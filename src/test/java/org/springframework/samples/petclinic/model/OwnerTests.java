@@ -10,6 +10,8 @@ import org.junit.jupiter.api.Test;
  * Unit tests for the {@link Owner} class.
  */
 class OwnerTests {
+    // Slice 01 sandbox-only execution marker
+
 
     @Test
     void shouldReturnPetsSortedByName() {
