@@ -12,7 +12,6 @@ import org.junit.jupiter.api.Test;
 class OwnerTests {
     // Slice 02 boundary marker: preserves the Slice 01 OwnerTests coverage scope
 
-
     @Test
     void shouldReturnPetsSortedByName() {
         // Given
