@@ -95,8 +95,7 @@ public class PetController {
 
     @GetMapping(value = "/pets/{petId}/edit")
     public String initUpdateForm(@PathVariable("petId") int petId, ModelMap model) {
-        Pet pet = this.clinicService.findPetById(petId);
-        model.put("pet", pet);
+        model.put("pet", this.clinicService.findPetById(petId));
         return VIEWS_PETS_CREATE_OR_UPDATE_FORM;
     }
 
