@@ -40,6 +40,7 @@ import java.util.Collection;
 public class PetController {
 
     private static final String VIEWS_PETS_CREATE_OR_UPDATE_FORM = "pets/createOrUpdatePetForm";
+    private static final String MODEL_ATTRIBUTE_PET = "pet";
     private final ClinicService clinicService;
 
     public PetController(ClinicService clinicService) {
@@ -70,7 +71,7 @@ public class PetController {
     public String initCreationForm(Owner owner, ModelMap model) {
         Pet pet = new Pet();
         owner.addPet(pet);
-        model.put("pet", pet);
+        model.put(MODEL_ATTRIBUTE_PET, pet);
         return VIEWS_PETS_CREATE_OR_UPDATE_FORM;
     }
 
@@ -80,7 +81,7 @@ public class PetController {
             result.rejectValue("name", "duplicate", "already exists");
         }
         if (result.hasErrors()) {
-            model.put("pet", pet);
+            model.put(MODEL_ATTRIBUTE_PET, pet);
             return VIEWS_PETS_CREATE_OR_UPDATE_FORM;
         }
 
@@ -95,14 +96,14 @@ public class PetController {
 
     @GetMapping(value = "/pets/{petId}/edit")
     public String initUpdateForm(@PathVariable("petId") int petId, ModelMap model) {
-        model.put("pet", this.clinicService.findPetById(petId));
+        model.put(MODEL_ATTRIBUTE_PET, this.clinicService.findPetById(petId));
         return VIEWS_PETS_CREATE_OR_UPDATE_FORM;
     }
 
     @PostMapping(value = "/pets/{petId}/edit")
     public String processUpdateForm(@Valid Pet pet, BindingResult result, Owner owner, ModelMap model) {
         if (result.hasErrors()) {
-            model.put("pet", pet);
+            model.put(MODEL_ATTRIBUTE_PET, pet);
             return VIEWS_PETS_CREATE_OR_UPDATE_FORM;
         }
 
