@@ -39,6 +39,7 @@ import org.springframework.web.servlet.ModelAndView;
 public class OwnerController {
 
     private static final String VIEWS_OWNER_CREATE_OR_UPDATE_FORM = "owners/createOrUpdateOwnerForm";
+    private static final String VIEWS_OWNER_FIND_OWNERS = "owners/findOwners";
     private final ClinicService clinicService;
 
     public OwnerController(ClinicService clinicService) {
@@ -69,7 +70,7 @@ public class OwnerController {
     @GetMapping(value = "/owners/find")
     public String initFindForm(Map<String, Object> model) {
         model.put("owner", new Owner());
-        return "owners/findOwners";
+        return VIEWS_OWNER_FIND_OWNERS;
     }
 
     @GetMapping(value = "/owners")
@@ -85,7 +86,7 @@ public class OwnerController {
         if (results.isEmpty()) {
             // no owners found
             result.rejectValue("lastName", "notFound", "not found");
-            return "owners/findOwners";
+            return VIEWS_OWNER_FIND_OWNERS;
         } else if (results.size() == 1) {
             // 1 owner found
             return "redirect:/owners/" + results.iterator().next().getId();
