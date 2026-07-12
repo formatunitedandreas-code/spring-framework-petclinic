@@ -41,6 +41,7 @@ public class OwnerController {
     private static final String MODEL_ATTRIBUTE_OWNER = "owner";
     private static final String VIEWS_OWNER_CREATE_OR_UPDATE_FORM = "owners/createOrUpdateOwnerForm";
     private static final String VIEWS_OWNER_FIND_OWNERS = "owners/findOwners";
+    private static final String VIEW_REDIRECT_OWNER_DETAILS = "redirect:/owners/{ownerId}";
     private final ClinicService clinicService;
 
     public OwnerController(ClinicService clinicService) {
@@ -118,7 +119,7 @@ public class OwnerController {
 
         owner.setId(ownerId);
         this.clinicService.saveOwner(owner);
-        return "redirect:/owners/{ownerId}";
+        return VIEW_REDIRECT_OWNER_DETAILS;
     }
 
     /**
