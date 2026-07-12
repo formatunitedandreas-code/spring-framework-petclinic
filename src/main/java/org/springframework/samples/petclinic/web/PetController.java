@@ -76,7 +76,7 @@ public class PetController {
 
     @PostMapping(value = "/pets/new")
     public String processCreationForm(Owner owner, @Valid Pet pet, BindingResult result, ModelMap model) {
-        if (StringUtils.hasLength(pet.getName()) && pet.isNew() && owner.getPet(pet.getName(), true) != null){
+        if (hasDuplicatePetName(owner, pet)) {
             result.rejectValue("name", "duplicate", "already exists");
         }
         if (result.hasErrors()) {
@@ -87,6 +87,10 @@ public class PetController {
         owner.addPet(pet);
         this.clinicService.savePet(pet);
         return "redirect:/owners/{ownerId}";
+    }
+
+    private boolean hasDuplicatePetName(Owner owner, Pet pet) {
+        return StringUtils.hasLength(pet.getName()) && pet.isNew() && owner.getPet(pet.getName(), true) != null;
     }
 
     @GetMapping(value = "/pets/{petId}/edit")
