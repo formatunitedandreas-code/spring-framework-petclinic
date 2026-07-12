@@ -41,6 +41,8 @@ public class OwnerController {
     private static final String MODEL_ATTRIBUTE_OWNER = "owner";
     private static final String VIEWS_OWNER_CREATE_OR_UPDATE_FORM = "owners/createOrUpdateOwnerForm";
     private static final String VIEWS_OWNER_FIND_OWNERS = "owners/findOwners";
+    private static final String MODEL_ATTRIBUTE_SELECTIONS = "selections";
+    private static final String VIEW_OWNERS_LIST = "owners/ownersList";
     private static final String VIEW_REDIRECT_OWNER_DETAILS = "redirect:/owners/{ownerId}";
     private final ClinicService clinicService;
 
@@ -99,8 +101,8 @@ public class OwnerController {
             return "redirect:/owners/" + foundOwner.getId();
         } else {
             // multiple owners found
-            model.put("selections", results);
-            return "owners/ownersList";
+            model.put(MODEL_ATTRIBUTE_SELECTIONS, results);
+            return VIEW_OWNERS_LIST;
         }
     }
 
