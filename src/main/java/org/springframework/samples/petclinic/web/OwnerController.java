@@ -88,8 +88,7 @@ public class OwnerController {
             return "owners/findOwners";
         } else if (results.size() == 1) {
             // 1 owner found
-            owner = results.iterator().next();
-            return "redirect:/owners/" + owner.getId();
+            return "redirect:/owners/" + results.iterator().next().getId();
         } else {
             // multiple owners found
             model.put("selections", results);
