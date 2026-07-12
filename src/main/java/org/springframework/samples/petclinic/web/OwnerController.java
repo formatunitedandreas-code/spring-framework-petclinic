@@ -94,7 +94,8 @@ public class OwnerController {
             return VIEWS_OWNER_FIND_OWNERS;
         } else if (results.size() == 1) {
             // 1 owner found
-            return "redirect:/owners/" + results.iterator().next().getId();
+            Owner owner = results.iterator().next();
+            return "redirect:/owners/" + owner.getId();
         } else {
             // multiple owners found
             model.put("selections", results);
@@ -104,7 +105,8 @@ public class OwnerController {
 
     @GetMapping(value = "/owners/{ownerId}/edit")
     public String initUpdateOwnerForm(@PathVariable("ownerId") int ownerId, Model model) {
-        model.addAttribute(this.clinicService.findOwnerById(ownerId));
+        Owner owner = this.clinicService.findOwnerById(ownerId);
+        model.addAttribute(owner);
         return VIEWS_OWNER_CREATE_OR_UPDATE_FORM;
     }
 
