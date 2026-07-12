@@ -41,6 +41,7 @@ public class PetController {
 
     private static final String VIEWS_PETS_CREATE_OR_UPDATE_FORM = "pets/createOrUpdatePetForm";
     private static final String MODEL_ATTRIBUTE_PET = "pet";
+    private static final String VIEW_REDIRECT_OWNERS = "redirect:/owners/{ownerId}";
     private final ClinicService clinicService;
 
     public PetController(ClinicService clinicService) {
@@ -87,7 +88,7 @@ public class PetController {
 
         owner.addPet(pet);
         this.clinicService.savePet(pet);
-        return "redirect:/owners/{ownerId}";
+        return VIEW_REDIRECT_OWNERS;
     }
 
     private boolean hasDuplicatePetName(Owner owner, Pet pet) {
@@ -109,7 +110,7 @@ public class PetController {
 
         owner.addPet(pet);
         this.clinicService.savePet(pet);
-        return "redirect:/owners/{ownerId}";
+        return VIEW_REDIRECT_OWNERS;
     }
 
 }
