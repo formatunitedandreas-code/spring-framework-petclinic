@@ -39,6 +39,7 @@ public class VisitController {
     private static final String VIEW_VISIT_FORM = "pets/createOrUpdateVisitForm";
     private static final String VIEW_VISITS_LIST = "visitList";
     private static final String MODEL_ATTRIBUTE_VISITS = "visits";
+    private static final String VIEW_REDIRECT_OWNER = "redirect:/owners/{ownerId}";
     private final ClinicService clinicService;
 
     public VisitController(ClinicService clinicService) {
@@ -82,7 +83,7 @@ public class VisitController {
         }
 
         this.clinicService.saveVisit(visit);
-        return "redirect:/owners/{ownerId}";
+        return VIEW_REDIRECT_OWNER;
     }
 
     @GetMapping(value = "/owners/{ownerId}/pets/{petId}/visits")
