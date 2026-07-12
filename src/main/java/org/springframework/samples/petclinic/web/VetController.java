@@ -49,15 +49,13 @@ public class VetController {
 
     @GetMapping(value = "/vets.json", produces = MediaType.APPLICATION_JSON_VALUE)
     @ResponseBody
-    public
-    Vets showJsonVetList() {
+    public Vets showJsonVetList() {
         return getVets();
     }
 
     @GetMapping(value = "/vets.xml", produces = MediaType.APPLICATION_XML_VALUE)
     @ResponseBody
-    public
-    Vets showXmlVetList() {
+    public Vets showXmlVetList() {
         return getVets();
     }
 
