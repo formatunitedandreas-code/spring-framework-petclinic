@@ -44,7 +44,10 @@ public class ClinicServiceImpl implements ClinicService {
     private final OwnerRepository ownerRepository;
     private final VisitRepository visitRepository;
 
-    public ClinicServiceImpl(PetRepository petRepository, VetRepository vetRepository, OwnerRepository ownerRepository, VisitRepository visitRepository) {
+    public ClinicServiceImpl(PetRepository petRepository,
+            VetRepository vetRepository,
+            OwnerRepository ownerRepository,
+            VisitRepository visitRepository) {
         this.petRepository = petRepository;
         this.vetRepository = vetRepository;
         this.ownerRepository = ownerRepository;
