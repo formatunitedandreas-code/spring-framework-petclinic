@@ -34,7 +34,7 @@ import java.util.Map;
 public class VetController {
 
     private static final String MODEL_ATTRIBUTE_VETS = "vets";
-    private static final String VIEW_VET_LIST = "vets/vetList";
+    private static final String VIEWS_VET_LIST = "vets/vetList";
     private final ClinicService clinicService;
 
     public VetController(ClinicService clinicService) {
@@ -45,8 +45,12 @@ public class VetController {
     public String showVetList(Map<String, Object> model) {
         // Here we are returning an object of type 'Vets' rather than a collection of Vet objects
         // so it is simpler for Object-Xml mapping
+        addVetsToModel(model);
+        return VIEWS_VET_LIST;
+    }
+
+    private void addVetsToModel(Map<String, Object> model) {
         model.put(MODEL_ATTRIBUTE_VETS, getVets());
-        return VIEW_VET_LIST;
     }
 
     @GetMapping(value = "/vets.json", produces = MediaType.APPLICATION_JSON_VALUE)

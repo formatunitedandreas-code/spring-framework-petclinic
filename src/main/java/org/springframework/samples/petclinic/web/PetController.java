@@ -82,7 +82,7 @@ public class PetController {
             result.rejectValue("name", "duplicate", "already exists");
         }
         if (result.hasErrors()) {
-            return buildPetForm(model, pet);
+            return showPetForm(model, pet);
         }
 
         return savePet(owner, pet);
@@ -101,7 +101,7 @@ public class PetController {
     @PostMapping(value = "/pets/{petId}/edit")
     public String processUpdateForm(@Valid Pet pet, BindingResult result, Owner owner, ModelMap model) {
         if (result.hasErrors()) {
-            return buildPetForm(model, pet);
+            return showPetForm(model, pet);
         }
 
         return savePet(owner, pet);
@@ -113,7 +113,7 @@ public class PetController {
         return VIEW_REDIRECT_OWNERS;
     }
 
-    private String buildPetForm(ModelMap model, Pet pet) {
+    private String showPetForm(ModelMap model, Pet pet) {
         model.put(MODEL_ATTRIBUTE_PET, pet);
         return VIEWS_PETS_CREATE_OR_UPDATE_FORM;
     }

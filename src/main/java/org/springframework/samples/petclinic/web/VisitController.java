@@ -36,8 +36,8 @@ import org.springframework.web.bind.annotation.*;
 @Controller
 public class VisitController {
 
-    private static final String VIEW_VISIT_FORM = "pets/createOrUpdateVisitForm";
-    private static final String VIEW_VISITS_LIST = "visitList";
+    private static final String VIEWS_VISIT_FORM = "pets/createOrUpdateVisitForm";
+    private static final String VIEWS_VISITS_LIST = "visitList";
     private static final String MODEL_ATTRIBUTE_VISITS = "visits";
     private static final String VIEW_REDIRECT_OWNER = "redirect:/owners/{ownerId}";
     private final ClinicService clinicService;
@@ -72,14 +72,14 @@ public class VisitController {
     // Spring MVC calls method loadPetWithVisit(...) before initNewVisitForm is called
     @GetMapping(value = "/owners/{ownerId}/pets/{petId}/visits/new")
     public String initNewVisitForm() {
-        return VIEW_VISIT_FORM;
+        return VIEWS_VISIT_FORM;
     }
 
     // Spring MVC calls method loadPetWithVisit(...) before processNewVisitForm is called
     @PostMapping(value = "/owners/{ownerId}/pets/{petId}/visits/new")
     public String processNewVisitForm(@Valid Visit visit, BindingResult result) {
         if (result.hasErrors()) {
-            return VIEW_VISIT_FORM;
+            return VIEWS_VISIT_FORM;
         }
 
         this.clinicService.saveVisit(visit);
@@ -90,7 +90,7 @@ public class VisitController {
     public String showVisits(@PathVariable int petId, Map<String, Object> model) {
         Pet pet = this.clinicService.findPetById(petId);
         model.put(MODEL_ATTRIBUTE_VISITS, pet.getVisits());
-        return VIEW_VISITS_LIST;
+        return VIEWS_VISITS_LIST;
     }
 
 }

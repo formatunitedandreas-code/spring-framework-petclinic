@@ -92,18 +92,27 @@ public class OwnerController {
         // find owners by last name
         Collection<Owner> results = this.clinicService.findOwnerByLastName(owner.getLastName());
         if (results.isEmpty()) {
-            // no owners found
-            result.rejectValue("lastName", "notFound", "not found");
-            return VIEWS_OWNER_FIND_OWNERS;
-        } else if (results.size() == 1) {
-            // 1 owner found
-            Owner foundOwner = results.iterator().next();
-            return "redirect:/owners/" + foundOwner.getId();
-        } else {
-            // multiple owners found
-            model.put(MODEL_ATTRIBUTE_SELECTIONS, results);
-            return VIEW_OWNERS_LIST;
+            return handleNoOwners(result);
         }
+        if (results.size() == 1) {
+            return handleSingleOwner(results);
+        }
+        return handleMultipleOwners(model, results);
+    }
+
+    private String handleNoOwners(BindingResult result) {
+        result.rejectValue("lastName", "notFound", "not found");
+        return VIEWS_OWNER_FIND_OWNERS;
+    }
+
+    private String handleSingleOwner(Collection<Owner> results) {
+        Owner foundOwner = results.iterator().next();
+        return "redirect:/owners/" + foundOwner.getId();
+    }
+
+    private String handleMultipleOwners(Map<String, Object> model, Collection<Owner> results) {
+        model.put(MODEL_ATTRIBUTE_SELECTIONS, results);
+        return VIEW_OWNERS_LIST;
     }
 
     @GetMapping(value = "/owners/{ownerId}/edit")
