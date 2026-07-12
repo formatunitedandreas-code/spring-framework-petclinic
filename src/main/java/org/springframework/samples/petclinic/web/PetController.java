@@ -85,9 +85,7 @@ public class PetController {
             return showPetForm(model, pet);
         }
 
-        owner.addPet(pet);
-        this.clinicService.savePet(pet);
-        return VIEW_REDIRECT_OWNERS;
+        return savePet(owner, pet);
     }
 
     private boolean hasDuplicatePetName(Owner owner, Pet pet) {
@@ -106,6 +104,10 @@ public class PetController {
             return showPetForm(model, pet);
         }
 
+        return savePet(owner, pet);
+    }
+
+    private String savePet(Owner owner, Pet pet) {
         owner.addPet(pet);
         this.clinicService.savePet(pet);
         return VIEW_REDIRECT_OWNERS;

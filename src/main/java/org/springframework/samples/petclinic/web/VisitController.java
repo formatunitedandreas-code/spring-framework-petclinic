@@ -37,6 +37,9 @@ import org.springframework.web.bind.annotation.*;
 public class VisitController {
 
     private static final String VIEWS_VISIT_FORM = "pets/createOrUpdateVisitForm";
+    private static final String VIEWS_VISITS_LIST = "visitList";
+    private static final String MODEL_ATTRIBUTE_VISITS = "visits";
+    private static final String VIEW_REDIRECT_OWNER = "redirect:/owners/{ownerId}";
     private final ClinicService clinicService;
 
     public VisitController(ClinicService clinicService) {
@@ -61,7 +64,8 @@ public class VisitController {
     @ModelAttribute("visit")
     public Visit loadPetWithVisit(@PathVariable("petId") int petId) {
         Visit visit = new Visit();
-        this.clinicService.findPetById(petId).addVisit(visit);
+        Pet pet = this.clinicService.findPetById(petId);
+        pet.addVisit(visit);
         return visit;
     }
 
@@ -79,13 +83,14 @@ public class VisitController {
         }
 
         this.clinicService.saveVisit(visit);
-        return "redirect:/owners/{ownerId}";
+        return VIEW_REDIRECT_OWNER;
     }
 
     @GetMapping(value = "/owners/{ownerId}/pets/{petId}/visits")
     public String showVisits(@PathVariable int petId, Map<String, Object> model) {
-        model.put("visits", this.clinicService.findPetById(petId).getVisits());
-        return "visitList";
+        Pet pet = this.clinicService.findPetById(petId);
+        model.put(MODEL_ATTRIBUTE_VISITS, pet.getVisits());
+        return VIEWS_VISITS_LIST;
     }
 
 }

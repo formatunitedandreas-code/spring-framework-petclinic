@@ -38,9 +38,12 @@ import org.springframework.web.servlet.ModelAndView;
 @Controller
 public class OwnerController {
 
+    private static final String MODEL_ATTRIBUTE_OWNER = "owner";
     private static final String VIEWS_OWNER_CREATE_OR_UPDATE_FORM = "owners/createOrUpdateOwnerForm";
     private static final String VIEWS_OWNER_FIND_OWNERS = "owners/findOwners";
-    private static final String MODEL_ATTRIBUTE_OWNER = "owner";
+    private static final String MODEL_ATTRIBUTE_SELECTIONS = "selections";
+    private static final String VIEW_OWNERS_LIST = "owners/ownersList";
+    private static final String VIEW_REDIRECT_OWNER_DETAILS = "redirect:/owners/{ownerId}";
     private final ClinicService clinicService;
 
     public OwnerController(ClinicService clinicService) {
@@ -54,7 +57,7 @@ public class OwnerController {
 
     @GetMapping(value = "/owners/new")
     public String initCreationForm(Map<String, Object> model) {
-        model.put(MODEL_ATTRIBUTE_OWNER, new Owner());
+        initializeOwnerModel(model);
         return VIEWS_OWNER_CREATE_OR_UPDATE_FORM;
     }
 
@@ -70,8 +73,12 @@ public class OwnerController {
 
     @GetMapping(value = "/owners/find")
     public String initFindForm(Map<String, Object> model) {
-        model.put(MODEL_ATTRIBUTE_OWNER, new Owner());
+        initializeOwnerModel(model);
         return VIEWS_OWNER_FIND_OWNERS;
+    }
+
+    private void initializeOwnerModel(Map<String, Object> model) {
+        model.put(MODEL_ATTRIBUTE_OWNER, new Owner());
     }
 
     @GetMapping(value = "/owners")
@@ -99,17 +106,19 @@ public class OwnerController {
     }
 
     private String handleSingleOwner(Collection<Owner> results) {
-        return "redirect:/owners/" + results.iterator().next().getId();
+        Owner foundOwner = results.iterator().next();
+        return "redirect:/owners/" + foundOwner.getId();
     }
 
     private String handleMultipleOwners(Map<String, Object> model, Collection<Owner> results) {
-        model.put("selections", results);
-        return "owners/ownersList";
+        model.put(MODEL_ATTRIBUTE_SELECTIONS, results);
+        return VIEW_OWNERS_LIST;
     }
 
     @GetMapping(value = "/owners/{ownerId}/edit")
     public String initUpdateOwnerForm(@PathVariable("ownerId") int ownerId, Model model) {
-        model.addAttribute(this.clinicService.findOwnerById(ownerId));
+        Owner owner = this.clinicService.findOwnerById(ownerId);
+        model.addAttribute(owner);
         return VIEWS_OWNER_CREATE_OR_UPDATE_FORM;
     }
 
@@ -121,7 +130,7 @@ public class OwnerController {
 
         owner.setId(ownerId);
         this.clinicService.saveOwner(owner);
-        return "redirect:/owners/{ownerId}";
+        return VIEW_REDIRECT_OWNER_DETAILS;
     }
 
     /**
@@ -132,7 +141,8 @@ public class OwnerController {
      */
     @GetMapping("/owners/{ownerId}")
     public ModelAndView showOwner(@PathVariable("ownerId") int ownerId) {
-        return new ModelAndView("owners/ownerDetails").addObject(this.clinicService.findOwnerById(ownerId));
+        Owner owner = this.clinicService.findOwnerById(ownerId);
+        return new ModelAndView("owners/ownerDetails").addObject(owner);
     }
 
 }
