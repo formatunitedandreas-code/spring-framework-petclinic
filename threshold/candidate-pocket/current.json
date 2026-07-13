@@ -2,85 +2,59 @@
   "schemaVersion": "threshold.petclinic.candidate-pocket.v0.1",
   "leaseName": "petclinic-threshold-governed-refactor-lease-v1",
   "branch": "threshold-governed-refactor-demo-4",
-  "generatedFromHead": "ce0a3bfb45a523809e30c6dd68ac230b674ff5a3",
+  "generatedFromHead": "a703491cc707d6f0de9fcfd30719bfa278a74df8",
   "scopeExpansion": {
     "addedPathFamilies": [
       "src/main/java/org/springframework/samples/petclinic/repository/**/*.java",
-      "src/main/java/org/springframework/samples/petclinic/repository/*.java"
+      "src/main/java/org/springframework/samples/petclinic/model/**/*.java",
+      "src/main/java/org/springframework/samples/petclinic/util/**/*.java",
+      "src/main/java/org/springframework/samples/petclinic/application/**/*.java"
     ],
     "candidateClasses": [
+      "private_helper_extraction_for_readability",
+      "redundant_local_variable_simplification",
+      "duplicate_literal_local_constant_extraction",
       "repository_readability_cleanup",
-      "micro-format cleanup"
+      "model_readability_cleanup",
+      "utility_readability_cleanup"
     ],
     "guardrails": [
       "one source file per candidate",
       "no public API behavior change",
-      "keep JPQL strings byte-for-byte identical",
       "no persistence behavior change",
+      "no request mapping changes",
       "no pom.xml or dependency change",
       "full threshold validate-slice with Maven test before source commit",
-      "separate receipt and lease-state governance commit after source commit"
+      "explicit candidate packet + receipt on successful commit"
     ]
   },
   "rankingRules": [
-    "prefer mechanically verifiable no-behavior-change cleanup",
+    "prefer service layer over web layer (if present)",
     "prefer smallest diff",
-    "prefer lexical file path if candidates remain tied"
+    "prefer same-file reuse only when method differs",
+    "prefer lexical file path then method name",
+    "prefer mechanically verifiable readability cleanup"
   ],
   "candidates": [
     {
-      "candidateId": "petclinic-jpa-owner-query-formatting-wrap",
-      "candidateClass": "repository_readability_cleanup",
-      "file": "src/main/java/org/springframework/samples/petclinic/repository/jpa/JpaOwnerRepositoryImpl.java",
-      "method": "findById",
-      "expectedDiffSummary": "Wrap long createQuery invocation without changing JPQL text.",
-      "allowedChange": "Formatting-only line wrap of createQuery arguments; query string and parameters unchanged.",
+      "candidateId": "petclinic-util-callmonitor-get-call-time-early-return",
+      "candidateClass": "utility_readability_cleanup",
+      "file": "src/main/java/org/springframework/samples/petclinic/util/CallMonitoringAspect.java",
+      "method": "getCallTime",
+      "expectedDiffSummary": "Invert guard in getCallTime to reduce nesting and read path first.",
+      "allowedChange": "Refactor conditional to early-return style; no timing semantics change.",
       "risk": "low",
-      "score": 75,
+      "score": 78,
       "validation": "threshold/scripts/validate-slice.ps1",
       "rejectIf": [
-        "changes query string",
-        "changes parameter name",
-        "changes query return type",
-        "changes persistence semantics"
-      ]
-    },
-    {
-      "candidateId": "petclinic-jpa-pet-type-query-line-wrapping",
-      "candidateClass": "repository_readability_cleanup",
-      "file": "src/main/java/org/springframework/samples/petclinic/repository/jpa/JpaPetRepositoryImpl.java",
-      "method": "findPetTypes",
-      "expectedDiffSummary": "Wrap long createQuery invocation without changing JPQL text.",
-      "allowedChange": "Formatting-only line wrap of createQuery arguments; query string and parameters unchanged.",
-      "risk": "low",
-      "score": 74,
-      "validation": "threshold/scripts/validate-slice.ps1",
-      "rejectIf": [
-        "changes query string",
-        "changes parameter name",
-        "changes query return type",
-        "changes persistence semantics"
-      ]
-    },
-    {
-      "candidateId": "petclinic-jpa-visit-find-pet-query-line-wrapping",
-      "candidateClass": "repository_readability_cleanup",
-      "file": "src/main/java/org/springframework/samples/petclinic/repository/jpa/JpaVisitRepositoryImpl.java",
-      "method": "findByPetId",
-      "expectedDiffSummary": "Wrap long createQuery invocation without changing JPQL text.",
-      "allowedChange": "Formatting-only line wrap of createQuery arguments; query string and parameters unchanged.",
-      "risk": "low",
-      "score": 73,
-      "validation": "threshold/scripts/validate-slice.ps1",
-      "rejectIf": [
-        "changes query string",
-        "changes parameter name",
-        "changes query return type",
-        "changes persistence semantics"
+        "changes monitoring semantics",
+        "adds public API surface",
+        "changes division semantics",
+        "behavioral branching change"
       ]
     }
   ],
-  "nextRecommendedCandidateId": "petclinic-jpa-owner-query-formatting-wrap",
+  "nextRecommendedCandidateId": "petclinic-util-callmonitor-get-call-time-early-return",
   "nonClaims": [
     "candidate pocket is not an implementation claim",
     "no public readiness claim",
