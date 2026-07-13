@@ -44,12 +44,14 @@ import org.springframework.core.style.ToStringCreator;
 @Table(name = "owners")
 public class Owner extends Person {
 
+    private static final String CITY = "city";
+
     private static final String ADDRESS = "address";
     @Column(name = ADDRESS)
     @NotEmpty
     private String address;
 
-    @Column(name = "city")
+    @Column(name = CITY)
     @NotEmpty
     private String city;
 
@@ -155,7 +157,7 @@ public class Owner extends Person {
             .append("lastName", this.getLastName())
             .append("firstName", this.getFirstName())
             .append(ADDRESS, this.address)
-            .append("city", this.city)
+            .append(CITY, this.city)
             .append("telephone", this.telephone)
             .toString();
     }
