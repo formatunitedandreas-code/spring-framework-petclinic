@@ -86,11 +86,13 @@ public class CallMonitoringAspect {
             return joinPoint.proceed();
         } finally {
             sw.stop();
-            synchronized (this) {
-                this.callCount++;
-                this.accumulatedCallTime += sw.getTotalTimeMillis();
-            }
+            recordInvocation(sw.getTotalTimeMillis());
         }
+    }
+
+    private synchronized void recordInvocation(long totalTimeMillis) {
+        this.callCount++;
+        this.accumulatedCallTime += totalTimeMillis;
     }
 
 }
