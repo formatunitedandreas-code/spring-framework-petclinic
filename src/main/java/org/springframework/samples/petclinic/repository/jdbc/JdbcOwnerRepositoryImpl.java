@@ -104,17 +104,21 @@ public class JdbcOwnerRepositoryImpl implements OwnerRepository {
     }
 
     public void loadPetsAndVisits(final Owner owner) {
-        final List<JdbcPet> pets = this.jdbcClient.sql("""
-            SELECT pets.id, name, birth_date, type_id, owner_id, visits.id as visit_id, visit_date, description, pet_id
-            FROM pets LEFT OUTER JOIN visits ON pets.id = pet_id
-            WHERE owner_id=:id ORDER BY pet_id
-            """)
-            .param("id", owner.getId())
-            .query(new JdbcPetVisitExtractor());
+        final List<JdbcPet> pets = loadPetsAndVisitsForOwner(owner.getId());
         Collection<PetType> petTypes = getPetTypes();
         for (JdbcPet pet : pets) {
             mapPetToOwner(owner, petTypes, pet);
         }
+    }
+
+    private List<JdbcPet> loadPetsAndVisitsForOwner(int ownerId) {
+        return this.jdbcClient.sql("""
+            SELECT pets.id, name, birth_date, type_id, owner_id, visits.id as visit_id, visit_date, description, pet_id
+            FROM pets LEFT OUTER JOIN visits ON pets.id = pet_id
+            WHERE owner_id=:id ORDER BY pet_id
+            """)
+            .param("id", ownerId)
+            .query(new JdbcPetVisitExtractor());
     }
 
     private void mapPetToOwner(Owner owner, Collection<PetType> petTypes, JdbcPet pet) {
