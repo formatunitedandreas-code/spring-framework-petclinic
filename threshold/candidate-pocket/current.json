@@ -2,7 +2,7 @@
   "schemaVersion": "threshold.petclinic.candidate-pocket.v0.1",
   "leaseName": "petclinic-threshold-governed-refactor-lease-v1",
   "branch": "threshold-governed-refactor-demo-4",
-  "generatedFromHead": "a703491cc707d6f0de9fcfd30719bfa278a74df8",
+  "generatedFromHead": "f1a4ee108f5da24482dafb8714c7a0a4dba661d6",
   "scopeExpansion": {
     "addedPathFamilies": [
       "src/main/java/org/springframework/samples/petclinic/repository/**/*.java",
@@ -35,26 +35,8 @@
     "prefer lexical file path then method name",
     "prefer mechanically verifiable readability cleanup"
   ],
-  "candidates": [
-    {
-      "candidateId": "petclinic-util-callmonitor-get-call-time-early-return",
-      "candidateClass": "utility_readability_cleanup",
-      "file": "src/main/java/org/springframework/samples/petclinic/util/CallMonitoringAspect.java",
-      "method": "getCallTime",
-      "expectedDiffSummary": "Invert guard in getCallTime to reduce nesting and read path first.",
-      "allowedChange": "Refactor conditional to early-return style; no timing semantics change.",
-      "risk": "low",
-      "score": 78,
-      "validation": "threshold/scripts/validate-slice.ps1",
-      "rejectIf": [
-        "changes monitoring semantics",
-        "adds public API surface",
-        "changes division semantics",
-        "behavioral branching change"
-      ]
-    }
-  ],
-  "nextRecommendedCandidateId": "petclinic-util-callmonitor-get-call-time-early-return",
+  "candidates": [],
+  "nextRecommendedCandidateId": null,
   "nonClaims": [
     "candidate pocket is not an implementation claim",
     "no public readiness claim",
