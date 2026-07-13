@@ -97,6 +97,10 @@ public class Pet extends NamedEntity {
     }
 
     public List<Visit> getVisits() {
+        return sortedVisits();
+    }
+
+    private List<Visit> sortedVisits() {
         List<Visit> sortedVisits = new ArrayList<>(getVisitsInternal());
         sortedVisits.sort(Comparator.comparing(Visit::getDate).reversed());
         return Collections.unmodifiableList(sortedVisits);
