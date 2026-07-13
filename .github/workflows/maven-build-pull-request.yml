@@ -2,7 +2,12 @@ name: Java CI for Pull Request
 
 on:
   pull_request:
-    types: [opened, synchronize, reopened]
+    branches:
+      - main
+    types: [opened, synchronize, reopened, ready_for_review]
+  push:
+    branches:
+      - 'threshold-governed-refactor-demo-*'
 
 jobs:
   build:
