@@ -95,12 +95,14 @@ public abstract class OneToManyResultSetExtractor<R, C, K> implements ResultSetE
 		while (more) {
 			R root = rootMapper.mapRow(rs, row);
 			K primaryKey = mapPrimaryKey(rs);
-			if (mapForeignKey(rs) != null) {
-				while (more && primaryKey.equals(mapForeignKey(rs))) {
+			K foreignKey = mapForeignKey(rs);
+			if (foreignKey != null) {
+				while (more && primaryKey.equals(foreignKey)) {
 					addChild(root, childMapper.mapRow(rs, row));
 					more = rs.next();
 					if (more) {
 						row++;
+						foreignKey = mapForeignKey(rs);
 					}
 				}
 			}
