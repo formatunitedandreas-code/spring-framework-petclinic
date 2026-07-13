@@ -77,7 +77,8 @@ function Apply-ReadableMethodSignatureWrap {
     if ($lineNumber -lt $lines.Count) {
         $updatedLines += $lines[$lineNumber..($lines.Count - 1)]
     }
-    Set-Content -Path $path -Value $updatedLines -NoNewline
+    $updatedText = $updatedLines -join "`r`n"
+    Set-Content -Path $path -Value $updatedText -NoNewline
 
     Write-Host "appliedCandidate=$($Candidate.candidateId)"
     Write-Host "changedFile=$path"
