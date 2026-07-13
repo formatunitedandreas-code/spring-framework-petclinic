@@ -43,7 +43,8 @@ public class JpaVetRepositoryImpl implements VetRepository {
     @Override
     public Collection<Vet> findAll() {
         return this.em.createQuery(
-            "SELECT distinct vet FROM Vet vet left join fetch vet.specialties ORDER BY vet.lastName, vet.firstName", Vet.class)
+            "SELECT distinct vet FROM Vet vet left join fetch vet.specialties " +
+            "ORDER BY vet.lastName, vet.firstName", Vet.class)
             .getResultList();
     }
 
