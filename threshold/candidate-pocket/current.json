@@ -1,9 +1,9 @@
 {
     "schemaVersion":  "threshold.petclinic.candidate-pocket.v0.2",
-    "leaseName":  "petclinic-threshold-governed-refactor-lease-v3",
+    "leaseName":  "petclinic-threshold-governed-refactor-lease-v5",
     "branch":  "threshold-governed-refactor-demo-6",
-    "generatedFromHead":  "335b65852747464a496089aeb0a47a2aa5774ff2",
-    "generatedAt":  "2026-07-13T22:18:38.8060394Z",
+    "generatedFromHead":  "4efaa12bedf541e3b3ab191336ea9d68519bf818",
+    "generatedAt":  "2026-07-13T22:28:30.3923449Z",
     "discovery":  {
                       "method":  "static-heuristic-scan",
                       "scannedFiles":  47,
@@ -16,40 +16,9 @@
                                   ]
                   },
     "candidates":  [
-                       {
-                           "candidateId":  "src-main-java-org-springframework-samples-petclinic-model-owner-java-duplicate-literal-local-constant-extraction-telephone",
-                           "candidateClass":  "duplicate_literal_local_constant_extraction",
-                           "score":  96,
-                           "file":  "src/main/java/org/springframework/samples/petclinic/model/Owner.java",
-                           "member":  "telephone",
-                           "literal":  "\"telephone\"",
-                           "constantName":  "TELEPHONE",
-                           "expectedDiffSummary":  "Extract repeated literal \"telephone\" to a same-class private constant.",
-                           "estimatedChangedLines":  4,
-                           "tieBreak":  {
-                                            "layerScore":  6,
-                                            "path":  "src/main/java/org/springframework/samples/petclinic/model/Owner.java",
-                                            "member":  "telephone"
-                                        }
-                       },
-                       {
-                           "candidateId":  "src-main-java-org-springframework-samples-petclinic-web-ownercontroller-java-duplicate-literal-local-constant-extraction-ownerid",
-                           "candidateClass":  "duplicate_literal_local_constant_extraction",
-                           "score":  95,
-                           "file":  "src/main/java/org/springframework/samples/petclinic/web/OwnerController.java",
-                           "member":  "ownerId",
-                           "literal":  "\"ownerId\"",
-                           "constantName":  "OWNER_ID",
-                           "expectedDiffSummary":  "Extract repeated literal \"ownerId\" to a same-class private constant.",
-                           "estimatedChangedLines":  4,
-                           "tieBreak":  {
-                                            "layerScore":  5,
-                                            "path":  "src/main/java/org/springframework/samples/petclinic/web/OwnerController.java",
-                                            "member":  "ownerId"
-                                        }
-                       }
+
                    ],
-    "nextRecommendedCandidateId":  "src-main-java-org-springframework-samples-petclinic-model-owner-java-duplicate-literal-local-constant-extraction-telephone",
+    "nextRecommendedCandidateId":  null,
     "nonClaims":  [
                       "candidate pocket is not an implementation claim",
                       "candidate pocket does not claim behavior preservation until slice validation passes",
