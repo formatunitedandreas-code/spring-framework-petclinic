@@ -43,9 +43,9 @@ public class JpaPetRepositoryImpl implements PetRepository {
     }
 
     @Override
-    @SuppressWarnings("unchecked")
     public List<PetType> findPetTypes() {
-        return this.em.createQuery("SELECT ptype FROM PetType ptype ORDER BY ptype.name").getResultList();
+        return this.em.createQuery("SELECT ptype FROM PetType ptype ORDER BY ptype.name", PetType.class)
+            .getResultList();
     }
 
     @Override
