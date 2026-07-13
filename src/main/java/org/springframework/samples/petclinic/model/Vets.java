@@ -34,10 +34,10 @@ public class Vets {
 
     @XmlElement(name = "vet")
     public List<Vet> getVetList() {
-        if (vetList == null) {
-            vetList = new ArrayList<>();
+        if (this.vetList == null) {
+            this.vetList = new ArrayList<>();
         }
-        return vetList;
+        return this.vetList;
     }
 
 }
