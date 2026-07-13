@@ -4,14 +4,14 @@
     "leaseId":  "petclinic-threshold-governed-refactor-lease-v1",
     "mode":  "local_refactor",
     "startHead":  "4e4c7eba92c80d35e8244f8526828680f0a25922",
-    "currentHead":  "7c651d8f19c3208fe627a06f45e993fd465bea46",
-    "candidatesProcessed":  2,
-    "commitsCreated":  2,
+    "currentHead":  "f909cb11b3c8171ea804e60e14cc8f7b093f9335",
+    "candidatesProcessed":  3,
+    "commitsCreated":  3,
     "remainingBudget":  {
-                            "candidates":  3,
-                            "commits":  3,
+                            "candidates":  2,
+                            "commits":  2,
                             "repairAttempts":  1
                         },
-    "lastReceipt":  "threshold/receipts/petclinic-jpa-pet-type-query-line-wrapping-7c651d8f19c3.json",
+    "lastReceipt":  "threshold/receipts/petclinic-jpa-visit-find-pet-query-line-wrapping-f909cb11b3c8.json",
     "terminalState":  "active"
 }
