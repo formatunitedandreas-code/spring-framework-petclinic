@@ -18,7 +18,6 @@ package org.springframework.samples.petclinic.repository.jpa;
 import java.util.Collection;
 
 import jakarta.persistence.EntityManager;
-import jakarta.persistence.Query;
 
 import org.springframework.samples.petclinic.model.Owner;
 import org.springframework.samples.petclinic.repository.OwnerRepository;
@@ -49,11 +48,10 @@ public class JpaOwnerRepositoryImpl implements OwnerRepository {
      * - creating a Lightweight class
      * - Turning on lazy-loading and using the open session in view pattern
      */
-    @SuppressWarnings("unchecked")
     public Collection<Owner> findByLastName(String lastName) {
         // using 'join fetch' because a single query should load both owners and pets
         // using 'left join fetch' because it might happen that an owner does not have pets yet
-        return (Collection<Owner>) this.em.createQuery("SELECT DISTINCT owner FROM Owner owner left join fetch owner.pets WHERE owner.lastName LIKE :lastName")
+        return this.em.createQuery("SELECT DISTINCT owner FROM Owner owner left join fetch owner.pets WHERE owner.lastName LIKE :lastName", Owner.class)
             .setParameter("lastName", lastName + "%")
             .getResultList();
     }
