@@ -68,22 +68,26 @@ public class JdbcVetRepositoryImpl implements VetRepository {
 
         // Build each vet's list of specialties.
         for (Vet vet : vets) {
-            final List<Integer> vetSpecialtiesIds = this.jdbcClient.sql(
-                    "SELECT specialty_id FROM vet_specialties WHERE vet_id=?")
-                .param(vet.getId())
-                .query(
-                    new BeanPropertyRowMapper<Integer>() {
-                        @Override
-                        public Integer mapRow(ResultSet rs, int row) throws SQLException {
-                            return rs.getInt(1);
-                        }
-                    }
-                ).list();
+            final List<Integer> vetSpecialtiesIds = getSpecialtyIdsFor(vet);
             for (int specialtyId : vetSpecialtiesIds) {
                 Specialty specialty = EntityUtils.getById(specialties, Specialty.class, specialtyId);
                 vet.addSpecialty(specialty);
             }
         }
         return vets;
+    }
+
+    private List<Integer> getSpecialtyIdsFor(Vet vet) {
+        return this.jdbcClient.sql("SELECT specialty_id FROM vet_specialties WHERE vet_id=?")
+            .param(vet.getId())
+            .query(
+                new BeanPropertyRowMapper<Integer>() {
+                    @Override
+                    public Integer mapRow(ResultSet rs, int row) throws SQLException {
+                        return rs.getInt(1);
+                    }
+                }
+            )
+            .list();
     }
 }
