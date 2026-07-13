@@ -1,17 +1,17 @@
 {
-  "schemaVersion": "threshold.petclinic.lease-state.v0.1",
-  "invocationId": "petclinic-refactor-expanded-scope-v1-20260713T170000Z",
-  "leaseId": "petclinic-threshold-governed-refactor-lease-v1",
-  "mode": "local_refactor",
-  "startHead": "a703491cc707d6f0de9fcfd30719bfa278a74df8",
-  "currentHead": "a703491cc707d6f0de9fcfd30719bfa278a74df8",
-  "candidatesProcessed": 0,
-  "commitsCreated": 0,
-  "remainingBudget": {
-    "candidates": 5,
-    "commits": 5,
-    "repairAttempts": 1
-  },
-  "lastReceipt": null,
-  "terminalState": "active"
+    "schemaVersion":  "threshold.petclinic.lease-state.v0.1",
+    "invocationId":  "petclinic-refactor-expanded-scope-v1-20260713T170000Z",
+    "leaseId":  "petclinic-threshold-governed-refactor-lease-v1",
+    "mode":  "local_refactor",
+    "startHead":  "a703491cc707d6f0de9fcfd30719bfa278a74df8",
+    "currentHead":  "89f6a28be4a1e20179c551c6ecc67a37b9bcb86d",
+    "candidatesProcessed":  1,
+    "commitsCreated":  1,
+    "remainingBudget":  {
+                            "candidates":  4,
+                            "commits":  4,
+                            "repairAttempts":  1
+                        },
+    "lastReceipt":  "threshold/receipts/petclinic-util-callmonitor-get-call-time-early-return-89f6a28be4a1.json",
+    "terminalState":  "active"
 }
