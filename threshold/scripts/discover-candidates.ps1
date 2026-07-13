@@ -15,6 +15,23 @@ function Get-LeaseScalar {
     return ($match -replace "^\s*$([regex]::Escape($Name)):\s*", "").Trim()
 }
 
+function Get-LeaseList {
+    param([string[]] $Lines, [string] $Name)
+    $items = New-Object System.Collections.Generic.List[string]
+    $inside = $false
+    foreach ($line in $Lines) {
+        if ($line -match "^\s*$([regex]::Escape($Name)):\s*$") {
+            $inside = $true
+            continue
+        }
+        if ($inside -and $line -match "^\S") { break }
+        if ($inside -and $line -match "^\s*-\s*(.+?)\s*$") {
+            $items.Add(($Matches[1]).Trim())
+        }
+    }
+    return $items.ToArray()
+}
+
 function ConvertTo-RepoPath {
     param([string] $Path)
     return ($Path -replace "\\", "/").Trim()
@@ -26,6 +43,67 @@ function New-CandidateId {
     return $stem.Trim("-")
 }
 
+function Is-CandidateAllowed {
+    param([string] $CandidateClass, [string[]] $AllowedTypes)
+    return ($AllowedTypes.Count -eq 0) -or ($AllowedTypes -contains $CandidateClass)
+}
+
+function Add-Candidate {
+    param(
+        [hashtable] $Candidate,
+        [string] $CandidateClass,
+        [string[]] $AllowedTypes,
+        [System.Collections.Generic.List[object]] $Bucket
+    )
+    if (-not (Is-CandidateAllowed -CandidateClass $CandidateClass -AllowedTypes $AllowedTypes)) {
+        return
+    }
+    $Candidate.candidateClass = $CandidateClass
+    $Bucket.Add([pscustomobject]$Candidate)
+}
+
+function Parse-MethodBlocks {
+    param([string[]] $Lines)
+    $methods = New-Object System.Collections.Generic.List[psobject]
+
+    $signaturePattern = "^\s*(public|private|protected)\s+[^({;]+\s+([a-zA-Z_][a-zA-Z0-9_]*)\s*\([^)]*\)\s*(?:throws\s+[^{]+)?\s*\{$"
+    for ($i = 0; $i -lt $lines.Count; $i++) {
+        $line = $lines[$i]
+        $match = [regex]::Match($line, $signaturePattern)
+        if (-not $match.Success) {
+            continue
+        }
+
+        $methodName = $match.Groups[2].Value
+        $braceDepth = 0
+        $end = -1
+        for ($j = $i; $j -lt $lines.Count; $j++) {
+            $text = $lines[$j]
+            $braceDepth += ([regex]::Matches($text, '\{').Count - [regex]::Matches($text, '\}').Count)
+            if ($j -gt $i -and $braceDepth -eq 0) {
+                $end = $j
+                break
+            }
+        }
+        if ($end -lt 0) {
+            continue
+        }
+
+        $methods.Add([pscustomobject]@{
+            Name = $methodName
+            StartLine = $i
+            EndLine = $end
+            Lines = $lines[$i..$end]
+            Text = ($lines[$i..$end] -join "`r`n")
+            LineCount = $end - $i + 1
+        })
+
+        $i = $end
+    }
+
+    return $methods
+}
+
 if (-not (Test-Path $LeasePath)) {
     throw "Lease file not found: $LeasePath"
 }
@@ -34,6 +112,7 @@ $leaseLines = Get-Content $LeasePath
 $leaseName = Get-LeaseScalar $leaseLines "leaseName"
 $branch = Get-LeaseScalar $leaseLines "branch"
 $head = (& git rev-parse HEAD).Trim()
+$allowedCandidateTypes = Get-LeaseList $leaseLines "allowedCandidateTypes"
 
 $sourceFiles = @(
     Get-ChildItem "src/main/java/org/springframework/samples/petclinic" -Recurse -Filter "*.java" |
@@ -57,13 +136,13 @@ foreach ($file in $sourceFiles) {
     elseif ($path -like "*/web/*") { $layerScore = 5 }
     elseif ($path -like "*/util/*") { $layerScore = 5 }
 
+    # Heuristic 1: remove redundant local variable if assigned once and directly returned.
     $returnLocalPattern = "(?ms)(?<type>[A-Z][A-Za-z0-9_<>, ?]+)\s+(?<name>[a-z][A-Za-z0-9_]*)\s*=\s*(?<expr>[^;]+);\s*return\s+\k<name>\s*;"
     foreach ($match in [regex]::Matches($content, $returnLocalPattern)) {
         $member = $match.Groups["name"].Value
         $score = 30 + 30 + 20 + 12 + 10 + $layerScore
-        $candidates.Add([ordered]@{
+        Add-Candidate -CandidateClass "redundant_local_variable_simplification" -AllowedTypes $allowedCandidateTypes -Bucket $candidates -Candidate ([ordered]@{
             candidateId = New-CandidateId $path "redundant_local_variable_simplification" $member
-            candidateClass = "redundant_local_variable_simplification"
             score = $score
             file = $path
             member = $member
@@ -73,6 +152,7 @@ foreach ($file in $sourceFiles) {
         })
     }
 
+    # Heuristic 2: line readability cleanup for long statements.
     $longLines = @()
     for ($i = 0; $i -lt $lines.Count; $i++) {
         if ($lines[$i].Length -gt 120 -and $lines[$i] -match "^\s*(private|public|return|[A-Za-z0-9_]+\.)") {
@@ -83,9 +163,8 @@ foreach ($file in $sourceFiles) {
         $member = "line-$($longLines[0])"
         $candidateClass = if ($path -like "*/repository/*") { "repository_readability_cleanup" } else { "private_helper_extraction_for_readability" }
         $score = 30 + 30 + 20 + 10 + $layerScore
-        $candidates.Add([ordered]@{
+        Add-Candidate -CandidateClass $candidateClass -AllowedTypes $allowedCandidateTypes -Bucket $candidates -Candidate ([ordered]@{
             candidateId = New-CandidateId $path $candidateClass $member
-            candidateClass = $candidateClass
             score = $score
             file = $path
             member = $member
@@ -95,6 +174,55 @@ foreach ($file in $sourceFiles) {
         })
     }
 
+    $methods = Parse-MethodBlocks -Lines $lines
+
+    # Heuristic 3: repository-specific readability candidate.
+    if ($path -like "*/repository/*") {
+        foreach ($method in $methods) {
+            $methodName = $method.Name
+            $methodText = $method.Text
+            $methodLineCount = $method.LineCount
+            $hasSqlToken = [regex]::IsMatch($methodText, "(?i)\b(SELECT|INSERT|UPDATE|DELETE|MERGE)\b")
+            $hasSqlQueryCall = [regex]::IsMatch($methodText, "(?i)\.sql\s*\(")
+            $hasJdbcCall = [regex]::IsMatch($methodText, "(?i)\b(jdbcClient|jdbcTemplate|entityManager|queryFor|NamedParameterJdbcTemplate|createQuery)\b")
+            if (($hasSqlToken -or $hasSqlQueryCall) -and ($hasJdbcCall -or $hasSqlQueryCall) -and $methodLineCount -gt 8) {
+                Add-Candidate -CandidateClass "repository_readability_cleanup" -AllowedTypes $allowedCandidateTypes -Bucket $candidates -Candidate ([ordered]@{
+                    candidateId = New-CandidateId $path "repository_readability_cleanup" $methodName
+                    score = 30 + 30 + 20 + 18 + $layerScore
+                    file = $path
+                    member = $methodName
+                    expectedDiffSummary = "Extract repository SQL/persistence readability chunk from method '$methodName' into a private helper."
+                    estimatedChangedLines = [Math]::Min(40, $methodLineCount)
+                    tieBreak = [ordered]@{ layerScore = $layerScore; path = $path; member = $methodName }
+                })
+            }
+        }
+    }
+
+    # Heuristic 4: utility-specific readability candidate.
+    if ($path -like "*/util/*") {
+        foreach ($method in $methods) {
+            $methodName = $method.Name
+            $methodText = $method.Text
+            $methodLineCount = $method.LineCount
+            $hasTryFinally = [regex]::IsMatch($methodText, "(?s)\btry\b.*\bfinally\b")
+            $hasStopWatch = [regex]::IsMatch($methodText, "(?i)\bStopWatch\b")
+            $hasSynchronized = [regex]::IsMatch($methodText, "(?i)\bsynchronized\b")
+            if ($methodLineCount -gt 8 -and (($hasTryFinally -and $hasStopWatch) -or $hasSynchronized -or $hasStopWatch)) {
+                Add-Candidate -CandidateClass "utility_readability_cleanup" -AllowedTypes $allowedCandidateTypes -Bucket $candidates -Candidate ([ordered]@{
+                    candidateId = New-CandidateId $path "utility_readability_cleanup" $methodName
+                    score = 30 + 30 + 20 + 12 + $layerScore
+                    file = $path
+                    member = $methodName
+                    expectedDiffSummary = "Extract utility control-flow or instrumentation concern from '$methodName' into private helper(s)."
+                    estimatedChangedLines = [Math]::Min(36, $methodLineCount)
+                    tieBreak = [ordered]@{ layerScore = $layerScore; path = $path; member = $methodName }
+                })
+            }
+        }
+    }
+
+    # Heuristic 5: duplicate literal extraction.
     $stringMatches = [regex]::Matches($content, '"([^"\\\r\n]|\\.)+"') |
         ForEach-Object { $_.Value } |
         Where-Object {
@@ -113,9 +241,8 @@ foreach ($file in $sourceFiles) {
         $constantName = $constantName.Trim("_")
         if ([string]::IsNullOrWhiteSpace($constantName)) { continue }
         $score = 30 + 30 + 20 + 10 + $layerScore
-        $candidates.Add([ordered]@{
+        Add-Candidate -CandidateClass "duplicate_literal_local_constant_extraction" -AllowedTypes $allowedCandidateTypes -Bucket $candidates -Candidate ([ordered]@{
             candidateId = New-CandidateId $path "duplicate_literal_local_constant_extraction" $literalName
-            candidateClass = "duplicate_literal_local_constant_extraction"
             score = $score
             file = $path
             member = $literalName
@@ -160,6 +287,7 @@ $pocket = [ordered]@{
             "file path lexical",
             "member lexical"
         )
+        allowedCandidateTypes = $allowedCandidateTypes
     }
     candidates = $ranked
     nextRecommendedCandidateId = if ($ranked.Count -gt 0) { $ranked[0].candidateId } else { $null }
