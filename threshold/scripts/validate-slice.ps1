@@ -69,6 +69,7 @@ $maxChangedLines = Get-BudgetValue $leaseLines "maxChangedLinesPerCandidate"
 $maxGovernanceChangedLines = Get-BudgetValue $leaseLines "maxGovernanceChangedLinesPerCandidate"
 $javaHome = Get-LeaseScalar $leaseLines "javaHome"
 $expectedBranch = Get-LeaseScalar $leaseLines "branch"
+$leaseStartHead = Get-LeaseScalar $leaseLines "startHead"
 
 $currentBranch = (& git branch --show-current).Trim()
 if ($currentBranch -ne $expectedBranch) { throw "Branch mismatch. expected=$expectedBranch actual=$currentBranch" }
@@ -89,7 +90,44 @@ if (-not $changedPaths) {
     if ($RequireHeadReceipt) {
         $head = (& git rev-parse HEAD).Trim()
         $receipt = Get-ReceiptForCommit $head
-        if (-not $receipt) { throw "No working tree changes and no receipt for HEAD $head." }
+        if (-not $receipt) {
+            $headPaths = @(& git diff-tree --no-commit-id --name-only -r $head)
+            $headIsGovernanceOnly = $headPaths.Count -gt 0
+            foreach ($path in $headPaths) {
+                if (-not (Test-GovernancePath $path)) {
+                    $headIsGovernanceOnly = $false
+                    break
+                }
+            }
+            if (-not $headIsGovernanceOnly) {
+                throw "No working tree changes and no receipt for HEAD $head."
+            }
+
+            $latestSourceCommit = $null
+            $commits = @(& git rev-list --reverse "$leaseStartHead..HEAD")
+            foreach ($commit in $commits) {
+                $commitPaths = @(& git diff-tree --no-commit-id --name-only -r $commit)
+                if ($commitPaths.Count -eq 0) { continue }
+                $governanceOnly = $true
+                foreach ($path in $commitPaths) {
+                    if (-not (Test-GovernancePath $path)) {
+                        $governanceOnly = $false
+                        break
+                    }
+                }
+                if (-not $governanceOnly) {
+                    $latestSourceCommit = $commit
+                }
+            }
+            if (-not $latestSourceCommit) {
+                throw "No source commit detected after lease startHead $leaseStartHead."
+            }
+
+            $receipt = Get-ReceiptForCommit $latestSourceCommit
+            if (-not $receipt) {
+                throw "Latest source commit $latestSourceCommit has no receipt."
+            }
+        }
         Write-Host "Threshold slice validation passed"
         Write-Host "changedPaths=0"
         Write-Host "headReceipt=$receipt"
