@@ -17,6 +17,7 @@ package org.springframework.samples.petclinic.web;
 
 
 import java.text.ParseException;
+import java.util.Collection;
 import java.util.Locale;
 
 import org.jspecify.annotations.NullMarked;
@@ -53,11 +54,15 @@ public class PetTypeFormatter implements Formatter<PetType> {
     @Override
     public PetType parse(String text, Locale locale) throws ParseException {
         for (PetType type : this.clinicService.findPetTypes()) {
-            if (type.getName().equals(text)) {
+            if (matchesName(type, text)) {
                 return type;
             }
         }
         throw new ParseException("type not found: " + text, 0);
+    }
+
+    private boolean matchesName(PetType type, String text) {
+        return type.getName().equals(text);
     }
 
 }
