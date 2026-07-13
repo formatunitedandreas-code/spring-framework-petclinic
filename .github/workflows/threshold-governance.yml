@@ -112,7 +112,8 @@ jobs:
           $prCommits = @(git rev-list --reverse "origin/${{ github.base_ref }}..HEAD")
           if ($prCommits.Count -eq 0) { throw "No PR commits detected." }
 
-          $latestSourceCommit = $null
+          $sourceCommitsMissingReceipts = New-Object System.Collections.Generic.List[string]
+          $sourceCommitCount = 0
           foreach ($commit in @($prCommits | Select-Object -Last $prCommits.Count)) {
             $commitPaths = @(git diff-tree --no-commit-id --name-only -r $commit)
             if ($commitPaths.Count -eq 0) { continue }
@@ -124,16 +125,19 @@ jobs:
               Write-Host "Governance-only commit does not require self-referential receipt: $commit"
               continue
             }
-            $latestSourceCommit = $commit
+
+            $sourceCommitCount += 1
+            if (-not $receiptByCommit.ContainsKey($commit)) {
+              $sourceCommitsMissingReceipts.Add($commit)
+            }
           }
 
-          if (-not $latestSourceCommit) {
+          if ($sourceCommitCount -eq 0) {
             throw "No source commit detected in PR range."
           }
-          if (-not $receiptByCommit.ContainsKey($latestSourceCommit)) {
-            throw "Latest source commit '$latestSourceCommit' has no corresponding Threshold receipt."
+          if ($sourceCommitsMissingReceipts.Count -gt 0) {
+            throw "Source commits without corresponding Threshold receipt: $($sourceCommitsMissingReceipts -join ', ')"
           }
 
-          Write-Host "latestSourceCommit=$latestSourceCommit"
-          Write-Host "latestSourceReceipt=$($receiptByCommit[$latestSourceCommit])"
+          Write-Host "sourceCommitReceiptCoverage=complete"
           Write-Host "Threshold governance passed"

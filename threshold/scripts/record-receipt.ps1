@@ -155,6 +155,12 @@ if ($UpdateState -and -not $DryRun) {
         $invocationId = [string]$state.invocationId
         $mode = [string]$state.mode
         $terminalState = [string]$state.terminalState
+        if ($state.PSObject.Properties.Name -contains "branch") {
+            $stateBranch = [string]$state.branch
+        }
+        else {
+            $stateBranch = $branch
+        }
     }
     else {
         $candidatesProcessed = 1
@@ -165,19 +171,23 @@ if ($UpdateState -and -not $DryRun) {
         $invocationId = "petclinic-governance-repair-$((Get-Date).ToUniversalTime().ToString("yyyyMMddTHHmmssZ"))"
         $mode = "local_refactor"
         $terminalState = "active"
+        $stateBranch = $branch
     }
     $newState = [ordered]@{
-        schemaVersion = "threshold.petclinic.lease-state.v0.1"
+        schemaVersion = "threshold.petclinic.lease-state.v0.2"
         invocationId = $invocationId
         leaseId = $leaseName
         mode = $mode
+        branch = $stateBranch
         startHead = $leaseStartHead
         currentHead = $CommitHash
+        currentSourceHead = $CommitHash
         candidatesProcessed = $candidatesProcessed
         commitsCreated = $commitsCreated
         remainingBudget = [ordered]@{ candidates = $remainingCandidates; commits = $remainingCommits; repairAttempts = $remainingRepairs }
         lastReceipt = ConvertTo-RepoPath $outPath
         terminalState = $terminalState
+        updatedAt = (Get-Date).ToUniversalTime().ToString("o")
     }
     $newState | ConvertTo-Json -Depth 8 | Set-Content $StatePath
 }

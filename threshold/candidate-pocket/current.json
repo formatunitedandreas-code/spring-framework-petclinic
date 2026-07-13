@@ -1,47 +1,57 @@
 {
-  "schemaVersion": "threshold.petclinic.candidate-pocket.v0.1",
-  "leaseName": "petclinic-threshold-governed-refactor-lease-v1",
-  "branch": "threshold-governed-refactor-demo-4",
-  "generatedFromHead": "7907bbc6696c4686a89607dac26aa0aa9ede5558",
-  "scopeExpansion": {
-    "addedPathFamilies": [
-      "src/main/java/org/springframework/samples/petclinic/repository/**/*.java",
-      "src/main/java/org/springframework/samples/petclinic/model/**/*.java",
-      "src/main/java/org/springframework/samples/petclinic/util/**/*.java",
-      "src/main/java/org/springframework/samples/petclinic/application/**/*.java"
-    ],
-    "candidateClasses": [
-      "private_helper_extraction_for_readability",
-      "redundant_local_variable_simplification",
-      "duplicate_literal_local_constant_extraction",
-      "repository_readability_cleanup",
-      "model_readability_cleanup",
-      "utility_readability_cleanup"
-    ],
-    "guardrails": [
-      "one source file per candidate",
-      "no public API behavior change",
-      "no persistence behavior change",
-      "no request mapping changes",
-      "no pom.xml or dependency change",
-      "full threshold validate-slice with Maven test before source commit",
-      "explicit candidate packet + receipt on successful commit"
-    ]
-  },
-  "rankingRules": [
-    "prefer service layer over web layer (if present)",
-    "prefer smallest diff",
-    "prefer same-file reuse only when method differs",
-    "prefer lexical file path then method name",
-    "prefer mechanically verifiable readability cleanup"
-  ],
-  "candidates": [],
-  "nextRecommendedCandidateId": null,
-  "nonClaims": [
-    "candidate pocket is not an implementation claim",
-    "no public readiness claim",
-    "no public correctness claim",
-    "no public security claim",
-    "no public compliance claim"
-  ]
+    "schemaVersion":  "threshold.petclinic.candidate-pocket.v0.2",
+    "leaseName":  "petclinic-threshold-governed-refactor-lease-v1",
+    "branch":  "threshold-governed-refactor-demo-6",
+    "generatedFromHead":  "656501072552cf63777e8ac1c3ff933641a112a0",
+    "generatedAt":  "2026-07-13T21:27:46.8805982Z",
+    "discovery":  {
+                      "method":  "static-heuristic-scan",
+                      "scannedFiles":  47,
+                      "ranking":  [
+                                      "score descending",
+                                      "estimated changed lines ascending",
+                                      "candidate class lexical",
+                                      "file path lexical",
+                                      "member lexical"
+                                  ]
+                  },
+    "candidates":  [
+                       {
+                           "candidateId":  "src-main-java-org-springframework-samples-petclinic-repository-jdbc-jdbcpetvisitextractor-java-duplicate-literal-local-constant-extraction-visits-pet-id",
+                           "candidateClass":  "duplicate_literal_local_constant_extraction",
+                           "score":  97,
+                           "file":  "src/main/java/org/springframework/samples/petclinic/repository/jdbc/JdbcPetVisitExtractor.java",
+                           "member":  "visits-pet-id",
+                           "expectedDiffSummary":  "Extract repeated literal \"visits.pet_id\" to a same-class private constant.",
+                           "estimatedChangedLines":  4,
+                           "tieBreak":  {
+                                            "layerScore":  7,
+                                            "path":  "src/main/java/org/springframework/samples/petclinic/repository/jdbc/JdbcPetVisitExtractor.java",
+                                            "member":  "visits-pet-id"
+                                        }
+                       },
+                       {
+                           "candidateId":  "src-main-java-org-springframework-samples-petclinic-web-ownercontroller-java-private-helper-extraction-for-readability-line-140",
+                           "candidateClass":  "private_helper_extraction_for_readability",
+                           "score":  95,
+                           "file":  "src/main/java/org/springframework/samples/petclinic/web/OwnerController.java",
+                           "member":  "line-140",
+                           "expectedDiffSummary":  "Wrap or locally extract long readability line without changing behavior.",
+                           "estimatedChangedLines":  2,
+                           "tieBreak":  {
+                                            "layerScore":  5,
+                                            "path":  "src/main/java/org/springframework/samples/petclinic/web/OwnerController.java",
+                                            "member":  "line-140"
+                                        }
+                       }
+                   ],
+    "nextRecommendedCandidateId":  "src-main-java-org-springframework-samples-petclinic-repository-jdbc-jdbcpetvisitextractor-java-duplicate-literal-local-constant-extraction-visits-pet-id",
+    "nonClaims":  [
+                      "candidate pocket is not an implementation claim",
+                      "candidate pocket does not claim behavior preservation until slice validation passes",
+                      "no public readiness claim",
+                      "no public correctness claim",
+                      "no public security claim",
+                      "no public compliance claim"
+                  ]
 }
