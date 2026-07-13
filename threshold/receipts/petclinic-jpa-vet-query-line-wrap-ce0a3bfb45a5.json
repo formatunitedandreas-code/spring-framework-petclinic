@@ -1,0 +1,50 @@
+{
+    "schemaVersion":  "threshold.petclinic.slice-receipt.v0.2",
+    "candidateId":  "petclinic-jpa-vet-query-line-wrap",
+    "leaseName":  "petclinic-threshold-governed-refactor-lease-v1",
+    "branch":  "threshold-governed-refactor-demo-4",
+    "candidateClass":  "repository_readability_cleanup",
+    "leaseStartHead":  "4e4c7eba92c80d35e8244f8526828680f0a25922",
+    "baseHead":  "7b02331a93aaab8c536f6a8028cf1ef2647ba975",
+    "commitHash":  "ce0a3bfb45a523809e30c6dd68ac230b674ff5a3",
+    "receiptMaterialization":  "prospective",
+    "perCommitValidationLogAvailable":  true,
+    "branchFinalValidationPassed":  true,
+    "changedFiles":  [
+                         {
+                             "path":  "src/main/java/org/springframework/samples/petclinic/repository/jpa/JpaVetRepositoryImpl.java",
+                             "beforeSha256":  "04210ffbcef4c1348caa0690fd567136601365e162c89b951d36ab8a63ca68c2",
+                             "afterSha256":  "91f6b054c07f3bfc1f3d2dbbaf0adebf41b013e0198a29b527692161dadc8dcb"
+                         }
+                     ],
+    "diffSummary":  "Wrap long createQuery call in findAll without changing JPQL string",
+    "diffStat":  {
+                     "filesChanged":  1,
+                     "insertions":  2,
+                     "deletions":  1
+                 },
+    "validation":  {
+                       "diffCheck":  "passed",
+                       "command":  "powershell -ExecutionPolicy Bypass -File threshold\\scripts\\validate-slice.ps1",
+                       "result":  "Threshold slice validation passed; BUILD SUCCESS; Tests run: 75; Failures: 0; Errors: 0; Skipped: 0",
+                       "testsRun":  75,
+                       "failures":  0,
+                       "errors":  0,
+                       "skipped":  0
+                   },
+    "nonClaims":  [
+                      "no push in candidate slice",
+                      "no PR update in candidate slice",
+                      "no upstream interaction",
+                      "no pom.xml change",
+                      "no dependency change",
+                      "no src/test change",
+                      "no merge",
+                      "no release",
+                      "no deploy",
+                      "no public readiness claim",
+                      "no public correctness claim",
+                      "no public security claim",
+                      "no public compliance claim"
+                  ]
+}
