@@ -2,23 +2,21 @@
   "schemaVersion": "threshold.petclinic.candidate-pocket.v0.1",
   "leaseName": "petclinic-threshold-governed-refactor-lease-v1",
   "branch": "threshold-governed-refactor-demo-4",
-  "generatedFromHead": "d29cd9cb05faef5e1e937674dc5a15255660b756",
+  "generatedFromHead": "ce0a3bfb45a523809e30c6dd68ac230b674ff5a3",
   "scopeExpansion": {
     "addedPathFamilies": [
-      "src/main/java/org/springframework/samples/petclinic/model/**/*.java",
-      "src/main/java/org/springframework/samples/petclinic/util/**/*.java",
-      "src/main/java/org/springframework/samples/petclinic/*.java"
+      "src/main/java/org/springframework/samples/petclinic/repository/**/*.java",
+      "src/main/java/org/springframework/samples/petclinic/repository/*.java"
     ],
     "candidateClasses": [
-      "model_readability_cleanup",
-      "utility_readability_cleanup",
-      "application_bootstrap_readability_cleanup"
+      "repository_readability_cleanup",
+      "micro-format cleanup"
     ],
     "guardrails": [
       "one source file per candidate",
       "no public API behavior change",
-      "no persistence mapping semantic change",
-      "no validation semantic change",
+      "keep JPQL strings byte-for-byte identical",
+      "no persistence behavior change",
       "no pom.xml or dependency change",
       "full threshold validate-slice with Maven test before source commit",
       "separate receipt and lease-state governance commit after source commit"
@@ -27,115 +25,62 @@
   "rankingRules": [
     "prefer mechanically verifiable no-behavior-change cleanup",
     "prefer smallest diff",
-    "prefer already covered model or service behavior",
-    "prefer private helper extraction only when it names existing logic directly",
     "prefer lexical file path if candidates remain tied"
   ],
   "candidates": [
     {
-      "candidateId": "petclinic-model-owner-pet-name-normalization-helper",
-      "candidateClass": "model_readability_cleanup",
-      "file": "src/main/java/org/springframework/samples/petclinic/model/Owner.java",
-      "method": "getPet",
-      "expectedDiffSummary": "Extract lowercase normalization of the requested pet name into a private helper.",
-      "allowedChange": "Introduce one private helper that returns name.toLowerCase() and use it in getPet.",
-      "risk": "low",
-      "score": 86,
-      "validation": "threshold/scripts/validate-slice.ps1",
-      "rejectIf": [
-        "changes pet matching semantics",
-        "changes null handling",
-        "changes collection iteration order",
-        "requires test or mapping changes"
-      ]
-    },
-    {
-      "candidateId": "petclinic-model-owner-sorted-pets-helper",
-      "candidateClass": "model_readability_cleanup",
-      "file": "src/main/java/org/springframework/samples/petclinic/model/Owner.java",
-      "method": "getPets",
-      "expectedDiffSummary": "Extract sorted pets list construction into a private helper.",
-      "allowedChange": "Move existing ArrayList construction and sort call into one private helper; keep unmodifiable wrapper in public method.",
-      "risk": "low",
-      "score": 82,
-      "validation": "threshold/scripts/validate-slice.ps1",
-      "rejectIf": [
-        "changes comparator",
-        "changes returned mutability",
-        "changes pet collection initialization",
-        "requires test or mapping changes"
-      ]
-    },
-    {
-      "candidateId": "petclinic-model-pet-sorted-visits-helper",
-      "candidateClass": "model_readability_cleanup",
-      "file": "src/main/java/org/springframework/samples/petclinic/model/Pet.java",
-      "method": "getVisits",
-      "expectedDiffSummary": "Extract sorted visits list construction into a private helper.",
-      "allowedChange": "Move existing ArrayList construction and reversed date sort into one private helper; keep unmodifiable wrapper in public method.",
-      "risk": "low",
-      "score": 82,
-      "validation": "threshold/scripts/validate-slice.ps1",
-      "rejectIf": [
-        "changes comparator",
-        "changes returned mutability",
-        "changes visit collection initialization",
-        "requires test or mapping changes"
-      ]
-    },
-    {
-      "candidateId": "petclinic-util-entity-id-match-helper",
-      "candidateClass": "utility_readability_cleanup",
-      "file": "src/main/java/org/springframework/samples/petclinic/util/EntityUtils.java",
-      "method": "getById",
-      "expectedDiffSummary": "Extract entity id and type matching condition into a private helper.",
-      "allowedChange": "Introduce one private static helper for the existing entity.getId() and entityClass.isInstance(entity) predicate.",
-      "risk": "low",
-      "score": 80,
-      "validation": "threshold/scripts/validate-slice.ps1",
-      "rejectIf": [
-        "changes ObjectRetrievalFailureException behavior",
-        "changes type bound or generic signature",
-        "changes null behavior",
-        "requires test changes"
-      ]
-    },
-    {
-      "candidateId": "petclinic-util-call-monitor-average-time-guard",
-      "candidateClass": "utility_readability_cleanup",
-      "file": "src/main/java/org/springframework/samples/petclinic/util/CallMonitoringAspect.java",
-      "method": "getCallTime",
-      "expectedDiffSummary": "Normalize the average-call-time guard with explicit braces or a private hasCalls helper.",
-      "allowedChange": "Add braces to the existing if/else or extract hasCalls as one private helper without changing arithmetic.",
-      "risk": "low",
-      "score": 76,
-      "validation": "threshold/scripts/validate-slice.ps1",
-      "rejectIf": [
-        "changes synchronization behavior",
-        "changes timing arithmetic",
-        "changes JMX annotations",
-        "requires test changes"
-      ]
-    },
-    {
-      "candidateId": "petclinic-jpa-owner-query-line-wrapping",
+      "candidateId": "petclinic-jpa-owner-query-formatting-wrap",
       "candidateClass": "repository_readability_cleanup",
       "file": "src/main/java/org/springframework/samples/petclinic/repository/jpa/JpaOwnerRepositoryImpl.java",
-      "method": "findByLastName",
-      "expectedDiffSummary": "Wrap long JPQL createQuery call without changing query text.",
-      "allowedChange": "Formatting-only line wrap of createQuery arguments; query string must remain byte-for-byte identical.",
+      "method": "findById",
+      "expectedDiffSummary": "Wrap long createQuery invocation without changing JPQL text.",
+      "allowedChange": "Formatting-only line wrap of createQuery arguments; query string and parameters unchanged.",
+      "risk": "low",
+      "score": 75,
+      "validation": "threshold/scripts/validate-slice.ps1",
+      "rejectIf": [
+        "changes query string",
+        "changes parameter name",
+        "changes query return type",
+        "changes persistence semantics"
+      ]
+    },
+    {
+      "candidateId": "petclinic-jpa-pet-type-query-line-wrapping",
+      "candidateClass": "repository_readability_cleanup",
+      "file": "src/main/java/org/springframework/samples/petclinic/repository/jpa/JpaPetRepositoryImpl.java",
+      "method": "findPetTypes",
+      "expectedDiffSummary": "Wrap long createQuery invocation without changing JPQL text.",
+      "allowedChange": "Formatting-only line wrap of createQuery arguments; query string and parameters unchanged.",
       "risk": "low",
       "score": 74,
       "validation": "threshold/scripts/validate-slice.ps1",
       "rejectIf": [
-        "changes JPQL text",
+        "changes query string",
         "changes parameter name",
-        "changes returned query type",
-        "requires test changes"
+        "changes query return type",
+        "changes persistence semantics"
+      ]
+    },
+    {
+      "candidateId": "petclinic-jpa-visit-find-pet-query-line-wrapping",
+      "candidateClass": "repository_readability_cleanup",
+      "file": "src/main/java/org/springframework/samples/petclinic/repository/jpa/JpaVisitRepositoryImpl.java",
+      "method": "findByPetId",
+      "expectedDiffSummary": "Wrap long createQuery invocation without changing JPQL text.",
+      "allowedChange": "Formatting-only line wrap of createQuery arguments; query string and parameters unchanged.",
+      "risk": "low",
+      "score": 73,
+      "validation": "threshold/scripts/validate-slice.ps1",
+      "rejectIf": [
+        "changes query string",
+        "changes parameter name",
+        "changes query return type",
+        "changes persistence semantics"
       ]
     }
   ],
-  "nextRecommendedCandidateId": "petclinic-model-owner-pet-name-normalization-helper",
+  "nextRecommendedCandidateId": "petclinic-jpa-owner-query-formatting-wrap",
   "nonClaims": [
     "candidate pocket is not an implementation claim",
     "no public readiness claim",
