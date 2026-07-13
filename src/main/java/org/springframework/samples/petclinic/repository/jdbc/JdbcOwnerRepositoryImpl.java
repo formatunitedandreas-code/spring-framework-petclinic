@@ -103,9 +103,8 @@ public class JdbcOwnerRepositoryImpl implements OwnerRepository {
     }
 
     public void loadPetsAndVisits(final Owner owner) {
-        final List<JdbcPet> pets = loadPetsAndVisitsForOwner(owner.getId());
         Collection<PetType> petTypes = getPetTypes();
-        for (JdbcPet pet : pets) {
+        for (JdbcPet pet : loadPetsAndVisitsForOwner(owner.getId())) {
             mapPetToOwner(owner, petTypes, pet);
         }
     }
