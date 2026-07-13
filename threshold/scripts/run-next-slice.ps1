@@ -46,9 +46,12 @@ function Resolve-ExecutionPocket {
     }
 
     $tempPocketPath = Join-Path ([System.IO.Path]::GetTempPath()) "threshold-candidate-pocket-$head.json"
-    & powershell.exe -NoProfile -ExecutionPolicy Bypass -File "threshold/scripts/discover-candidates.ps1" -LeasePath $LeasePath -PocketPath $tempPocketPath
+    $discoveryOutput = & powershell.exe -NoProfile -ExecutionPolicy Bypass -File "threshold/scripts/discover-candidates.ps1" -LeasePath $LeasePath -PocketPath $tempPocketPath
     if ($LASTEXITCODE -ne 0) {
         throw "Candidate discovery failed."
+    }
+    foreach ($line in $discoveryOutput) {
+        Write-Host $line
     }
     return $tempPocketPath
 }
