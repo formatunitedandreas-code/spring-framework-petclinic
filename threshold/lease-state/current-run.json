@@ -1,15 +1,15 @@
 {
     "schemaVersion":  "threshold.petclinic.lease-state.v0.1",
-    "invocationId":  "petclinic-refactor-continuation-20260713T085525Z",
+    "invocationId":  "petclinic-refactor-continuation-20260713T120000Z",
     "leaseId":  "petclinic-threshold-governed-refactor-lease-v1",
     "mode":  "local_refactor",
-    "startHead":  "4e4c7eba92c80d35e8244f8526828680f0a25922",
-    "currentHead":  "619e4a3ea2d8ccaf7809eb2a45a8506125633d55",
-    "candidatesProcessed":  5,
-    "commitsCreated":  5,
+    "startHead":  "a79ed3addebb1b11436880e0c85ce3ea96b1aaa2",
+    "currentHead":  "a79ed3addebb1b11436880e0c85ce3ea96b1aaa2",
+    "candidatesProcessed":  0,
+    "commitsCreated":  0,
     "remainingBudget":  {
-                            "candidates":  0,
-                            "commits":  0,
+                            "candidates":  5,
+                            "commits":  5,
                             "repairAttempts":  1
                         },
     "lastReceipt":  "threshold/receipts/petclinic-model-owner-sorted-pets-helper-619e4a3ea2d8.json",
