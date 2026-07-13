@@ -87,20 +87,19 @@ public class JdbcOwnerRepositoryImpl implements OwnerRepository {
      */
     @Override
     public Owner findById(int id) {
-        Owner owner;
         try {
-            owner = this.jdbcClient.sql("""
-                    SELECT id, first_name, last_name, address, city, telephone
-                    FROM owners WHERE id = :id
-                    """)
+            Owner owner = this.jdbcClient.sql("""
+                SELECT id, first_name, last_name, address, city, telephone
+                FROM owners WHERE id = :id
+                """)
                 .param("id", id)
                 .query(BeanPropertyRowMapper.newInstance(Owner.class))
                 .single();
+            loadPetsAndVisits(owner);
+            return owner;
         } catch (EmptyResultDataAccessException ex) {
             throw new ObjectRetrievalFailureException(Owner.class, id);
         }
-        loadPetsAndVisits(owner);
-        return owner;
     }
 
     public void loadPetsAndVisits(final Owner owner) {
