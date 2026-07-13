@@ -1,0 +1,49 @@
+{
+    "candidateId":  "threshold-governance-recording-v1",
+    "leaseName":  "petclinic-threshold-governed-refactor-lease-v1",
+    "branch":  "threshold-governed-refactor-demo-4",
+    "candidateClass":  "threshold_enforcement",
+    "baseHead":  "4e4c7eba92c80d35e8244f8526828680f0a25922",
+    "commitHash":  "69f02a99270fb61529b1d0e62af7102f2a1698b7",
+    "changedFiles":  [
+                         {
+                             "path":  ".github/workflows/threshold-governance.yml",
+                             "beforeSha256":  null,
+                             "afterSha256":  "64332D67C8FE59E759790A78D17C9A54F955DD746EA43FDA7EA3EA367FA8AC02"
+                         },
+                         {
+                             "path":  "threshold/scripts/record-receipt.ps1",
+                             "beforeSha256":  null,
+                             "afterSha256":  "53CD1EB10D7C83D6853644A0F166F25A2ED7C86416B908CD2E9B9A004D20BA7E"
+                         }
+                     ],
+    "diffStat":  {
+                     "filesChanged":  2,
+                     "insertions":  188,
+                     "deletions":  0
+                 },
+    "validation":  {
+                       "diffCheck":  "passed",
+                       "command":  ".\\mvnw.cmd test",
+                       "result":  "MANUAL_PREVIEW_NOT_TESTED",
+                       "testsRun":  0,
+                       "failures":  0,
+                       "errors":  0,
+                       "skipped":  0
+                   },
+    "nonClaims":  [
+                      "no push in candidate slice",
+                      "no PR update in candidate slice",
+                      "no upstream interaction",
+                      "no pom.xml change",
+                      "no dependency change",
+                      "no src/test change",
+                      "no merge",
+                      "no release",
+                      "no deploy",
+                      "no public readiness claim",
+                      "no public correctness claim",
+                      "no public security claim",
+                      "no public compliance claim"
+                  ]
+}

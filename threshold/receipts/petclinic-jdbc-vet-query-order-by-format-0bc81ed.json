@@ -1,0 +1,50 @@
+﻿{
+    "candidateClass":  "repository_readability_cleanup",
+    "branch":  "threshold-governed-refactor-demo-4",
+    "receiptMaterialization":  "prospective",
+    "changedFiles":  [
+                         {
+                             "beforeSha256":  "91645673D79BAF4800A254B3362233230C5858E5A741DD49FD264711385D048D",
+                             "path":  "src/main/java/org/springframework/samples/petclinic/repository/jdbc/JdbcVetRepositoryImpl.java",
+                             "afterSha256":  "DA0A2918914129775F678D7E19160FA91C5FDA3A8347EF1B27AE13452DC1D3E7"
+                         }
+                     ],
+    "validation":  {
+                       "skipped":  0,
+                       "errors":  0,
+                       "testsRun":  75,
+                       "command":  ".\\mvnw.cmd test",
+                       "result":  "BUILD SUCCESS",
+                       "failures":  0,
+                       "diffCheck":  "passed"
+                   },
+    "diffSummary":  "Normalize Vet repository SQL ORDER BY spacing for readability in JdbcVetRepositoryImpl.findAll.",
+    "nonClaims":  [
+                      "no push in candidate slice",
+                      "no PR update in candidate slice",
+                      "no upstream interaction",
+                      "no pom.xml change",
+                      "no dependency change",
+                      "no src/test change",
+                      "no merge",
+                      "no release",
+                      "no deploy",
+                      "no public readiness claim",
+                      "no public correctness claim",
+                      "no public security claim",
+                      "no public compliance claim"
+                  ],
+    "branchFinalValidationPassed":  true,
+    "diffStat":  {
+                     "filesChanged":  1,
+                     "deletions":  1,
+                     "insertions":  1
+                 },
+    "perCommitValidationLogAvailable":  true,
+    "baseHead":  "fb59db1e3d9d536b091618bb03219c20b53f979a",
+    "commitHash":  "0bc81ed11930c7afdf26d4e2d48a7e15dbf5430d",
+    "leaseName":  "petclinic-threshold-governed-refactor-lease-v1",
+    "schemaVersion":  "threshold.petclinic.slice-receipt.v0.2",
+    "candidateId":  "petclinic-jdbc-vet-query-order-by-format",
+    "leaseStartHead":  "a703491cc707d6f0de9fcfd30719bfa278a74df8"
+}

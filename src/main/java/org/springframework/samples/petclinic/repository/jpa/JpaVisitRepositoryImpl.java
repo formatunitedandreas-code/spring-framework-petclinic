@@ -18,8 +18,6 @@ package org.springframework.samples.petclinic.repository.jpa;
 import java.util.List;
 
 import jakarta.persistence.EntityManager;
-import jakarta.persistence.Query;
-
 import org.springframework.samples.petclinic.model.Visit;
 import org.springframework.samples.petclinic.repository.VisitRepository;
 import org.springframework.stereotype.Repository;
@@ -55,11 +53,11 @@ public class JpaVisitRepositoryImpl implements VisitRepository {
 
 
     @Override
-    @SuppressWarnings("unchecked")
     public List<Visit> findByPetId(Integer petId) {
-        Query query = this.em.createQuery("SELECT v FROM Visit v where v.pet.id= :id");
-        query.setParameter("id", petId);
-        return query.getResultList();
+        return this.em.createQuery(
+            "SELECT v FROM Visit v WHERE v.pet.id = :id", Visit.class)
+            .setParameter("id", petId)
+            .getResultList();
     }
 
 }

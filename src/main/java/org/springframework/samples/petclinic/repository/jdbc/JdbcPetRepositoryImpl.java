@@ -70,26 +70,30 @@ public class JdbcPetRepositoryImpl implements PetRepository {
 
     @Override
     public Pet findById(int id) {
-        int ownerId;
         try {
-            ownerId = this.jdbcClient
-                .sql("SELECT owner_id FROM pets WHERE id=:id")
-                .param("id", id)
-                .query(Integer.class)
-                .single();
+            return EntityUtils.getById(
+                this.ownerRepository.findById(findOwnerIdByPetId(id)).getPets(),
+                Pet.class,
+                id
+            );
         } catch (EmptyResultDataAccessException ex) {
             throw new ObjectRetrievalFailureException(Pet.class, id);
         }
-        Owner owner = this.ownerRepository.findById(ownerId);
-        return EntityUtils.getById(owner.getPets(), Pet.class, id);
+    }
+
+    private int findOwnerIdByPetId(int petId) {
+        return this.jdbcClient
+            .sql("SELECT owner_id FROM pets WHERE id=:id")
+            .param("id", petId)
+            .query(Integer.class)
+            .single();
     }
 
     @Override
     public void save(Pet pet) {
+        MapSqlParameterSource parameterSource = createPetParameterSource(pet);
         if (pet.isNew()) {
-            Number newKey = this.insertPet.executeAndReturnKey(
-                createPetParameterSource(pet));
-            pet.setId(newKey.intValue());
+            pet.setId(this.insertPet.executeAndReturnKey(parameterSource).intValue());
             return;
         }
         this.jdbcClient
@@ -98,7 +102,7 @@ public class JdbcPetRepositoryImpl implements PetRepository {
                     SET name=:name, birth_date=:birth_date, type_id=:type_id, owner_id=:owner_id
                     WHERE id=:id
                     """)
-                .paramSource(createPetParameterSource(pet))
+                .paramSource(parameterSource)
                 .update();
     }
 

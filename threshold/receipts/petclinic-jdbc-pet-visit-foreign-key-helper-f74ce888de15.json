@@ -1,0 +1,50 @@
+{
+    "schemaVersion":  "threshold.petclinic.slice-receipt.v0.2",
+    "candidateId":  "petclinic-jdbc-pet-visit-foreign-key-helper",
+    "leaseName":  "petclinic-threshold-governed-refactor-lease-v1",
+    "branch":  "threshold-governed-refactor-demo-4",
+    "candidateClass":  "repository_readability_cleanup",
+    "leaseStartHead":  "4e4c7eba92c80d35e8244f8526828680f0a25922",
+    "baseHead":  "dcbf56d1a55df1933a3c54bf3867dcd516aefdc0",
+    "commitHash":  "f74ce888de15905712bf0b913c3b18dcdc1c4338",
+    "receiptMaterialization":  "prospective",
+    "perCommitValidationLogAvailable":  true,
+    "branchFinalValidationPassed":  true,
+    "changedFiles":  [
+                         {
+                             "path":  "src/main/java/org/springframework/samples/petclinic/repository/jdbc/JdbcPetVisitExtractor.java",
+                             "beforeSha256":  "7dba686636c366f17fc875daf8e433c215cf5b5d4818f1ba643d45483eef3f75",
+                             "afterSha256":  "e1c11896ba419fd2ca759d46d35715c751e7655f2eaeac0ffcd36b72248ba589"
+                         }
+                     ],
+    "diffSummary":  "Extract visit foreign key presence helper",
+    "diffStat":  {
+                     "filesChanged":  1,
+                     "insertions":  5,
+                     "deletions":  1
+                 },
+    "validation":  {
+                       "diffCheck":  "passed",
+                       "command":  "powershell -ExecutionPolicy Bypass -File threshold\\scripts\\validate-slice.ps1",
+                       "result":  "BUILD SUCCESS; Tests run: 75, Failures: 0, Errors: 0, Skipped: 0",
+                       "testsRun":  75,
+                       "failures":  0,
+                       "errors":  0,
+                       "skipped":  0
+                   },
+    "nonClaims":  [
+                      "no push in candidate slice",
+                      "no PR update in candidate slice",
+                      "no upstream interaction",
+                      "no pom.xml change",
+                      "no dependency change",
+                      "no src/test change",
+                      "no merge",
+                      "no release",
+                      "no deploy",
+                      "no public readiness claim",
+                      "no public correctness claim",
+                      "no public security claim",
+                      "no public compliance claim"
+                  ]
+}

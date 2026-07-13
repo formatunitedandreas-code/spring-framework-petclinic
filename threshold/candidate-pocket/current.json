@@ -1,0 +1,47 @@
+{
+  "schemaVersion": "threshold.petclinic.candidate-pocket.v0.1",
+  "leaseName": "petclinic-threshold-governed-refactor-lease-v1",
+  "branch": "threshold-governed-refactor-demo-4",
+  "generatedFromHead": "7907bbc6696c4686a89607dac26aa0aa9ede5558",
+  "scopeExpansion": {
+    "addedPathFamilies": [
+      "src/main/java/org/springframework/samples/petclinic/repository/**/*.java",
+      "src/main/java/org/springframework/samples/petclinic/model/**/*.java",
+      "src/main/java/org/springframework/samples/petclinic/util/**/*.java",
+      "src/main/java/org/springframework/samples/petclinic/application/**/*.java"
+    ],
+    "candidateClasses": [
+      "private_helper_extraction_for_readability",
+      "redundant_local_variable_simplification",
+      "duplicate_literal_local_constant_extraction",
+      "repository_readability_cleanup",
+      "model_readability_cleanup",
+      "utility_readability_cleanup"
+    ],
+    "guardrails": [
+      "one source file per candidate",
+      "no public API behavior change",
+      "no persistence behavior change",
+      "no request mapping changes",
+      "no pom.xml or dependency change",
+      "full threshold validate-slice with Maven test before source commit",
+      "explicit candidate packet + receipt on successful commit"
+    ]
+  },
+  "rankingRules": [
+    "prefer service layer over web layer (if present)",
+    "prefer smallest diff",
+    "prefer same-file reuse only when method differs",
+    "prefer lexical file path then method name",
+    "prefer mechanically verifiable readability cleanup"
+  ],
+  "candidates": [],
+  "nextRecommendedCandidateId": null,
+  "nonClaims": [
+    "candidate pocket is not an implementation claim",
+    "no public readiness claim",
+    "no public correctness claim",
+    "no public security claim",
+    "no public compliance claim"
+  ]
+}

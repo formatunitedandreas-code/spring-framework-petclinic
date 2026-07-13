@@ -1,0 +1,139 @@
+name: Threshold governance
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, labeled, unlabeled]
+
+jobs:
+  threshold-governance:
+    if: contains(github.event.pull_request.labels.*.name, 'threshold-governed')
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Fetch pull request base
+        run: git fetch origin ${{ github.base_ref }} --depth=1
+
+      - name: Verify Threshold lease, receipts, and state
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = "Stop"
+          $leasePath = "threshold/leases/current.yaml"
+          $statePath = "threshold/lease-state/current-run.json"
+          if (-not (Test-Path $leasePath)) {
+            throw "Missing Threshold lease: $leasePath"
+          }
+
+          function Get-LeaseList {
+            param([string[]] $Lines, [string] $Name)
+            $items = New-Object System.Collections.Generic.List[string]
+            $inside = $false
+            foreach ($line in $Lines) {
+              if ($line -match "^\s*$([regex]::Escape($Name)):\s*$") { $inside = $true; continue }
+              if ($inside -and $line -match "^\S") { break }
+              if ($inside -and $line -match "^\s*-\s*(.+?)\s*$") { $items.Add(($Matches[1]).Trim()) }
+            }
+            return $items.ToArray()
+          }
+
+          function Test-PathAgainstPattern {
+            param([string] $Path, [string] $Pattern)
+            $normalizedPath = $Path -replace "\\", "/"
+            $normalizedPattern = $Pattern -replace "\\", "/"
+            return [System.Management.Automation.WildcardPattern]::new($normalizedPattern, "IgnoreCase").IsMatch($normalizedPath)
+          }
+
+          function Test-GovernancePath {
+            param([string] $Path)
+            $normalized = $Path -replace "\\", "/"
+            return $normalized -like "threshold/*" -or $normalized -eq ".github/workflows/threshold-governance.yml"
+          }
+
+          $leaseLines = Get-Content $leasePath
+          $getScalar = {
+            param([string[]]$Lines, [string]$Name)
+            $match = $Lines | Where-Object { $_ -match "^\s*$([regex]::Escape($Name)):\s*(.+?)\s*$" } | Select-Object -First 1
+            if (-not $match) { throw "Missing lease field '$Name'" }
+            return ($match -replace "^\s*$([regex]::Escape($Name)):\s*", "").Trim()
+          }
+          $allowedPaths = Get-LeaseList $leaseLines "allowedPaths"
+          $forbiddenPaths = Get-LeaseList $leaseLines "forbiddenPaths"
+          $expectedBaseRef = & $getScalar $leaseLines "baseRef"
+          $expectedBranch = & $getScalar $leaseLines "branch"
+          $changedPaths = @(git diff --name-only "origin/${{ github.base_ref }}...HEAD")
+          if ($changedPaths.Count -eq 0) { throw "No changed paths detected for the pull request." }
+
+          if ("${{ github.base_ref }}" -ne $expectedBaseRef.Replace("origin/", "")) {
+            throw "PR base ref '${{ github.base_ref }}' does not match threshold baseRef '$expectedBaseRef'."
+          }
+          if ($null -ne "${{ github.head_ref }}" -and "${{ github.head_ref }}" -ne $expectedBranch) {
+            Write-Host "PR head branch '${{ github.head_ref }}' differs from expected Threshold branch '$expectedBranch'."
+          }
+
+          foreach ($path in $changedPaths) {
+            $isAllowed = $false
+            foreach ($pattern in $allowedPaths) {
+              if (Test-PathAgainstPattern $path $pattern) { $isAllowed = $true; break }
+            }
+            if (-not $isAllowed) { throw "Changed path is outside Threshold lease allowlist: $path" }
+            foreach ($pattern in $forbiddenPaths) {
+              if (Test-PathAgainstPattern $path $pattern) { throw "Changed path is forbidden by Threshold lease: $path" }
+            }
+          }
+
+          $receiptPaths = @(Get-ChildItem threshold/receipts -Filter *.json -ErrorAction SilentlyContinue)
+          if ($receiptPaths.Count -eq 0) { throw "Missing Threshold receipt under threshold/receipts/*.json" }
+
+          $receiptByCommit = @{}
+          foreach ($receiptPath in $receiptPaths) {
+            $receipt = Get-Content $receiptPath.FullName -Raw | ConvertFrom-Json
+            if (-not $receipt.candidateId) { throw "Receipt is missing candidateId: $($receiptPath.FullName)" }
+            if (-not $receipt.candidateClass) { throw "Receipt is missing candidateClass: $($receiptPath.FullName)" }
+            if (-not $receipt.baseHead) { throw "Receipt is missing baseHead: $($receiptPath.FullName)" }
+            if (-not $receipt.commitHash) { throw "Receipt is missing commitHash: $($receiptPath.FullName)" }
+            if (-not $receipt.changedFiles -or $receipt.changedFiles.Count -eq 0) { throw "Receipt is missing changedFiles: $($receiptPath.FullName)" }
+            if (-not $receipt.validation -or -not $receipt.validation.result) { throw "Receipt is missing validation result: $($receiptPath.FullName)" }
+            if (-not $receipt.nonClaims -or $receipt.nonClaims.Count -eq 0) { throw "Receipt is missing nonClaims: $($receiptPath.FullName)" }
+            $receiptByCommit[[string]$receipt.commitHash] = $receiptPath.FullName
+          }
+
+          if (Test-Path $statePath) {
+            $state = Get-Content $statePath -Raw | ConvertFrom-Json
+            if (-not $state.invocationId) { throw "Lease state is missing invocationId." }
+            if (-not $state.currentHead) { throw "Lease state is missing currentHead." }
+            if (-not $state.remainingBudget) { throw "Lease state is missing remainingBudget." }
+          }
+          else {
+            Write-Host "No lease state file found at $statePath; continuing with receipt-only validation."
+          }
+
+          $prCommits = @(git rev-list --reverse "origin/${{ github.base_ref }}..HEAD")
+          if ($prCommits.Count -eq 0) { throw "No PR commits detected." }
+
+          $latestSourceCommit = $null
+          foreach ($commit in @($prCommits | Select-Object -Last $prCommits.Count)) {
+            $commitPaths = @(git diff-tree --no-commit-id --name-only -r $commit)
+            if ($commitPaths.Count -eq 0) { continue }
+            $governanceOnly = $true
+            foreach ($path in $commitPaths) {
+              if (-not (Test-GovernancePath $path)) { $governanceOnly = $false; break }
+            }
+            if ($governanceOnly) {
+              Write-Host "Governance-only commit does not require self-referential receipt: $commit"
+              continue
+            }
+            $latestSourceCommit = $commit
+          }
+
+          if (-not $latestSourceCommit) {
+            throw "No source commit detected in PR range."
+          }
+          if (-not $receiptByCommit.ContainsKey($latestSourceCommit)) {
+            throw "Latest source commit '$latestSourceCommit' has no corresponding Threshold receipt."
+          }
+
+          Write-Host "latestSourceCommit=$latestSourceCommit"
+          Write-Host "latestSourceReceipt=$($receiptByCommit[$latestSourceCommit])"
+          Write-Host "Threshold governance passed"

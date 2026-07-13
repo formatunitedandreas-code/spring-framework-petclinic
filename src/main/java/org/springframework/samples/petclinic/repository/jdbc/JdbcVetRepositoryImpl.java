@@ -23,8 +23,6 @@ import org.springframework.samples.petclinic.repository.VetRepository;
 import org.springframework.samples.petclinic.util.EntityUtils;
 import org.springframework.stereotype.Repository;
 
-import java.sql.ResultSet;
-import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -57,7 +55,7 @@ public class JdbcVetRepositoryImpl implements VetRepository {
     public Collection<Vet> findAll() {
         // Retrieve the list of all vets.
         List<Vet> vets = new ArrayList<>(this.jdbcClient.sql(
-                "SELECT id, first_name, last_name FROM vets ORDER BY last_name,first_name")
+            "SELECT id, first_name, last_name FROM vets ORDER BY last_name, first_name")
             .query(BeanPropertyRowMapper.newInstance(Vet.class))
             .list());
 
@@ -68,22 +66,22 @@ public class JdbcVetRepositoryImpl implements VetRepository {
 
         // Build each vet's list of specialties.
         for (Vet vet : vets) {
-            final List<Integer> vetSpecialtiesIds = this.jdbcClient.sql(
-                    "SELECT specialty_id FROM vet_specialties WHERE vet_id=?")
-                .param(vet.getId())
-                .query(
-                    new BeanPropertyRowMapper<Integer>() {
-                        @Override
-                        public Integer mapRow(ResultSet rs, int row) throws SQLException {
-                            return rs.getInt(1);
-                        }
-                    }
-                ).list();
-            for (int specialtyId : vetSpecialtiesIds) {
-                Specialty specialty = EntityUtils.getById(specialties, Specialty.class, specialtyId);
-                vet.addSpecialty(specialty);
-            }
+            addSpecialtiesToVet(vet, specialties);
         }
         return vets;
+    }
+
+    private void addSpecialtiesToVet(Vet vet, List<Specialty> specialties) {
+        for (int specialtyId : getSpecialtyIdsFor(vet)) {
+            Specialty specialty = EntityUtils.getById(specialties, Specialty.class, specialtyId);
+            vet.addSpecialty(specialty);
+        }
+    }
+
+    private List<Integer> getSpecialtyIdsFor(Vet vet) {
+        return this.jdbcClient.sql("SELECT specialty_id FROM vet_specialties WHERE vet_id=?")
+            .param(vet.getId())
+            .query((rs, row) -> rs.getInt(1))
+            .list();
     }
 }

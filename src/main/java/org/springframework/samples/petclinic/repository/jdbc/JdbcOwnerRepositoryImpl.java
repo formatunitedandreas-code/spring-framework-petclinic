@@ -87,43 +87,48 @@ public class JdbcOwnerRepositoryImpl implements OwnerRepository {
      */
     @Override
     public Owner findById(int id) {
-        Owner owner;
         try {
-            owner = this.jdbcClient.sql("""
-                    SELECT id, first_name, last_name, address, city, telephone
-                    FROM owners WHERE id = :id
-                    """)
+            Owner owner = this.jdbcClient.sql("""
+                SELECT id, first_name, last_name, address, city, telephone
+                FROM owners WHERE id = :id
+                """)
                 .param("id", id)
                 .query(BeanPropertyRowMapper.newInstance(Owner.class))
                 .single();
+            loadPetsAndVisits(owner);
+            return owner;
         } catch (EmptyResultDataAccessException ex) {
             throw new ObjectRetrievalFailureException(Owner.class, id);
         }
-        loadPetsAndVisits(owner);
-        return owner;
     }
 
     public void loadPetsAndVisits(final Owner owner) {
-        final List<JdbcPet> pets = this.jdbcClient.sql("""
+        Collection<PetType> petTypes = getPetTypes();
+        for (JdbcPet pet : loadPetsAndVisitsForOwner(owner.getId())) {
+            mapPetToOwner(owner, petTypes, pet);
+        }
+    }
+
+    private List<JdbcPet> loadPetsAndVisitsForOwner(int ownerId) {
+        return this.jdbcClient.sql("""
             SELECT pets.id, name, birth_date, type_id, owner_id, visits.id as visit_id, visit_date, description, pet_id
             FROM pets LEFT OUTER JOIN visits ON pets.id = pet_id
             WHERE owner_id=:id ORDER BY pet_id
             """)
-            .param("id", owner.getId())
+            .param("id", ownerId)
             .query(new JdbcPetVisitExtractor());
-        Collection<PetType> petTypes = getPetTypes();
-        for (JdbcPet pet : pets) {
-            pet.setType(EntityUtils.getById(petTypes, PetType.class, pet.getTypeId()));
-            owner.addPet(pet);
-        }
+    }
+
+    private void mapPetToOwner(Owner owner, Collection<PetType> petTypes, JdbcPet pet) {
+        pet.setType(EntityUtils.getById(petTypes, PetType.class, pet.getTypeId()));
+        owner.addPet(pet);
     }
 
     @Override
     public void save(Owner owner) {
         BeanPropertySqlParameterSource parameterSource = new BeanPropertySqlParameterSource(owner);
         if (owner.isNew()) {
-            Number newKey = this.insertOwner.executeAndReturnKey(parameterSource);
-            owner.setId(newKey.intValue());
+            owner.setId(this.insertOwner.executeAndReturnKey(parameterSource).intValue());
             return;
         }
         this.jdbcClient.sql("""

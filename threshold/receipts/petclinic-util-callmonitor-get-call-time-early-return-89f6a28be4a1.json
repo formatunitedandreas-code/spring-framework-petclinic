@@ -1,0 +1,50 @@
+{
+    "schemaVersion":  "threshold.petclinic.slice-receipt.v0.2",
+    "candidateId":  "petclinic-util-callmonitor-get-call-time-early-return",
+    "leaseName":  "petclinic-threshold-governed-refactor-lease-v1",
+    "branch":  "threshold-governed-refactor-demo-4",
+    "candidateClass":  "utility_readability_cleanup",
+    "leaseStartHead":  "a703491cc707d6f0de9fcfd30719bfa278a74df8",
+    "baseHead":  "241e49fe1b9275841af50c7ab7c2405b320de94a",
+    "commitHash":  "89f6a28be4a1e20179c551c6ecc67a37b9bcb86d",
+    "receiptMaterialization":  "prospective",
+    "perCommitValidationLogAvailable":  false,
+    "branchFinalValidationPassed":  false,
+    "changedFiles":  [
+                         {
+                             "path":  "src/main/java/org/springframework/samples/petclinic/util/CallMonitoringAspect.java",
+                             "beforeSha256":  "1f993c92c2c42361d3e33fb205cbefb0c113e30bf8aec0120c7a29d1e2570eeb",
+                             "afterSha256":  "e7435e19d8131bc16e601f4156650237fd7f94e4c3cf2f5b0ae19f525245b612"
+                         }
+                     ],
+    "diffSummary":  "Invert getCallTime guard to early-return style; no semantic change.",
+    "diffStat":  {
+                     "filesChanged":  1,
+                     "insertions":  2,
+                     "deletions":  3
+                 },
+    "validation":  {
+                       "diffCheck":  "passed",
+                       "command":  ".\\mvnw.cmd test",
+                       "result":  "BUILD SUCCESS",
+                       "testsRun":  75,
+                       "failures":  0,
+                       "errors":  0,
+                       "skipped":  0
+                   },
+    "nonClaims":  [
+                      "no push in candidate slice",
+                      "no PR update in candidate slice",
+                      "no upstream interaction",
+                      "no pom.xml change",
+                      "no dependency change",
+                      "no src/test change",
+                      "no merge",
+                      "no release",
+                      "no deploy",
+                      "no public readiness claim",
+                      "no public correctness claim",
+                      "no public security claim",
+                      "no public compliance claim"
+                  ]
+}
