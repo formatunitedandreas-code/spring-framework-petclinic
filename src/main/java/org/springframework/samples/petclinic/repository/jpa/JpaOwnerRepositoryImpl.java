@@ -52,7 +52,8 @@ public class JpaOwnerRepositoryImpl implements OwnerRepository {
         // using 'join fetch' because a single query should load both owners and pets
         // using 'left join fetch' because it might happen that an owner does not have pets yet
         return this.em.createQuery(
-            "SELECT DISTINCT owner FROM Owner owner left join fetch owner.pets WHERE owner.lastName LIKE :lastName", Owner.class)
+            "SELECT DISTINCT owner FROM Owner owner left join fetch owner.pets " +
+            "WHERE owner.lastName LIKE :lastName", Owner.class)
             .setParameter("lastName", lastName + "%")
             .getResultList();
     }
