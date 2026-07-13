@@ -75,20 +75,28 @@ public class JdbcVisitRepositoryImpl implements VisitRepository {
 
     @Override
     public List<Visit> findByPetId(Integer petId) {
-        JdbcPet pet = this.jdbcClient
+        JdbcPet pet = findPetById(petId);
+        List<Visit> visits = findVisitsByPetId(petId);
+
+        attachPetToVisits(visits, pet);
+
+        return visits;
+    }
+
+    private JdbcPet findPetById(Integer petId) {
+        return this.jdbcClient
             .sql("SELECT id, name, birth_date, type_id, owner_id FROM pets WHERE id=:id")
             .param("id", petId)
             .query(new JdbcPetRowMapper())
             .single();
+    }
 
+    private List<Visit> findVisitsByPetId(Integer petId) {
         List<Visit> visits = this.jdbcClient
             .sql("SELECT id as visit_id, visit_date, description FROM visits WHERE pet_id=:id")
             .param("id", petId)
             .query(new JdbcVisitRowMapper())
             .list();
-
-        attachPetToVisits(visits, pet);
-
         return visits;
     }
 
