@@ -80,21 +80,20 @@ public class CallMonitoringAspect {
 
     @Around("within(@org.springframework.stereotype.Repository *)")
     public Object invoke(ProceedingJoinPoint joinPoint) throws Throwable {
-        if (this.enabled) {
-            StopWatch sw = new StopWatch(joinPoint.toShortString());
-
-            sw.start("invoke");
-            try {
-                return joinPoint.proceed();
-            } finally {
-                sw.stop();
-                synchronized (this) {
-                    this.callCount++;
-                    this.accumulatedCallTime += sw.getTotalTimeMillis();
-                }
-            }
-        } else {
+        if (!this.enabled) {
             return joinPoint.proceed();
+        }
+        StopWatch sw = new StopWatch(joinPoint.toShortString());
+
+        sw.start("invoke");
+        try {
+            return joinPoint.proceed();
+        } finally {
+            sw.stop();
+            synchronized (this) {
+                this.callCount++;
+                this.accumulatedCallTime += sw.getTotalTimeMillis();
+            }
         }
     }
 
