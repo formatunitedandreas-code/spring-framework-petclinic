@@ -100,7 +100,7 @@ foreach ($file in $sourceFiles) {
         Where-Object {
             $_ -notmatch '^"/' -and
             $_ -notmatch '^"redirect:' -and
-            $_ -notmatch '^"[A-Z_]+"$'
+            $_ -cnotmatch '^"[A-Z_]+"$'
         } |
         Group-Object |
         Where-Object { $_.Count -ge 2 } |
