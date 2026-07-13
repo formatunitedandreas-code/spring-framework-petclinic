@@ -67,11 +67,10 @@ public class CallMonitoringAspect {
 
     @ManagedAttribute
     public long getCallTime() {
-        if (hasCalls()) {
-            return this.accumulatedCallTime / this.callCount;
-        } else {
+        if (!hasCalls()) {
             return 0;
         }
+        return this.accumulatedCallTime / this.callCount;
     }
 
     private boolean hasCalls() {
