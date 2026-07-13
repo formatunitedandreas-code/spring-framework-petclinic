@@ -159,7 +159,9 @@ public class OwnerController {
     }
 
     private ModelAndView buildOwnerDetailsView(int ownerId) {
-        return new ModelAndView(VIEWS_OWNER_DETAILS).addObject(this.clinicService.findOwnerById(ownerId));
+        ModelAndView modelAndView = new ModelAndView(VIEWS_OWNER_DETAILS);
+        modelAndView.addObject(this.clinicService.findOwnerById(ownerId));
+        return modelAndView;
     }
 
 }
