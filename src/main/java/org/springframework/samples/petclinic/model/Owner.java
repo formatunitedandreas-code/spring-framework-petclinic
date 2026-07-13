@@ -123,13 +123,17 @@ public class Owner extends Person {
      * @return true if pet name is already in use
      */
     public Pet getPet(String name, boolean ignoreNew) {
-        name = name.toLowerCase();
+        String petName = normalizePetName(name);
         for (Pet pet : getPetsInternal()) {
-            if (isMatchingPet(pet, name, ignoreNew)) {
+            if (isMatchingPet(pet, petName, ignoreNew)) {
                 return pet;
             }
         }
         return null;
+    }
+
+    private String normalizePetName(String name) {
+        return name.toLowerCase();
     }
 
     private boolean isMatchingPet(Pet pet, String name, boolean ignoreNew) {
