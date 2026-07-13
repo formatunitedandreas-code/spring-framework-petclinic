@@ -109,6 +109,9 @@ foreach ($file in $sourceFiles) {
     foreach ($group in $stringMatches | Select-Object -First 2) {
         $literalName = ($group.Name.Trim('"') -replace "[^A-Za-z0-9]+", "-").Trim("-")
         if ([string]::IsNullOrWhiteSpace($literalName)) { continue }
+        $constantName = ($literalName -creplace "([a-z])([A-Z])", '$1_$2').ToUpperInvariant() -creplace "[^A-Z0-9]+", "_"
+        $constantName = $constantName.Trim("_")
+        if ([string]::IsNullOrWhiteSpace($constantName)) { continue }
         $score = 30 + 30 + 20 + 10 + $layerScore
         $candidates.Add([ordered]@{
             candidateId = New-CandidateId $path "duplicate_literal_local_constant_extraction" $literalName
@@ -116,6 +119,8 @@ foreach ($file in $sourceFiles) {
             score = $score
             file = $path
             member = $literalName
+            literal = $group.Name
+            constantName = $constantName
             expectedDiffSummary = "Extract repeated literal $($group.Name) to a same-class private constant."
             estimatedChangedLines = 4
             tieBreak = [ordered]@{ layerScore = $layerScore; path = $path; member = $literalName }

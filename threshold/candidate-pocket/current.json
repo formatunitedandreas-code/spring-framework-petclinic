@@ -2,8 +2,8 @@
     "schemaVersion":  "threshold.petclinic.candidate-pocket.v0.2",
     "leaseName":  "petclinic-threshold-governed-refactor-lease-v1",
     "branch":  "threshold-governed-refactor-demo-6",
-    "generatedFromHead":  "656501072552cf63777e8ac1c3ff933641a112a0",
-    "generatedAt":  "2026-07-13T21:27:46.8805982Z",
+    "generatedFromHead":  "f32475508df13940622009be1db1bff75d1b063c",
+    "generatedAt":  "2026-07-13T21:32:21.2851561Z",
     "discovery":  {
                       "method":  "static-heuristic-scan",
                       "scannedFiles":  47,
@@ -22,6 +22,8 @@
                            "score":  97,
                            "file":  "src/main/java/org/springframework/samples/petclinic/repository/jdbc/JdbcPetVisitExtractor.java",
                            "member":  "visits-pet-id",
+                           "literal":  "\"visits.pet_id\"",
+                           "constantName":  "VISITS_PET_ID",
                            "expectedDiffSummary":  "Extract repeated literal \"visits.pet_id\" to a same-class private constant.",
                            "estimatedChangedLines":  4,
                            "tieBreak":  {
