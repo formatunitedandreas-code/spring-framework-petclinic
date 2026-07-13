@@ -89,9 +89,8 @@ public class JdbcPetRepositoryImpl implements PetRepository {
     @Override
     public void save(Pet pet) {
         if (pet.isNew()) {
-            Number newKey = this.insertPet.executeAndReturnKey(
-                createPetParameterSource(pet));
-            pet.setId(newKey.intValue());
+            pet.setId(this.insertPet.executeAndReturnKey(
+                createPetParameterSource(pet)).intValue());
             return;
         }
         this.jdbcClient
