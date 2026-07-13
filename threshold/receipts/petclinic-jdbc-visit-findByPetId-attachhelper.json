@@ -1,0 +1,49 @@
+{
+    "candidateId":  "petclinic-jdbc-visit-findByPetId-attachhelper",
+    "leaseName":  "petclinic-threshold-governed-refactor-lease-v1",
+    "branch":  "threshold-governed-refactor-demo-4",
+    "candidateClass":  "threshold_enforcement",
+    "baseHead":  "4e4c7eba92c80d35e8244f8526828680f0a25922",
+    "commitHash":  "3fbb73c0f3fbad0ae8a303cd6dad3b04b9ba3aa5",
+    "changedFiles":  [
+                         {
+                             "path":  "src/main/java/org/springframework/samples/petclinic/repository/jdbc/JdbcVisitRepositoryImpl.java",
+                             "beforeSha256":  null,
+                             "afterSha256":  "10947EA5FD8B3EA4F5CB713489396B49C9C4CFE81A684049A956375D4B9CA168"
+                         },
+                         {
+                             "path":  "threshold/receipts/petclinic-jdbc-visit-findByPetId-attachhelper.json",
+                             "beforeSha256":  null,
+                             "afterSha256":  "8B8086D19446D6777B861CB261D9F873F1D0B98A536F734EEE97646C29D7D7C9"
+                         }
+                     ],
+    "diffStat":  {
+                     "filesChanged":  2,
+                     "insertions":  54,
+                     "deletions":  1
+                 },
+    "validation":  {
+                       "diffCheck":  "passed",
+                       "command":  ".\\mvnw.cmd test",
+                       "result":  "BUILD SUCCESS, Tests run 75, Failures 0, Errors 0, Skipped 0",
+                       "testsRun":  75,
+                       "failures":  0,
+                       "errors":  0,
+                       "skipped":  0
+                   },
+    "nonClaims":  [
+                      "no push in candidate slice",
+                      "no PR update in candidate slice",
+                      "no upstream interaction",
+                      "no pom.xml change",
+                      "no dependency change",
+                      "no src/test change",
+                      "no merge",
+                      "no release",
+                      "no deploy",
+                      "no public readiness claim",
+                      "no public correctness claim",
+                      "no public security claim",
+                      "no public compliance claim"
+                  ]
+}

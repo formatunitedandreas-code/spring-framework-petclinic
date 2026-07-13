@@ -89,10 +89,14 @@ public class JdbcVisitRepositoryImpl implements VisitRepository {
             .list();
 
         for (Visit visit: visits) {
-            visit.setPet(pet);
+            attachPetToVisit(visit, pet);
         }
 
         return visits;
+    }
+
+    private void attachPetToVisit(Visit visit, JdbcPet pet) {
+        visit.setPet(pet);
     }
 
 }
