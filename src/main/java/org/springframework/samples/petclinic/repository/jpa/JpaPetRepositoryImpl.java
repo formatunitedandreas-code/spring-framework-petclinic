@@ -44,7 +44,8 @@ public class JpaPetRepositoryImpl implements PetRepository {
 
     @Override
     public List<PetType> findPetTypes() {
-        return this.em.createQuery("SELECT ptype FROM PetType ptype ORDER BY ptype.name", PetType.class)
+        return this.em.createQuery(
+            "SELECT ptype FROM PetType ptype ORDER BY ptype.name", PetType.class)
             .getResultList();
     }
 
