@@ -88,9 +88,9 @@ public class JdbcPetRepositoryImpl implements PetRepository {
 
     @Override
     public void save(Pet pet) {
+        MapSqlParameterSource parameterSource = createPetParameterSource(pet);
         if (pet.isNew()) {
-            pet.setId(this.insertPet.executeAndReturnKey(
-                createPetParameterSource(pet)).intValue());
+            pet.setId(this.insertPet.executeAndReturnKey(parameterSource).intValue());
             return;
         }
         this.jdbcClient
@@ -99,7 +99,7 @@ public class JdbcPetRepositoryImpl implements PetRepository {
                     SET name=:name, birth_date=:birth_date, type_id=:type_id, owner_id=:owner_id
                     WHERE id=:id
                     """)
-                .paramSource(createPetParameterSource(pet))
+                .paramSource(parameterSource)
                 .update();
     }
 
