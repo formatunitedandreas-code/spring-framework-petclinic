@@ -23,6 +23,67 @@ function ConvertTo-ConstantLine {
     return "    private static final String $ConstantName = $Literal;"
 }
 
+function Apply-ReadableMethodSignatureWrap {
+    param([pscustomobject] $Candidate)
+
+    $path = ConvertTo-RepoPath $Candidate.file
+    if (-not (Test-Path $path)) {
+        throw "Candidate file not found: $path"
+    }
+    if (-not $Candidate.member) {
+        throw "Candidate is missing member field."
+    }
+
+    $member = [string]$Candidate.member
+    if (-not $member.StartsWith("line-")) {
+        throw "Unsupported helper candidate marker '$member'."
+    }
+    $lineNumber = [int]($member.Substring(5))
+
+    $lines = Get-Content $path
+    if ($lineNumber -lt 1 -or $lineNumber -gt $lines.Count) {
+        throw "Candidate line '$lineNumber' is outside file range in $path."
+    }
+
+    $line = $lines[$lineNumber - 1]
+    $signatureMatch = [regex]::Match($line, "^(?<indent>\s*)(?<signature>.+?)\(\s*(?<params>.*)\)\s*\{\s*$")
+    if (-not $signatureMatch.Success) {
+        throw "Candidate line '$lineNumber' is not a method declaration in $path."
+    }
+
+    $paramsRaw = $signatureMatch.Groups["params"].Value.Trim()
+    $parameters = $paramsRaw -split "," | ForEach-Object { $_.Trim() } | Where-Object { -not [string]::IsNullOrWhiteSpace($_) }
+    if ($parameters.Count -lt 2) {
+        throw "Candidate line '$lineNumber' has no multi-parameter signature to wrap in $path."
+    }
+
+    $indent = $signatureMatch.Groups["indent"].Value
+    $signature = $signatureMatch.Groups["signature"].Value.TrimEnd()
+    $childIndent = "$indent    "
+
+    $wrapped = @()
+    $wrapped += "$indent$signature("
+    for ($i = 0; $i -lt $parameters.Count; $i++) {
+        $separator = if ($i -lt $parameters.Count - 1) { "," } else { "" }
+        $wrapped += "$childIndent$($parameters[$i])$separator"
+    }
+    $wrapped += "$indent) {"
+
+    $updatedLines = @()
+    if ($lineNumber -gt 1) {
+        $updatedLines += $lines[0..($lineNumber - 2)]
+    }
+    $updatedLines += $wrapped
+    if ($lineNumber -lt $lines.Count) {
+        $updatedLines += $lines[$lineNumber..($lines.Count - 1)]
+    }
+    Set-Content -Path $path -Value $updatedLines -NoNewline
+
+    Write-Host "appliedCandidate=$($Candidate.candidateId)"
+    Write-Host "changedFile=$path"
+    Write-Host "signatureWrappedLine=$lineNumber"
+}
+
 function Assert-CleanWorktree {
     $status = @(& git status --porcelain)
     if ($status) {
@@ -140,6 +201,9 @@ Write-Host "selectedCandidateFile=$($candidate.file)"
 switch ([string]$candidate.candidateClass) {
     "duplicate_literal_local_constant_extraction" {
         Apply-DuplicateLiteralConstantExtraction -Candidate $candidate
+    }
+    "private_helper_extraction_for_readability" {
+        Apply-ReadableMethodSignatureWrap -Candidate $candidate
     }
     default {
         throw "Candidate class '$($candidate.candidateClass)' is not yet automatically patchable by run-next-slice."
