@@ -70,17 +70,18 @@ public class JdbcPetRepositoryImpl implements PetRepository {
 
     @Override
     public Pet findById(int id) {
-        int ownerId;
+        Owner owner;
         try {
-            ownerId = this.jdbcClient
-                .sql("SELECT owner_id FROM pets WHERE id=:id")
-                .param("id", id)
-                .query(Integer.class)
-                .single();
+            owner = this.ownerRepository.findById(
+                this.jdbcClient
+                    .sql("SELECT owner_id FROM pets WHERE id=:id")
+                    .param("id", id)
+                    .query(Integer.class)
+                    .single()
+            );
         } catch (EmptyResultDataAccessException ex) {
             throw new ObjectRetrievalFailureException(Pet.class, id);
         }
-        Owner owner = this.ownerRepository.findById(ownerId);
         return EntityUtils.getById(owner.getPets(), Pet.class, id);
     }
 
