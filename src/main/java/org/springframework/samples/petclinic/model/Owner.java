@@ -96,6 +96,10 @@ public class Owner extends Person {
     }
 
     public List<Pet> getPets() {
+        return sortedPets();
+    }
+
+    private List<Pet> sortedPets() {
         List<Pet> sortedPets = new ArrayList<>(getPetsInternal());
         sortedPets.sort(Comparator.comparing(Pet::getName, String.CASE_INSENSITIVE_ORDER));
         return Collections.unmodifiableList(sortedPets);
