@@ -57,9 +57,8 @@ public class JdbcVisitRepositoryImpl implements VisitRepository {
         if (!visit.isNew()) {
             throw new UnsupportedOperationException("Visit update not supported");
         }
-        Number newKey = this.insertVisit.executeAndReturnKey(
-            createVisitParameterSource(visit));
-        visit.setId(newKey.intValue());
+        visit.setId(this.insertVisit.executeAndReturnKey(
+            createVisitParameterSource(visit)).intValue());
     }
 
 
