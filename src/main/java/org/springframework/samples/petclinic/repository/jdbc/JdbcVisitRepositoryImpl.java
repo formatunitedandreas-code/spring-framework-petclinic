@@ -92,12 +92,11 @@ public class JdbcVisitRepositoryImpl implements VisitRepository {
     }
 
     private List<Visit> findVisitsByPetId(Integer petId) {
-        List<Visit> visits = this.jdbcClient
+        return this.jdbcClient
             .sql("SELECT id as visit_id, visit_date, description FROM visits WHERE pet_id=:id")
             .param("id", petId)
             .query(new JdbcVisitRowMapper())
             .list();
-        return visits;
     }
 
     private void attachPetToVisits(List<Visit> visits, JdbcPet pet) {
