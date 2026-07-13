@@ -137,7 +137,11 @@ public class OwnerController {
     }
 
     @PostMapping(value = OWNER_EDIT_PATH)
-    public String processUpdateOwnerForm(@Valid Owner owner, BindingResult result, @PathVariable("ownerId") int ownerId) {
+    public String processUpdateOwnerForm(
+        @Valid Owner owner,
+        BindingResult result,
+        @PathVariable("ownerId") int ownerId
+    ) {
         if (result.hasErrors()) {
             return VIEWS_OWNER_CREATE_OR_UPDATE_FORM;
         }
