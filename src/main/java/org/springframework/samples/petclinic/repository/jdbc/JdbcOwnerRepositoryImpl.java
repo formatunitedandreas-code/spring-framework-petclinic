@@ -47,6 +47,8 @@ import java.util.List;
 @Repository
 public class JdbcOwnerRepositoryImpl implements OwnerRepository {
 
+    private static final String ID = "id";
+
     private final JdbcClient jdbcClient;
 
     private final SimpleJdbcInsert insertOwner;
@@ -55,7 +57,7 @@ public class JdbcOwnerRepositoryImpl implements OwnerRepository {
 
         this.insertOwner = new SimpleJdbcInsert(dataSource)
             .withTableName("owners")
-            .usingGeneratedKeyColumns("id");
+            .usingGeneratedKeyColumns(ID);
 
         this.jdbcClient = jdbcClient;
 
@@ -92,7 +94,7 @@ public class JdbcOwnerRepositoryImpl implements OwnerRepository {
                 SELECT id, first_name, last_name, address, city, telephone
                 FROM owners WHERE id = :id
                 """)
-                .param("id", id)
+                .param(ID, id)
                 .query(BeanPropertyRowMapper.newInstance(Owner.class))
                 .single();
             loadPetsAndVisits(owner);
@@ -115,7 +117,7 @@ public class JdbcOwnerRepositoryImpl implements OwnerRepository {
             FROM pets LEFT OUTER JOIN visits ON pets.id = pet_id
             WHERE owner_id=:id ORDER BY pet_id
             """)
-            .param("id", ownerId)
+            .param(ID, ownerId)
             .query(new JdbcPetVisitExtractor());
     }
 
