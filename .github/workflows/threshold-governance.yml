@@ -60,9 +60,29 @@ jobs:
           }
 
           $leaseLines = Get-Content $leasePath
+          $getScalar = {
+            param([string[]]$Lines, [string]$Name)
+            $match = $Lines | Where-Object { $_ -match "^\s*$([regex]::Escape($Name)):\s*(.+?)\s*$" } | Select-Object -First 1
+            if (-not $match) {
+              throw "Missing lease field '$Name'"
+            }
+            return ($match -replace "^\s*$([regex]::Escape($Name)):\s*", "").Trim()
+          }
           $allowedPaths = Get-LeaseList $leaseLines "allowedPaths"
           $forbiddenPaths = Get-LeaseList $leaseLines "forbiddenPaths"
+          $expectedBaseRef = & $getScalar $leaseLines "baseRef"
+          $expectedBranch = & $getScalar $leaseLines "branch"
           $changedPaths = @(git diff --name-only "origin/${{ github.base_ref }}...HEAD")
+          if ($changedPaths.Count -eq 0) {
+            throw "No changed paths detected for the pull request."
+          }
+
+          if ("${{ github.base_ref }}" -ne $expectedBaseRef.Replace("origin/", "")) {
+            throw "PR base ref '${{ github.base_ref }}' does not match threshold baseRef '$expectedBaseRef'."
+          }
+          if ($null -ne "${{ github.head_ref }}" -and "${{ github.head_ref }}" -ne $expectedBranch) {
+            Write-Host "PR head branch '${{ github.head_ref }}' differs from expected Threshold branch '$expectedBranch'."
+          }
 
           foreach ($path in $changedPaths) {
             $isAllowed = $false
@@ -102,6 +122,13 @@ jobs:
             if (-not $receipt.validation -or -not $receipt.validation.result) {
               throw "Receipt is missing validation result: $($receiptPath.FullName)"
             }
+          }
+
+          $headCommitReceipt = $receiptPaths | Where-Object {
+            (Get-Content $_.FullName -Raw | ConvertFrom-Json).commitHash -eq "${{ github.sha }}"
+          }
+          if ($headCommitReceipt.Count -eq 0) {
+            throw "Latest PR commit '${{ github.sha }}' has no corresponding receipt."
           }
 
           Write-Host "Threshold governance passed"
