@@ -71,8 +71,11 @@ public class JdbcPetRepositoryImpl implements PetRepository {
     @Override
     public Pet findById(int id) {
         try {
-            Owner owner = this.ownerRepository.findById(findOwnerIdByPetId(id));
-            return EntityUtils.getById(owner.getPets(), Pet.class, id);
+            return EntityUtils.getById(
+                this.ownerRepository.findById(findOwnerIdByPetId(id)).getPets(),
+                Pet.class,
+                id
+            );
         } catch (EmptyResultDataAccessException ex) {
             throw new ObjectRetrievalFailureException(Pet.class, id);
         }
