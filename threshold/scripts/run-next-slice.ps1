@@ -30,25 +30,27 @@ function Assert-CleanWorktree {
     }
 }
 
-function Update-PocketIfStale {
+function Resolve-ExecutionPocket {
     param(
         [string] $PocketPath,
         [string] $LeasePath
     )
 
     $head = (& git rev-parse HEAD).Trim()
-    $needsDiscovery = $true
+    $executionPocketPath = $PocketPath
     if (Test-Path $PocketPath) {
         $pocket = Get-Content $PocketPath -Raw | ConvertFrom-Json
         if ($pocket.generatedFromHead -eq $head -and $pocket.candidates.Count -gt 0) {
-            $needsDiscovery = $false
+            return $executionPocketPath
         }
     }
 
-    if ($needsDiscovery) {
-        & powershell.exe -NoProfile -ExecutionPolicy Bypass -File "threshold/scripts/discover-candidates.ps1" -LeasePath $LeasePath -PocketPath $PocketPath
-        if ($LASTEXITCODE -ne 0) { throw "Candidate discovery failed." }
+    $tempPocketPath = Join-Path ([System.IO.Path]::GetTempPath()) "threshold-candidate-pocket-$head.json"
+    & powershell.exe -NoProfile -ExecutionPolicy Bypass -File "threshold/scripts/discover-candidates.ps1" -LeasePath $LeasePath -PocketPath $tempPocketPath
+    if ($LASTEXITCODE -ne 0) {
+        throw "Candidate discovery failed."
     }
+    return $tempPocketPath
 }
 
 function Get-NextCandidate {
@@ -122,9 +124,9 @@ function Apply-DuplicateLiteralConstantExtraction {
 if ($LASTEXITCODE -ne 0) { throw "Threshold preflight failed." }
 
 Assert-CleanWorktree
-Update-PocketIfStale -PocketPath $PocketPath -LeasePath $LeasePath
+$executionPocketPath = Resolve-ExecutionPocket -PocketPath $PocketPath -LeasePath $LeasePath
 
-$candidate = Get-NextCandidate -PocketPath $PocketPath -MinScore $MinScore
+$candidate = Get-NextCandidate -PocketPath $executionPocketPath -MinScore $MinScore
 if (-not $candidate) { exit 0 }
 
 Write-Host "selectedCandidateId=$($candidate.candidateId)"
