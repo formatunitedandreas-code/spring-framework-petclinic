@@ -129,8 +129,7 @@ public class JdbcOwnerRepositoryImpl implements OwnerRepository {
     public void save(Owner owner) {
         BeanPropertySqlParameterSource parameterSource = new BeanPropertySqlParameterSource(owner);
         if (owner.isNew()) {
-            Number newKey = this.insertOwner.executeAndReturnKey(parameterSource);
-            owner.setId(newKey.intValue());
+            owner.setId(this.insertOwner.executeAndReturnKey(parameterSource).intValue());
             return;
         }
         this.jdbcClient.sql("""
