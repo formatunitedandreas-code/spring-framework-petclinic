@@ -61,7 +61,8 @@ public class JpaOwnerRepositoryImpl implements OwnerRepository {
     public Owner findById(int id) {
         // using 'join fetch' because a single query should load both owners and pets
         // using 'left join fetch' because it might happen that an owner does not have pets yet
-        return this.em.createQuery("SELECT owner FROM Owner owner left join fetch owner.pets WHERE owner.id = :id", Owner.class)
+        return this.em.createQuery(
+            "SELECT owner FROM Owner owner left join fetch owner.pets WHERE owner.id = :id", Owner.class)
             .setParameter("id", id)
             .getSingleResult();
     }
