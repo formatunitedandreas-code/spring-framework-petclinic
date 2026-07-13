@@ -10,9 +10,9 @@ budget:
   maxCandidatesThisRun: 5
   maxCommitsThisRun: 5
   maxFilesPerCandidate: 1
-  maxGovernanceFilesPerCandidate: 5
+  maxGovernanceFilesPerCandidate: 8
   maxChangedLinesPerCandidate: 80
-  maxGovernanceChangedLinesPerCandidate: 650
+  maxGovernanceChangedLinesPerCandidate: 1200
   maxRepairAttemptsPerCandidate: 1
 
 allowedRiskClasses:
@@ -32,6 +32,7 @@ allowedPaths:
   - src/main/java/org/springframework/samples/petclinic/repository/**/*.java
   - threshold/leases/*.yaml
   - threshold/receipts/*.json
+  - threshold/lease-state/*.json
   - threshold/scripts/*.ps1
   - .github/workflows/threshold-governance.yml
 
