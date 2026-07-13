@@ -3,15 +3,15 @@
     "invocationId":  "petclinic-refactor-expanded-scope-v2-20260713T200000Z",
     "leaseId":  "petclinic-threshold-governed-refactor-lease-v1",
     "mode":  "local_refactor",
-    "startHead":  "7907bbc6696c4686a89607dac26aa0aa9ede5558",
-    "currentHead":  "7907bbc6696c4686a89607dac26aa0aa9ede5558",
-    "candidatesProcessed":  0,
-    "commitsCreated":  0,
+    "startHead":  "a703491cc707d6f0de9fcfd30719bfa278a74df8",
+    "currentHead":  "7b4c9f77b2d8f2cbf9df0b23c366fd02fd3e32d4",
+    "candidatesProcessed":  1,
+    "commitsCreated":  1,
     "remainingBudget":  {
-                            "candidates":  5,
-                            "commits":  5,
+                            "candidates":  4,
+                            "commits":  4,
                             "repairAttempts":  1
                         },
-    "lastReceipt":  "threshold/receipts/petclinic-jdbc-visitrepository-save-key-inline-2623c462a92a.json",
+    "lastReceipt":  "threshold/receipts/petclinic-jdbc-ownerrepository-save-key-inline-7b4c9f77b2d8.json",
     "terminalState":  "active"
 }
