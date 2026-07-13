@@ -43,7 +43,9 @@ import org.springframework.core.style.ToStringCreator;
 @Entity
 @Table(name = "owners")
 public class Owner extends Person {
-    @Column(name = "address")
+
+    private static final String ADDRESS = "address";
+    @Column(name = ADDRESS)
     @NotEmpty
     private String address;
 
@@ -152,7 +154,7 @@ public class Owner extends Person {
             .append("new", this.isNew())
             .append("lastName", this.getLastName())
             .append("firstName", this.getFirstName())
-            .append("address", this.address)
+            .append(ADDRESS, this.address)
             .append("city", this.city)
             .append("telephone", this.telephone)
             .toString();
