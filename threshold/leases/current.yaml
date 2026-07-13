@@ -30,9 +30,15 @@ allowedPaths:
   - src/main/java/org/springframework/samples/petclinic/web/**/*.java
   - src/main/java/org/springframework/samples/petclinic/repository/*.java
   - src/main/java/org/springframework/samples/petclinic/repository/**/*.java
+  - src/main/java/org/springframework/samples/petclinic/model/*.java
+  - src/main/java/org/springframework/samples/petclinic/model/**/*.java
+  - src/main/java/org/springframework/samples/petclinic/util/*.java
+  - src/main/java/org/springframework/samples/petclinic/util/**/*.java
+  - src/main/java/org/springframework/samples/petclinic/*.java
   - threshold/leases/*.yaml
   - threshold/receipts/*.json
   - threshold/lease-state/*.json
+  - threshold/candidate-pocket/*.json
   - threshold/scripts/*.ps1
   - .github/workflows/threshold-governance.yml
 
@@ -49,6 +55,9 @@ allowedCandidateTypes:
   - duplicate_literal_local_constant_extraction
   - controller_branch_readability_decomposition
   - repository_readability_cleanup
+  - model_readability_cleanup
+  - utility_readability_cleanup
+  - application_bootstrap_readability_cleanup
   - threshold_governance_artifact_update
 
 forbiddenActions:
