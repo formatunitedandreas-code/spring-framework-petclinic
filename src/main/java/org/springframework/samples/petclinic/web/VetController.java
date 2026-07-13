@@ -16,12 +16,14 @@
 package org.springframework.samples.petclinic.web;
 
 import org.springframework.http.MediaType;
+import org.springframework.samples.petclinic.model.Vet;
 import org.springframework.samples.petclinic.model.Vets;
 import org.springframework.samples.petclinic.service.ClinicService;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ResponseBody;
 
+import java.util.Collection;
 import java.util.Map;
 
 /**
@@ -68,9 +70,13 @@ public class VetController {
     private Vets getVets() {
         // Here we are returning an object of type 'Vets' rather than a collection of Vet objects
         // so it is simpler for JSon/Object mapping
-        Vets vets = new Vets();
-        vets.getVetList().addAll(this.clinicService.findVets());
-        return vets;
+        return createVets(this.clinicService.findVets());
+    }
+
+    private Vets createVets(Collection<Vet> vets) {
+        Vets mappedVets = new Vets();
+        mappedVets.getVetList().addAll(vets);
+        return mappedVets;
     }
 
 }
