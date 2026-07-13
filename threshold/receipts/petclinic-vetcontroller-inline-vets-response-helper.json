@@ -1,0 +1,44 @@
+{
+  "candidateId": "petclinic-vetcontroller-inline-vets-response-helper",
+  "leaseName": "petclinic-threshold-governed-refactor-lease-v1",
+  "branch": "threshold-governed-refactor-demo-4",
+  "candidateClass": "redundant private helper inline cleanup",
+  "baseHead": "4e4c7eba92c80d35e8244f8526828680f0a25922",
+  "commitHash": "e522ba7d3ff9c2d2547d8871e98030a28fe7d3f9",
+  "changedFiles": [
+    {
+      "path": "src/main/java/org/springframework/samples/petclinic/web/VetController.java",
+      "beforeSha256": "86E82FB2330C551E6D8E2DDF13D958A5CB3D48C3B476248EC66AA7C21E8ADF47",
+      "afterSha256": "CE9456FA296EC8D64F56CEDDB247F954437BDDA347F8BACEB1F96FFBB6DD6FC1"
+    }
+  ],
+  "diffStat": {
+    "filesChanged": 1,
+    "insertions": 2,
+    "deletions": 6
+  },
+  "validation": {
+    "diffCheck": "passed",
+    "command": "$env:JAVA_HOME='C:\\Program Files\\Java\\jdk-17'; .\\mvnw.cmd test",
+    "result": "BUILD SUCCESS",
+    "testsRun": 75,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  "nonClaims": [
+    "no push in candidate slice",
+    "no PR update in candidate slice",
+    "no upstream interaction",
+    "no pom.xml change",
+    "no dependency change",
+    "no src/test change",
+    "no merge",
+    "no release",
+    "no deploy",
+    "no public readiness claim",
+    "no public correctness claim",
+    "no public security claim",
+    "no public compliance claim"
+  ]
+}

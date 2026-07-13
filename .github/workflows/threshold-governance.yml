@@ -1,0 +1,107 @@
+name: Threshold governance
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, labeled, unlabeled]
+
+jobs:
+  threshold-governance:
+    if: contains(github.event.pull_request.labels.*.name, 'threshold-governed')
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Fetch pull request base
+        run: git fetch origin ${{ github.base_ref }} --depth=1
+
+      - name: Verify Threshold lease and receipts
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = "Stop"
+          $leasePath = "threshold/leases/current.yaml"
+          if (-not (Test-Path $leasePath)) {
+            throw "Missing Threshold lease: $leasePath"
+          }
+
+          function Get-LeaseList {
+            param(
+              [string[]] $Lines,
+              [string] $Name
+            )
+
+            $items = New-Object System.Collections.Generic.List[string]
+            $inside = $false
+            foreach ($line in $Lines) {
+              if ($line -match "^\s*$([regex]::Escape($Name)):\s*$") {
+                $inside = $true
+                continue
+              }
+              if ($inside -and $line -match "^\S") {
+                break
+              }
+              if ($inside -and $line -match "^\s*-\s*(.+?)\s*$") {
+                $items.Add(($Matches[1]).Trim())
+              }
+            }
+            return $items.ToArray()
+          }
+
+          function Test-PathAgainstPattern {
+            param(
+              [string] $Path,
+              [string] $Pattern
+            )
+
+            $normalizedPath = $Path -replace "\\", "/"
+            $normalizedPattern = $Pattern -replace "\\", "/"
+            return [System.Management.Automation.WildcardPattern]::new($normalizedPattern, "IgnoreCase").IsMatch($normalizedPath)
+          }
+
+          $leaseLines = Get-Content $leasePath
+          $allowedPaths = Get-LeaseList $leaseLines "allowedPaths"
+          $forbiddenPaths = Get-LeaseList $leaseLines "forbiddenPaths"
+          $changedPaths = @(git diff --name-only "origin/${{ github.base_ref }}...HEAD")
+
+          foreach ($path in $changedPaths) {
+            $isAllowed = $false
+            foreach ($pattern in $allowedPaths) {
+              if (Test-PathAgainstPattern $path $pattern) {
+                $isAllowed = $true
+                break
+              }
+            }
+            if (-not $isAllowed) {
+              throw "Changed path is outside Threshold lease allowlist: $path"
+            }
+
+            foreach ($pattern in $forbiddenPaths) {
+              if (Test-PathAgainstPattern $path $pattern) {
+                throw "Changed path is forbidden by Threshold lease: $path"
+              }
+            }
+          }
+
+          $receiptPaths = @(Get-ChildItem threshold/receipts -Filter *.json -ErrorAction SilentlyContinue)
+          if ($receiptPaths.Count -eq 0) {
+            throw "Missing Threshold receipt under threshold/receipts/*.json"
+          }
+
+          foreach ($receiptPath in $receiptPaths) {
+            $receipt = Get-Content $receiptPath.FullName -Raw | ConvertFrom-Json
+            if (-not $receipt.candidateId) {
+              throw "Receipt is missing candidateId: $($receiptPath.FullName)"
+            }
+            if (-not $receipt.commitHash) {
+              throw "Receipt is missing commitHash: $($receiptPath.FullName)"
+            }
+            if (-not $receipt.changedFiles -or $receipt.changedFiles.Count -eq 0) {
+              throw "Receipt is missing changedFiles: $($receiptPath.FullName)"
+            }
+            if (-not $receipt.validation -or -not $receipt.validation.result) {
+              throw "Receipt is missing validation result: $($receiptPath.FullName)"
+            }
+          }
+
+          Write-Host "Threshold governance passed"
