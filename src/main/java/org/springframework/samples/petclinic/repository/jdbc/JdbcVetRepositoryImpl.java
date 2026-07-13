@@ -23,8 +23,6 @@ import org.springframework.samples.petclinic.repository.VetRepository;
 import org.springframework.samples.petclinic.util.EntityUtils;
 import org.springframework.stereotype.Repository;
 
-import java.sql.ResultSet;
-import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -83,14 +81,7 @@ public class JdbcVetRepositoryImpl implements VetRepository {
     private List<Integer> getSpecialtyIdsFor(Vet vet) {
         return this.jdbcClient.sql("SELECT specialty_id FROM vet_specialties WHERE vet_id=?")
             .param(vet.getId())
-            .query(
-                new BeanPropertyRowMapper<Integer>() {
-                    @Override
-                    public Integer mapRow(ResultSet rs, int row) throws SQLException {
-                        return rs.getInt(1);
-                    }
-                }
-            )
+            .query((rs, row) -> rs.getInt(1))
             .list();
     }
 }
