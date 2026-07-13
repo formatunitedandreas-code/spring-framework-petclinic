@@ -38,6 +38,8 @@ import org.springframework.web.servlet.ModelAndView;
 @Controller
 public class OwnerController {
 
+    private static final String OWNER_ID = "ownerId";
+
     private static final String VIEWS_OWNER_CREATE_OR_UPDATE_FORM = "owners/createOrUpdateOwnerForm";
     private static final String VIEWS_OWNER_FIND_OWNERS = "owners/findOwners";
     private static final String VIEWS_OWNER_LIST = "owners/ownersList";
@@ -127,7 +129,7 @@ public class OwnerController {
     }
 
     @GetMapping(value = OWNER_EDIT_PATH)
-    public String initUpdateOwnerForm(@PathVariable("ownerId") int ownerId, Model model) {
+    public String initUpdateOwnerForm(@PathVariable(OWNER_ID) int ownerId, Model model) {
         addOwnerToModel(model, ownerId);
         return VIEWS_OWNER_CREATE_OR_UPDATE_FORM;
     }
@@ -140,7 +142,7 @@ public class OwnerController {
     public String processUpdateOwnerForm(
         @Valid Owner owner,
         BindingResult result,
-        @PathVariable("ownerId") int ownerId
+        @PathVariable(OWNER_ID) int ownerId
     ) {
         if (result.hasErrors()) {
             return VIEWS_OWNER_CREATE_OR_UPDATE_FORM;
@@ -158,7 +160,7 @@ public class OwnerController {
      * @return a ModelMap with the model attributes for the view
      */
     @GetMapping("/owners/{ownerId}")
-    public ModelAndView showOwner(@PathVariable("ownerId") int ownerId) {
+    public ModelAndView showOwner(@PathVariable(OWNER_ID) int ownerId) {
         return buildOwnerDetailsView(ownerId);
     }
 
