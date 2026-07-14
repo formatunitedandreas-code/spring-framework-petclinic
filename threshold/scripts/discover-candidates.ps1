@@ -2,6 +2,8 @@
 param(
     [string] $LeasePath = "threshold/leases/current.yaml",
     [string] $PocketPath = "threshold/candidate-pocket/current.json",
+    [string] $GatePath = "threshold/gates/auto-patchable-candidate-classes.json",
+    [string] $SourceRoot = "src/main/java/org/springframework/samples/petclinic",
     [int] $Limit = 25
 )
 
@@ -75,6 +77,28 @@ function Is-CandidateAllowed {
     return ($AllowedTypes.Count -eq 0) -or ($AllowedTypes -contains $CandidateClass)
 }
 
+function Get-AutoPatchableGate {
+    param([string] $Path)
+
+    $approved = @{}
+    if (-not (Test-Path $Path)) {
+        return $approved
+    }
+
+    $gate = Get-Content $Path -Raw | ConvertFrom-Json
+    foreach ($entry in @($gate.approvedAutoPatchableCandidateClasses)) {
+        if ($entry.candidateClass) {
+            $approved[[string]$entry.candidateClass] = $entry
+        }
+    }
+    return $approved
+}
+
+function Test-CandidateClassGate {
+    param([string] $CandidateClass)
+    return $script:ApprovedAutoPatchableCandidateClasses.ContainsKey($CandidateClass)
+}
+
 function Add-Candidate {
     param(
         [hashtable] $Candidate,
@@ -89,11 +113,19 @@ function Add-Candidate {
     $Candidate.autoPatchable = Test-AutoPatchableCandidate $Candidate $CandidateClass
     $Candidate.reviewOnly = -not $Candidate.autoPatchable
     $Candidate.executionMode = if ($Candidate.autoPatchable) { "auto_patchable" } else { "review_only" }
+    $Candidate.gate = [ordered]@{
+        required = $true
+        approved = Test-CandidateClassGate $CandidateClass
+        gatePath = ConvertTo-RepoPath $GatePath
+    }
     $Bucket.Add([pscustomobject]$Candidate)
 }
 
 function Test-AutoPatchableCandidate {
     param([hashtable] $Candidate, [string] $CandidateClass)
+    if (-not (Test-CandidateClassGate $CandidateClass)) {
+        return $false
+    }
     if ($CandidateClass -eq "duplicate_literal_local_constant_extraction") {
         return $Candidate.ContainsKey("literal") -and $Candidate.ContainsKey("constantName")
     }
@@ -194,9 +226,10 @@ $leaseName = Get-LeaseScalar $leaseLines "leaseName"
 $branch = Get-LeaseScalar $leaseLines "branch"
 $head = (& git rev-parse HEAD).Trim()
 $allowedCandidateTypes = Get-LeaseList $leaseLines "allowedCandidateTypes"
+$script:ApprovedAutoPatchableCandidateClasses = Get-AutoPatchableGate -Path $GatePath
 
 $sourceFiles = @(
-    Get-ChildItem "src/main/java/org/springframework/samples/petclinic" -Recurse -Filter "*.java" |
+    Get-ChildItem $SourceRoot -Recurse -Filter "*.java" |
         Where-Object {
             $_.FullName -notmatch "\\src\\test\\" -and
             $_.FullName -notmatch "\\target\\"
@@ -433,6 +466,9 @@ $pocket = [ordered]@{
     generatedAt = (Get-Date).ToUniversalTime().ToString("o")
     discovery = [ordered]@{
         method = "static-heuristic-scan"
+        sourceRoot = ConvertTo-RepoPath $SourceRoot
+        gatePath = ConvertTo-RepoPath $GatePath
+        approvedAutoPatchableCandidateClasses = @($script:ApprovedAutoPatchableCandidateClasses.Keys | Sort-Object)
         scannedFiles = $sourceFiles.Count
         ranking = @(
             "score descending",
