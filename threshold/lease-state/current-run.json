@@ -1,12 +1,12 @@
 {
     "schemaVersion":  "threshold.petclinic.lease-state.v0.2",
-    "invocationId":  "petclinic-threshold-governed-refactor-lease-v15-20260714T133913Z",
-    "leaseId":  "petclinic-threshold-governed-refactor-lease-v15",
+    "invocationId":  "petclinic-threshold-governed-refactor-lease-v16-20260714T135725Z",
+    "leaseId":  "petclinic-threshold-governed-refactor-lease-v16",
     "mode":  "local_refactor",
     "branch":  "threshold-governed-refactor-demo-7",
-    "startHead":  "72a2d5c3c2c5d375d31136b6f9f5b50bf5243d66",
-    "currentHead":  "72a2d5c3c2c5d375d31136b6f9f5b50bf5243d66",
-    "currentSourceHead":  "72a2d5c3c2c5d375d31136b6f9f5b50bf5243d66",
+    "startHead":  "8956652a7f0a8549f02b8b7ca6149b71c52da137",
+    "currentHead":  "8956652a7f0a8549f02b8b7ca6149b71c52da137",
+    "currentSourceHead":  "8956652a7f0a8549f02b8b7ca6149b71c52da137",
     "candidatesProcessed":  0,
     "commitsCreated":  0,
     "remainingBudget":  {
@@ -16,5 +16,5 @@
                         },
     "lastReceipt":  null,
     "terminalState":  "active",
-    "updatedAt":  "2026-07-14T13:39:13.0794428Z"
+    "updatedAt":  "2026-07-14T13:57:25.9475414Z"
 }
