@@ -131,7 +131,7 @@ function Test-AutoPatchableCandidate {
         return $Candidate.ContainsKey("member") -and ([string]$Candidate.member).StartsWith("line-")
     }
     if ($CandidateClass -eq "comment_wrap_cleanup") {
-        return $Candidate.ContainsKey("member") -and ([string]$Candidate.member).StartsWith("line-")
+        return $Candidate.ContainsKey("member") -and ([string]$Candidate.member).StartsWith("line-") -and $Candidate.ContainsKey("commentWrapSplitPointFound") -and $Candidate.commentWrapSplitPointFound -eq $true
     }
     return $false
 }
@@ -144,6 +144,36 @@ function Test-SimpleStringConstantLine {
 function Test-SplitStringConstantLine {
     param([string] $Line)
     return $Line -match '^\s*private static final String [A-Z0-9_]+ = "[^"\\]+" \+\s+"[^"\\]+";\s*$'
+}
+
+function Find-ConservativeCommentSplitPoint {
+    param([string] $Text)
+
+    $minimumPrefix = 24
+    $preferredMaxIndex = [Math]::Min(112, $Text.Length - 1)
+    if ($preferredMaxIndex -lt $minimumPrefix) {
+        return $null
+    }
+
+    $spaceSplit = $Text.LastIndexOf(" ", $preferredMaxIndex)
+    if ($spaceSplit -ge $minimumPrefix -and $spaceSplit -lt ($Text.Length - 1)) {
+        return [pscustomobject]@{
+            Index = $spaceSplit
+            KeepDelimiter = $false
+        }
+    }
+
+    foreach ($delimiter in @("/", "#", "?", "&", "-", ".", ":")) {
+        $splitIndex = $Text.LastIndexOf($delimiter, $preferredMaxIndex)
+        if ($splitIndex -ge $minimumPrefix -and $splitIndex -lt ($Text.Length - 1)) {
+            return [pscustomobject]@{
+                Index = $splitIndex
+                KeepDelimiter = $true
+            }
+        }
+    }
+
+    return $null
 }
 
 function Parse-MethodBlocks {
@@ -296,12 +326,17 @@ foreach ($file in $sourceFiles) {
         if ($line -notmatch '^\s*\*\s+\S') {
             continue
         }
+        $commentText = ($line -replace '^\s*\*\s+', '')
+        if (-not (Find-ConservativeCommentSplitPoint -Text $commentText)) {
+            continue
+        }
         $member = "line-$($i + 1)"
         Add-Candidate -CandidateClass "comment_wrap_cleanup" -AllowedTypes $allowedCandidateTypes -Bucket $candidates -Candidate ([ordered]@{
             candidateId = New-CandidateId $path "comment_wrap_cleanup" $member
             score = 30 + 30 + 20 + 10 + $layerScore
             file = $path
             member = $member
+            commentWrapSplitPointFound = $true
             expectedDiffSummary = "Wrap one long Javadoc comment line without changing source behavior."
             estimatedChangedLines = 2
             tieBreak = [ordered]@{ layerScore = $layerScore; path = $path; member = $member }
