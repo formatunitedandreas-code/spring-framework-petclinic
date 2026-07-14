@@ -51,6 +51,11 @@ function Test-SimpleStringConstantLine {
     return $Line -match '^\s*private static final String [A-Z0-9_]+ = "[^"\\]+";\s*$'
 }
 
+function Test-SplitStringConstantLine {
+    param([string] $Line)
+    return $Line -match '^\s*private static final String [A-Z0-9_]+ = "[^"\\]+" \+\s+"[^"\\]+";\s*$'
+}
+
 function Write-TextFile {
     param([string] $Path, [string] $Content)
     $encoding = New-Object System.Text.UTF8Encoding $false
@@ -351,6 +356,26 @@ function Get-NextCandidate {
                     break
                 }
             }
+            "split_string_constant_normalization" {
+                $member = [string]$candidate.member
+                if (-not $member.StartsWith("line-")) {
+                    Write-Host "candidateSkippedReason=unsupported_line_marker:$($candidate.candidateId)"
+                    $applicable = $false
+                    break
+                }
+                $lineNumber = [int]($member.Substring(5))
+                $lines = Get-Content $path
+                if ($lineNumber -lt 1 -or $lineNumber -gt $lines.Count) {
+                    Write-Host "candidateSkippedReason=line_outside_file:$($candidate.candidateId)"
+                    $applicable = $false
+                    break
+                }
+                if (-not (Test-SplitStringConstantLine $lines[$lineNumber - 1])) {
+                    Write-Host "candidateSkippedReason=unsupported_line_cleanup:$($candidate.candidateId)"
+                    $applicable = $false
+                    break
+                }
+            }
             "utility_readability_cleanup" {
                 if (-not $candidate.helperName) {
                     Write-Host "candidateSkippedReason=missing_fields:$($candidate.candidateId)"
@@ -579,6 +604,56 @@ function Apply-StringConstantWrapCleanup {
     Apply-LongStringConstantWrap -Candidate $Candidate
 }
 
+function Apply-SplitStringConstantNormalization {
+    param([pscustomobject] $Candidate)
+
+    $path = ConvertTo-RepoPath $Candidate.file
+    if (-not (Test-Path $path)) { throw "Candidate file not found: $path" }
+
+    $member = [string]$Candidate.member
+    if (-not $member.StartsWith("line-")) {
+        throw "Split string normalization requires a line marker candidate."
+    }
+
+    $lineNumber = [int]($member.Substring(5))
+    $lines = Get-Content $path
+    if ($lineNumber -lt 1 -or $lineNumber -gt $lines.Count) {
+        throw "Candidate line '$lineNumber' is outside file range in $path."
+    }
+
+    $line = $lines[$lineNumber - 1]
+    $match = [regex]::Match($line, '^(?<indent>\s*)private static final String (?<name>[A-Z0-9_]+) = "(?<first>[^"\\]+)" \+\s+"(?<second>[^"\\]+)";\s*$')
+    if (-not $match.Success) {
+        throw "Line '$lineNumber' is not a supported split string constant in $path."
+    }
+
+    $indent = $match.Groups["indent"].Value
+    $name = $match.Groups["name"].Value
+    $firstSegment = $match.Groups["first"].Value
+    $secondSegment = $match.Groups["second"].Value
+    $wrapped = @(
+        "$indent" + "private static final String $name = `"$firstSegment`" +",
+        "$indent    `"$secondSegment`";"
+    )
+
+    $updatedLines = @()
+    if ($lineNumber -gt 1) {
+        $updatedLines += $lines[0..($lineNumber - 2)]
+    }
+    $updatedLines += $wrapped
+    if ($lineNumber -lt $lines.Count) {
+        $updatedLines += $lines[$lineNumber..($lines.Count - 1)]
+    }
+
+    $originalText = Get-Content $path -Raw
+    $updatedText = $updatedLines -join (Get-LineEnding -Content $originalText)
+    Write-TextFile -Path $path -Content $updatedText
+
+    Write-Host "appliedCandidate=$($Candidate.candidateId)"
+    Write-Host "changedFile=$path"
+    Write-Host "normalizedConstant=$name"
+}
+
 function Apply-UtilityReadabilityCleanup {
     param([pscustomobject] $Candidate)
 
@@ -715,6 +790,9 @@ switch ([string]$candidate.candidateClass) {
     }
     "string_constant_wrap_cleanup" {
         Apply-StringConstantWrapCleanup -Candidate $candidate
+    }
+    "split_string_constant_normalization" {
+        Apply-SplitStringConstantNormalization -Candidate $candidate
     }
     "utility_readability_cleanup" {
         Apply-UtilityReadabilityCleanup -Candidate $candidate

@@ -121,6 +121,9 @@ function Test-AutoPatchableCandidate {
             $Candidate.ContainsKey("helperName") -and
             -not [string]::IsNullOrWhiteSpace([string]$Candidate.helperName)
     }
+    if ($CandidateClass -eq "split_string_constant_normalization") {
+        return $Candidate.ContainsKey("member") -and ([string]$Candidate.member).StartsWith("line-")
+    }
     if ($CandidateClass -eq "string_constant_wrap_cleanup") {
         return $Candidate.ContainsKey("member") -and ([string]$Candidate.member).StartsWith("line-")
     }
@@ -133,6 +136,11 @@ function Test-AutoPatchableCandidate {
 function Test-SimpleStringConstantLine {
     param([string] $Line)
     return $Line -match '^\s*private static final String [A-Z0-9_]+ = "[^"\\]+";\s*$'
+}
+
+function Test-SplitStringConstantLine {
+    param([string] $Line)
+    return $Line -match '^\s*private static final String [A-Z0-9_]+ = "[^"\\]+" \+\s+"[^"\\]+";\s*$'
 }
 
 function Parse-MethodBlocks {
@@ -225,7 +233,25 @@ foreach ($file in $sourceFiles) {
         })
     }
 
-    # Heuristic 2: line readability cleanup for long statements.
+    # Heuristic 2: normalize already split string constants with poor inline wrapping.
+    for ($i = 0; $i -lt $lines.Count; $i++) {
+        if (-not (Test-SplitStringConstantLine $lines[$i])) {
+            continue
+        }
+        $member = "line-$($i + 1)"
+        $score = 30 + 30 + 20 + 10 + $layerScore
+        Add-Candidate -CandidateClass "split_string_constant_normalization" -AllowedTypes $allowedCandidateTypes -Bucket $candidates -Candidate ([ordered]@{
+            candidateId = New-CandidateId $path "split_string_constant_normalization" $member
+            score = $score
+            file = $path
+            member = $member
+            expectedDiffSummary = "Normalize a split string constant into a clean two-line wrap without changing its value."
+            estimatedChangedLines = 2
+            tieBreak = [ordered]@{ layerScore = $layerScore; path = $path; member = $member }
+        })
+    }
+
+    # Heuristic 3: line readability cleanup for long statements.
     $longLines = @()
     for ($i = 0; $i -lt $lines.Count; $i++) {
         if ($lines[$i].Length -gt 120 -and $lines[$i] -match "^\s*(private|public|return|[A-Za-z0-9_]+\.)") {
@@ -258,7 +284,7 @@ foreach ($file in $sourceFiles) {
 
     $methods = @(Parse-MethodBlocks -Lines $lines)
 
-    # Heuristic 3: tiny spacing normalization between adjacent methods.
+    # Heuristic 4: tiny spacing normalization between adjacent methods.
     if ($methods.Count -gt 1) {
         for ($m = 0; $m -lt ($methods.Count - 1); $m++) {
             $currentMethod = $methods[$m]
@@ -279,7 +305,7 @@ foreach ($file in $sourceFiles) {
         }
     }
 
-    # Heuristic 4: repository-specific readability candidate.
+    # Heuristic 5: repository-specific readability candidate.
     if ($path -like "*/repository/*") {
         foreach ($method in $methods) {
             $methodName = $method.Name
@@ -317,7 +343,7 @@ foreach ($file in $sourceFiles) {
         }
     }
 
-    # Heuristic 5: utility-specific readability candidate.
+    # Heuristic 6: utility-specific readability candidate.
     if ($path -like "*/util/*") {
         foreach ($method in $methods) {
             $methodName = $method.Name
@@ -348,7 +374,7 @@ foreach ($file in $sourceFiles) {
         }
     }
 
-    # Heuristic 6: duplicate literal extraction.
+    # Heuristic 7: duplicate literal extraction.
     $stringMatches = [regex]::Matches($content, '"([^"\\\r\n]|\\.)+"') |
         ForEach-Object { $_.Value } |
         Where-Object {
