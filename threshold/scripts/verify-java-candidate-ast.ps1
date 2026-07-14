@@ -36,6 +36,11 @@ function Test-SimpleStringConstantLine {
     return $Line -match '^\s*private static final String [A-Z0-9_]+ = "[^"\\]+";\s*$'
 }
 
+function Test-SplitStringConstantStartLine {
+    param([string] $Line)
+    return $Line -match '^\s*private static final String [A-Z0-9_]+ = "[^"\\]+" \+\s*$'
+}
+
 if ($CandidateClass -notin @("repository_readability_cleanup", "redundant_local_variable_simplification")) {
     Write-Host "astVerificationSkipped=true"
     Write-Host "candidateClass=$CandidateClass"
@@ -48,7 +53,8 @@ if ($CandidateClass -eq "repository_readability_cleanup" -and $Member.StartsWith
     if ($lineNumber -lt 1 -or $lineNumber -gt $lines.Count) {
         throw "AST-lite line verification failed: line $lineNumber outside $File"
     }
-    if (-not (Test-SimpleStringConstantLine $lines[$lineNumber - 1])) {
+    if (-not ((Test-SimpleStringConstantLine $lines[$lineNumber - 1]) -or
+        (Test-SplitStringConstantStartLine $lines[$lineNumber - 1]))) {
         throw "AST-lite line verification failed: unsupported line cleanup in $File"
     }
     Write-Host "astVerificationPassed=true"

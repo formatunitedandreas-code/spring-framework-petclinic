@@ -149,6 +149,11 @@ function Test-SplitStringConstantLine {
     return $Line -match '^\s*private static final String [A-Z0-9_]+ = "[^"\\]+" \+\s+"[^"\\]+";\s*$'
 }
 
+function Test-SplitStringConstantStartLine {
+    param([string] $Line)
+    return $Line -match '^\s*private static final String [A-Z0-9_]+ = "[^"\\]+" \+\s*$'
+}
+
 function Test-SimpleQueryAnnotationLine {
     param([string] $Line)
     return $Line -match '^\s*@Query\("(?<value>[^"\\]+)"\)\s*$'
@@ -340,6 +345,35 @@ foreach ($file in $sourceFiles) {
                 file = $path
                 member = $member
                 expectedDiffSummary = "Wrap a long Spring Data @Query annotation into a concatenated two-line query literal without changing semantics."
+                estimatedChangedLines = 2
+                tieBreak = [ordered]@{ layerScore = $layerScore; path = $path; member = $member }
+            })
+        }
+    }
+
+    # Heuristic 3c: repository split string constant continuation cleanup.
+    if ($path -like "*/repository/*") {
+        for ($i = 0; $i -lt ($lines.Count - 1); $i++) {
+            if ($lines[$i].Length -le 110) {
+                continue
+            }
+            if (-not (Test-SplitStringConstantStartLine $lines[$i])) {
+                continue
+            }
+            if ($lines[$i + 1] -notmatch '^\s*"[^"\\]+";\s*$') {
+                continue
+            }
+
+            $member = "line-$($i + 1)"
+            $constantMatch = [regex]::Match($lines[$i], '^\s*private static final String (?<name>[A-Z0-9_]+) =')
+            $constantName = if ($constantMatch.Success) { $constantMatch.Groups["name"].Value } else { $null }
+            Add-Candidate -CandidateClass "repository_readability_cleanup" -AllowedTypes $allowedCandidateTypes -Bucket $candidates -Candidate ([ordered]@{
+                candidateId = New-CandidateId $path "repository_readability_cleanup" $member
+                score = 30 + 30 + 20 + 18 + $layerScore
+                file = $path
+                member = $member
+                constantName = $constantName
+                expectedDiffSummary = "Normalize a split repository string constant into a canonical two-line continuation format."
                 estimatedChangedLines = 2
                 tieBreak = [ordered]@{ layerScore = $layerScore; path = $path; member = $member }
             })
