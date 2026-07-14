@@ -49,6 +49,9 @@ public class JdbcOwnerRepositoryImpl implements OwnerRepository {
 
     private static final String ID = "id";
 
+
+    private static final String GET_PET_TYPES_SQL = "SELECT id, name FROM types ORDER BY name";
+
     private final JdbcClient jdbcClient;
 
     private final SimpleJdbcInsert insertOwner;
@@ -143,7 +146,7 @@ public class JdbcOwnerRepositoryImpl implements OwnerRepository {
     }
 
     public Collection<PetType> getPetTypes() {
-        return this.jdbcClient.sql("SELECT id, name FROM types ORDER BY name")
+        return this.jdbcClient.sql(GET_PET_TYPES_SQL)
             .query(BeanPropertyRowMapper.newInstance(PetType.class))
             .list();
     }
