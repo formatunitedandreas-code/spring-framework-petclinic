@@ -193,19 +193,21 @@ function Get-BatchCandidates {
 
     $firstClass = [string]$eligible[0].candidateClass
     $sameClass = @($eligible | Where-Object { [string]$_.candidateClass -eq $firstClass })
-    $selected = New-Object System.Collections.Generic.List[object]
-    $selectedFiles = New-Object System.Collections.Generic.HashSet[string]
+    $selected = @()
+    $selectedFiles = @()
 
     foreach ($candidate in $sameClass) {
         $path = ConvertTo-RepoPath $candidate.file
         if (-not (Test-Path $path)) { continue }
-        [void]$selectedFiles.Add($path)
-        if ($selectedFiles.Count -gt $MaxFilesPerBatch) { break }
-        $selected.Add($candidate) | Out-Null
+        if ($selectedFiles -notcontains $path) {
+            $selectedFiles += $path
+        }
+        if (@($selectedFiles).Count -gt $MaxFilesPerBatch) { break }
+        $selected += $candidate
         if ($selected.Count -ge $MaxSlicesPerBatch) { break }
     }
 
-    return @($selected)
+    return $selected
 }
 
 function Get-ChangedLineCount {
