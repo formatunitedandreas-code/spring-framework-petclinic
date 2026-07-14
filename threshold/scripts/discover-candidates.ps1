@@ -329,6 +329,10 @@ foreach ($file in $sourceFiles) {
             if ($methodLineCount -gt 8 -and (($hasTryFinally -and $hasStopWatch) -or $hasSynchronized -or $hasStopWatch)) {
                 $utilityPattern = if ($hasStopWatch) { "stopwatch_start_helper" } else { "synchronized_helper" }
                 $helperName = if ($hasStopWatch) { "startInvocationStopWatch" } else { "recordInvocation" }
+                if ($content -match "private\s+StopWatch\s+$([regex]::Escape($helperName))\s*\(" -or
+                    $content -match "private\s+[\w<>]+\s+$([regex]::Escape($helperName))\s*\(") {
+                    continue
+                }
                 Add-Candidate -CandidateClass "utility_readability_cleanup" -AllowedTypes $allowedCandidateTypes -Bucket $candidates -Candidate ([ordered]@{
                     candidateId = New-CandidateId $path "utility_readability_cleanup" $methodName
                     score = 30 + 30 + 20 + 12 + $layerScore
