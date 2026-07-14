@@ -46,6 +46,9 @@ public class JdbcPetRepositoryImpl implements PetRepository {
 
     private static final String ID = "id";
 
+
+    private static final String FIND_OWNER_ID_BY_PET_ID_SQL = "SELECT owner_id FROM pets WHERE id=:id";
+
     private final JdbcClient jdbcClient;
 
     private final SimpleJdbcInsert insertPet;
@@ -85,7 +88,7 @@ public class JdbcPetRepositoryImpl implements PetRepository {
 
     private int findOwnerIdByPetId(int petId) {
         return this.jdbcClient
-            .sql("SELECT owner_id FROM pets WHERE id=:id")
+            .sql(FIND_OWNER_ID_BY_PET_ID_SQL)
             .param(ID, petId)
             .query(Integer.class)
             .single();
