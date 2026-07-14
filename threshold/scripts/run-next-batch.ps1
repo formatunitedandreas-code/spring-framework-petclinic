@@ -157,12 +157,15 @@ function New-CandidatePocket {
     $path = Join-Path ([System.IO.Path]::GetTempPath()) "threshold-batch-candidate-pocket-$head.json"
     if (Test-Path $path) { Remove-Item -LiteralPath $path -Force }
 
-    & powershell.exe -NoProfile -ExecutionPolicy Bypass -File "threshold/scripts/discover-candidates.ps1" `
+    $discoveryOutput = @(& powershell.exe -NoProfile -ExecutionPolicy Bypass -File "threshold/scripts/discover-candidates.ps1" `
         -LeasePath $LeasePath `
         -GatePath $GatePath `
         -PocketPath $path `
-        -Limit 100
+        -Limit 100)
     if ($LASTEXITCODE -ne 0) { throw "Candidate discovery failed." }
+    foreach ($line in $discoveryOutput) {
+        Write-Host $line
+    }
     if (-not (Test-Path $path)) { throw "Candidate discovery produced no pocket." }
     return $path
 }
