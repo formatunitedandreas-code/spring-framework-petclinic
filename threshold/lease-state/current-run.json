@@ -1,20 +1,20 @@
 {
     "schemaVersion":  "threshold.petclinic.lease-state.v0.2",
-    "invocationId":  "owned-autonomous-refactor-branch-wave-v0_9_renewed_budget-20260714T215819Z",
-    "leaseId":  "owned-autonomous-refactor-branch-wave-v0_9_renewed_budget",
+    "invocationId":  "owned-autonomous-refactor-branch-wave-v0_9-20260714T220244Z",
+    "leaseId":  "owned-autonomous-refactor-branch-wave-v0_9",
     "mode":  "local_refactor",
     "branch":  "threshold-governed-refactor-demo-9",
-    "startHead":  "3492fa6f553ac90680e3f1a3754b06eade1b34cd",
-    "currentHead":  "6a6763a8423bdbce7c6b924c648c20cab54f4078",
-    "currentSourceHead":  "6a6763a8423bdbce7c6b924c648c20cab54f4078",
-    "candidatesProcessed":  3,
-    "commitsCreated":  1,
+    "startHead":  "1a7d07ace11138abb09f9432bbad0deffda169aa",
+    "currentHead":  "1a7d07ace11138abb09f9432bbad0deffda169aa",
+    "currentSourceHead":  "1a7d07ace11138abb09f9432bbad0deffda169aa",
+    "candidatesProcessed":  0,
+    "commitsCreated":  0,
     "remainingBudget":  {
-                            "candidates":  0,
-                            "commits":  0,
+                            "candidates":  3,
+                            "commits":  1,
                             "repairAttempts":  1
                         },
-    "lastReceipt":  "threshold/receipts/threshold-batch-c5df16221d22-20260714T220010Z.json",
-    "terminalState":  "budget_exhausted",
-    "updatedAt":  "2026-07-14T22:00:10.0000000Z"
+    "lastReceipt":  null,
+    "terminalState":  "active",
+    "updatedAt":  "2026-07-14T22:02:45.0294509Z"
 }
