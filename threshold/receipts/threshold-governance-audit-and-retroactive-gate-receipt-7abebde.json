@@ -1,0 +1,80 @@
+{
+  "schemaVersion": "threshold.petclinic.governance-audit-receipt.v0.1",
+  "receiptId": "threshold-governance-audit-and-retroactive-gate-receipt-7abebde",
+  "createdAt": "2026-07-14T20:20:00Z",
+  "branch": "threshold-governed-refactor-demo-7",
+  "headAtAuditStart": "7abebde66a1435f2cf5ad82735a7388d23981fb1",
+  "auditPurpose": [
+    "determine whether stale active lease-state enabled any extra autonomous source mutation",
+    "materialize a retrospective human-gate receipt for the auto-patchable scope-promotion gate"
+  ],
+  "staleActiveAudit": {
+    "affectedLeaseId": "petclinic-threshold-governed-refactor-lease-v16",
+    "staleStateCommit": "1a596f5f892e185524ca6404100dc69a72ab2f63",
+    "staleStateEvidence": {
+      "remainingCandidates": 0,
+      "remainingCommits": 0,
+      "terminalState": "active",
+      "currentSourceHead": "315c5301e39edb469b7bbc0789a4b0c124666f07",
+      "lastReceipt": "threshold/receipts/src-main-java-org-springframework-samples-petclinic-repository-jpa-jpaownerrepositoryimpl-java-repository-readability-cleanup-line-38-315c5301e39e.json"
+    },
+    "verifiedStateCommit": "7839fb8634b630e2015c280d385ae3c2767bba04",
+    "auditedCommitWindow": {
+      "fromExclusive": "1a596f5f892e185524ca6404100dc69a72ab2f63",
+      "toInclusive": "e9fa68419af305f26b4398dcff4f3744d5cee6ac",
+      "observedCommits": [
+        {
+          "commit": "e9fa68419af305f26b4398dcff4f3744d5cee6ac",
+          "subject": "Harden Threshold autonomous discovery gates",
+          "classification": "governance_hardening",
+          "changedPathClasses": [
+            "threshold/discovery-canaries/**",
+            "threshold/gates/**",
+            "threshold/leases/current.yaml",
+            "threshold/scripts/**"
+          ],
+          "sourceMutationObserved": false
+        }
+      ]
+    },
+    "finding": "No autonomous production-source slice was observed after the v16 budget reached 0/0 and before the stale active state was corrected.",
+    "residualRisk": "Audit is based on local Git history and tracked-file changes in the inspected branch. It does not claim to prove behavior outside this checkout or outside tracked commits."
+  },
+  "retroactiveHumanGateReceipt": {
+    "gateId": "retrospective-human-gate-for-auto-patchable-candidate-classes-v0-1",
+    "coveredChangeCommit": "e9fa68419af305f26b4398dcff4f3744d5cee6ac",
+    "coveredGateArtifact": "threshold/gates/auto-patchable-candidate-classes.json",
+    "coveredRule": "candidate classes without an explicit gate entry must be reviewOnly instead of autoPatchable",
+    "gateReason": "The gate changes autonomy policy by controlling which discovered candidate classes can be automatically patched.",
+    "humanGateType": "explicitHumanDecisionReceiptForRule",
+    "humanDecisionSource": "User requested this batch explicitly after reviewing the stale-active and scope-promotion findings.",
+    "decision": "accepted_retroactively_for_current_branch_record",
+    "limits": [
+      "does not retroactively authorize earlier scope expansions as if they had been gated before execution",
+      "does not authorize additional candidate classes beyond the committed gate artifact",
+      "does not authorize push, PR readiness, merge, release, deploy, or upstream interaction",
+      "does not bypass lease allowlists, canary checks, Maven validation, or per-slice receipts"
+    ]
+  },
+  "validation": {
+    "commands": [
+      "git show 1a596f5f892e185524ca6404100dc69a72ab2f63:threshold/lease-state/current-run.json",
+      "git log --oneline --name-only 1a596f5f892e185524ca6404100dc69a72ab2f63..e9fa68419af305f26b4398dcff4f3744d5cee6ac",
+      "git show --name-only --oneline e9fa68419af305f26b4398dcff4f3744d5cee6ac",
+      "git show --name-only --oneline 7839fb8634b630e2015c280d385ae3c2767bba04"
+    ],
+    "result": "passed",
+    "mavenTestRequired": false,
+    "mavenTestReason": "This batch records governance audit evidence only and does not modify PetClinic production or test source."
+  },
+  "nonClaims": [
+    "no upstream interaction",
+    "no merge",
+    "no release",
+    "no deploy",
+    "no public readiness claim",
+    "no public correctness claim",
+    "no public security claim",
+    "no public compliance claim"
+  ]
+}
