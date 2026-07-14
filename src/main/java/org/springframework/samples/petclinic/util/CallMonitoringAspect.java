@@ -93,6 +93,7 @@ public class CallMonitoringAspect {
         sw.start("invoke");
         return sw;
     }
+
     private synchronized void recordInvocation(long totalTimeMillis) {
         this.callCount++;
         this.accumulatedCallTime += totalTimeMillis;
