@@ -51,9 +51,16 @@ function ConvertTo-ConstantName {
     return "$snake`_$Suffix"
 }
 
-function Get-FirstInlineSqlLiteral {
+function Get-FirstRepositoryQueryExpression {
     param([string] $MethodText)
-    $match = [regex]::Match($MethodText, '(?s)\.sql\s*\(\s*(?<literal>"(?:[^"\\]|\\.)*")\s*\)')
+
+    $match = [regex]::Match($MethodText, '(?s)\.sql\s*\(\s*(?<literal>"""(?:.*?)"""|"(?:[^"\\]|\\.)*")\s*\)')
+    if ($match.Success) { return $match.Groups["literal"].Value }
+
+    $match = [regex]::Match(
+        $MethodText,
+        '(?s)\.createQuery\s*\(\s*(?<literal>(?:"""(?:.*?)"""|"(?:[^"\\]|\\.)*")(?:\s*\+\s*(?:"""(?:.*?)"""|"(?:[^"\\]|\\.)*"))*)\s*,'
+    )
     if (-not $match.Success) { return $null }
     return $match.Groups["literal"].Value
 }
@@ -85,10 +92,16 @@ function Test-AutoPatchableCandidate {
     if ($CandidateClass -eq "duplicate_literal_local_constant_extraction") {
         return $Candidate.ContainsKey("literal") -and $Candidate.ContainsKey("constantName")
     }
+    if ($CandidateClass -eq "redundant_local_variable_simplification") {
+        return $Candidate.ContainsKey("member") -and -not [string]::IsNullOrWhiteSpace([string]$Candidate.member)
+    }
     if ($CandidateClass -eq "private_helper_extraction_for_readability") {
         return $Candidate.ContainsKey("member") -and ([string]$Candidate.member).StartsWith("line-")
     }
     if ($CandidateClass -eq "repository_readability_cleanup") {
+        if ($Candidate.ContainsKey("member") -and ([string]$Candidate.member).StartsWith("line-")) {
+            return $true
+        }
         return $Candidate.ContainsKey("sqlLiteral") -and
             -not [string]::IsNullOrWhiteSpace([string]$Candidate.sqlLiteral) -and
             $Candidate.ContainsKey("constantName") -and
@@ -226,7 +239,7 @@ foreach ($file in $sourceFiles) {
             $hasSqlToken = [regex]::IsMatch($methodText, "(?i)\b(SELECT|INSERT|UPDATE|DELETE|MERGE)\b")
             $hasSqlQueryCall = [regex]::IsMatch($methodText, "(?i)\.sql\s*\(")
             $hasJdbcCall = [regex]::IsMatch($methodText, "(?i)\b(jdbcClient|jdbcTemplate|entityManager|queryFor|NamedParameterJdbcTemplate|createQuery)\b")
-            $inlineSqlLiteral = Get-FirstInlineSqlLiteral -MethodText $methodText
+            $inlineSqlLiteral = Get-FirstRepositoryQueryExpression -MethodText $methodText
             if (($hasSqlToken -or $hasSqlQueryCall) -and ($hasJdbcCall -or $hasSqlQueryCall) -and ($methodLineCount -gt 8 -or $inlineSqlLiteral)) {
                 $constantName = ConvertTo-ConstantName $methodName "SQL"
                 $expectedDiffSummary = if ($inlineSqlLiteral) {

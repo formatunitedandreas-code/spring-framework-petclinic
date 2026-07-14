@@ -29,6 +29,12 @@ function Get-LineEnding {
     return "`n"
 }
 
+function Get-LineIndent {
+    param([string] $Line)
+    $match = [regex]::Match($Line, "^(?<indent>\s*)")
+    return $match.Groups["indent"].Value
+}
+
 function Write-TextFile {
     param([string] $Path, [string] $Content)
     $encoding = New-Object System.Text.UTF8Encoding $false
@@ -235,6 +241,23 @@ function Get-NextCandidate {
                 }
             }
             "repository_readability_cleanup" {
+                $member = [string]$candidate.member
+                if ($member.StartsWith("line-")) {
+                    $lineNumber = [int]($member.Substring(5))
+                    $lines = Get-Content $path
+                    if ($lineNumber -lt 1 -or $lineNumber -gt $lines.Count) {
+                        Write-Host "candidateSkippedReason=line_outside_file:$($candidate.candidateId)"
+                        $applicable = $false
+                        break
+                    }
+                    if ($lines[$lineNumber - 1] -notmatch '^\s*private static final String [A-Z0-9_]+ = ".+";\s*$') {
+                        Write-Host "candidateSkippedReason=unsupported_line_cleanup:$($candidate.candidateId)"
+                        $applicable = $false
+                        break
+                    }
+                    break
+                }
+
                 if (-not $candidate.sqlLiteral -or -not $candidate.constantName) {
                     Write-Host "candidateSkippedReason=missing_fields:$($candidate.candidateId)"
                     $applicable = $false
@@ -320,11 +343,109 @@ function Apply-DuplicateLiteralConstantExtraction {
     Write-Host "constantName=$constantName"
 }
 
+function Apply-RedundantLocalVariableSimplification {
+    param([pscustomobject] $Candidate)
+
+    $path = ConvertTo-RepoPath $Candidate.file
+    if (-not (Test-Path $path)) { throw "Candidate file not found: $path" }
+    if (-not $Candidate.member) { throw "Candidate is missing member field." }
+
+    $variableName = [string]$Candidate.member
+    if ($variableName -notmatch "^[a-z][A-Za-z0-9_]*$") {
+        throw "Refusing unsafe local variable name '$variableName'."
+    }
+
+    $content = Get-Content $path -Raw
+    $declarationPattern = "(?ms)(?<indent>^\s*)(?<type>[A-Z][A-Za-z0-9_<>, ?]+)\s+$([regex]::Escape($variableName))\s*=\s*(?<expr>[^;]+);\s*`r?`n\s*return\s+$([regex]::Escape($variableName))\s*;"
+    $matches = [regex]::Matches($content, $declarationPattern)
+    if ($matches.Count -ne 1) {
+        throw "Expected exactly one immediate return-local candidate for '$variableName', found $($matches.Count)."
+    }
+
+    $match = $matches[0]
+    $indent = $match.Groups["indent"].Value
+    $expression = $match.Groups["expr"].Value.Trim()
+    if ([string]::IsNullOrWhiteSpace($expression)) {
+        throw "Refusing empty expression for '$variableName'."
+    }
+
+    $replacement = "$indent" + "return $expression;"
+    $updated = $content.Remove($match.Index, $match.Length).Insert($match.Index, $replacement)
+    Write-TextFile -Path $path -Content $updated
+
+    Write-Host "appliedCandidate=$($Candidate.candidateId)"
+    Write-Host "changedFile=$path"
+    Write-Host "inlinedLocal=$variableName"
+}
+
+function Apply-LongStringConstantWrap {
+    param([pscustomobject] $Candidate)
+
+    $path = ConvertTo-RepoPath $Candidate.file
+    if (-not (Test-Path $path)) { throw "Candidate file not found: $path" }
+    $member = [string]$Candidate.member
+    if (-not $member.StartsWith("line-")) {
+        throw "Long string constant wrap requires a line marker candidate."
+    }
+
+    $lineNumber = [int]($member.Substring(5))
+    $lines = Get-Content $path
+    if ($lineNumber -lt 1 -or $lineNumber -gt $lines.Count) {
+        throw "Candidate line '$lineNumber' is outside file range in $path."
+    }
+
+    $line = $lines[$lineNumber - 1]
+    $match = [regex]::Match($line, '^(?<indent>\s*)private static final String (?<name>[A-Z0-9_]+) = "(?<value>[^"\\]+)";\s*$')
+    if (-not $match.Success) {
+        throw "Line '$lineNumber' is not a supported simple string constant in $path."
+    }
+
+    $value = $match.Groups["value"].Value
+    $maxFirstSegmentLength = [Math]::Min(88, $value.Length - 1)
+    $splitIndex = $value.LastIndexOf(" ", $maxFirstSegmentLength)
+    if ($splitIndex -lt 24 -or $splitIndex -ge ($value.Length - 1)) {
+        throw "Could not find a conservative split point for string constant '$($match.Groups["name"].Value)'."
+    }
+
+    $indent = $match.Groups["indent"].Value
+    $name = $match.Groups["name"].Value
+    $firstSegment = $value.Substring(0, $splitIndex + 1)
+    $secondSegment = $value.Substring($splitIndex + 1)
+
+    $wrapped = @(
+        "$indent" + "private static final String $name = `"$firstSegment`" +",
+        "$indent    `"$secondSegment`";"
+    )
+
+    $updatedLines = @()
+    if ($lineNumber -gt 1) {
+        $updatedLines += $lines[0..($lineNumber - 2)]
+    }
+    $updatedLines += $wrapped
+    if ($lineNumber -lt $lines.Count) {
+        $updatedLines += $lines[$lineNumber..($lines.Count - 1)]
+    }
+
+    $originalText = Get-Content $path -Raw
+    $updatedText = $updatedLines -join (Get-LineEnding -Content $originalText)
+    Write-TextFile -Path $path -Content $updatedText
+
+    Write-Host "appliedCandidate=$($Candidate.candidateId)"
+    Write-Host "changedFile=$path"
+    Write-Host "wrappedConstant=$name"
+}
+
 function Apply-RepositoryReadabilityCleanup {
     param([pscustomobject] $Candidate)
 
     $path = ConvertTo-RepoPath $Candidate.file
     if (-not (Test-Path $path)) { throw "Candidate file not found: $path" }
+
+    if ($Candidate.member -and ([string]$Candidate.member).StartsWith("line-")) {
+        Apply-LongStringConstantWrap -Candidate $Candidate
+        return
+    }
+
     if (-not $Candidate.sqlLiteral) { throw "Candidate is missing sqlLiteral field." }
     if (-not $Candidate.constantName) { throw "Candidate is missing constantName field." }
 
@@ -425,6 +546,9 @@ Write-Host "selectedCandidateScore=$($candidate.score)"
 Write-Host "selectedCandidateFile=$($candidate.file)"
 
 switch ([string]$candidate.candidateClass) {
+    "redundant_local_variable_simplification" {
+        Apply-RedundantLocalVariableSimplification -Candidate $candidate
+    }
     "duplicate_literal_local_constant_extraction" {
         Apply-DuplicateLiteralConstantExtraction -Candidate $candidate
     }
