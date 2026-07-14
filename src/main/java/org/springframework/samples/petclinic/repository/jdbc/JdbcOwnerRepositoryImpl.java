@@ -52,6 +52,11 @@ public class JdbcOwnerRepositoryImpl implements OwnerRepository {
 
     private static final String GET_PET_TYPES_SQL = "SELECT id, name FROM types ORDER BY name";
 
+    private static final String FIND_BY_ID_SQL = """
+                SELECT id, first_name, last_name, address, city, telephone
+                FROM owners WHERE id = :id
+                """;
+
     private final JdbcClient jdbcClient;
 
     private final SimpleJdbcInsert insertOwner;
@@ -93,10 +98,7 @@ public class JdbcOwnerRepositoryImpl implements OwnerRepository {
     @Override
     public Owner findById(int id) {
         try {
-            Owner owner = this.jdbcClient.sql("""
-                SELECT id, first_name, last_name, address, city, telephone
-                FROM owners WHERE id = :id
-                """)
+            Owner owner = this.jdbcClient.sql(FIND_BY_ID_SQL)
                 .param(ID, id)
                 .query(BeanPropertyRowMapper.newInstance(Owner.class))
                 .single();
