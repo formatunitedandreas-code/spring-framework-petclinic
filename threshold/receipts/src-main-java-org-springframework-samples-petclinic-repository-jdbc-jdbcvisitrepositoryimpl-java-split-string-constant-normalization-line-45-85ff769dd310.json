@@ -1,0 +1,60 @@
+{
+    "schemaVersion":  "threshold.petclinic.slice-receipt.v0.2",
+    "candidateId":  "src-main-java-org-springframework-samples-petclinic-repository-jdbc-jdbcvisitrepositoryimpl-java-split-string-constant-normalization-line-45",
+    "leaseName":  "petclinic-threshold-governed-refactor-lease-v14",
+    "branch":  "threshold-governed-refactor-demo-6",
+    "candidateClass":  "split_string_constant_normalization",
+    "leaseStartHead":  "d116af9034b701b4f48bc50abeb22b913c4a1514",
+    "baseHead":  "d116af9034b701b4f48bc50abeb22b913c4a1514",
+    "commitHash":  "85ff769dd310950cf9f170a6f6707db871aab1a7",
+    "receiptMaterialization":  "post-commit",
+    "perCommitValidationLogAvailable":  true,
+    "branchFinalValidationPassed":  false,
+    "changedFiles":  [
+                         {
+                             "path":  "src/main/java/org/springframework/samples/petclinic/repository/jdbc/JdbcVisitRepositoryImpl.java",
+                             "beforeSha256":  "2fa9853f3245a0df286c25fb4e6a5c9c05b152de23c97cce51a0e4ac1d7f479c",
+                             "afterSha256":  "7a3b9e58dd19032ee2a2f0ac7619b4eccfabd0a9590fe135dd6fb01d765004b7"
+                         },
+                         {
+                             "path":  "threshold/lease-state/current-run.json",
+                             "beforeSha256":  "9a0042eeca924ff19c1c05dc26b388a0566e531f0e16782a513822c8cb0225ec",
+                             "afterSha256":  "d25848cf192e304b2fccae93440e93ef3376937231490778ea6565ca0c8b2dc8"
+                         },
+                         {
+                             "path":  "threshold/leases/current.yaml",
+                             "beforeSha256":  "a51ac29df39f11c482f1feb7fb31a8f27430ab593cc1d81d37196236b073a69c",
+                             "afterSha256":  "2dc80ac687e0ba7553b057d160ac0c4130792edf8cdadc241ca296ce01c82b0e"
+                         }
+                     ],
+    "diffSummary":  "Refactor PetClinic Normalize a split string constant into a clean two-lin",
+    "diffStat":  {
+                     "filesChanged":  3,
+                     "insertions":  16,
+                     "deletions":  15
+                 },
+    "validation":  {
+                       "diffCheck":  "passed",
+                       "command":  ".\\mvnw.cmd test",
+                       "result":  "BUILD SUCCESS",
+                       "testsRun":  75,
+                       "failures":  0,
+                       "errors":  0,
+                       "skipped":  0
+                   },
+    "nonClaims":  [
+                      "no push in candidate slice",
+                      "no PR update in candidate slice",
+                      "no upstream interaction",
+                      "no pom.xml change",
+                      "no dependency change",
+                      "no src/test change",
+                      "no merge",
+                      "no release",
+                      "no deploy",
+                      "no public readiness claim",
+                      "no public correctness claim",
+                      "no public security claim",
+                      "no public compliance claim"
+                  ]
+}
