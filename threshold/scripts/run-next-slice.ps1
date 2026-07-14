@@ -32,7 +32,8 @@ function Get-LineEnding {
 function Write-TextFile {
     param([string] $Path, [string] $Content)
     $encoding = New-Object System.Text.UTF8Encoding $false
-    [System.IO.File]::WriteAllText((Resolve-Path -LiteralPath $Path), $Content, $encoding)
+    $normalizedContent = $Content -replace "`r`n", "`n" -replace "`r", "`n"
+    [System.IO.File]::WriteAllText((Resolve-Path -LiteralPath $Path), $normalizedContent, $encoding)
 }
 
 function Insert-PrivateStaticStringConstant {
