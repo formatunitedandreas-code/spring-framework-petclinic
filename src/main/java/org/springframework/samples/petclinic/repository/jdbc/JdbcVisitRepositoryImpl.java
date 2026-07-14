@@ -39,6 +39,15 @@ import java.util.List;
 @Repository
 public class JdbcVisitRepositoryImpl implements VisitRepository {
 
+    private static final String ID = "id";
+
+
+    private static final String FIND_PET_BY_ID_SQL = "SELECT id, name, birth_date, type_id, owner_id FROM pets WHERE " +
+        "id=:id";
+
+    private static final String FIND_VISITS_BY_PET_ID_SQL = "SELECT id as visit_id, visit_date, description FROM visits WHERE " +
+        "pet_id=:id";
+
     private final JdbcClient jdbcClient;
 
     private final SimpleJdbcInsert insertVisit;
@@ -48,7 +57,7 @@ public class JdbcVisitRepositoryImpl implements VisitRepository {
 
         this.insertVisit = new SimpleJdbcInsert(dataSource)
             .withTableName("visits")
-            .usingGeneratedKeyColumns("id");
+            .usingGeneratedKeyColumns(ID);
     }
 
 
@@ -67,7 +76,7 @@ public class JdbcVisitRepositoryImpl implements VisitRepository {
      */
     private MapSqlParameterSource createVisitParameterSource(Visit visit) {
         return new MapSqlParameterSource()
-            .addValue("id", visit.getId())
+            .addValue(ID, visit.getId())
             .addValue("visit_date", visit.getDate())
             .addValue("description", visit.getDescription())
             .addValue("pet_id", visit.getPet().getId());
@@ -85,16 +94,16 @@ public class JdbcVisitRepositoryImpl implements VisitRepository {
 
     private JdbcPet findPetById(Integer petId) {
         return this.jdbcClient
-            .sql("SELECT id, name, birth_date, type_id, owner_id FROM pets WHERE id=:id")
-            .param("id", petId)
+            .sql(FIND_PET_BY_ID_SQL)
+            .param(ID, petId)
             .query(new JdbcPetRowMapper())
             .single();
     }
 
     private List<Visit> findVisitsByPetId(Integer petId) {
         return this.jdbcClient
-            .sql("SELECT id as visit_id, visit_date, description FROM visits WHERE pet_id=:id")
-            .param("id", petId)
+            .sql(FIND_VISITS_BY_PET_ID_SQL)
+            .param(ID, petId)
             .query(new JdbcVisitRowMapper())
             .list();
     }

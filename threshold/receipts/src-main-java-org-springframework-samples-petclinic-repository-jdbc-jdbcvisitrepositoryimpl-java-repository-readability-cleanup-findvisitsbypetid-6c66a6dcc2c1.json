@@ -1,0 +1,50 @@
+{
+    "schemaVersion":  "threshold.petclinic.slice-receipt.v0.2",
+    "candidateId":  "src-main-java-org-springframework-samples-petclinic-repository-jdbc-jdbcvisitrepositoryimpl-java-repository-readability-cleanup-findvisitsbypetid",
+    "leaseName":  "petclinic-threshold-governed-refactor-lease-v7",
+    "branch":  "threshold-governed-refactor-demo-6",
+    "candidateClass":  "repository_readability_cleanup",
+    "leaseStartHead":  "30eb4f497cb0b872b855008a84ad3a88b95a0b96",
+    "baseHead":  "5d2d11b426d6db239cc635ce678a2d92bed9eaea",
+    "commitHash":  "6c66a6dcc2c1437f934685a8e43c4fe6874d5ae7",
+    "receiptMaterialization":  "post-commit",
+    "perCommitValidationLogAvailable":  true,
+    "branchFinalValidationPassed":  false,
+    "changedFiles":  [
+                         {
+                             "path":  "src/main/java/org/springframework/samples/petclinic/repository/jdbc/JdbcVisitRepositoryImpl.java",
+                             "beforeSha256":  "da94b2f8f6684d98782faba091a8557e2103f87b2317192c440b0bb50b00f7cd",
+                             "afterSha256":  "67277d65f67e6b0383677318ecb9534e44d3c0eb05b6a9b93954637e01df9a50"
+                         }
+                     ],
+    "diffSummary":  "Refactor PetClinic Extract inline SQL literal from repository method \u0027fin",
+    "diffStat":  {
+                     "filesChanged":  1,
+                     "insertions":  3,
+                     "deletions":  1
+                 },
+    "validation":  {
+                       "diffCheck":  "passed",
+                       "command":  ".\\mvnw.cmd test",
+                       "result":  "BUILD SUCCESS",
+                       "testsRun":  75,
+                       "failures":  0,
+                       "errors":  0,
+                       "skipped":  0
+                   },
+    "nonClaims":  [
+                      "no push in candidate slice",
+                      "no PR update in candidate slice",
+                      "no upstream interaction",
+                      "no pom.xml change",
+                      "no dependency change",
+                      "no src/test change",
+                      "no merge",
+                      "no release",
+                      "no deploy",
+                      "no public readiness claim",
+                      "no public correctness claim",
+                      "no public security claim",
+                      "no public compliance claim"
+                  ]
+}

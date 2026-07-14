@@ -42,6 +42,11 @@ import java.util.List;
 @Repository
 public class JdbcVetRepositoryImpl implements VetRepository {
 
+    private static final String FIND_ALL_SQL = "SELECT id, first_name, last_name FROM vets ORDER BY last_name, " +
+        "first_name";
+
+    private static final String GET_SPECIALTY_IDS_FOR_SQL = "SELECT specialty_id FROM vet_specialties WHERE vet_id=?";
+
     private final JdbcClient jdbcClient;
 
     public JdbcVetRepositoryImpl(JdbcClient jdbcClient) {
@@ -55,7 +60,7 @@ public class JdbcVetRepositoryImpl implements VetRepository {
     public Collection<Vet> findAll() {
         // Retrieve the list of all vets.
         List<Vet> vets = new ArrayList<>(this.jdbcClient.sql(
-            "SELECT id, first_name, last_name FROM vets ORDER BY last_name, first_name")
+            FIND_ALL_SQL)
             .query(BeanPropertyRowMapper.newInstance(Vet.class))
             .list());
 
@@ -79,7 +84,7 @@ public class JdbcVetRepositoryImpl implements VetRepository {
     }
 
     private List<Integer> getSpecialtyIdsFor(Vet vet) {
-        return this.jdbcClient.sql("SELECT specialty_id FROM vet_specialties WHERE vet_id=?")
+        return this.jdbcClient.sql(GET_SPECIALTY_IDS_FOR_SQL)
             .param(vet.getId())
             .query((rs, row) -> rs.getInt(1))
             .list();

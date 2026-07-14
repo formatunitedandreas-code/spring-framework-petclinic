@@ -28,6 +28,8 @@ import java.sql.SQLException;
 public class JdbcPetVisitExtractor extends
     OneToManyResultSetExtractor<JdbcPet, Visit, Integer> {
 
+    private static final String VISITS_PET_ID = "visits.pet_id";
+
     public JdbcPetVisitExtractor() {
         super(new JdbcPetRowMapper(), new JdbcVisitRowMapper());
     }
@@ -42,11 +44,11 @@ public class JdbcPetVisitExtractor extends
         if (!hasVisitForeignKey(rs)) {
             return null;
         }
-        return rs.getInt("visits.pet_id");
+        return rs.getInt(VISITS_PET_ID);
     }
 
     private boolean hasVisitForeignKey(ResultSet rs) throws SQLException {
-        return rs.getObject("visits.pet_id") != null;
+        return rs.getObject(VISITS_PET_ID) != null;
     }
 
     @Override

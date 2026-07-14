@@ -35,6 +35,12 @@ import org.springframework.stereotype.Repository;
 @Repository
 public class JpaOwnerRepositoryImpl implements OwnerRepository {
 
+    private static final String FIND_BY_ID_SQL = "SELECT owner FROM Owner owner left join fetch owner.pets WHERE owner.id = " +
+        ":id";
+
+    private static final String FIND_BY_LAST_NAME_SQL = "SELECT DISTINCT owner FROM Owner owner left join fetch owner.pets " +
+            "WHERE owner.lastName LIKE :lastName";
+
     private final EntityManager em;
 
     public JpaOwnerRepositoryImpl(EntityManager em) {
@@ -52,8 +58,7 @@ public class JpaOwnerRepositoryImpl implements OwnerRepository {
         // using 'join fetch' because a single query should load both owners and pets
         // using 'left join fetch' because it might happen that an owner does not have pets yet
         return this.em.createQuery(
-            "SELECT DISTINCT owner FROM Owner owner left join fetch owner.pets " +
-            "WHERE owner.lastName LIKE :lastName", Owner.class)
+            FIND_BY_LAST_NAME_SQL, Owner.class)
             .setParameter("lastName", lastName + "%")
             .getResultList();
     }
@@ -63,7 +68,7 @@ public class JpaOwnerRepositoryImpl implements OwnerRepository {
         // using 'join fetch' because a single query should load both owners and pets
         // using 'left join fetch' because it might happen that an owner does not have pets yet
         return this.em.createQuery(
-            "SELECT owner FROM Owner owner left join fetch owner.pets WHERE owner.id = :id", Owner.class)
+            FIND_BY_ID_SQL, Owner.class)
             .setParameter("id", id)
             .getSingleResult();
     }

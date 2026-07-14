@@ -1,19 +1,19 @@
-leaseName: petclinic-threshold-governed-refactor-lease-v1
+leaseName: petclinic-threshold-governed-refactor-lease-v14
 repository: C:\dev\spring-framework-petclinic
-branch: threshold-governed-refactor-demo-4
+branch: threshold-governed-refactor-demo-6
 baseRemote: origin
 baseRef: origin/main
-startHead: a703491cc707d6f0de9fcfd30719bfa278a74df8
+startHead: d116af9034b701b4f48bc50abeb22b913c4a1514
 headPolicy: descendantOfStartHead
 
 budget:
   maxCandidatesThisRun: 5
   maxCommitsThisRun: 5
-  maxFilesPerCandidate: 1
+  maxFilesPerCandidate: 3
   maxGovernanceFilesPerCandidate: 8
-  maxChangedLinesPerCandidate: 80
+  maxChangedLinesPerCandidate: 140
   maxGovernanceChangedLinesPerCandidate: 1200
-  maxRepairAttemptsPerCandidate: 1
+  maxRepairAttemptsPerCandidate: 2
 
 allowedRiskClasses:
   - R0_READ_ONLY
@@ -39,6 +39,7 @@ allowedPaths:
   - threshold/receipts/*.json
   - threshold/lease-state/*.json
   - threshold/candidate-pocket/*.json
+  - threshold/lanes/*.yaml
   - threshold/scripts/*.ps1
   - .github/workflows/threshold-governance.yml
 
@@ -54,10 +55,14 @@ allowedCandidateTypes:
   - redundant_local_variable_simplification
   - duplicate_literal_local_constant_extraction
   - controller_branch_readability_decomposition
+  - method_signature_wrap_cleanup
   - repository_readability_cleanup
   - model_readability_cleanup
+  - split_string_constant_normalization
+  - string_constant_wrap_cleanup
   - utility_readability_cleanup
   - application_bootstrap_readability_cleanup
+  - method_spacing_normalization
   - threshold_governance_artifact_update
 
 forbiddenActions:
@@ -81,5 +86,5 @@ validation:
 
 terminalBoundary:
   afterLocalCommit: hold_at_local_commit_boundary
-  draftPrAllowed: true
+  draftPrAllowed: false
   mergeAllowed: false

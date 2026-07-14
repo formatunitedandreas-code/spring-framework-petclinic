@@ -44,6 +44,19 @@ import java.util.List;
 @Repository
 public class JdbcPetRepositoryImpl implements PetRepository {
 
+    private static final String ID = "id";
+
+
+    private static final String FIND_OWNER_ID_BY_PET_ID_SQL = "SELECT owner_id FROM pets WHERE id=:id";
+
+    private static final String FIND_PET_TYPES_SQL = "SELECT id, name FROM types ORDER BY name";
+
+    private static final String SAVE_SQL = """
+                    UPDATE pets
+                    SET name=:name, birth_date=:birth_date, type_id=:type_id, owner_id=:owner_id
+                    WHERE id=:id
+                    """;
+
     private final JdbcClient jdbcClient;
 
     private final SimpleJdbcInsert insertPet;
@@ -55,7 +68,7 @@ public class JdbcPetRepositoryImpl implements PetRepository {
 
         this.insertPet = new SimpleJdbcInsert(dataSource)
             .withTableName("pets")
-            .usingGeneratedKeyColumns("id");
+            .usingGeneratedKeyColumns(ID);
 
         this.ownerRepository = ownerRepository;
     }
@@ -63,7 +76,7 @@ public class JdbcPetRepositoryImpl implements PetRepository {
     @Override
     public List<PetType> findPetTypes() {
         return this.jdbcClient
-            .sql("SELECT id, name FROM types ORDER BY name")
+            .sql(FIND_PET_TYPES_SQL)
             .query(BeanPropertyRowMapper.newInstance(PetType.class))
             .list();
     }
@@ -83,8 +96,8 @@ public class JdbcPetRepositoryImpl implements PetRepository {
 
     private int findOwnerIdByPetId(int petId) {
         return this.jdbcClient
-            .sql("SELECT owner_id FROM pets WHERE id=:id")
-            .param("id", petId)
+            .sql(FIND_OWNER_ID_BY_PET_ID_SQL)
+            .param(ID, petId)
             .query(Integer.class)
             .single();
     }
@@ -97,11 +110,7 @@ public class JdbcPetRepositoryImpl implements PetRepository {
             return;
         }
         this.jdbcClient
-                .sql("""
-                    UPDATE pets
-                    SET name=:name, birth_date=:birth_date, type_id=:type_id, owner_id=:owner_id
-                    WHERE id=:id
-                    """)
+                .sql(SAVE_SQL)
                 .paramSource(parameterSource)
                 .update();
     }
@@ -111,7 +120,7 @@ public class JdbcPetRepositoryImpl implements PetRepository {
      */
     private MapSqlParameterSource createPetParameterSource(Pet pet) {
         return new MapSqlParameterSource()
-            .addValue("id", pet.getId())
+            .addValue(ID, pet.getId())
             .addValue("name", pet.getName())
             .addValue("birth_date", pet.getBirthDate())
             .addValue("type_id", pet.getType().getId())

@@ -79,18 +79,24 @@ public class CallMonitoringAspect {
         if (!this.enabled) {
             return joinPoint.proceed();
         }
-        StopWatch sw = new StopWatch(joinPoint.toShortString());
-
-        sw.start("invoke");
+        StopWatch sw = startInvocationStopWatch(joinPoint);
         try {
             return joinPoint.proceed();
         } finally {
             sw.stop();
-            synchronized (this) {
-                this.callCount++;
-                this.accumulatedCallTime += sw.getTotalTimeMillis();
-            }
+            recordInvocation(sw.getTotalTimeMillis());
         }
+    }
+
+    private StopWatch startInvocationStopWatch(ProceedingJoinPoint joinPoint) {
+        StopWatch sw = new StopWatch(joinPoint.toShortString());
+        sw.start("invoke");
+        return sw;
+    }
+
+    private synchronized void recordInvocation(long totalTimeMillis) {
+        this.callCount++;
+        this.accumulatedCallTime += totalTimeMillis;
     }
 
 }

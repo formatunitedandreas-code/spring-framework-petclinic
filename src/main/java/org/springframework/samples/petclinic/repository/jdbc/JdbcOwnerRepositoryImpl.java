@@ -47,6 +47,34 @@ import java.util.List;
 @Repository
 public class JdbcOwnerRepositoryImpl implements OwnerRepository {
 
+    private static final String ID = "id";
+
+
+    private static final String GET_PET_TYPES_SQL = "SELECT id, name FROM types ORDER BY name";
+
+    private static final String SAVE_SQL = """
+                    UPDATE owners
+                    SET first_name=:firstName, last_name=:lastName, address=:address, city=:city, telephone=:telephone
+                    WHERE id=:id
+                    """;
+
+    private static final String LOAD_PETS_AND_VISITS_FOR_OWNER_SQL = """
+            SELECT pets.id, name, birth_date, type_id, owner_id, visits.id as visit_id, visit_date, description, pet_id
+            FROM pets LEFT OUTER JOIN visits ON pets.id = pet_id
+            WHERE owner_id=:id ORDER BY pet_id
+            """;
+
+    private static final String FIND_BY_LAST_NAME_SQL = """
+                SELECT id, first_name, last_name, address, city, telephone
+                FROM owners
+                WHERE last_name like :lastName
+                """;
+
+    private static final String FIND_BY_ID_SQL = """
+                SELECT id, first_name, last_name, address, city, telephone
+                FROM owners WHERE id = :id
+                """;
+
     private final JdbcClient jdbcClient;
 
     private final SimpleJdbcInsert insertOwner;
@@ -55,7 +83,7 @@ public class JdbcOwnerRepositoryImpl implements OwnerRepository {
 
         this.insertOwner = new SimpleJdbcInsert(dataSource)
             .withTableName("owners")
-            .usingGeneratedKeyColumns("id");
+            .usingGeneratedKeyColumns(ID);
 
         this.jdbcClient = jdbcClient;
 
@@ -69,11 +97,7 @@ public class JdbcOwnerRepositoryImpl implements OwnerRepository {
      */
     @Override
     public Collection<Owner> findByLastName(String lastName) {
-        List<Owner> owners = this.jdbcClient.sql("""
-                SELECT id, first_name, last_name, address, city, telephone
-                FROM owners
-                WHERE last_name like :lastName
-                """)
+        List<Owner> owners = this.jdbcClient.sql(FIND_BY_LAST_NAME_SQL)
             .param("lastName", lastName + "%")
             .query(BeanPropertyRowMapper.newInstance(Owner.class))
             .list();
@@ -88,11 +112,8 @@ public class JdbcOwnerRepositoryImpl implements OwnerRepository {
     @Override
     public Owner findById(int id) {
         try {
-            Owner owner = this.jdbcClient.sql("""
-                SELECT id, first_name, last_name, address, city, telephone
-                FROM owners WHERE id = :id
-                """)
-                .param("id", id)
+            Owner owner = this.jdbcClient.sql(FIND_BY_ID_SQL)
+                .param(ID, id)
                 .query(BeanPropertyRowMapper.newInstance(Owner.class))
                 .single();
             loadPetsAndVisits(owner);
@@ -110,12 +131,8 @@ public class JdbcOwnerRepositoryImpl implements OwnerRepository {
     }
 
     private List<JdbcPet> loadPetsAndVisitsForOwner(int ownerId) {
-        return this.jdbcClient.sql("""
-            SELECT pets.id, name, birth_date, type_id, owner_id, visits.id as visit_id, visit_date, description, pet_id
-            FROM pets LEFT OUTER JOIN visits ON pets.id = pet_id
-            WHERE owner_id=:id ORDER BY pet_id
-            """)
-            .param("id", ownerId)
+        return this.jdbcClient.sql(LOAD_PETS_AND_VISITS_FOR_OWNER_SQL)
+            .param(ID, ownerId)
             .query(new JdbcPetVisitExtractor());
     }
 
@@ -131,17 +148,13 @@ public class JdbcOwnerRepositoryImpl implements OwnerRepository {
             owner.setId(this.insertOwner.executeAndReturnKey(parameterSource).intValue());
             return;
         }
-        this.jdbcClient.sql("""
-                    UPDATE owners
-                    SET first_name=:firstName, last_name=:lastName, address=:address, city=:city, telephone=:telephone
-                    WHERE id=:id
-                    """)
+        this.jdbcClient.sql(SAVE_SQL)
                 .paramSource(parameterSource)
                 .update();
     }
 
     public Collection<PetType> getPetTypes() {
-        return this.jdbcClient.sql("SELECT id, name FROM types ORDER BY name")
+        return this.jdbcClient.sql(GET_PET_TYPES_SQL)
             .query(BeanPropertyRowMapper.newInstance(PetType.class))
             .list();
     }

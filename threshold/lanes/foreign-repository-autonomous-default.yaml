@@ -1,0 +1,39 @@
+laneName: foreign_repository_autonomous_lane_default_entrypoint_slice_v0_1
+targetRepo: spring-framework-petclinic
+laneImplementation: threshold/scripts/run-next-slice.ps1
+candidateSource: threshold/scripts/discover-candidates.ps1
+stateSource:
+  lease: threshold/leases/current.yaml
+  leaseState: threshold/lease-state/current-run.json
+mutationBoundary: local_commit_only_unless_publish_or_pr_lease_is_explicit
+
+defaultFlow:
+  - sync_lease_state
+  - preflight
+  - generate_candidate_pocket
+  - select_highest_ranked_auto_patchable_candidate
+  - apply_single_slice
+  - validate_diff_budget_and_maven_tests
+  - create_local_source_commit
+  - record_receipt
+  - stop_or_continue_until_budget_boundary
+
+stopConditions:
+  - blocker_detected
+  - budget_exhausted
+  - authority_violation
+  - no_auto_patchable_next_candidate
+  - validation_failure_after_allowed_repair_attempts
+  - publish_or_pr_boundary_without_explicit_lease
+
+nonClaims:
+  - no_external_mutation_without_explicit_publish_or_pr_lease
+  - no_push_without_explicit_publish_lease
+  - no_pr_without_explicit_pr_lease
+  - no_merge
+  - no_release
+  - no_deploy
+  - no public readiness claim
+  - no public correctness claim
+  - no public security claim
+  - no public compliance claim

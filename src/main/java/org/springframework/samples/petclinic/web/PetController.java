@@ -78,9 +78,13 @@ public class PetController {
     }
 
     private void addPetToModel(Owner owner, ModelMap model) {
+        model.put(MODEL_ATTRIBUTE_PET, createPetForOwner(owner));
+    }
+
+    private Pet createPetForOwner(Owner owner) {
         Pet pet = new Pet();
         owner.addPet(pet);
-        model.put(MODEL_ATTRIBUTE_PET, pet);
+        return pet;
     }
 
     @PostMapping(value = PET_NEW_PATH)

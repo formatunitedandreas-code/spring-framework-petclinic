@@ -43,15 +43,21 @@ import org.springframework.core.style.ToStringCreator;
 @Entity
 @Table(name = "owners")
 public class Owner extends Person {
-    @Column(name = "address")
+
+    private static final String TELEPHONE = "telephone";
+
+    private static final String CITY = "city";
+
+    private static final String ADDRESS = "address";
+    @Column(name = ADDRESS)
     @NotEmpty
     private String address;
 
-    @Column(name = "city")
+    @Column(name = CITY)
     @NotEmpty
     private String city;
 
-    @Column(name = "telephone")
+    @Column(name = TELEPHONE)
     @NotEmpty
     @Digits(fraction = 0, integer = 10)
     private String telephone;
@@ -152,9 +158,9 @@ public class Owner extends Person {
             .append("new", this.isNew())
             .append("lastName", this.getLastName())
             .append("firstName", this.getFirstName())
-            .append("address", this.address)
-            .append("city", this.city)
-            .append("telephone", this.telephone)
+            .append(ADDRESS, this.address)
+            .append(CITY, this.city)
+            .append(TELEPHONE, this.telephone)
             .toString();
     }
 }

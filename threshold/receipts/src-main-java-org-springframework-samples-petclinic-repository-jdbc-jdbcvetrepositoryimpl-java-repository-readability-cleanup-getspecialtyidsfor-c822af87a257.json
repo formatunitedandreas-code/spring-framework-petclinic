@@ -1,0 +1,50 @@
+{
+    "schemaVersion":  "threshold.petclinic.slice-receipt.v0.2",
+    "candidateId":  "src-main-java-org-springframework-samples-petclinic-repository-jdbc-jdbcvetrepositoryimpl-java-repository-readability-cleanup-getspecialtyidsfor",
+    "leaseName":  "petclinic-threshold-governed-refactor-lease-v7",
+    "branch":  "threshold-governed-refactor-demo-6",
+    "candidateClass":  "repository_readability_cleanup",
+    "leaseStartHead":  "30eb4f497cb0b872b855008a84ad3a88b95a0b96",
+    "baseHead":  "0cda29242c322659c4904e7ac538646aa8cc0e17",
+    "commitHash":  "c822af87a25763210a1e6bf8b1b85038dcebfe1d",
+    "receiptMaterialization":  "post-commit",
+    "perCommitValidationLogAvailable":  true,
+    "branchFinalValidationPassed":  false,
+    "changedFiles":  [
+                         {
+                             "path":  "src/main/java/org/springframework/samples/petclinic/repository/jdbc/JdbcVetRepositoryImpl.java",
+                             "beforeSha256":  "8f3ad9a23cf1b249e49f3a249dcc57f694c66c73157b87ec83d3fd61edf6c656",
+                             "afterSha256":  "bb6bb740dd910c00bba31587620ca9195c4d6c566ca85601baaf3bf4b80bd45d"
+                         }
+                     ],
+    "diffSummary":  "Refactor PetClinic repository readability cleanup for getSpecialtyIdsFor",
+    "diffStat":  {
+                     "filesChanged":  1,
+                     "insertions":  3,
+                     "deletions":  1
+                 },
+    "validation":  {
+                       "diffCheck":  "passed",
+                       "command":  "git diff --check",
+                       "result":  "SKIPPED_BY_LEASE_INVOCATION",
+                       "testsRun":  75,
+                       "failures":  0,
+                       "errors":  0,
+                       "skipped":  0
+                   },
+    "nonClaims":  [
+                      "no push in candidate slice",
+                      "no PR update in candidate slice",
+                      "no upstream interaction",
+                      "no pom.xml change",
+                      "no dependency change",
+                      "no src/test change",
+                      "no merge",
+                      "no release",
+                      "no deploy",
+                      "no public readiness claim",
+                      "no public correctness claim",
+                      "no public security claim",
+                      "no public compliance claim"
+                  ]
+}
