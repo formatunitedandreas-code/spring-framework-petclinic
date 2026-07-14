@@ -52,6 +52,12 @@ public class JdbcOwnerRepositoryImpl implements OwnerRepository {
 
     private static final String GET_PET_TYPES_SQL = "SELECT id, name FROM types ORDER BY name";
 
+    private static final String LOAD_PETS_AND_VISITS_FOR_OWNER_SQL = """
+            SELECT pets.id, name, birth_date, type_id, owner_id, visits.id as visit_id, visit_date, description, pet_id
+            FROM pets LEFT OUTER JOIN visits ON pets.id = pet_id
+            WHERE owner_id=:id ORDER BY pet_id
+            """;
+
     private static final String FIND_BY_LAST_NAME_SQL = """
                 SELECT id, first_name, last_name, address, city, telephone
                 FROM owners
@@ -119,11 +125,7 @@ public class JdbcOwnerRepositoryImpl implements OwnerRepository {
     }
 
     private List<JdbcPet> loadPetsAndVisitsForOwner(int ownerId) {
-        return this.jdbcClient.sql("""
-            SELECT pets.id, name, birth_date, type_id, owner_id, visits.id as visit_id, visit_date, description, pet_id
-            FROM pets LEFT OUTER JOIN visits ON pets.id = pet_id
-            WHERE owner_id=:id ORDER BY pet_id
-            """)
+        return this.jdbcClient.sql(LOAD_PETS_AND_VISITS_FOR_OWNER_SQL)
             .param(ID, ownerId)
             .query(new JdbcPetVisitExtractor());
     }
