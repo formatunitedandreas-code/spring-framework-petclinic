@@ -51,6 +51,12 @@ public class JdbcPetRepositoryImpl implements PetRepository {
 
     private static final String FIND_PET_TYPES_SQL = "SELECT id, name FROM types ORDER BY name";
 
+    private static final String SAVE_SQL = """
+                    UPDATE pets
+                    SET name=:name, birth_date=:birth_date, type_id=:type_id, owner_id=:owner_id
+                    WHERE id=:id
+                    """;
+
     private final JdbcClient jdbcClient;
 
     private final SimpleJdbcInsert insertPet;
@@ -104,11 +110,7 @@ public class JdbcPetRepositoryImpl implements PetRepository {
             return;
         }
         this.jdbcClient
-                .sql("""
-                    UPDATE pets
-                    SET name=:name, birth_date=:birth_date, type_id=:type_id, owner_id=:owner_id
-                    WHERE id=:id
-                    """)
+                .sql(SAVE_SQL)
                 .paramSource(parameterSource)
                 .update();
     }
