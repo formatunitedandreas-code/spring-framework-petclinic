@@ -83,6 +83,9 @@ allowedPaths:
   - threshold/receipts/*.json
   - threshold/lease-state/*.json
   - threshold/candidate-pocket/*.json
+  - threshold/discovery-canaries/**/*.java
+  - threshold/discovery-canaries/*.json
+  - threshold/gates/*.json
   - threshold/lanes/*.yaml
   - threshold/scripts/*.ps1
   - .github/workflows/threshold-governance.yml
@@ -101,6 +104,7 @@ allowedCandidateTypes:
   - controller_branch_readability_decomposition
   - method_signature_wrap_cleanup
   - repository_readability_cleanup
+  - spring_data_query_wrap_cleanup
   - model_readability_cleanup
   - split_string_constant_normalization
   - string_constant_wrap_cleanup
