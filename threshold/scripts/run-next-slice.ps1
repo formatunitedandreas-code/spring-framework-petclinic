@@ -23,6 +23,18 @@ function ConvertTo-ConstantLine {
     return "    private static final String $ConstantName = $Literal;"
 }
 
+function Get-LineEnding {
+    param([string] $Content)
+    if ($Content.Contains("`r`n")) { return "`r`n" }
+    return "`n"
+}
+
+function Write-TextFile {
+    param([string] $Path, [string] $Content)
+    $encoding = New-Object System.Text.UTF8Encoding $false
+    [System.IO.File]::WriteAllText((Resolve-Path -LiteralPath $Path), $Content, $encoding)
+}
+
 function Insert-PrivateStaticStringConstant {
     param(
         [string] $Content,
@@ -35,10 +47,11 @@ function Insert-PrivateStaticStringConstant {
     }
 
     $constantLine = ConvertTo-ConstantLine $ConstantName $Literal
+    $lineEnding = Get-LineEnding -Content $Content
     $staticStringMatches = [regex]::Matches($Content, "(?m)^    private static final String [A-Z0-9_]+ = .+;\r?$")
     if ($staticStringMatches.Count -gt 0) {
         $last = $staticStringMatches[$staticStringMatches.Count - 1]
-        return $Content.Insert($last.Index + $last.Length, "`r`n`r`n$constantLine")
+        return $Content.Insert($last.Index + $last.Length, "$lineEnding$lineEnding$constantLine")
     }
 
     $classPattern = "(?m)^public class [^{]+\{\r?\n"
@@ -51,7 +64,7 @@ function Insert-PrivateStaticStringConstant {
         throw "Could not find class declaration insertion point."
     }
 
-    return $Content.Insert($match.Index + $match.Length, "`r`n$constantLine`r`n")
+    return $Content.Insert($match.Index + $match.Length, "$lineEnding$constantLine$lineEnding")
 }
 
 function Apply-ReadableMethodSignatureWrap {
@@ -108,8 +121,9 @@ function Apply-ReadableMethodSignatureWrap {
     if ($lineNumber -lt $lines.Count) {
         $updatedLines += $lines[$lineNumber..($lines.Count - 1)]
     }
-    $updatedText = $updatedLines -join "`r`n"
-    Set-Content -Path $path -Value $updatedText -NoNewline
+    $originalText = Get-Content $path -Raw
+    $updatedText = $updatedLines -join (Get-LineEnding -Content $originalText)
+    Write-TextFile -Path $path -Content $updatedText
 
     Write-Host "appliedCandidate=$($Candidate.candidateId)"
     Write-Host "changedFile=$path"
@@ -216,7 +230,7 @@ function Apply-DuplicateLiteralConstantExtraction {
 
     $replaced = [regex]::Replace($content, [regex]::Escape($literal), $constantName)
     $updated = Insert-PrivateStaticStringConstant -Content $replaced -ConstantName $constantName -Literal $literal
-    Set-Content -Path $path -Value $updated -NoNewline
+    Write-TextFile -Path $path -Content $updated
 
     Write-Host "appliedCandidate=$($Candidate.candidateId)"
     Write-Host "changedFile=$path"
@@ -247,7 +261,7 @@ function Apply-RepositoryReadabilityCleanup {
 
     $replaced = $literalRegex.Replace($content, $constantName, 1)
     $updated = Insert-PrivateStaticStringConstant -Content $replaced -ConstantName $constantName -Literal $sqlLiteral
-    Set-Content -Path $path -Value $updated -NoNewline
+    Write-TextFile -Path $path -Content $updated
 
     Write-Host "appliedCandidate=$($Candidate.candidateId)"
     Write-Host "changedFile=$path"
@@ -281,14 +295,15 @@ function Apply-UtilityReadabilityCleanup {
         throw "Could not find StopWatch start block in $path."
     }
 
-    $helperBlock = @"
-    private StopWatch $helperName(ProceedingJoinPoint joinPoint) {
-        StopWatch sw = new StopWatch(joinPoint.toShortString());
-        sw.start("invoke");
-        return sw;
-    }
-
-"@
+    $lineEnding = Get-LineEnding -Content $updated
+    $helperBlock = @(
+        "    private StopWatch $helperName(ProceedingJoinPoint joinPoint) {",
+        "        StopWatch sw = new StopWatch(joinPoint.toShortString());",
+        "        sw.start(""invoke"");",
+        "        return sw;",
+        "    }",
+        ""
+    ) -join $lineEnding
 
     $insertPattern = "(?m)^    private synchronized void recordInvocation\("
     $insertMatch = [regex]::Match($updated, $insertPattern)
@@ -297,7 +312,7 @@ function Apply-UtilityReadabilityCleanup {
     }
 
     $updated = $updated.Insert($insertMatch.Index, $helperBlock)
-    Set-Content -Path $path -Value $updated -NoNewline
+    Write-TextFile -Path $path -Content $updated
 
     Write-Host "appliedCandidate=$($Candidate.candidateId)"
     Write-Host "changedFile=$path"
