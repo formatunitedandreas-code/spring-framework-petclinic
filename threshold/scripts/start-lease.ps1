@@ -83,6 +83,7 @@ allowedPaths:
   - threshold/receipts/*.json
   - threshold/lease-state/*.json
   - threshold/candidate-pocket/*.json
+  - threshold/lanes/*.yaml
   - threshold/scripts/*.ps1
   - .github/workflows/threshold-governance.yml
 
