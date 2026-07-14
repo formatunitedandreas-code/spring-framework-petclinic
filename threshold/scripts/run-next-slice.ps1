@@ -57,6 +57,36 @@ function Test-SplitStringConstantLine {
     return $Line -match '^\s*private static final String [A-Z0-9_]+ = "[^"\\]+" \+\s+"[^"\\]+";\s*$'
 }
 
+function Find-ConservativeCommentSplitPoint {
+    param([string] $Text)
+
+    $minimumPrefix = 24
+    $preferredMaxIndex = [Math]::Min(112, $Text.Length - 1)
+    if ($preferredMaxIndex -lt $minimumPrefix) {
+        return $null
+    }
+
+    $spaceSplit = $Text.LastIndexOf(" ", $preferredMaxIndex)
+    if ($spaceSplit -ge $minimumPrefix -and $spaceSplit -lt ($Text.Length - 1)) {
+        return [pscustomobject]@{
+            Index = $spaceSplit
+            KeepDelimiter = $false
+        }
+    }
+
+    foreach ($delimiter in @("/", "#", "?", "&", "-", ".", ":")) {
+        $splitIndex = $Text.LastIndexOf($delimiter, $preferredMaxIndex)
+        if ($splitIndex -ge $minimumPrefix -and $splitIndex -lt ($Text.Length - 1)) {
+            return [pscustomobject]@{
+                Index = $splitIndex
+                KeepDelimiter = $true
+            }
+        }
+    }
+
+    return $null
+}
+
 function Write-TextFile {
     param([string] $Path, [string] $Content)
     $encoding = New-Object System.Text.UTF8Encoding $false
@@ -853,14 +883,22 @@ function Apply-CommentWrapCleanup {
     $indent = $match.Groups["indent"].Value
     $text = $match.Groups["text"].Value.Trim()
     $maxTextLength = [Math]::Max(40, 112 - $indent.Length)
-    $splitIndex = $text.LastIndexOf(" ", [Math]::Min($maxTextLength, $text.Length - 1))
-    if ($splitIndex -lt 24 -or $splitIndex -ge ($text.Length - 1)) {
-        throw "Could not find a conservative split point for comment line '$lineNumber'."
+    $splitPoint = Find-ConservativeCommentSplitPoint -Text $text
+    if (-not $splitPoint) {
+        throw "Could not find a conservative split point for comment line '$lineNumber' using space or URL punctuation."
     }
 
+    $splitIndex = [int]$splitPoint.Index
+    $firstSegment = if ([bool]$splitPoint.KeepDelimiter) {
+        $text.Substring(0, $splitIndex + 1).TrimEnd()
+    }
+    else {
+        $text.Substring(0, $splitIndex).TrimEnd()
+    }
+    $secondSegment = $text.Substring($splitIndex + 1).TrimStart()
     $wrapped = @(
-        "$indent$($text.Substring(0, $splitIndex).TrimEnd())",
-        "$indent$($text.Substring($splitIndex + 1).TrimStart())"
+        "$indent$firstSegment",
+        "$indent$secondSegment"
     )
 
     $updatedLines = @()
