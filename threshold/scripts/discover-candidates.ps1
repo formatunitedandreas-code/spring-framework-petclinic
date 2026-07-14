@@ -118,6 +118,9 @@ function Test-AutoPatchableCandidate {
             $Candidate.ContainsKey("helperName") -and
             -not [string]::IsNullOrWhiteSpace([string]$Candidate.helperName)
     }
+    if ($CandidateClass -eq "method_spacing_normalization") {
+        return $Candidate.ContainsKey("member") -and ([string]$Candidate.member).StartsWith("line-")
+    }
     return $false
 }
 
@@ -244,9 +247,30 @@ foreach ($file in $sourceFiles) {
         })
     }
 
-    $methods = Parse-MethodBlocks -Lines $lines
+    $methods = @(Parse-MethodBlocks -Lines $lines)
 
-    # Heuristic 3: repository-specific readability candidate.
+    # Heuristic 3: tiny spacing normalization between adjacent methods.
+    if ($methods.Count -gt 1) {
+        for ($m = 0; $m -lt ($methods.Count - 1); $m++) {
+            $currentMethod = $methods[$m]
+            $nextMethod = $methods[$m + 1]
+            if ($nextMethod.StartLine -eq ($currentMethod.EndLine + 1)) {
+                $lineNumber = $currentMethod.EndLine + 1
+                $member = "line-$lineNumber"
+                Add-Candidate -CandidateClass "method_spacing_normalization" -AllowedTypes $allowedCandidateTypes -Bucket $candidates -Candidate ([ordered]@{
+                    candidateId = New-CandidateId $path "method_spacing_normalization" "$($currentMethod.Name)-$($nextMethod.Name)-$member"
+                    score = 30 + 30 + 20 + 10 + $layerScore
+                    file = $path
+                    member = $member
+                    expectedDiffSummary = "Insert a blank line between adjacent methods '$($currentMethod.Name)' and '$($nextMethod.Name)'."
+                    estimatedChangedLines = 1
+                    tieBreak = [ordered]@{ layerScore = $layerScore; path = $path; member = "$($currentMethod.Name)-$($nextMethod.Name)" }
+                })
+            }
+        }
+    }
+
+    # Heuristic 4: repository-specific readability candidate.
     if ($path -like "*/repository/*") {
         foreach ($method in $methods) {
             $methodName = $method.Name
@@ -284,7 +308,7 @@ foreach ($file in $sourceFiles) {
         }
     }
 
-    # Heuristic 4: utility-specific readability candidate.
+    # Heuristic 5: utility-specific readability candidate.
     if ($path -like "*/util/*") {
         foreach ($method in $methods) {
             $methodName = $method.Name
@@ -311,7 +335,7 @@ foreach ($file in $sourceFiles) {
         }
     }
 
-    # Heuristic 5: duplicate literal extraction.
+    # Heuristic 6: duplicate literal extraction.
     $stringMatches = [regex]::Matches($content, '"([^"\\\r\n]|\\.)+"') |
         ForEach-Object { $_.Value } |
         Where-Object {

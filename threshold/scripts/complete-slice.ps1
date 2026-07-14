@@ -83,7 +83,6 @@ $validationCommand = if ($SkipMavenTest.IsPresent) { "git diff --check" } else {
     -CandidateClass $CandidateClass `
     -BaseHead $baseHead `
     -CommitHash $sourceCommit `
-    -AllowedPath $changedPaths `
     -DiffSummary $CommitMessage `
     -ValidationCommand $validationCommand `
     -ValidationResult $validationResult `

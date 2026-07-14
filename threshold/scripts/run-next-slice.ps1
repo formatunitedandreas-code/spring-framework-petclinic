@@ -344,6 +344,27 @@ function Get-NextCandidate {
                     break
                 }
             }
+            "method_spacing_normalization" {
+                $member = [string]$candidate.member
+                if (-not $member.StartsWith("line-")) {
+                    Write-Host "candidateSkippedReason=unsupported_spacing_marker:$($candidate.candidateId)"
+                    $applicable = $false
+                    break
+                }
+                $lineNumber = [int]($member.Substring(5))
+                $lines = Get-Content $path
+                if ($lineNumber -lt 1 -or $lineNumber -ge $lines.Count) {
+                    Write-Host "candidateSkippedReason=line_outside_file:$($candidate.candidateId)"
+                    $applicable = $false
+                    break
+                }
+                if ($lines[$lineNumber - 1] -notmatch '^\s*\}\s*$' -or
+                    $lines[$lineNumber] -notmatch '^\s*(?:@|public\b|private\b|protected\b)') {
+                    Write-Host "candidateSkippedReason=unsupported_spacing_cleanup:$($candidate.candidateId)"
+                    $applicable = $false
+                    break
+                }
+            }
         }
 
         if ($applicable -and -not (Test-AstLiteCandidate -Candidate $candidate -Path $path)) {
@@ -582,6 +603,51 @@ function Apply-UtilityReadabilityCleanup {
     Write-Host "helperName=$helperName"
 }
 
+function Apply-MethodSpacingNormalization {
+    param([pscustomobject] $Candidate)
+
+    $path = ConvertTo-RepoPath $Candidate.file
+    if (-not (Test-Path $path)) { throw "Candidate file not found: $path" }
+
+    $member = [string]$Candidate.member
+    if (-not $member.StartsWith("line-")) {
+        throw "Method spacing normalization requires a line marker candidate."
+    }
+
+    $lineNumber = [int]($member.Substring(5))
+    $lines = Get-Content $path
+    if ($lineNumber -lt 1 -or $lineNumber -ge $lines.Count) {
+        throw "Candidate line '$lineNumber' is outside file range in $path."
+    }
+
+    if ($lines[$lineNumber - 1] -notmatch '^\s*\}\s*$') {
+        throw "Line '$lineNumber' is not a closing method brace in $path."
+    }
+    if ($lines[$lineNumber] -notmatch '^\s*(?:@|public\b|private\b|protected\b)') {
+        throw "Line after '$lineNumber' is not a method or annotation boundary in $path."
+    }
+
+    $updatedLines = @()
+    if ($lineNumber -gt 1) {
+        $updatedLines += $lines[0..($lineNumber - 1)]
+    }
+    else {
+        $updatedLines += $lines[0]
+    }
+    $updatedLines += ""
+    if ($lineNumber -lt $lines.Count) {
+        $updatedLines += $lines[$lineNumber..($lines.Count - 1)]
+    }
+
+    $originalText = Get-Content $path -Raw
+    $updatedText = $updatedLines -join (Get-LineEnding -Content $originalText)
+    Write-TextFile -Path $path -Content $updatedText
+
+    Write-Host "appliedCandidate=$($Candidate.candidateId)"
+    Write-Host "changedFile=$path"
+    Write-Host "insertedBlankLineAfter=$lineNumber"
+}
+
 & powershell.exe -NoProfile -ExecutionPolicy Bypass -File "threshold/scripts/sync-lease-state.ps1" `
     -LeasePath $LeasePath `
     -StatePath $StatePath `
@@ -620,6 +686,9 @@ switch ([string]$candidate.candidateClass) {
     }
     "utility_readability_cleanup" {
         Apply-UtilityReadabilityCleanup -Candidate $candidate
+    }
+    "method_spacing_normalization" {
+        Apply-MethodSpacingNormalization -Candidate $candidate
     }
     default {
         throw "Candidate class '$($candidate.candidateClass)' is not yet automatically patchable by run-next-slice."

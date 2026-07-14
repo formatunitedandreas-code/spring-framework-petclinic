@@ -103,6 +103,7 @@ allowedCandidateTypes:
   - model_readability_cleanup
   - utility_readability_cleanup
   - application_bootstrap_readability_cleanup
+  - method_spacing_normalization
   - threshold_governance_artifact_update
 
 forbiddenActions:
