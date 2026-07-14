@@ -1,20 +1,20 @@
 {
     "schemaVersion":  "threshold.petclinic.lease-state.v0.2",
-    "invocationId":  "petclinic-threshold-governed-refactor-lease-v14-20260714T110802Z",
-    "leaseId":  "petclinic-threshold-governed-refactor-lease-v14",
+    "invocationId":  "petclinic-threshold-batch-refactor-lease-v1-20260714T205822Z",
+    "leaseId":  "petclinic-threshold-batch-refactor-lease-v1",
     "mode":  "local_refactor",
-    "branch":  "threshold-governed-refactor-demo-6",
-    "startHead":  "d116af9034b701b4f48bc50abeb22b913c4a1514",
-    "currentHead":  "16ab629f32bd47a87dc003a76f8759715ee29b5b",
-    "currentSourceHead":  "16ab629f32bd47a87dc003a76f8759715ee29b5b",
-    "candidatesProcessed":  3,
-    "commitsCreated":  3,
+    "branch":  "threshold-governed-refactor-demo-8",
+    "startHead":  "73f00fa1a7f457eb4b1ada030ee6a287e0b50d7a",
+    "currentHead":  "73f00fa1a7f457eb4b1ada030ee6a287e0b50d7a",
+    "currentSourceHead":  "73f00fa1a7f457eb4b1ada030ee6a287e0b50d7a",
+    "candidatesProcessed":  0,
+    "commitsCreated":  0,
     "remainingBudget":  {
-                            "candidates":  2,
-                            "commits":  2,
-                            "repairAttempts":  2
+                            "candidates":  3,
+                            "commits":  1,
+                            "repairAttempts":  1
                         },
-    "lastReceipt":  "threshold/receipts/src-main-java-org-springframework-samples-petclinic-repository-jpa-jpaownerrepositoryimpl-java-split-string-constant-normalization-line-38-16ab629f32bd.json",
+    "lastReceipt":  null,
     "terminalState":  "active",
-    "updatedAt":  "2026-07-14T11:28:06.8680774Z"
+    "updatedAt":  "2026-07-14T20:58:22.1175682Z"
 }
