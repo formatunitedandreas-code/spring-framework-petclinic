@@ -1,9 +1,9 @@
-leaseName: petclinic-threshold-batch-refactor-lease-v1
+leaseName: owned-autonomous-refactor-branch-wave-v0_9
 repository: C:\dev\spring-framework-petclinic
-branch: threshold-governed-refactor-demo-8
+branch: threshold-governed-refactor-demo-9
 baseRemote: origin
 baseRef: origin/main
-startHead: 73f00fa1a7f457eb4b1ada030ee6a287e0b50d7a
+startHead: 1a7d07ace11138abb09f9432bbad0deffda169aa
 headPolicy: descendantOfStartHead
 
 budget:
