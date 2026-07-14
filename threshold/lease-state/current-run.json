@@ -5,16 +5,16 @@
     "mode":  "local_refactor",
     "branch":  "threshold-governed-refactor-demo-6",
     "startHead":  "4efaa12bedf541e3b3ab191336ea9d68519bf818",
-    "currentHead":  "376ac4a",
-    "currentSourceHead":  "376ac4a",
-    "candidatesProcessed":  4,
-    "commitsCreated":  4,
+    "currentHead":  "c6e90da",
+    "currentSourceHead":  "c6e90da",
+    "candidatesProcessed":  5,
+    "commitsCreated":  5,
     "remainingBudget":  {
-                            "candidates":  1,
-                            "commits":  1,
+                            "candidates":  0,
+                            "commits":  0,
                             "repairAttempts":  2
                         },
-    "lastReceipt":  "threshold/receipts/src-main-java-org-springframework-samples-petclinic-repository-jdbc-jdbcpetrepositoryimpl-java-repository-readability-cleanup-findpettypes-376ac4a.json",
+    "lastReceipt":  "threshold/receipts/src-main-java-org-springframework-samples-petclinic-repository-jdbc-jdbcvetrepositoryimpl-java-repository-readability-cleanup-findall-c6e90da.json",
     "terminalState":  "active",
-    "updatedAt":  "2026-07-14T05:23:56.9864929Z"
+    "updatedAt":  "2026-07-14T05:26:01.3854736Z"
 }
