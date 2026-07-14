@@ -133,6 +133,9 @@ function Test-AutoPatchableCandidate {
     if ($CandidateClass -eq "comment_wrap_cleanup") {
         return $Candidate.ContainsKey("member") -and ([string]$Candidate.member).StartsWith("line-") -and $Candidate.ContainsKey("commentWrapSplitPointFound") -and $Candidate.commentWrapSplitPointFound -eq $true
     }
+    if ($CandidateClass -eq "spring_data_query_wrap_cleanup") {
+        return $Candidate.ContainsKey("member") -and ([string]$Candidate.member).StartsWith("line-")
+    }
     return $false
 }
 
@@ -144,6 +147,11 @@ function Test-SimpleStringConstantLine {
 function Test-SplitStringConstantLine {
     param([string] $Line)
     return $Line -match '^\s*private static final String [A-Z0-9_]+ = "[^"\\]+" \+\s+"[^"\\]+";\s*$'
+}
+
+function Test-SimpleQueryAnnotationLine {
+    param([string] $Line)
+    return $Line -match '^\s*@Query\("(?<value>[^"\\]+)"\)\s*$'
 }
 
 function Find-ConservativeCommentSplitPoint {
@@ -313,6 +321,29 @@ foreach ($file in $sourceFiles) {
                     estimatedChangedLines = [Math]::Min(8, $longLines.Count * 2)
                     tieBreak = [ordered]@{ layerScore = $layerScore; path = $path; member = $member }
                 })
+    }
+
+    # Heuristic 3b: Spring Data JPA query annotation readability cleanup.
+    if ($path -like "*/repository/springdatajpa/*") {
+        for ($i = 0; $i -lt $lines.Count; $i++) {
+            if ($lines[$i].Length -le 110) {
+                continue
+            }
+            if (-not (Test-SimpleQueryAnnotationLine $lines[$i])) {
+                continue
+            }
+
+            $member = "line-$($i + 1)"
+            Add-Candidate -CandidateClass "spring_data_query_wrap_cleanup" -AllowedTypes $allowedCandidateTypes -Bucket $candidates -Candidate ([ordered]@{
+                candidateId = New-CandidateId $path "spring_data_query_wrap_cleanup" $member
+                score = 30 + 30 + 20 + 10 + $layerScore
+                file = $path
+                member = $member
+                expectedDiffSummary = "Wrap a long Spring Data @Query annotation into a concatenated two-line query literal without changing semantics."
+                estimatedChangedLines = 2
+                tieBreak = [ordered]@{ layerScore = $layerScore; path = $path; member = $member }
+            })
+        }
     }
 
     $methods = @(Parse-MethodBlocks -Lines $lines)

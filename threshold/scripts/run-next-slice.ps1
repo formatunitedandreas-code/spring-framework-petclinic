@@ -56,6 +56,11 @@ function Test-SplitStringConstantLine {
     return $Line -match '^\s*private static final String [A-Z0-9_]+ = "[^"\\]+" \+\s+"[^"\\]+";\s*$'
 }
 
+function Test-SimpleQueryAnnotationLine {
+    param([string] $Line)
+    return $Line -match '^\s*@Query\("(?<value>[^"\\]+)"\)\s*$'
+}
+
 function Find-ConservativeCommentSplitPoint {
     param([string] $Text)
 
@@ -374,6 +379,27 @@ function Get-NextCandidate {
                     break
                 }
             }
+            "spring_data_query_wrap_cleanup" {
+                $member = [string]$candidate.member
+                if (-not $member.StartsWith("line-")) {
+                    Write-Host "candidateSkippedReason=unsupported_line_marker:$($candidate.candidateId)"
+                    $applicable = $false
+                    break
+                }
+                $lineNumber = [int]($member.Substring(5))
+                $lines = Get-Content $path
+                if ($lineNumber -lt 1 -or $lineNumber -gt $lines.Count) {
+                    Write-Host "candidateSkippedReason=line_outside_file:$($candidate.candidateId)"
+                    $applicable = $false
+                    break
+                }
+                if ($lines[$lineNumber - 1].Length -le 110 -or
+                    -not (Test-SimpleQueryAnnotationLine $lines[$lineNumber - 1])) {
+                    Write-Host "candidateSkippedReason=unsupported_query_annotation_cleanup:$($candidate.candidateId)"
+                    $applicable = $false
+                    break
+                }
+            }
             "string_constant_wrap_cleanup" {
                 $member = [string]$candidate.member
                 if (-not $member.StartsWith("line-")) {
@@ -617,6 +643,62 @@ function Apply-LongStringConstantWrap {
     Write-Host "appliedCandidate=$($Candidate.candidateId)"
     Write-Host "changedFile=$path"
     Write-Host "wrappedConstant=$name"
+}
+
+function Apply-SpringDataQueryWrapCleanup {
+    param([pscustomobject] $Candidate)
+
+    $path = ConvertTo-RepoPath $Candidate.file
+    if (-not (Test-Path $path)) { throw "Candidate file not found: $path" }
+
+    $member = [string]$Candidate.member
+    if (-not $member.StartsWith("line-")) {
+        throw "Spring Data query wrap cleanup requires a line marker candidate."
+    }
+
+    $lineNumber = [int]($member.Substring(5))
+    $lines = Get-Content $path
+    if ($lineNumber -lt 1 -or $lineNumber -gt $lines.Count) {
+        throw "Candidate line '$lineNumber' is outside file range in $path."
+    }
+
+    $line = $lines[$lineNumber - 1]
+    $match = [regex]::Match($line, '^(?<indent>\s*)@Query\("(?<value>[^"\\]+)"\)\s*$')
+    if (-not $match.Success) {
+        throw "Line '$lineNumber' is not a supported Spring Data @Query annotation in $path."
+    }
+
+    $value = $match.Groups["value"].Value
+    $maxFirstSegmentLength = [Math]::Min(88, $value.Length - 1)
+    $splitIndex = $value.LastIndexOf(" ", $maxFirstSegmentLength)
+    if ($splitIndex -lt 24 -or $splitIndex -ge ($value.Length - 1)) {
+        throw "Could not find a conservative split point for @Query annotation '$lineNumber'."
+    }
+
+    $indent = $match.Groups["indent"].Value
+    $firstSegment = $value.Substring(0, $splitIndex + 1)
+    $secondSegment = $value.Substring($splitIndex + 1)
+
+    $wrapped = @()
+    $wrapped += "$indent@Query(`"$firstSegment`" +"
+    $wrapped += "$indent    `"$secondSegment`")"
+
+    $updatedLines = @()
+    if ($lineNumber -gt 1) {
+        $updatedLines += $lines[0..($lineNumber - 2)]
+    }
+    $updatedLines += $wrapped
+    if ($lineNumber -lt $lines.Count) {
+        $updatedLines += $lines[$lineNumber..($lines.Count - 1)]
+    }
+
+    $originalText = Get-Content $path -Raw
+    $updatedText = $updatedLines -join (Get-LineEnding -Content $originalText)
+    Write-TextFile -Path $path -Content $updatedText
+
+    Write-Host "appliedCandidate=$($Candidate.candidateId)"
+    Write-Host "changedFile=$path"
+    Write-Host "wrappedQueryAnnotationLine=$lineNumber"
 }
 
 function Apply-RepositoryReadabilityCleanup {
@@ -909,6 +991,9 @@ switch ([string]$candidate.candidateClass) {
     }
     "repository_readability_cleanup" {
         Apply-RepositoryReadabilityCleanup -Candidate $candidate
+    }
+    "spring_data_query_wrap_cleanup" {
+        Apply-SpringDataQueryWrapCleanup -Candidate $candidate
     }
     "string_constant_wrap_cleanup" {
         Apply-StringConstantWrapCleanup -Candidate $candidate

@@ -3,7 +3,7 @@ repository: C:\dev\spring-framework-petclinic
 branch: threshold-governed-refactor-demo-7
 baseRemote: origin
 baseRef: origin/main
-startHead: b078d58ee0e74ccda1acb18e97896277ea3a33cd
+startHead: 00a58b69e266b475ab72386527a1af40419fdac2
 headPolicy: descendantOfStartHead
 
 budget:
@@ -57,6 +57,7 @@ allowedCandidateTypes:
   - controller_branch_readability_decomposition
   - method_signature_wrap_cleanup
   - repository_readability_cleanup
+  - spring_data_query_wrap_cleanup
   - model_readability_cleanup
   - split_string_constant_normalization
   - string_constant_wrap_cleanup
