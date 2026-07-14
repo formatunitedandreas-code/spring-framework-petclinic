@@ -5,16 +5,16 @@
     "mode":  "local_refactor",
     "branch":  "threshold-governed-refactor-demo-9",
     "startHead":  "1a7d07ace11138abb09f9432bbad0deffda169aa",
-    "currentHead":  "1a7d07ace11138abb09f9432bbad0deffda169aa",
-    "currentSourceHead":  "1a7d07ace11138abb09f9432bbad0deffda169aa",
-    "candidatesProcessed":  0,
-    "commitsCreated":  0,
+    "currentHead":  "4140623e7fe5aba37b75fb8c4d7f7adb8055c4d1",
+    "currentSourceHead":  "4140623e7fe5aba37b75fb8c4d7f7adb8055c4d1",
+    "candidatesProcessed":  2,
+    "commitsCreated":  1,
     "remainingBudget":  {
-                            "candidates":  3,
-                            "commits":  1,
+                            "candidates":  1,
+                            "commits":  0,
                             "repairAttempts":  1
                         },
-    "lastReceipt":  null,
-    "terminalState":  "active",
-    "updatedAt":  "2026-07-14T22:02:45.0294509Z"
+    "lastReceipt":  "threshold/receipts/threshold-batch-c9adf28daa22-20260714T220500Z.json",
+    "terminalState":  "budget_exhausted",
+    "updatedAt":  "2026-07-14T22:05:00.0000000Z"
 }

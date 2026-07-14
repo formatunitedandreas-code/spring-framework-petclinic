@@ -1,0 +1,56 @@
+{
+  "schemaVersion": "threshold.petclinic.batch-receipt.v0.1",
+  "batchId": "threshold-batch-c9adf28daa22-20260714T220500Z",
+  "leaseId": "owned-autonomous-refactor-branch-wave-v0_9",
+  "branch": "threshold-governed-refactor-demo-9",
+  "baseHead": "c9adf28daa221757fe7bf3fd2c846e04d8a5e5a4",
+  "sourceCommit": "4140623e7fe5aba37b75fb8c4d7f7adb8055c4d1",
+  "candidateClass": "comment_wrap_cleanup",
+  "candidateCount": 2,
+  "changedFiles": [
+    "src/main/java/org/springframework/samples/petclinic/repository/VisitRepository.java",
+    "src/main/java/org/springframework/samples/petclinic/web/PetTypeFormatter.java"
+  ],
+  "changedLineCount": 6,
+  "candidates": [
+    {
+      "candidateId": "src-main-java-org-springframework-samples-petclinic-repository-visitrepository-java-comment-wrap-cleanup-line-25",
+      "candidateClass": "comment_wrap_cleanup",
+      "file": "src/main/java/org/springframework/samples/petclinic/repository/VisitRepository.java",
+      "member": "line-25",
+      "beforeSha256": "B609BDC305C8748A7B0549E5D068B731DE030AA371428545C2269E47566CE1E5",
+      "afterSha256": "4C721243E8B69B705AFD096362146958026AB275558228CDC29D7A660969EE5D",
+      "expectedDiffSummary": "Wrap long repository Javadoc reference without changing code behavior.",
+      "gateApproved": true,
+      "executionMode": "batched_auto_patchable"
+    },
+    {
+      "candidateId": "src-main-java-org-springframework-samples-petclinic-web-pettypeformatter-java-comment-wrap-cleanup-line-30",
+      "candidateClass": "comment_wrap_cleanup",
+      "file": "src/main/java/org/springframework/samples/petclinic/web/PetTypeFormatter.java",
+      "member": "line-30",
+      "beforeSha256": "D6DB8E815FC930A182DC0F3F8FF778914B674D1D533035E5C60CB7F8CF0F4791",
+      "afterSha256": "642C25CD0509E95658FAF11ACC55BA4B3B734B26D5D056D753E46595D12794D4",
+      "expectedDiffSummary": "Wrap long formatter Javadoc reference without changing code behavior.",
+      "gateApproved": true,
+      "executionMode": "batched_auto_patchable"
+    }
+  ],
+  "validation": {
+    "discoveryCanary": "passed",
+    "diffCheck": "passed",
+    "command": ".\\mvnw.cmd test",
+    "result": "BUILD SUCCESS",
+    "testsRun": 75,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  "nonClaims": [
+    "batch receipt preserves per-candidate evidence but is not an external review claim",
+    "no upstream interaction in batch slice",
+    "no PR update in batch slice",
+    "no merge, release, or deploy in batch slice",
+    "no public readiness, correctness, security, or compliance claim"
+  ]
+}
