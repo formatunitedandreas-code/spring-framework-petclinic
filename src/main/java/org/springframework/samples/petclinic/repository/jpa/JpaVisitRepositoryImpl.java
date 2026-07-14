@@ -36,6 +36,8 @@ import org.springframework.stereotype.Repository;
 @Repository
 public class JpaVisitRepositoryImpl implements VisitRepository {
 
+    private static final String FIND_BY_PET_ID_SQL = "SELECT v FROM Visit v WHERE v.pet.id = :id";
+
     private final EntityManager em;
 
     public JpaVisitRepositoryImpl(EntityManager em) {
@@ -55,7 +57,7 @@ public class JpaVisitRepositoryImpl implements VisitRepository {
     @Override
     public List<Visit> findByPetId(Integer petId) {
         return this.em.createQuery(
-            "SELECT v FROM Visit v WHERE v.pet.id = :id", Visit.class)
+            FIND_BY_PET_ID_SQL, Visit.class)
             .setParameter("id", petId)
             .getResultList();
     }
