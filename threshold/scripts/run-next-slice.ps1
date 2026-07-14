@@ -63,6 +63,14 @@ function Write-TextFile {
     [System.IO.File]::WriteAllText((Resolve-Path -LiteralPath $Path), $normalizedContent, $encoding)
 }
 
+function Get-FileSha256 {
+    param([string] $Path)
+    if (-not (Test-Path $Path)) {
+        throw "File not found for hashing: $Path"
+    }
+    return (Get-FileHash -Algorithm SHA256 -LiteralPath $Path).Hash
+}
+
 function Insert-PrivateStaticStringConstant {
     param(
         [string] $Content,
@@ -538,10 +546,9 @@ function Apply-LongStringConstantWrap {
     $firstSegment = $value.Substring(0, $splitIndex + 1)
     $secondSegment = $value.Substring($splitIndex + 1)
 
-    $wrapped = @(
-        "$indent" + "private static final String $name = `"$firstSegment`" +",
-        "$indent    `"$secondSegment`";"
-    )
+    $wrapped = @()
+    $wrapped += "$indent" + "private static final String $name = `"$firstSegment`" +"
+    $wrapped += "$indent    `"$secondSegment`";"
 
     $updatedLines = @()
     if ($lineNumber -gt 1) {
@@ -631,10 +638,9 @@ function Apply-SplitStringConstantNormalization {
     $name = $match.Groups["name"].Value
     $firstSegment = $match.Groups["first"].Value
     $secondSegment = $match.Groups["second"].Value
-    $wrapped = @(
-        "$indent" + "private static final String $name = `"$firstSegment`" +",
-        "$indent    `"$secondSegment`";"
-    )
+    $wrapped = @()
+    $wrapped += "$indent" + "private static final String $name = `"$firstSegment`" +"
+    $wrapped += "$indent    `"$secondSegment`";"
 
     $updatedLines = @()
     if ($lineNumber -gt 1) {
@@ -772,6 +778,9 @@ Write-Host "selectedCandidateClass=$($candidate.candidateClass)"
 Write-Host "selectedCandidateScore=$($candidate.score)"
 Write-Host "selectedCandidateFile=$($candidate.file)"
 
+$candidatePath = ConvertTo-RepoPath $candidate.file
+$beforeHash = Get-FileSha256 -Path $candidatePath
+
 switch ([string]$candidate.candidateClass) {
     "redundant_local_variable_simplification" {
         Apply-RedundantLocalVariableSimplification -Candidate $candidate
@@ -803,6 +812,11 @@ switch ([string]$candidate.candidateClass) {
     default {
         throw "Candidate class '$($candidate.candidateClass)' is not yet automatically patchable by run-next-slice."
     }
+}
+
+$afterHash = Get-FileSha256 -Path $candidatePath
+if ($beforeHash -eq $afterHash) {
+    throw "Candidate '$($candidate.candidateId)' produced no materialized file change."
 }
 
 $commitSummary = $candidate.expectedDiffSummary
