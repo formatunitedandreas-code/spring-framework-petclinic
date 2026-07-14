@@ -52,6 +52,12 @@ public class JdbcOwnerRepositoryImpl implements OwnerRepository {
 
     private static final String GET_PET_TYPES_SQL = "SELECT id, name FROM types ORDER BY name";
 
+    private static final String FIND_BY_LAST_NAME_SQL = """
+                SELECT id, first_name, last_name, address, city, telephone
+                FROM owners
+                WHERE last_name like :lastName
+                """;
+
     private static final String FIND_BY_ID_SQL = """
                 SELECT id, first_name, last_name, address, city, telephone
                 FROM owners WHERE id = :id
@@ -79,11 +85,7 @@ public class JdbcOwnerRepositoryImpl implements OwnerRepository {
      */
     @Override
     public Collection<Owner> findByLastName(String lastName) {
-        List<Owner> owners = this.jdbcClient.sql("""
-                SELECT id, first_name, last_name, address, city, telephone
-                FROM owners
-                WHERE last_name like :lastName
-                """)
+        List<Owner> owners = this.jdbcClient.sql(FIND_BY_LAST_NAME_SQL)
             .param("lastName", lastName + "%")
             .query(BeanPropertyRowMapper.newInstance(Owner.class))
             .list();
