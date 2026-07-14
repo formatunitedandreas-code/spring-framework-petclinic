@@ -59,7 +59,21 @@ function Add-Candidate {
         return
     }
     $Candidate.candidateClass = $CandidateClass
+    $Candidate.autoPatchable = Test-AutoPatchableCandidate $Candidate $CandidateClass
+    $Candidate.reviewOnly = -not $Candidate.autoPatchable
+    $Candidate.executionMode = if ($Candidate.autoPatchable) { "auto_patchable" } else { "review_only" }
     $Bucket.Add([pscustomobject]$Candidate)
+}
+
+function Test-AutoPatchableCandidate {
+    param([hashtable] $Candidate, [string] $CandidateClass)
+    if ($CandidateClass -eq "duplicate_literal_local_constant_extraction") {
+        return $Candidate.ContainsKey("literal") -and $Candidate.ContainsKey("constantName")
+    }
+    if ($CandidateClass -eq "private_helper_extraction_for_readability") {
+        return $Candidate.ContainsKey("member") -and ([string]$Candidate.member).StartsWith("line-")
+    }
+    return $false
 }
 
 function Parse-MethodBlocks {
@@ -266,6 +280,8 @@ $ranked = @(
         Select-Object -First $Limit
 )
 
+$autoPatchableRanked = @($ranked | Where-Object { $_.autoPatchable })
+
 $pocketDir = Split-Path $PocketPath -Parent
 if ($pocketDir -and -not (Test-Path $pocketDir)) {
     New-Item -ItemType Directory -Path $pocketDir | Out-Null
@@ -291,6 +307,7 @@ $pocket = [ordered]@{
     }
     candidates = $ranked
     nextRecommendedCandidateId = if ($ranked.Count -gt 0) { $ranked[0].candidateId } else { $null }
+    nextAutoPatchableCandidateId = if ($autoPatchableRanked.Count -gt 0) { $autoPatchableRanked[0].candidateId } else { $null }
     nonClaims = @(
         "candidate pocket is not an implementation claim",
         "candidate pocket does not claim behavior preservation until slice validation passes",
@@ -308,4 +325,6 @@ Write-Host "pocketPath=$(ConvertTo-RepoPath $PocketPath)"
 Write-Host "branch=$branch"
 Write-Host "head=$head"
 Write-Host "candidateCount=$($ranked.Count)"
+Write-Host "autoPatchableCandidateCount=$($autoPatchableRanked.Count)"
 Write-Host "nextRecommendedCandidateId=$($pocket.nextRecommendedCandidateId)"
+Write-Host "nextAutoPatchableCandidateId=$($pocket.nextAutoPatchableCandidateId)"

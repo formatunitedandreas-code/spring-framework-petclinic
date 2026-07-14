@@ -92,6 +92,21 @@ function Assert-CleanWorktree {
     }
 }
 
+function Assert-LeaseRuntimeState {
+    param(
+        [string] $LeasePath,
+        [string] $StatePath
+    )
+
+    & powershell.exe -NoProfile -ExecutionPolicy Bypass -File "threshold/scripts/sync-lease-state.ps1" `
+        -LeasePath $LeasePath `
+        -StatePath $StatePath `
+        -CheckOnly
+    if ($LASTEXITCODE -ne 0) {
+        throw "Threshold lease-state sync check failed."
+    }
+}
+
 function Resolve-ExecutionPocket {
     param(
         [string] $PocketPath,
@@ -129,10 +144,16 @@ function Get-NextCandidate {
     }
 
     $pocket = Get-Content $PocketPath -Raw | ConvertFrom-Json
-    $candidate = @($pocket.candidates | Where-Object { [int]$_.score -ge $MinScore } | Select-Object -First 1)
+    $candidate = @(
+        $pocket.candidates |
+            Where-Object { [int]$_.score -ge $MinScore -and $_.autoPatchable -eq $true } |
+            Select-Object -First 1
+    )
     if (-not $candidate) {
-        Write-Host "ready_no_candidates"
+        Write-Host "ready_no_auto_patchable_candidates"
         Write-Host "minScore=$MinScore"
+        Write-Host "candidateCount=$(@($pocket.candidates).Count)"
+        Write-Host "reviewOnlyCandidateCount=$(@($pocket.candidates | Where-Object { $_.reviewOnly -eq $true }).Count)"
         return $null
     }
     return $candidate
@@ -189,6 +210,7 @@ function Apply-DuplicateLiteralConstantExtraction {
 if ($LASTEXITCODE -ne 0) { throw "Threshold preflight failed." }
 
 Assert-CleanWorktree
+Assert-LeaseRuntimeState -LeasePath $LeasePath -StatePath $StatePath
 $executionPocketPath = Resolve-ExecutionPocket -PocketPath $PocketPath -LeasePath $LeasePath
 
 $candidate = Get-NextCandidate -PocketPath $executionPocketPath -MinScore $MinScore
