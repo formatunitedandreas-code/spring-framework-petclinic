@@ -81,6 +81,7 @@ if ($remainingRepairs -lt 0 -or $remainingRepairs -gt $maxRepairs) {
 if ($Write.IsPresent) {
     $state.branch = $currentBranch
     $state.currentHead = $currentHead
+    $state.currentSourceHead = $currentHead
     if (-not $state.PSObject.Properties["runtimeObservedHead"]) {
         $state | Add-Member -NotePropertyName "runtimeObservedHead" -NotePropertyValue $currentHead
     } else {
@@ -100,5 +101,6 @@ Write-Host "mode=$(if ($Write.IsPresent) { 'write' } else { 'check' })"
 Write-Host "branch=$currentBranch"
 Write-Host "head=$currentHead"
 Write-Host "stateCurrentHead=$($state.currentHead)"
+Write-Host "stateCurrentSourceHead=$($state.currentSourceHead)"
 Write-Host "remainingCandidates=$remainingCandidates"
 Write-Host "remainingCommits=$remainingCommits"

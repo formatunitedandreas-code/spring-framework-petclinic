@@ -320,6 +320,14 @@ function Apply-UtilityReadabilityCleanup {
     Write-Host "helperName=$helperName"
 }
 
+& powershell.exe -NoProfile -ExecutionPolicy Bypass -File "threshold/scripts/sync-lease-state.ps1" `
+    -LeasePath $LeasePath `
+    -StatePath $StatePath `
+    -Write
+if ($LASTEXITCODE -ne 0) {
+    throw "Threshold lease-state sync failed before preflight."
+}
+
 & powershell.exe -NoProfile -ExecutionPolicy Bypass -File "threshold/scripts/preflight.ps1" -LeasePath $LeasePath
 if ($LASTEXITCODE -ne 0) { throw "Threshold preflight failed." }
 
