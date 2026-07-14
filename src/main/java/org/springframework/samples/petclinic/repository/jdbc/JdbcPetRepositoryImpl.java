@@ -49,6 +49,8 @@ public class JdbcPetRepositoryImpl implements PetRepository {
 
     private static final String FIND_OWNER_ID_BY_PET_ID_SQL = "SELECT owner_id FROM pets WHERE id=:id";
 
+    private static final String FIND_PET_TYPES_SQL = "SELECT id, name FROM types ORDER BY name";
+
     private final JdbcClient jdbcClient;
 
     private final SimpleJdbcInsert insertPet;
@@ -68,7 +70,7 @@ public class JdbcPetRepositoryImpl implements PetRepository {
     @Override
     public List<PetType> findPetTypes() {
         return this.jdbcClient
-            .sql("SELECT id, name FROM types ORDER BY name")
+            .sql(FIND_PET_TYPES_SQL)
             .query(BeanPropertyRowMapper.newInstance(PetType.class))
             .list();
     }
