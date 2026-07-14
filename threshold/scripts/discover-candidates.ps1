@@ -2,6 +2,8 @@
 param(
     [string] $LeasePath = "threshold/leases/current.yaml",
     [string] $PocketPath = "threshold/candidate-pocket/current.json",
+    [string] $GatePath = "threshold/gates/auto-patchable-candidate-classes.json",
+    [string] $SourceRoot = "src/main/java/org/springframework/samples/petclinic",
     [int] $Limit = 25
 )
 
@@ -75,6 +77,28 @@ function Is-CandidateAllowed {
     return ($AllowedTypes.Count -eq 0) -or ($AllowedTypes -contains $CandidateClass)
 }
 
+function Get-AutoPatchableGate {
+    param([string] $Path)
+
+    $approved = @{}
+    if (-not (Test-Path $Path)) {
+        return $approved
+    }
+
+    $gate = Get-Content $Path -Raw | ConvertFrom-Json
+    foreach ($entry in @($gate.approvedAutoPatchableCandidateClasses)) {
+        if ($entry.candidateClass) {
+            $approved[[string]$entry.candidateClass] = $entry
+        }
+    }
+    return $approved
+}
+
+function Test-CandidateClassGate {
+    param([string] $CandidateClass)
+    return $script:ApprovedAutoPatchableCandidateClasses.ContainsKey($CandidateClass)
+}
+
 function Add-Candidate {
     param(
         [hashtable] $Candidate,
@@ -89,11 +113,19 @@ function Add-Candidate {
     $Candidate.autoPatchable = Test-AutoPatchableCandidate $Candidate $CandidateClass
     $Candidate.reviewOnly = -not $Candidate.autoPatchable
     $Candidate.executionMode = if ($Candidate.autoPatchable) { "auto_patchable" } else { "review_only" }
+    $Candidate.gate = [ordered]@{
+        required = $true
+        approved = Test-CandidateClassGate $CandidateClass
+        gatePath = ConvertTo-RepoPath $GatePath
+    }
     $Bucket.Add([pscustomobject]$Candidate)
 }
 
 function Test-AutoPatchableCandidate {
     param([hashtable] $Candidate, [string] $CandidateClass)
+    if (-not (Test-CandidateClassGate $CandidateClass)) {
+        return $false
+    }
     if ($CandidateClass -eq "duplicate_literal_local_constant_extraction") {
         return $Candidate.ContainsKey("literal") -and $Candidate.ContainsKey("constantName")
     }
@@ -130,6 +162,12 @@ function Test-AutoPatchableCandidate {
     if ($CandidateClass -eq "method_spacing_normalization") {
         return $Candidate.ContainsKey("member") -and ([string]$Candidate.member).StartsWith("line-")
     }
+    if ($CandidateClass -eq "comment_wrap_cleanup") {
+        return $Candidate.ContainsKey("member") -and ([string]$Candidate.member).StartsWith("line-") -and $Candidate.ContainsKey("commentWrapSplitPointFound") -and $Candidate.commentWrapSplitPointFound -eq $true
+    }
+    if ($CandidateClass -eq "spring_data_query_wrap_cleanup") {
+        return $Candidate.ContainsKey("member") -and ([string]$Candidate.member).StartsWith("line-")
+    }
     return $false
 }
 
@@ -141,6 +179,46 @@ function Test-SimpleStringConstantLine {
 function Test-SplitStringConstantLine {
     param([string] $Line)
     return $Line -match '^\s*private static final String [A-Z0-9_]+ = "[^"\\]+" \+\s+"[^"\\]+";\s*$'
+}
+
+function Test-SplitStringConstantStartLine {
+    param([string] $Line)
+    return $Line -match '^\s*private static final String [A-Z0-9_]+ = "[^"\\]+" \+\s*$'
+}
+
+function Test-SimpleQueryAnnotationLine {
+    param([string] $Line)
+    return $Line -match '^\s*@Query\("(?<value>[^"\\]+)"\)\s*$'
+}
+
+function Find-ConservativeCommentSplitPoint {
+    param([string] $Text)
+
+    $minimumPrefix = 24
+    $preferredMaxIndex = [Math]::Min(112, $Text.Length - 1)
+    if ($preferredMaxIndex -lt $minimumPrefix) {
+        return $null
+    }
+
+    $spaceSplit = $Text.LastIndexOf(" ", $preferredMaxIndex)
+    if ($spaceSplit -ge $minimumPrefix -and $spaceSplit -lt ($Text.Length - 1)) {
+        return [pscustomobject]@{
+            Index = $spaceSplit
+            KeepDelimiter = $false
+        }
+    }
+
+    foreach ($delimiter in @("/", "#", "?", "&", "-", ".", ":")) {
+        $splitIndex = $Text.LastIndexOf($delimiter, $preferredMaxIndex)
+        if ($splitIndex -ge $minimumPrefix -and $splitIndex -lt ($Text.Length - 1)) {
+            return [pscustomobject]@{
+                Index = $splitIndex
+                KeepDelimiter = $true
+            }
+        }
+    }
+
+    return $null
 }
 
 function Parse-MethodBlocks {
@@ -194,9 +272,10 @@ $leaseName = Get-LeaseScalar $leaseLines "leaseName"
 $branch = Get-LeaseScalar $leaseLines "branch"
 $head = (& git rev-parse HEAD).Trim()
 $allowedCandidateTypes = Get-LeaseList $leaseLines "allowedCandidateTypes"
+$script:ApprovedAutoPatchableCandidateClasses = Get-AutoPatchableGate -Path $GatePath
 
 $sourceFiles = @(
-    Get-ChildItem "src/main/java/org/springframework/samples/petclinic" -Recurse -Filter "*.java" |
+    Get-ChildItem $SourceRoot -Recurse -Filter "*.java" |
         Where-Object {
             $_.FullName -notmatch "\\src\\test\\" -and
             $_.FullName -notmatch "\\target\\"
@@ -282,9 +361,87 @@ foreach ($file in $sourceFiles) {
                 })
     }
 
+    # Heuristic 3b: Spring Data JPA query annotation readability cleanup.
+    if ($path -like "*/repository/springdatajpa/*") {
+        for ($i = 0; $i -lt $lines.Count; $i++) {
+            if ($lines[$i].Length -le 110) {
+                continue
+            }
+            if (-not (Test-SimpleQueryAnnotationLine $lines[$i])) {
+                continue
+            }
+
+            $member = "line-$($i + 1)"
+            Add-Candidate -CandidateClass "spring_data_query_wrap_cleanup" -AllowedTypes $allowedCandidateTypes -Bucket $candidates -Candidate ([ordered]@{
+                candidateId = New-CandidateId $path "spring_data_query_wrap_cleanup" $member
+                score = 30 + 30 + 20 + 10 + $layerScore
+                file = $path
+                member = $member
+                expectedDiffSummary = "Wrap a long Spring Data @Query annotation into a concatenated two-line query literal without changing semantics."
+                estimatedChangedLines = 2
+                tieBreak = [ordered]@{ layerScore = $layerScore; path = $path; member = $member }
+            })
+        }
+    }
+
+    # Heuristic 3c: repository split string constant continuation cleanup.
+    if ($path -like "*/repository/*") {
+        for ($i = 0; $i -lt ($lines.Count - 1); $i++) {
+            if ($lines[$i].Length -le 110) {
+                continue
+            }
+            if (-not (Test-SplitStringConstantStartLine $lines[$i])) {
+                continue
+            }
+            if ($lines[$i + 1] -notmatch '^\s*"[^"\\]+";\s*$') {
+                continue
+            }
+
+            $member = "line-$($i + 1)"
+            $constantMatch = [regex]::Match($lines[$i], '^\s*private static final String (?<name>[A-Z0-9_]+) =')
+            $constantName = if ($constantMatch.Success) { $constantMatch.Groups["name"].Value } else { $null }
+            Add-Candidate -CandidateClass "repository_readability_cleanup" -AllowedTypes $allowedCandidateTypes -Bucket $candidates -Candidate ([ordered]@{
+                candidateId = New-CandidateId $path "repository_readability_cleanup" $member
+                score = 30 + 30 + 20 + 18 + $layerScore
+                file = $path
+                member = $member
+                constantName = $constantName
+                expectedDiffSummary = "Normalize a split repository string constant into a canonical two-line continuation format."
+                estimatedChangedLines = 2
+                tieBreak = [ordered]@{ layerScore = $layerScore; path = $path; member = $member }
+            })
+        }
+    }
+
     $methods = @(Parse-MethodBlocks -Lines $lines)
 
     # Heuristic 4: tiny spacing normalization between adjacent methods.
+    for ($i = 0; $i -lt $lines.Count; $i++) {
+        $line = $lines[$i]
+        if ($line.Length -le 120) {
+            continue
+        }
+        if ($line -notmatch '^\s*\*\s+\S') {
+            continue
+        }
+        $commentText = ($line -replace '^\s*\*\s+', '')
+        if (-not (Find-ConservativeCommentSplitPoint -Text $commentText)) {
+            continue
+        }
+        $member = "line-$($i + 1)"
+        Add-Candidate -CandidateClass "comment_wrap_cleanup" -AllowedTypes $allowedCandidateTypes -Bucket $candidates -Candidate ([ordered]@{
+            candidateId = New-CandidateId $path "comment_wrap_cleanup" $member
+            score = 30 + 30 + 20 + 10 + $layerScore
+            file = $path
+            member = $member
+            commentWrapSplitPointFound = $true
+            expectedDiffSummary = "Wrap one long Javadoc comment line without changing source behavior."
+            estimatedChangedLines = 2
+            tieBreak = [ordered]@{ layerScore = $layerScore; path = $path; member = $member }
+        })
+    }
+
+    # Heuristic 5: tiny spacing normalization between adjacent methods.
     if ($methods.Count -gt 1) {
         for ($m = 0; $m -lt ($methods.Count - 1); $m++) {
             $currentMethod = $methods[$m]
@@ -305,7 +462,7 @@ foreach ($file in $sourceFiles) {
         }
     }
 
-    # Heuristic 5: repository-specific readability candidate.
+    # Heuristic 6: repository-specific readability candidate.
     if ($path -like "*/repository/*") {
         foreach ($method in $methods) {
             $methodName = $method.Name
@@ -343,7 +500,7 @@ foreach ($file in $sourceFiles) {
         }
     }
 
-    # Heuristic 6: utility-specific readability candidate.
+    # Heuristic 7: utility-specific readability candidate.
     if ($path -like "*/util/*") {
         foreach ($method in $methods) {
             $methodName = $method.Name
@@ -374,7 +531,7 @@ foreach ($file in $sourceFiles) {
         }
     }
 
-    # Heuristic 7: duplicate literal extraction.
+    # Heuristic 8: duplicate literal extraction.
     $stringMatches = [regex]::Matches($content, '"([^"\\\r\n]|\\.)+"') |
         ForEach-Object { $_.Value } |
         Where-Object {
@@ -433,6 +590,9 @@ $pocket = [ordered]@{
     generatedAt = (Get-Date).ToUniversalTime().ToString("o")
     discovery = [ordered]@{
         method = "static-heuristic-scan"
+        sourceRoot = ConvertTo-RepoPath $SourceRoot
+        gatePath = ConvertTo-RepoPath $GatePath
+        approvedAutoPatchableCandidateClasses = @($script:ApprovedAutoPatchableCandidateClasses.Keys | Sort-Object)
         scannedFiles = $sourceFiles.Count
         ranking = @(
             "score descending",

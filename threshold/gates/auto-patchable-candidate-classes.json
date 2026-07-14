@@ -1,0 +1,117 @@
+{
+  "schemaVersion": "threshold.petclinic.auto-patchable-gate.v0.1",
+  "gateId": "petclinic-auto-patchable-candidate-class-gate-v0-1",
+  "purpose": "Require an explicit gate artifact before a discovered candidate class can be treated as autoPatchable by the autonomous runner.",
+  "promotionPolicy": {
+    "newCandidateClassRequiresGateEntry": true,
+    "newExecutorRequiresGateEntry": true,
+    "batchReceiptModeRequiresGateEntry": true,
+    "missingGateEntryMeansReviewOnly": true,
+    "gateEntryDoesNotBypassLeaseAllowlist": true,
+    "gateEntryDoesNotBypassValidation": true
+  },
+  "batchReceiptMode": {
+    "schemaVersion": "threshold.petclinic.batch-receipt-mode.v0.1",
+    "enabled": true,
+    "maxSlicesPerBatch": 3,
+    "maxFilesPerBatch": 3,
+    "maxChangedLinesPerBatch": 120,
+    "fullMavenTest": "onceAfterBatch",
+    "sourceCommitPolicy": "one_source_commit_per_batch",
+    "receiptCommitPolicy": "one_batch_receipt_commit_per_batch",
+    "failurePolicy": "revert_entire_batch_before_commit",
+    "approvedCandidateClasses": [
+      {
+        "candidateClass": "comment_wrap_cleanup",
+        "authorizedBy": "retrospective-human-gate-for-auto-patchable-candidate-classes-v0-1",
+        "scope": "pilot batch mode for independent single-line Javadoc comment wraps only",
+        "requiresDiscoveryCanary": true,
+        "requiresSameCandidateClassPerBatch": true
+      }
+    ],
+    "heldCandidateClasses": [
+      {
+        "candidateClass": "repository_readability_cleanup",
+        "reason": "hold until batch executor has a dedicated promotion receipt for repository readability changes"
+      },
+      {
+        "candidateClass": "spring_data_query_wrap_cleanup",
+        "reason": "hold until query wrapping has a dedicated batch canary and promotion receipt"
+      }
+    ]
+  },
+  "approvedAutoPatchableCandidateClasses": [
+    {
+      "candidateClass": "comment_wrap_cleanup",
+      "authorizedBy": "governance-hardening-bootstrap",
+      "scope": "single long Javadoc comment line wrapping only",
+      "requiresCanary": true
+    },
+    {
+      "candidateClass": "duplicate_literal_local_constant_extraction",
+      "authorizedBy": "governance-hardening-bootstrap",
+      "scope": "same-class private string constant extraction for repeated literals",
+      "requiresCanary": true
+    },
+    {
+      "candidateClass": "method_signature_wrap_cleanup",
+      "authorizedBy": "governance-hardening-bootstrap",
+      "scope": "format-only wrapping of long Java method signatures",
+      "requiresCanary": true
+    },
+    {
+      "candidateClass": "method_spacing_normalization",
+      "authorizedBy": "governance-hardening-bootstrap",
+      "scope": "single blank-line insertion between adjacent methods",
+      "requiresCanary": true
+    },
+    {
+      "candidateClass": "private_helper_extraction_for_readability",
+      "authorizedBy": "governance-hardening-bootstrap",
+      "scope": "existing runner-supported line cleanup only",
+      "requiresCanary": true
+    },
+    {
+      "candidateClass": "redundant_local_variable_simplification",
+      "authorizedBy": "governance-hardening-bootstrap",
+      "scope": "immediate return-local simplification only",
+      "requiresCanary": true
+    },
+    {
+      "candidateClass": "repository_readability_cleanup",
+      "authorizedBy": "governance-hardening-bootstrap",
+      "scope": "repository SQL constant extraction and split string normalization only",
+      "requiresCanary": true
+    },
+    {
+      "candidateClass": "spring_data_query_wrap_cleanup",
+      "authorizedBy": "governance-hardening-bootstrap",
+      "scope": "format-only wrapping of long Spring Data @Query annotations",
+      "requiresCanary": true
+    },
+    {
+      "candidateClass": "split_string_constant_normalization",
+      "authorizedBy": "governance-hardening-bootstrap",
+      "scope": "canonical two-line continuation for already split string constants",
+      "requiresCanary": true
+    },
+    {
+      "candidateClass": "string_constant_wrap_cleanup",
+      "authorizedBy": "governance-hardening-bootstrap",
+      "scope": "format-only wrapping of long private static final string constants",
+      "requiresCanary": true
+    },
+    {
+      "candidateClass": "utility_readability_cleanup",
+      "authorizedBy": "governance-hardening-bootstrap",
+      "scope": "runner-supported StopWatch helper extraction only",
+      "requiresCanary": true
+    }
+  ],
+  "nonClaims": [
+    "gate entry is not a behavior-preservation claim",
+    "gate entry is not a public readiness claim",
+    "gate entry is not a public correctness claim",
+    "gate entry does not authorize push, PR, merge, release, or deploy"
+  ]
+}

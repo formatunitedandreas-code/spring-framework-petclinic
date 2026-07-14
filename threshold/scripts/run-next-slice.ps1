@@ -3,6 +3,7 @@ param(
     [string] $LeasePath = "threshold/leases/current.yaml",
     [string] $StatePath = "threshold/lease-state/current-run.json",
     [string] $PocketPath = "threshold/candidate-pocket/current.json",
+    [string] $GatePath = "threshold/gates/auto-patchable-candidate-classes.json",
     [int] $MinScore = 70,
     [switch] $SkipMavenTest
 )
@@ -54,6 +55,46 @@ function Test-SimpleStringConstantLine {
 function Test-SplitStringConstantLine {
     param([string] $Line)
     return $Line -match '^\s*private static final String [A-Z0-9_]+ = "[^"\\]+" \+\s+"[^"\\]+";\s*$'
+}
+
+function Test-SplitStringConstantStartLine {
+    param([string] $Line)
+    return $Line -match '^\s*private static final String [A-Z0-9_]+ = "[^"\\]+" \+\s*$'
+}
+
+function Test-SimpleQueryAnnotationLine {
+    param([string] $Line)
+    return $Line -match '^\s*@Query\("(?<value>[^"\\]+)"\)\s*$'
+}
+
+function Find-ConservativeCommentSplitPoint {
+    param([string] $Text)
+
+    $minimumPrefix = 24
+    $preferredMaxIndex = [Math]::Min(112, $Text.Length - 1)
+    if ($preferredMaxIndex -lt $minimumPrefix) {
+        return $null
+    }
+
+    $spaceSplit = $Text.LastIndexOf(" ", $preferredMaxIndex)
+    if ($spaceSplit -ge $minimumPrefix -and $spaceSplit -lt ($Text.Length - 1)) {
+        return [pscustomobject]@{
+            Index = $spaceSplit
+            KeepDelimiter = $false
+        }
+    }
+
+    foreach ($delimiter in @("/", "#", "?", "&", "-", ".", ":")) {
+        $splitIndex = $Text.LastIndexOf($delimiter, $preferredMaxIndex)
+        if ($splitIndex -ge $minimumPrefix -and $splitIndex -lt ($Text.Length - 1)) {
+            return [pscustomobject]@{
+                Index = $splitIndex
+                KeepDelimiter = $true
+            }
+        }
+    }
+
+    return $null
 }
 
 function Write-TextFile {
@@ -188,6 +229,55 @@ function Assert-LeaseRuntimeState {
     }
 }
 
+function Invoke-DiscoveryCanary {
+    param(
+        [string] $LeasePath,
+        [string] $GatePath
+    )
+
+    & powershell.exe -NoProfile -ExecutionPolicy Bypass -File "threshold/scripts/test-discovery-canary.ps1" `
+        -LeasePath $LeasePath `
+        -GatePath $GatePath
+    if ($LASTEXITCODE -ne 0) {
+        throw "Threshold discovery canary failed."
+    }
+}
+
+function Get-LeaseRunState {
+    param([string] $StatePath)
+    if (-not (Test-Path $StatePath)) {
+        throw "Lease state file not found: $StatePath"
+    }
+    return Get-Content $StatePath -Raw | ConvertFrom-Json
+}
+
+function Set-LeaseTerminalState {
+    param(
+        [string] $StatePath,
+        [string] $TerminalState,
+        [string] $Reason
+    )
+
+    $state = Get-LeaseRunState -StatePath $StatePath
+    $head = (& git rev-parse HEAD).Trim()
+    $state.currentHead = $head
+    $state.terminalState = $TerminalState
+    if (-not $state.PSObject.Properties["terminalReason"]) {
+        $state | Add-Member -NotePropertyName "terminalReason" -NotePropertyValue $Reason
+    }
+    else {
+        $state.terminalReason = $Reason
+    }
+    if (-not $state.PSObject.Properties["discoveryCanaryLastPassedAt"]) {
+        $state | Add-Member -NotePropertyName "discoveryCanaryLastPassedAt" -NotePropertyValue (Get-Date).ToUniversalTime().ToString("o")
+    }
+    else {
+        $state.discoveryCanaryLastPassedAt = (Get-Date).ToUniversalTime().ToString("o")
+    }
+    $state.updatedAt = (Get-Date).ToUniversalTime().ToString("o")
+    $state | ConvertTo-Json -Depth 10 | Set-Content $StatePath
+}
+
 function Test-AstLiteCandidate {
     param(
         [pscustomobject] $Candidate,
@@ -230,7 +320,8 @@ function Test-AstLiteCandidate {
 function Resolve-ExecutionPocket {
     param(
         [string] $PocketPath,
-        [string] $LeasePath
+        [string] $LeasePath,
+        [string] $GatePath
     )
 
     $head = (& git rev-parse HEAD).Trim()
@@ -243,7 +334,7 @@ function Resolve-ExecutionPocket {
     }
 
     $tempPocketPath = Join-Path ([System.IO.Path]::GetTempPath()) "threshold-candidate-pocket-$head.json"
-    $discoveryOutput = & powershell.exe -NoProfile -ExecutionPolicy Bypass -File "threshold/scripts/discover-candidates.ps1" -LeasePath $LeasePath -PocketPath $tempPocketPath
+    $discoveryOutput = & powershell.exe -NoProfile -ExecutionPolicy Bypass -File "threshold/scripts/discover-candidates.ps1" -LeasePath $LeasePath -GatePath $GatePath -PocketPath $tempPocketPath
     if ($LASTEXITCODE -ne 0) {
         throw "Candidate discovery failed."
     }
@@ -318,7 +409,11 @@ function Get-NextCandidate {
                         $applicable = $false
                         break
                     }
-                    if (-not (Test-SimpleStringConstantLine $lines[$lineNumber - 1])) {
+                    $line = $lines[$lineNumber - 1]
+                    $nextLine = if ($lineNumber -lt $lines.Count) { $lines[$lineNumber] } else { $null }
+                    $simpleConstant = Test-SimpleStringConstantLine $line
+                    $splitStartConstant = (Test-SplitStringConstantStartLine $line) -and $nextLine -and ($nextLine -match '^\s*"[^"\\]+";\s*$')
+                    if (-not ($simpleConstant -or $splitStartConstant)) {
                         Write-Host "candidateSkippedReason=unsupported_line_cleanup:$($candidate.candidateId)"
                         $applicable = $false
                         break
@@ -340,6 +435,27 @@ function Get-NextCandidate {
                 }
                 if ($content -match "private\s+static\s+final\s+String\s+$([regex]::Escape([string]$candidate.constantName))\s*=") {
                     Write-Host "candidateSkippedReason=constant_already_exists:$($candidate.candidateId)"
+                    $applicable = $false
+                    break
+                }
+            }
+            "spring_data_query_wrap_cleanup" {
+                $member = [string]$candidate.member
+                if (-not $member.StartsWith("line-")) {
+                    Write-Host "candidateSkippedReason=unsupported_line_marker:$($candidate.candidateId)"
+                    $applicable = $false
+                    break
+                }
+                $lineNumber = [int]($member.Substring(5))
+                $lines = Get-Content $path
+                if ($lineNumber -lt 1 -or $lineNumber -gt $lines.Count) {
+                    Write-Host "candidateSkippedReason=line_outside_file:$($candidate.candidateId)"
+                    $applicable = $false
+                    break
+                }
+                if ($lines[$lineNumber - 1].Length -le 110 -or
+                    -not (Test-SimpleQueryAnnotationLine $lines[$lineNumber - 1])) {
+                    Write-Host "candidateSkippedReason=unsupported_query_annotation_cleanup:$($candidate.candidateId)"
                     $applicable = $false
                     break
                 }
@@ -414,6 +530,27 @@ function Get-NextCandidate {
                 if ($lines[$lineNumber - 1] -notmatch '^\s*\}\s*$' -or
                     $lines[$lineNumber] -notmatch '^\s*(?:@|public\b|private\b|protected\b)') {
                     Write-Host "candidateSkippedReason=unsupported_spacing_cleanup:$($candidate.candidateId)"
+                    $applicable = $false
+                    break
+                }
+            }
+            "comment_wrap_cleanup" {
+                $member = [string]$candidate.member
+                if (-not $member.StartsWith("line-")) {
+                    Write-Host "candidateSkippedReason=unsupported_comment_marker:$($candidate.candidateId)"
+                    $applicable = $false
+                    break
+                }
+                $lineNumber = [int]($member.Substring(5))
+                $lines = Get-Content $path
+                if ($lineNumber -lt 1 -or $lineNumber -gt $lines.Count) {
+                    Write-Host "candidateSkippedReason=line_outside_file:$($candidate.candidateId)"
+                    $applicable = $false
+                    break
+                }
+                if ($lines[$lineNumber - 1].Length -le 120 -or
+                    $lines[$lineNumber - 1] -notmatch '^\s*\*\s+\S') {
+                    Write-Host "candidateSkippedReason=unsupported_comment_cleanup:$($candidate.candidateId)"
                     $applicable = $false
                     break
                 }
@@ -568,6 +705,62 @@ function Apply-LongStringConstantWrap {
     Write-Host "wrappedConstant=$name"
 }
 
+function Apply-SpringDataQueryWrapCleanup {
+    param([pscustomobject] $Candidate)
+
+    $path = ConvertTo-RepoPath $Candidate.file
+    if (-not (Test-Path $path)) { throw "Candidate file not found: $path" }
+
+    $member = [string]$Candidate.member
+    if (-not $member.StartsWith("line-")) {
+        throw "Spring Data query wrap cleanup requires a line marker candidate."
+    }
+
+    $lineNumber = [int]($member.Substring(5))
+    $lines = Get-Content $path
+    if ($lineNumber -lt 1 -or $lineNumber -gt $lines.Count) {
+        throw "Candidate line '$lineNumber' is outside file range in $path."
+    }
+
+    $line = $lines[$lineNumber - 1]
+    $match = [regex]::Match($line, '^(?<indent>\s*)@Query\("(?<value>[^"\\]+)"\)\s*$')
+    if (-not $match.Success) {
+        throw "Line '$lineNumber' is not a supported Spring Data @Query annotation in $path."
+    }
+
+    $value = $match.Groups["value"].Value
+    $maxFirstSegmentLength = [Math]::Min(88, $value.Length - 1)
+    $splitIndex = $value.LastIndexOf(" ", $maxFirstSegmentLength)
+    if ($splitIndex -lt 24 -or $splitIndex -ge ($value.Length - 1)) {
+        throw "Could not find a conservative split point for @Query annotation '$lineNumber'."
+    }
+
+    $indent = $match.Groups["indent"].Value
+    $firstSegment = $value.Substring(0, $splitIndex + 1)
+    $secondSegment = $value.Substring($splitIndex + 1)
+
+    $wrapped = @()
+    $wrapped += "$indent@Query(`"$firstSegment`" +"
+    $wrapped += "$indent    `"$secondSegment`")"
+
+    $updatedLines = @()
+    if ($lineNumber -gt 1) {
+        $updatedLines += $lines[0..($lineNumber - 2)]
+    }
+    $updatedLines += $wrapped
+    if ($lineNumber -lt $lines.Count) {
+        $updatedLines += $lines[$lineNumber..($lines.Count - 1)]
+    }
+
+    $originalText = Get-Content $path -Raw
+    $updatedText = $updatedLines -join (Get-LineEnding -Content $originalText)
+    Write-TextFile -Path $path -Content $updatedText
+
+    Write-Host "appliedCandidate=$($Candidate.candidateId)"
+    Write-Host "changedFile=$path"
+    Write-Host "wrappedQueryAnnotationLine=$lineNumber"
+}
+
 function Apply-RepositoryReadabilityCleanup {
     param([pscustomobject] $Candidate)
 
@@ -575,7 +768,22 @@ function Apply-RepositoryReadabilityCleanup {
     if (-not (Test-Path $path)) { throw "Candidate file not found: $path" }
 
     if ($Candidate.member -and ([string]$Candidate.member).StartsWith("line-")) {
-        Apply-LongStringConstantWrap -Candidate $Candidate
+        $lineNumber = [int](([string]$Candidate.member).Substring(5))
+        $lines = Get-Content $path
+        if ($lineNumber -lt 1 -or $lineNumber -gt $lines.Count) {
+            throw "Candidate line '$lineNumber' is outside file range in $path."
+        }
+
+        $line = $lines[$lineNumber - 1]
+        if (Test-SimpleStringConstantLine $line) {
+            Apply-LongStringConstantWrap -Candidate $Candidate
+            return
+        }
+        if (Test-SplitStringConstantStartLine $line) {
+            Apply-SplitStringConstantNormalization -Candidate $Candidate
+            return
+        }
+        throw "Unsupported repository readability line cleanup in $path."
         return
     }
 
@@ -630,6 +838,20 @@ function Apply-SplitStringConstantNormalization {
 
     $line = $lines[$lineNumber - 1]
     $match = [regex]::Match($line, '^(?<indent>\s*)private static final String (?<name>[A-Z0-9_]+) = "(?<first>[^"\\]+)" \+\s+"(?<second>[^"\\]+)";\s*$')
+    $multilineMatch = $null
+    if (-not $match.Success) {
+        $match = [regex]::Match($line, '^(?<indent>\s*)private static final String (?<name>[A-Z0-9_]+) = "(?<first>[^"\\]+)" \+\s*$')
+        if ($match.Success) {
+            if ($lineNumber -ge $lines.Count) {
+                throw "Candidate line '$lineNumber' is missing split continuation in $path."
+            }
+            $nextLine = $lines[$lineNumber]
+            $multilineMatch = [regex]::Match($nextLine, '^(?<indent>\s*)"(?<second>[^"\\]+)";\s*$')
+            if (-not $multilineMatch.Success) {
+                throw "Line '$lineNumber' is not a supported split string constant in $path."
+            }
+        }
+    }
     if (-not $match.Success) {
         throw "Line '$lineNumber' is not a supported split string constant in $path."
     }
@@ -637,17 +859,29 @@ function Apply-SplitStringConstantNormalization {
     $indent = $match.Groups["indent"].Value
     $name = $match.Groups["name"].Value
     $firstSegment = $match.Groups["first"].Value
-    $secondSegment = $match.Groups["second"].Value
+    if ($multilineMatch) {
+        $secondSegment = $multilineMatch.Groups["second"].Value
+        $continuationIndent = $multilineMatch.Groups["indent"].Value
+    }
+    else {
+        $secondSegment = $match.Groups["second"].Value
+        $continuationIndent = "$indent    "
+    }
     $wrapped = @()
-    $wrapped += "$indent" + "private static final String $name = `"$firstSegment`" +"
-    $wrapped += "$indent    `"$secondSegment`";"
+    $wrapped += "$indent" + "private static final String $name = `"$firstSegment`""
+    $wrapped += "$continuationIndent+ `"$secondSegment`";"
 
     $updatedLines = @()
     if ($lineNumber -gt 1) {
         $updatedLines += $lines[0..($lineNumber - 2)]
     }
     $updatedLines += $wrapped
-    if ($lineNumber -lt $lines.Count) {
+    if ($multilineMatch) {
+        if ($lineNumber + 1 -lt $lines.Count) {
+            $updatedLines += $lines[($lineNumber + 1)..($lines.Count - 1)]
+        }
+    }
+    elseif ($lineNumber -lt $lines.Count) {
         $updatedLines += $lines[$lineNumber..($lines.Count - 1)]
     }
 
@@ -755,6 +989,68 @@ function Apply-MethodSpacingNormalization {
     Write-Host "insertedBlankLineAfter=$lineNumber"
 }
 
+function Apply-CommentWrapCleanup {
+    param([pscustomobject] $Candidate)
+
+    $path = ConvertTo-RepoPath $Candidate.file
+    if (-not (Test-Path $path)) { throw "Candidate file not found: $path" }
+
+    $member = [string]$Candidate.member
+    if (-not $member.StartsWith("line-")) {
+        throw "Comment wrap cleanup requires a line marker candidate."
+    }
+
+    $lineNumber = [int]($member.Substring(5))
+    $lines = Get-Content $path
+    if ($lineNumber -lt 1 -or $lineNumber -gt $lines.Count) {
+        throw "Candidate line '$lineNumber' is outside file range in $path."
+    }
+
+    $line = $lines[$lineNumber - 1]
+    $match = [regex]::Match($line, '^(?<indent>\s*\*\s+)(?<text>\S.*)$')
+    if (-not $match.Success -or $line.Length -le 120) {
+        throw "Line '$lineNumber' is not a supported long comment line in $path."
+    }
+
+    $indent = $match.Groups["indent"].Value
+    $text = $match.Groups["text"].Value.Trim()
+    $maxTextLength = [Math]::Max(40, 112 - $indent.Length)
+    $splitPoint = Find-ConservativeCommentSplitPoint -Text $text
+    if (-not $splitPoint) {
+        throw "Could not find a conservative split point for comment line '$lineNumber' using space or URL punctuation."
+    }
+
+    $splitIndex = [int]$splitPoint.Index
+    $firstSegment = if ([bool]$splitPoint.KeepDelimiter) {
+        $text.Substring(0, $splitIndex + 1).TrimEnd()
+    }
+    else {
+        $text.Substring(0, $splitIndex).TrimEnd()
+    }
+    $secondSegment = $text.Substring($splitIndex + 1).TrimStart()
+    $wrapped = @(
+        "$indent$firstSegment",
+        "$indent$secondSegment"
+    )
+
+    $updatedLines = @()
+    if ($lineNumber -gt 1) {
+        $updatedLines += $lines[0..($lineNumber - 2)]
+    }
+    $updatedLines += $wrapped
+    if ($lineNumber -lt $lines.Count) {
+        $updatedLines += $lines[$lineNumber..($lines.Count - 1)]
+    }
+
+    $originalText = Get-Content $path -Raw
+    $updatedText = $updatedLines -join (Get-LineEnding -Content $originalText)
+    Write-TextFile -Path $path -Content $updatedText
+
+    Write-Host "appliedCandidate=$($Candidate.candidateId)"
+    Write-Host "changedFile=$path"
+    Write-Host "wrappedCommentLine=$lineNumber"
+}
+
 & powershell.exe -NoProfile -ExecutionPolicy Bypass -File "threshold/scripts/sync-lease-state.ps1" `
     -LeasePath $LeasePath `
     -StatePath $StatePath `
@@ -768,10 +1064,24 @@ if ($LASTEXITCODE -ne 0) { throw "Threshold preflight failed." }
 
 Assert-CleanWorktree
 Assert-LeaseRuntimeState -LeasePath $LeasePath -StatePath $StatePath
-$executionPocketPath = Resolve-ExecutionPocket -PocketPath $PocketPath -LeasePath $LeasePath
+$state = Get-LeaseRunState -StatePath $StatePath
+if ([int]$state.remainingBudget.candidates -le 0 -or [int]$state.remainingBudget.commits -le 0) {
+    Invoke-DiscoveryCanary -LeasePath $LeasePath -GatePath $GatePath
+    Set-LeaseTerminalState -StatePath $StatePath -TerminalState "budget_exhausted_verified" -Reason "remaining candidate or commit budget is exhausted after discovery canary passed"
+    Write-Host "budget_exhausted_verified"
+    Write-Host "remainingCandidates=$($state.remainingBudget.candidates)"
+    Write-Host "remainingCommits=$($state.remainingBudget.commits)"
+    exit 0
+}
+
+Invoke-DiscoveryCanary -LeasePath $LeasePath -GatePath $GatePath
+$executionPocketPath = Resolve-ExecutionPocket -PocketPath $PocketPath -LeasePath $LeasePath -GatePath $GatePath
 
 $candidate = Get-NextCandidate -PocketPath $executionPocketPath -MinScore $MinScore
-if (-not $candidate) { exit 0 }
+if (-not $candidate) {
+    Set-LeaseTerminalState -StatePath $StatePath -TerminalState "ready_no_candidates_verified" -Reason "no applicable autoPatchable candidates after discovery canary passed"
+    exit 0
+}
 
 Write-Host "selectedCandidateId=$($candidate.candidateId)"
 Write-Host "selectedCandidateClass=$($candidate.candidateClass)"
@@ -797,6 +1107,9 @@ switch ([string]$candidate.candidateClass) {
     "repository_readability_cleanup" {
         Apply-RepositoryReadabilityCleanup -Candidate $candidate
     }
+    "spring_data_query_wrap_cleanup" {
+        Apply-SpringDataQueryWrapCleanup -Candidate $candidate
+    }
     "string_constant_wrap_cleanup" {
         Apply-StringConstantWrapCleanup -Candidate $candidate
     }
@@ -808,6 +1121,9 @@ switch ([string]$candidate.candidateClass) {
     }
     "method_spacing_normalization" {
         Apply-MethodSpacingNormalization -Candidate $candidate
+    }
+    "comment_wrap_cleanup" {
+        Apply-CommentWrapCleanup -Candidate $candidate
     }
     default {
         throw "Candidate class '$($candidate.candidateClass)' is not yet automatically patchable by run-next-slice."

@@ -161,6 +161,9 @@ if ($UpdateState -and -not $DryRun) {
         else {
             $stateBranch = $branch
         }
+        if ($remainingCandidates -eq 0 -or $remainingCommits -eq 0) {
+            $terminalState = "budget_exhausted"
+        }
     }
     else {
         $candidatesProcessed = 1
