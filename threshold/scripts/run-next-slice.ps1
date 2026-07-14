@@ -190,18 +190,99 @@ function Get-NextCandidate {
     }
 
     $pocket = Get-Content $PocketPath -Raw | ConvertFrom-Json
-    $candidate = @(
+    $allCandidates = @(
         $pocket.candidates |
-            Where-Object { [int]$_.score -ge $MinScore -and $_.autoPatchable -eq $true } |
-            Select-Object -First 1
+            Where-Object { [int]$_.score -ge $MinScore -and $_.autoPatchable -eq $true }
     )
-    if (-not $candidate) {
+    if (-not $allCandidates) {
         Write-Host "ready_no_auto_patchable_candidates"
         Write-Host "minScore=$MinScore"
         Write-Host "candidateCount=$(@($pocket.candidates).Count)"
         Write-Host "reviewOnlyCandidateCount=$(@($pocket.candidates | Where-Object { $_.reviewOnly -eq $true }).Count)"
         return $null
     }
+
+    $applicableCandidates = New-Object System.Collections.Generic.List[object]
+    foreach ($candidate in $allCandidates) {
+        if (-not $candidate.file) { continue }
+        $path = ConvertTo-RepoPath $candidate.file
+        if (-not (Test-Path $path)) {
+            Write-Host "candidateSkippedReason=missing_file:$($candidate.candidateId)"
+            continue
+        }
+
+        $content = Get-Content $path -Raw
+        $candidateClass = [string]$candidate.candidateClass
+        $applicable = $true
+
+        switch ($candidateClass) {
+            "duplicate_literal_local_constant_extraction" {
+                if (-not $candidate.constantName -or -not $candidate.literal) {
+                    Write-Host "candidateSkippedReason=missing_fields:$($candidate.candidateId)"
+                    $applicable = $false
+                    break
+                }
+                $literalCount = [regex]::Matches($content, [regex]::Escape([string]$candidate.literal)).Count
+                if ($literalCount -lt 2) {
+                    Write-Host "candidateSkippedReason=literal_exhausted:$($candidate.candidateId)"
+                    $applicable = $false
+                    break
+                }
+                if ($content -match "private\s+static\s+final\s+String\s+$([regex]::Escape([string]$candidate.constantName))\s*=") {
+                    Write-Host "candidateSkippedReason=constant_already_exists:$($candidate.candidateId)"
+                    $applicable = $false
+                    break
+                }
+            }
+            "repository_readability_cleanup" {
+                if (-not $candidate.sqlLiteral -or -not $candidate.constantName) {
+                    Write-Host "candidateSkippedReason=missing_fields:$($candidate.candidateId)"
+                    $applicable = $false
+                    break
+                }
+                $literalCount = [regex]::Matches($content, [regex]::Escape([string]$candidate.sqlLiteral)).Count
+                if ($literalCount -lt 1) {
+                    Write-Host "candidateSkippedReason=sql_literal_missing:$($candidate.candidateId)"
+                    $applicable = $false
+                    break
+                }
+                if ($content -match "private\s+static\s+final\s+String\s+$([regex]::Escape([string]$candidate.constantName))\s*=") {
+                    Write-Host "candidateSkippedReason=constant_already_exists:$($candidate.candidateId)"
+                    $applicable = $false
+                    break
+                }
+            }
+            "utility_readability_cleanup" {
+                if (-not $candidate.helperName) {
+                    Write-Host "candidateSkippedReason=missing_fields:$($candidate.candidateId)"
+                    $applicable = $false
+                    break
+                }
+                if ($content -match "private\s+StopWatch\s+$([regex]::Escape([string]$candidate.helperName))\s*\(" -or
+                    $content -match "private\s+[\w<>]+\s+$([regex]::Escape([string]$candidate.helperName))\s*\(") {
+                    Write-Host "candidateSkippedReason=helper_already_exists:$($candidate.candidateId)"
+                    $applicable = $false
+                    break
+                }
+            }
+        }
+
+        if ($applicable) {
+            $applicableCandidates.Add($candidate) | Out-Null
+        }
+    }
+
+    if (-not $applicableCandidates -or $applicableCandidates.Count -eq 0) {
+        Write-Host "ready_no_auto_patchable_candidates"
+        Write-Host "minScore=$MinScore"
+        Write-Host "candidateCount=$(@($pocket.candidates).Count)"
+        Write-Host "reviewOnlyCandidateCount=$(@($pocket.candidates | Where-Object { $_.reviewOnly -eq $true }).Count)"
+        Write-Host "applicableCandidateCount=0"
+        return $null
+    }
+
+    $candidate = @($applicableCandidates | Select-Object -First 1)
+    if (-not $candidate) { return $null }
     return $candidate
 }
 
