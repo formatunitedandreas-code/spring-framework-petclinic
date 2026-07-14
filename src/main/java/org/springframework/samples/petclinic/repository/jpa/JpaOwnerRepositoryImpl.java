@@ -38,8 +38,8 @@ public class JpaOwnerRepositoryImpl implements OwnerRepository {
     private static final String FIND_BY_ID_SQL = "SELECT owner FROM Owner owner left join fetch owner.pets WHERE owner.id = "
         + ":id";
 
-    private static final String FIND_BY_LAST_NAME_SQL = "SELECT DISTINCT owner FROM Owner owner left join fetch owner.pets " +
-            "WHERE owner.lastName LIKE :lastName";
+    private static final String FIND_BY_LAST_NAME_SQL = "SELECT DISTINCT owner FROM Owner owner left join fetch owner.pets "
+            + "WHERE owner.lastName LIKE :lastName";
 
     private final EntityManager em;
 
