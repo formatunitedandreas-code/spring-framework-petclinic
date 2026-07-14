@@ -1,15 +1,15 @@
-leaseName: petclinic-threshold-governed-refactor-lease-v12
+leaseName: petclinic-threshold-governed-refactor-lease-v14
 repository: C:\dev\spring-framework-petclinic
 branch: threshold-governed-refactor-demo-6
 baseRemote: origin
 baseRef: origin/main
-startHead: 6926ec7e2414dc5ebef914956418bc22c44cedc5
+startHead: d116af9034b701b4f48bc50abeb22b913c4a1514
 headPolicy: descendantOfStartHead
 
 budget:
   maxCandidatesThisRun: 5
   maxCommitsThisRun: 5
-  maxFilesPerCandidate: 1
+  maxFilesPerCandidate: 3
   maxGovernanceFilesPerCandidate: 8
   maxChangedLinesPerCandidate: 140
   maxGovernanceChangedLinesPerCandidate: 1200
