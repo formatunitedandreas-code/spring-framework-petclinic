@@ -194,14 +194,11 @@ function Test-AstLiteCandidate {
         "-Member",
         ([string]$Candidate.member)
     )
-    if ($Candidate.PSObject.Properties["sqlLiteral"] -and $Candidate.sqlLiteral) {
-        $args += @("-SqlLiteral", ([string]$Candidate.sqlLiteral))
-    }
     if ($Candidate.PSObject.Properties["constantName"] -and $Candidate.constantName) {
         $args += @("-ConstantName", ([string]$Candidate.constantName))
     }
 
-    $output = & powershell.exe @args 2>&1
+    $output = @(& powershell.exe @args)
     foreach ($line in $output) {
         Write-Host $line
     }
