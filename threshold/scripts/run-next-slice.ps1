@@ -331,6 +331,26 @@ function Get-NextCandidate {
                     break
                 }
             }
+            "string_constant_wrap_cleanup" {
+                $member = [string]$candidate.member
+                if (-not $member.StartsWith("line-")) {
+                    Write-Host "candidateSkippedReason=unsupported_line_marker:$($candidate.candidateId)"
+                    $applicable = $false
+                    break
+                }
+                $lineNumber = [int]($member.Substring(5))
+                $lines = Get-Content $path
+                if ($lineNumber -lt 1 -or $lineNumber -gt $lines.Count) {
+                    Write-Host "candidateSkippedReason=line_outside_file:$($candidate.candidateId)"
+                    $applicable = $false
+                    break
+                }
+                if (-not (Test-SimpleStringConstantLine $lines[$lineNumber - 1])) {
+                    Write-Host "candidateSkippedReason=unsupported_line_cleanup:$($candidate.candidateId)"
+                    $applicable = $false
+                    break
+                }
+            }
             "utility_readability_cleanup" {
                 if (-not $candidate.helperName) {
                     Write-Host "candidateSkippedReason=missing_fields:$($candidate.candidateId)"
@@ -553,6 +573,12 @@ function Apply-RepositoryReadabilityCleanup {
     Write-Host "constantName=$constantName"
 }
 
+function Apply-StringConstantWrapCleanup {
+    param([pscustomobject] $Candidate)
+
+    Apply-LongStringConstantWrap -Candidate $Candidate
+}
+
 function Apply-UtilityReadabilityCleanup {
     param([pscustomobject] $Candidate)
 
@@ -681,8 +707,14 @@ switch ([string]$candidate.candidateClass) {
     "private_helper_extraction_for_readability" {
         Apply-ReadableMethodSignatureWrap -Candidate $candidate
     }
+    "method_signature_wrap_cleanup" {
+        Apply-ReadableMethodSignatureWrap -Candidate $candidate
+    }
     "repository_readability_cleanup" {
         Apply-RepositoryReadabilityCleanup -Candidate $candidate
+    }
+    "string_constant_wrap_cleanup" {
+        Apply-StringConstantWrapCleanup -Candidate $candidate
     }
     "utility_readability_cleanup" {
         Apply-UtilityReadabilityCleanup -Candidate $candidate

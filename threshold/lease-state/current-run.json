@@ -1,20 +1,20 @@
 {
     "schemaVersion":  "threshold.petclinic.lease-state.v0.2",
-    "invocationId":  "petclinic-threshold-governed-refactor-lease-v11-20260714T091721Z",
-    "leaseId":  "petclinic-threshold-governed-refactor-lease-v11",
+    "invocationId":  "petclinic-threshold-governed-refactor-lease-v12-20260714T093411Z",
+    "leaseId":  "petclinic-threshold-governed-refactor-lease-v12",
     "mode":  "local_refactor",
     "branch":  "threshold-governed-refactor-demo-6",
-    "startHead":  "1faa7c745e3ffe671e8d11e0291daf5cd25d5ac0",
-    "currentHead":  "c5ec4a01d0177aab887ba3324b1ee6e639caa9f0",
-    "currentSourceHead":  "c5ec4a01d0177aab887ba3324b1ee6e639caa9f0",
-    "candidatesProcessed":  1,
-    "commitsCreated":  1,
+    "startHead":  "6926ec7e2414dc5ebef914956418bc22c44cedc5",
+    "currentHead":  "6926ec7e2414dc5ebef914956418bc22c44cedc5",
+    "currentSourceHead":  "6926ec7e2414dc5ebef914956418bc22c44cedc5",
+    "candidatesProcessed":  0,
+    "commitsCreated":  0,
     "remainingBudget":  {
-                            "candidates":  4,
-                            "commits":  4,
+                            "candidates":  5,
+                            "commits":  5,
                             "repairAttempts":  2
                         },
-    "lastReceipt":  "threshold/receipts/src-main-java-org-springframework-samples-petclinic-util-callmonitoringaspect-java-method-spacing-normalization-startinvocationstopwatch-recordinvocation-line-95-c5ec4a01d017.json",
+    "lastReceipt":  null,
     "terminalState":  "active",
-    "updatedAt":  "2026-07-14T09:23:49.6601117Z"
+    "updatedAt":  "2026-07-14T09:34:11.0876032Z"
 }

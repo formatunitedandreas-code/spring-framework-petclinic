@@ -103,6 +103,9 @@ function Test-AutoPatchableCandidate {
     if ($CandidateClass -eq "private_helper_extraction_for_readability") {
         return $Candidate.ContainsKey("member") -and ([string]$Candidate.member).StartsWith("line-")
     }
+    if ($CandidateClass -eq "method_signature_wrap_cleanup") {
+        return $Candidate.ContainsKey("member") -and ([string]$Candidate.member).StartsWith("line-")
+    }
     if ($CandidateClass -eq "repository_readability_cleanup") {
         if ($Candidate.ContainsKey("member") -and ([string]$Candidate.member).StartsWith("line-")) {
             return $true
@@ -117,6 +120,9 @@ function Test-AutoPatchableCandidate {
             [string]$Candidate.utilityPattern -eq "stopwatch_start_helper" -and
             $Candidate.ContainsKey("helperName") -and
             -not [string]::IsNullOrWhiteSpace([string]$Candidate.helperName)
+    }
+    if ($CandidateClass -eq "string_constant_wrap_cleanup") {
+        return $Candidate.ContainsKey("member") -and ([string]$Candidate.member).StartsWith("line-")
     }
     if ($CandidateClass -eq "method_spacing_normalization") {
         return $Candidate.ContainsKey("member") -and ([string]$Candidate.member).StartsWith("line-")
@@ -228,10 +234,13 @@ foreach ($file in $sourceFiles) {
     }
     if ($longLines.Count -gt 0) {
         $member = "line-$($longLines[0])"
-        $candidateClass = if ($path -like "*/repository/*") { "repository_readability_cleanup" } else { "private_helper_extraction_for_readability" }
-        if ($candidateClass -eq "repository_readability_cleanup" -and
-            -not (Test-SimpleStringConstantLine $lines[$longLines[0] - 1])) {
-            $candidateClass = $null
+        $candidateLine = $lines[$longLines[0] - 1]
+        $candidateClass = $null
+        if (Test-SimpleStringConstantLine $candidateLine) {
+            $candidateClass = if ($path -like "*/repository/*") { "repository_readability_cleanup" } else { "string_constant_wrap_cleanup" }
+        }
+        elseif ($candidateLine -match "^\s*(public|private|protected)\s+.+\)\s*\{\s*$") {
+            $candidateClass = "method_signature_wrap_cleanup"
         }
     }
     if ($longLines.Count -gt 0 -and $candidateClass) {
@@ -241,10 +250,10 @@ foreach ($file in $sourceFiles) {
             score = $score
             file = $path
             member = $member
-            expectedDiffSummary = "Wrap or locally extract long readability line without changing behavior."
-            estimatedChangedLines = [Math]::Min(8, $longLines.Count * 2)
-            tieBreak = [ordered]@{ layerScore = $layerScore; path = $path; member = $member }
-        })
+                    expectedDiffSummary = "Wrap a long constant or method signature readability line without changing behavior."
+                    estimatedChangedLines = [Math]::Min(8, $longLines.Count * 2)
+                    tieBreak = [ordered]@{ layerScore = $layerScore; path = $path; member = $member }
+                })
     }
 
     $methods = @(Parse-MethodBlocks -Lines $lines)

@@ -99,8 +99,10 @@ allowedCandidateTypes:
   - redundant_local_variable_simplification
   - duplicate_literal_local_constant_extraction
   - controller_branch_readability_decomposition
+  - method_signature_wrap_cleanup
   - repository_readability_cleanup
   - model_readability_cleanup
+  - string_constant_wrap_cleanup
   - utility_readability_cleanup
   - application_bootstrap_readability_cleanup
   - method_spacing_normalization
