@@ -52,6 +52,12 @@ public class JdbcOwnerRepositoryImpl implements OwnerRepository {
 
     private static final String GET_PET_TYPES_SQL = "SELECT id, name FROM types ORDER BY name";
 
+    private static final String SAVE_SQL = """
+                    UPDATE owners
+                    SET first_name=:firstName, last_name=:lastName, address=:address, city=:city, telephone=:telephone
+                    WHERE id=:id
+                    """;
+
     private static final String LOAD_PETS_AND_VISITS_FOR_OWNER_SQL = """
             SELECT pets.id, name, birth_date, type_id, owner_id, visits.id as visit_id, visit_date, description, pet_id
             FROM pets LEFT OUTER JOIN visits ON pets.id = pet_id
@@ -142,11 +148,7 @@ public class JdbcOwnerRepositoryImpl implements OwnerRepository {
             owner.setId(this.insertOwner.executeAndReturnKey(parameterSource).intValue());
             return;
         }
-        this.jdbcClient.sql("""
-                    UPDATE owners
-                    SET first_name=:firstName, last_name=:lastName, address=:address, city=:city, telephone=:telephone
-                    WHERE id=:id
-                    """)
+        this.jdbcClient.sql(SAVE_SQL)
                 .paramSource(parameterSource)
                 .update();
     }
