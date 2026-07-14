@@ -5,9 +5,40 @@
   "promotionPolicy": {
     "newCandidateClassRequiresGateEntry": true,
     "newExecutorRequiresGateEntry": true,
+    "batchReceiptModeRequiresGateEntry": true,
     "missingGateEntryMeansReviewOnly": true,
     "gateEntryDoesNotBypassLeaseAllowlist": true,
     "gateEntryDoesNotBypassValidation": true
+  },
+  "batchReceiptMode": {
+    "schemaVersion": "threshold.petclinic.batch-receipt-mode.v0.1",
+    "enabled": true,
+    "maxSlicesPerBatch": 3,
+    "maxFilesPerBatch": 3,
+    "maxChangedLinesPerBatch": 120,
+    "fullMavenTest": "onceAfterBatch",
+    "sourceCommitPolicy": "one_source_commit_per_batch",
+    "receiptCommitPolicy": "one_batch_receipt_commit_per_batch",
+    "failurePolicy": "revert_entire_batch_before_commit",
+    "approvedCandidateClasses": [
+      {
+        "candidateClass": "comment_wrap_cleanup",
+        "authorizedBy": "retrospective-human-gate-for-auto-patchable-candidate-classes-v0-1",
+        "scope": "pilot batch mode for independent single-line Javadoc comment wraps only",
+        "requiresDiscoveryCanary": true,
+        "requiresSameCandidateClassPerBatch": true
+      }
+    ],
+    "heldCandidateClasses": [
+      {
+        "candidateClass": "repository_readability_cleanup",
+        "reason": "hold until batch executor has a dedicated promotion receipt for repository readability changes"
+      },
+      {
+        "candidateClass": "spring_data_query_wrap_cleanup",
+        "reason": "hold until query wrapping has a dedicated batch canary and promotion receipt"
+      }
+    ]
   },
   "approvedAutoPatchableCandidateClasses": [
     {
