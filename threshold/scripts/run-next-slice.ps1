@@ -23,6 +23,37 @@ function ConvertTo-ConstantLine {
     return "    private static final String $ConstantName = $Literal;"
 }
 
+function Insert-PrivateStaticStringConstant {
+    param(
+        [string] $Content,
+        [string] $ConstantName,
+        [string] $Literal
+    )
+
+    if ($Content -match "private\s+static\s+final\s+String\s+$([regex]::Escape($ConstantName))\s*=") {
+        throw "Constant '$ConstantName' already exists."
+    }
+
+    $constantLine = ConvertTo-ConstantLine $ConstantName $Literal
+    $staticStringMatches = [regex]::Matches($Content, "(?m)^    private static final String [A-Z0-9_]+ = .+;\r?$")
+    if ($staticStringMatches.Count -gt 0) {
+        $last = $staticStringMatches[$staticStringMatches.Count - 1]
+        return $Content.Insert($last.Index + $last.Length, "`r`n`r`n$constantLine")
+    }
+
+    $classPattern = "(?m)^public class [^{]+\{\r?\n"
+    $match = [regex]::Match($Content, $classPattern)
+    if (-not $match.Success) {
+        $classPattern = "(?m)^(public\s+)?(abstract\s+)?class [^{]+\{\r?\n"
+        $match = [regex]::Match($Content, $classPattern)
+    }
+    if (-not $match.Success) {
+        throw "Could not find class declaration insertion point."
+    }
+
+    return $Content.Insert($match.Index + $match.Length, "`r`n$constantLine`r`n")
+}
+
 function Apply-ReadableMethodSignatureWrap {
     param([pscustomobject] $Candidate)
 
@@ -184,26 +215,93 @@ function Apply-DuplicateLiteralConstantExtraction {
     }
 
     $replaced = [regex]::Replace($content, [regex]::Escape($literal), $constantName)
-    $constantLine = ConvertTo-ConstantLine $constantName $literal
-
-    $classPattern = "(?m)^public class [^{]+\{\r?\n"
-    $match = [regex]::Match($replaced, $classPattern)
-    if (-not $match.Success) {
-        $classPattern = "(?m)^(public\s+)?(abstract\s+)?class [^{]+\{\r?\n"
-        $match = [regex]::Match($replaced, $classPattern)
-    }
-    if (-not $match.Success) {
-        throw "Could not find class declaration insertion point in $path."
-    }
-
-    $insertAt = $match.Index + $match.Length
-    $updated = $replaced.Insert($insertAt, "`r`n$constantLine`r`n")
+    $updated = Insert-PrivateStaticStringConstant -Content $replaced -ConstantName $constantName -Literal $literal
     Set-Content -Path $path -Value $updated -NoNewline
 
     Write-Host "appliedCandidate=$($Candidate.candidateId)"
     Write-Host "changedFile=$path"
     Write-Host "literalOccurrences=$literalCount"
     Write-Host "constantName=$constantName"
+}
+
+function Apply-RepositoryReadabilityCleanup {
+    param([pscustomobject] $Candidate)
+
+    $path = ConvertTo-RepoPath $Candidate.file
+    if (-not (Test-Path $path)) { throw "Candidate file not found: $path" }
+    if (-not $Candidate.sqlLiteral) { throw "Candidate is missing sqlLiteral field." }
+    if (-not $Candidate.constantName) { throw "Candidate is missing constantName field." }
+
+    $sqlLiteral = [string]$Candidate.sqlLiteral
+    $constantName = [string]$Candidate.constantName
+    if ($constantName -notmatch "^[A-Z][A-Z0-9_]*$") {
+        throw "Refusing unsafe SQL constant name '$constantName'."
+    }
+
+    $content = Get-Content $path -Raw
+    $literalRegex = [regex]::new([regex]::Escape($sqlLiteral))
+    $literalCount = $literalRegex.Matches($content).Count
+    if ($literalCount -lt 1) {
+        throw "SQL literal $sqlLiteral was not found in $path."
+    }
+
+    $replaced = $literalRegex.Replace($content, $constantName, 1)
+    $updated = Insert-PrivateStaticStringConstant -Content $replaced -ConstantName $constantName -Literal $sqlLiteral
+    Set-Content -Path $path -Value $updated -NoNewline
+
+    Write-Host "appliedCandidate=$($Candidate.candidateId)"
+    Write-Host "changedFile=$path"
+    Write-Host "sqlLiteralOccurrences=$literalCount"
+    Write-Host "constantName=$constantName"
+}
+
+function Apply-UtilityReadabilityCleanup {
+    param([pscustomobject] $Candidate)
+
+    $path = ConvertTo-RepoPath $Candidate.file
+    if (-not (Test-Path $path)) { throw "Candidate file not found: $path" }
+    if ([string]$Candidate.utilityPattern -ne "stopwatch_start_helper") {
+        throw "Unsupported utility cleanup pattern '$($Candidate.utilityPattern)'."
+    }
+
+    $helperName = [string]$Candidate.helperName
+    if ($helperName -notmatch "^[a-z][A-Za-z0-9_]*$") {
+        throw "Refusing unsafe utility helper name '$helperName'."
+    }
+
+    $content = Get-Content $path -Raw
+    if ($content -match "private\s+StopWatch\s+$([regex]::Escape($helperName))\s*\(") {
+        throw "Utility helper '$helperName' already exists in $path."
+    }
+
+    $blockPattern = "(?s)        StopWatch sw = new StopWatch\(joinPoint\.toShortString\(\)\);\r?\n\r?\n        sw\.start\(""invoke""\);"
+    $blockReplacement = "        StopWatch sw = $helperName(joinPoint);"
+    $updated = [regex]::Replace($content, $blockPattern, $blockReplacement, 1)
+    if ($updated -eq $content) {
+        throw "Could not find StopWatch start block in $path."
+    }
+
+    $helperBlock = @"
+    private StopWatch $helperName(ProceedingJoinPoint joinPoint) {
+        StopWatch sw = new StopWatch(joinPoint.toShortString());
+        sw.start("invoke");
+        return sw;
+    }
+
+"@
+
+    $insertPattern = "(?m)^    private synchronized void recordInvocation\("
+    $insertMatch = [regex]::Match($updated, $insertPattern)
+    if (-not $insertMatch.Success) {
+        throw "Could not find utility helper insertion point in $path."
+    }
+
+    $updated = $updated.Insert($insertMatch.Index, $helperBlock)
+    Set-Content -Path $path -Value $updated -NoNewline
+
+    Write-Host "appliedCandidate=$($Candidate.candidateId)"
+    Write-Host "changedFile=$path"
+    Write-Host "helperName=$helperName"
 }
 
 & powershell.exe -NoProfile -ExecutionPolicy Bypass -File "threshold/scripts/preflight.ps1" -LeasePath $LeasePath
@@ -227,6 +325,12 @@ switch ([string]$candidate.candidateClass) {
     }
     "private_helper_extraction_for_readability" {
         Apply-ReadableMethodSignatureWrap -Candidate $candidate
+    }
+    "repository_readability_cleanup" {
+        Apply-RepositoryReadabilityCleanup -Candidate $candidate
+    }
+    "utility_readability_cleanup" {
+        Apply-UtilityReadabilityCleanup -Candidate $candidate
     }
     default {
         throw "Candidate class '$($candidate.candidateClass)' is not yet automatically patchable by run-next-slice."

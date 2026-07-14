@@ -43,6 +43,21 @@ function New-CandidateId {
     return $stem.Trim("-")
 }
 
+function ConvertTo-ConstantName {
+    param([string] $Name, [string] $Suffix)
+    $snake = ($Name -creplace "([a-z0-9])([A-Z])", '$1_$2').ToUpperInvariant() -creplace "[^A-Z0-9]+", "_"
+    $snake = $snake.Trim("_")
+    if ([string]::IsNullOrWhiteSpace($snake)) { $snake = "VALUE" }
+    return "$snake`_$Suffix"
+}
+
+function Get-FirstInlineSqlLiteral {
+    param([string] $MethodText)
+    $match = [regex]::Match($MethodText, '(?s)\.sql\s*\(\s*(?<literal>"(?:[^"\\]|\\.)*")\s*\)')
+    if (-not $match.Success) { return $null }
+    return $match.Groups["literal"].Value
+}
+
 function Is-CandidateAllowed {
     param([string] $CandidateClass, [string[]] $AllowedTypes)
     return ($AllowedTypes.Count -eq 0) -or ($AllowedTypes -contains $CandidateClass)
@@ -72,6 +87,18 @@ function Test-AutoPatchableCandidate {
     }
     if ($CandidateClass -eq "private_helper_extraction_for_readability") {
         return $Candidate.ContainsKey("member") -and ([string]$Candidate.member).StartsWith("line-")
+    }
+    if ($CandidateClass -eq "repository_readability_cleanup") {
+        return $Candidate.ContainsKey("sqlLiteral") -and
+            -not [string]::IsNullOrWhiteSpace([string]$Candidate.sqlLiteral) -and
+            $Candidate.ContainsKey("constantName") -and
+            -not [string]::IsNullOrWhiteSpace([string]$Candidate.constantName)
+    }
+    if ($CandidateClass -eq "utility_readability_cleanup") {
+        return $Candidate.ContainsKey("utilityPattern") -and
+            [string]$Candidate.utilityPattern -eq "stopwatch_start_helper" -and
+            $Candidate.ContainsKey("helperName") -and
+            -not [string]::IsNullOrWhiteSpace([string]$Candidate.helperName)
     }
     return $false
 }
@@ -199,14 +226,23 @@ foreach ($file in $sourceFiles) {
             $hasSqlToken = [regex]::IsMatch($methodText, "(?i)\b(SELECT|INSERT|UPDATE|DELETE|MERGE)\b")
             $hasSqlQueryCall = [regex]::IsMatch($methodText, "(?i)\.sql\s*\(")
             $hasJdbcCall = [regex]::IsMatch($methodText, "(?i)\b(jdbcClient|jdbcTemplate|entityManager|queryFor|NamedParameterJdbcTemplate|createQuery)\b")
-            if (($hasSqlToken -or $hasSqlQueryCall) -and ($hasJdbcCall -or $hasSqlQueryCall) -and $methodLineCount -gt 8) {
+            $inlineSqlLiteral = Get-FirstInlineSqlLiteral -MethodText $methodText
+            if (($hasSqlToken -or $hasSqlQueryCall) -and ($hasJdbcCall -or $hasSqlQueryCall) -and ($methodLineCount -gt 8 -or $inlineSqlLiteral)) {
+                $constantName = ConvertTo-ConstantName $methodName "SQL"
+                $expectedDiffSummary = if ($inlineSqlLiteral) {
+                    "Extract inline SQL literal from repository method '$methodName' into a private constant."
+                } else {
+                    "Extract repository SQL/persistence readability chunk from method '$methodName' into a private helper."
+                }
                 Add-Candidate -CandidateClass "repository_readability_cleanup" -AllowedTypes $allowedCandidateTypes -Bucket $candidates -Candidate ([ordered]@{
                     candidateId = New-CandidateId $path "repository_readability_cleanup" $methodName
                     score = 30 + 30 + 20 + 18 + $layerScore
                     file = $path
                     member = $methodName
-                    expectedDiffSummary = "Extract repository SQL/persistence readability chunk from method '$methodName' into a private helper."
-                    estimatedChangedLines = [Math]::Min(40, $methodLineCount)
+                    sqlLiteral = $inlineSqlLiteral
+                    constantName = $constantName
+                    expectedDiffSummary = $expectedDiffSummary
+                    estimatedChangedLines = if ($inlineSqlLiteral) { 4 } else { [Math]::Min(40, $methodLineCount) }
                     tieBreak = [ordered]@{ layerScore = $layerScore; path = $path; member = $methodName }
                 })
             }
@@ -223,11 +259,15 @@ foreach ($file in $sourceFiles) {
             $hasStopWatch = [regex]::IsMatch($methodText, "(?i)\bStopWatch\b")
             $hasSynchronized = [regex]::IsMatch($methodText, "(?i)\bsynchronized\b")
             if ($methodLineCount -gt 8 -and (($hasTryFinally -and $hasStopWatch) -or $hasSynchronized -or $hasStopWatch)) {
+                $utilityPattern = if ($hasStopWatch) { "stopwatch_start_helper" } else { "synchronized_helper" }
+                $helperName = if ($hasStopWatch) { "startInvocationStopWatch" } else { "recordInvocation" }
                 Add-Candidate -CandidateClass "utility_readability_cleanup" -AllowedTypes $allowedCandidateTypes -Bucket $candidates -Candidate ([ordered]@{
                     candidateId = New-CandidateId $path "utility_readability_cleanup" $methodName
                     score = 30 + 30 + 20 + 12 + $layerScore
                     file = $path
                     member = $methodName
+                    utilityPattern = $utilityPattern
+                    helperName = $helperName
                     expectedDiffSummary = "Extract utility control-flow or instrumentation concern from '$methodName' into private helper(s)."
                     estimatedChangedLines = [Math]::Min(36, $methodLineCount)
                     tieBreak = [ordered]@{ layerScore = $layerScore; path = $path; member = $methodName }
