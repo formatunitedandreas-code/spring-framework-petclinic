@@ -5,16 +5,16 @@
     "mode":  "local_refactor",
     "branch":  "threshold-governed-refactor-demo-6",
     "startHead":  "1faa7c745e3ffe671e8d11e0291daf5cd25d5ac0",
-    "currentHead":  "1faa7c745e3ffe671e8d11e0291daf5cd25d5ac0",
-    "currentSourceHead":  "1faa7c745e3ffe671e8d11e0291daf5cd25d5ac0",
-    "candidatesProcessed":  0,
-    "commitsCreated":  0,
+    "currentHead":  "c5ec4a01d0177aab887ba3324b1ee6e639caa9f0",
+    "currentSourceHead":  "c5ec4a01d0177aab887ba3324b1ee6e639caa9f0",
+    "candidatesProcessed":  1,
+    "commitsCreated":  1,
     "remainingBudget":  {
-                            "candidates":  5,
-                            "commits":  5,
+                            "candidates":  4,
+                            "commits":  4,
                             "repairAttempts":  2
                         },
-    "lastReceipt":  null,
+    "lastReceipt":  "threshold/receipts/src-main-java-org-springframework-samples-petclinic-util-callmonitoringaspect-java-method-spacing-normalization-startinvocationstopwatch-recordinvocation-line-95-c5ec4a01d017.json",
     "terminalState":  "active",
-    "updatedAt":  "2026-07-14T09:17:22.0072183Z"
+    "updatedAt":  "2026-07-14T09:23:49.6601117Z"
 }
