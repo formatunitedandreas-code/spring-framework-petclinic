@@ -1,0 +1,65 @@
+{
+    "schemaVersion":  "threshold.petclinic.slice-receipt.v0.2",
+    "candidateId":  "threshold-add-split-string-constant-normalization",
+    "leaseName":  "petclinic-threshold-governed-refactor-lease-v12",
+    "branch":  "threshold-governed-refactor-demo-6",
+    "candidateClass":  "threshold_governance_artifact_update",
+    "leaseStartHead":  "6926ec7e2414dc5ebef914956418bc22c44cedc5",
+    "baseHead":  "3e092626c0cb179221ee34e48c3fb041b37437c0",
+    "commitHash":  "2ba184ba08247e504d3b75710a18b403913c6c6d",
+    "receiptMaterialization":  "post-commit",
+    "perCommitValidationLogAvailable":  true,
+    "branchFinalValidationPassed":  false,
+    "changedFiles":  [
+                         {
+                             "path":  "threshold/leases/current.yaml",
+                             "beforeSha256":  "46ded12406920216a101672a04db9690ee40083966659a3d465b5e72629bd9c7",
+                             "afterSha256":  "a51ac29df39f11c482f1feb7fb31a8f27430ab593cc1d81d37196236b073a69c"
+                         },
+                         {
+                             "path":  "threshold/scripts/discover-candidates.ps1",
+                             "beforeSha256":  "ed2c56e6842f4bea549bdc6eee2571b8f422196ca9ddadb8b69d52c01b1e272d",
+                             "afterSha256":  "d2e54989d23ef4f7ec3251827ffe195e79f0b2659bf825a46520be932c86d245"
+                         },
+                         {
+                             "path":  "threshold/scripts/run-next-slice.ps1",
+                             "beforeSha256":  "ed09919e87bcda5584e110ff70b50afeb2864a8a1abcc1720adcf5c000a74649",
+                             "afterSha256":  "1ee8a9ff5c70c91251a02af63ae1300f898d134bda797b132dab12af8ebe46e2"
+                         },
+                         {
+                             "path":  "threshold/scripts/start-lease.ps1",
+                             "beforeSha256":  "8cac526258cacf16241410369390a1d1e78081eaa6320c1fed7dae6f79fe2c06",
+                             "afterSha256":  "3673b6ea4106f04f2793ca923298131213d00ad92021bfdf4df176d2e32636eb"
+                         }
+                     ],
+    "diffSummary":  "Add Threshold split string constant normalization",
+    "diffStat":  {
+                     "filesChanged":  4,
+                     "insertions":  111,
+                     "deletions":  5
+                 },
+    "validation":  {
+                       "diffCheck":  "passed",
+                       "command":  ".\\mvnw.cmd test",
+                       "result":  "BUILD SUCCESS",
+                       "testsRun":  75,
+                       "failures":  0,
+                       "errors":  0,
+                       "skipped":  0
+                   },
+    "nonClaims":  [
+                      "no push in candidate slice",
+                      "no PR update in candidate slice",
+                      "no upstream interaction",
+                      "no pom.xml change",
+                      "no dependency change",
+                      "no src/test change",
+                      "no merge",
+                      "no release",
+                      "no deploy",
+                      "no public readiness claim",
+                      "no public correctness claim",
+                      "no public security claim",
+                      "no public compliance claim"
+                  ]
+}
