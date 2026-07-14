@@ -110,6 +110,7 @@ allowedCandidateTypes:
   - string_constant_wrap_cleanup
   - utility_readability_cleanup
   - application_bootstrap_readability_cleanup
+  - comment_wrap_cleanup
   - method_spacing_normalization
   - threshold_governance_artifact_update
 
