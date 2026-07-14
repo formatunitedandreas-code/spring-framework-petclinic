@@ -31,6 +31,11 @@ if (-not (Test-Path $File)) {
     throw "Java candidate file not found: $File"
 }
 
+function Test-SimpleStringConstantLine {
+    param([string] $Line)
+    return $Line -match '^\s*private static final String [A-Z0-9_]+ = "[^"\\]+";\s*$'
+}
+
 if ($CandidateClass -notin @("repository_readability_cleanup", "redundant_local_variable_simplification")) {
     Write-Host "astVerificationSkipped=true"
     Write-Host "candidateClass=$CandidateClass"
@@ -43,7 +48,7 @@ if ($CandidateClass -eq "repository_readability_cleanup" -and $Member.StartsWith
     if ($lineNumber -lt 1 -or $lineNumber -gt $lines.Count) {
         throw "AST-lite line verification failed: line $lineNumber outside $File"
     }
-    if ($lines[$lineNumber - 1] -notmatch '^\s*private static final String [A-Z0-9_]+ = ".+";\s*$') {
+    if (-not (Test-SimpleStringConstantLine $lines[$lineNumber - 1])) {
         throw "AST-lite line verification failed: unsupported line cleanup in $File"
     }
     Write-Host "astVerificationPassed=true"

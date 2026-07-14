@@ -46,6 +46,11 @@ function Get-LineIndent {
     return $match.Groups["indent"].Value
 }
 
+function Test-SimpleStringConstantLine {
+    param([string] $Line)
+    return $Line -match '^\s*private static final String [A-Z0-9_]+ = "[^"\\]+";\s*$'
+}
+
 function Write-TextFile {
     param([string] $Path, [string] $Content)
     $encoding = New-Object System.Text.UTF8Encoding $false
@@ -300,7 +305,7 @@ function Get-NextCandidate {
                         $applicable = $false
                         break
                     }
-                    if ($lines[$lineNumber - 1] -notmatch '^\s*private static final String [A-Z0-9_]+ = ".+";\s*$') {
+                    if (-not (Test-SimpleStringConstantLine $lines[$lineNumber - 1])) {
                         Write-Host "candidateSkippedReason=unsupported_line_cleanup:$($candidate.candidateId)"
                         $applicable = $false
                         break

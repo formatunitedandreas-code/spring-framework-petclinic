@@ -121,6 +121,11 @@ function Test-AutoPatchableCandidate {
     return $false
 }
 
+function Test-SimpleStringConstantLine {
+    param([string] $Line)
+    return $Line -match '^\s*private static final String [A-Z0-9_]+ = "[^"\\]+";\s*$'
+}
+
 function Parse-MethodBlocks {
     param([string[]] $Lines)
     $methods = New-Object System.Collections.Generic.List[psobject]
@@ -222,7 +227,7 @@ foreach ($file in $sourceFiles) {
         $member = "line-$($longLines[0])"
         $candidateClass = if ($path -like "*/repository/*") { "repository_readability_cleanup" } else { "private_helper_extraction_for_readability" }
         if ($candidateClass -eq "repository_readability_cleanup" -and
-            $lines[$longLines[0] - 1] -notmatch '^\s*private static final String [A-Z0-9_]+ = ".+";\s*$') {
+            -not (Test-SimpleStringConstantLine $lines[$longLines[0] - 1])) {
             $candidateClass = $null
         }
     }
