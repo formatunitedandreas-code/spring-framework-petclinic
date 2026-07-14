@@ -3,6 +3,7 @@ param(
     [string] $LeasePath = "threshold/leases/current.yaml",
     [string] $StatePath = "threshold/lease-state/current-run.json",
     [string] $PocketPath = "threshold/candidate-pocket/current.json",
+    [string] $GatePath = "threshold/gates/auto-patchable-candidate-classes.json",
     [int] $MinScore = 70,
     [switch] $SkipMavenTest
 )
@@ -228,6 +229,55 @@ function Assert-LeaseRuntimeState {
     }
 }
 
+function Invoke-DiscoveryCanary {
+    param(
+        [string] $LeasePath,
+        [string] $GatePath
+    )
+
+    & powershell.exe -NoProfile -ExecutionPolicy Bypass -File "threshold/scripts/test-discovery-canary.ps1" `
+        -LeasePath $LeasePath `
+        -GatePath $GatePath
+    if ($LASTEXITCODE -ne 0) {
+        throw "Threshold discovery canary failed."
+    }
+}
+
+function Get-LeaseRunState {
+    param([string] $StatePath)
+    if (-not (Test-Path $StatePath)) {
+        throw "Lease state file not found: $StatePath"
+    }
+    return Get-Content $StatePath -Raw | ConvertFrom-Json
+}
+
+function Set-LeaseTerminalState {
+    param(
+        [string] $StatePath,
+        [string] $TerminalState,
+        [string] $Reason
+    )
+
+    $state = Get-LeaseRunState -StatePath $StatePath
+    $head = (& git rev-parse HEAD).Trim()
+    $state.currentHead = $head
+    $state.terminalState = $TerminalState
+    if (-not $state.PSObject.Properties["terminalReason"]) {
+        $state | Add-Member -NotePropertyName "terminalReason" -NotePropertyValue $Reason
+    }
+    else {
+        $state.terminalReason = $Reason
+    }
+    if (-not $state.PSObject.Properties["discoveryCanaryLastPassedAt"]) {
+        $state | Add-Member -NotePropertyName "discoveryCanaryLastPassedAt" -NotePropertyValue (Get-Date).ToUniversalTime().ToString("o")
+    }
+    else {
+        $state.discoveryCanaryLastPassedAt = (Get-Date).ToUniversalTime().ToString("o")
+    }
+    $state.updatedAt = (Get-Date).ToUniversalTime().ToString("o")
+    $state | ConvertTo-Json -Depth 10 | Set-Content $StatePath
+}
+
 function Test-AstLiteCandidate {
     param(
         [pscustomobject] $Candidate,
@@ -270,7 +320,8 @@ function Test-AstLiteCandidate {
 function Resolve-ExecutionPocket {
     param(
         [string] $PocketPath,
-        [string] $LeasePath
+        [string] $LeasePath,
+        [string] $GatePath
     )
 
     $head = (& git rev-parse HEAD).Trim()
@@ -283,7 +334,7 @@ function Resolve-ExecutionPocket {
     }
 
     $tempPocketPath = Join-Path ([System.IO.Path]::GetTempPath()) "threshold-candidate-pocket-$head.json"
-    $discoveryOutput = & powershell.exe -NoProfile -ExecutionPolicy Bypass -File "threshold/scripts/discover-candidates.ps1" -LeasePath $LeasePath -PocketPath $tempPocketPath
+    $discoveryOutput = & powershell.exe -NoProfile -ExecutionPolicy Bypass -File "threshold/scripts/discover-candidates.ps1" -LeasePath $LeasePath -GatePath $GatePath -PocketPath $tempPocketPath
     if ($LASTEXITCODE -ne 0) {
         throw "Candidate discovery failed."
     }
@@ -1013,10 +1064,24 @@ if ($LASTEXITCODE -ne 0) { throw "Threshold preflight failed." }
 
 Assert-CleanWorktree
 Assert-LeaseRuntimeState -LeasePath $LeasePath -StatePath $StatePath
-$executionPocketPath = Resolve-ExecutionPocket -PocketPath $PocketPath -LeasePath $LeasePath
+$state = Get-LeaseRunState -StatePath $StatePath
+if ([int]$state.remainingBudget.candidates -le 0 -or [int]$state.remainingBudget.commits -le 0) {
+    Invoke-DiscoveryCanary -LeasePath $LeasePath -GatePath $GatePath
+    Set-LeaseTerminalState -StatePath $StatePath -TerminalState "budget_exhausted_verified" -Reason "remaining candidate or commit budget is exhausted after discovery canary passed"
+    Write-Host "budget_exhausted_verified"
+    Write-Host "remainingCandidates=$($state.remainingBudget.candidates)"
+    Write-Host "remainingCommits=$($state.remainingBudget.commits)"
+    exit 0
+}
+
+Invoke-DiscoveryCanary -LeasePath $LeasePath -GatePath $GatePath
+$executionPocketPath = Resolve-ExecutionPocket -PocketPath $PocketPath -LeasePath $LeasePath -GatePath $GatePath
 
 $candidate = Get-NextCandidate -PocketPath $executionPocketPath -MinScore $MinScore
-if (-not $candidate) { exit 0 }
+if (-not $candidate) {
+    Set-LeaseTerminalState -StatePath $StatePath -TerminalState "ready_no_candidates_verified" -Reason "no applicable autoPatchable candidates after discovery canary passed"
+    exit 0
+}
 
 Write-Host "selectedCandidateId=$($candidate.candidateId)"
 Write-Host "selectedCandidateClass=$($candidate.candidateClass)"
