@@ -1,0 +1,50 @@
+{
+    "schemaVersion":  "threshold.petclinic.slice-receipt.v0.2",
+    "candidateId":  "src-main-java-org-springframework-samples-petclinic-repository-springdatajpa-springdataownerrepository-java-spring-data-query-wrap-cleanup-line-35",
+    "leaseName":  "petclinic-threshold-governed-refactor-lease-v16",
+    "branch":  "threshold-governed-refactor-demo-7",
+    "candidateClass":  "spring_data_query_wrap_cleanup",
+    "leaseStartHead":  "00a58b69e266b475ab72386527a1af40419fdac2",
+    "baseHead":  "b5ec0eedb51b0ad37ef7fd3c575934ddab25d6ed",
+    "commitHash":  "dbef187ad97887bba11d47a920064e3573ee3488",
+    "receiptMaterialization":  "post-commit",
+    "perCommitValidationLogAvailable":  true,
+    "branchFinalValidationPassed":  false,
+    "changedFiles":  [
+                         {
+                             "path":  "src/main/java/org/springframework/samples/petclinic/repository/springdatajpa/SpringDataOwnerRepository.java",
+                             "beforeSha256":  "52e25f8fa83181dea17c8d0a4d4bb2ffceef0d312b080b1a19eedf57fe7e1ade",
+                             "afterSha256":  "22c5ba877f883b557d5b181c545f944adc2e0492dd9632cc8e44579e1846c5a5"
+                         }
+                     ],
+    "diffSummary":  "Refactor PetClinic Wrap a long Spring Data @Query annotation into a conca",
+    "diffStat":  {
+                     "filesChanged":  1,
+                     "insertions":  3,
+                     "deletions":  2
+                 },
+    "validation":  {
+                       "diffCheck":  "passed",
+                       "command":  ".\\mvnw.cmd test",
+                       "result":  "BUILD SUCCESS",
+                       "testsRun":  75,
+                       "failures":  0,
+                       "errors":  0,
+                       "skipped":  0
+                   },
+    "nonClaims":  [
+                      "no push in candidate slice",
+                      "no PR update in candidate slice",
+                      "no upstream interaction",
+                      "no pom.xml change",
+                      "no dependency change",
+                      "no src/test change",
+                      "no merge",
+                      "no release",
+                      "no deploy",
+                      "no public readiness claim",
+                      "no public correctness claim",
+                      "no public security claim",
+                      "no public compliance claim"
+                  ]
+}
