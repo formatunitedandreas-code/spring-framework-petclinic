@@ -1,9 +1,9 @@
-leaseName: petclinic-threshold-governed-refactor-lease-v8
+leaseName: petclinic-threshold-governed-refactor-lease-v9
 repository: C:\dev\spring-framework-petclinic
 branch: threshold-governed-refactor-demo-6
 baseRemote: origin
 baseRef: origin/main
-startHead: 7682e97ac08c7390ca241da833dc038f40ef07df
+startHead: 351b4b34aa31c778ac796239bf470fd7c5b060ca
 headPolicy: descendantOfStartHead
 
 budget:
