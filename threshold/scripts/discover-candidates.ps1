@@ -51,6 +51,11 @@ function ConvertTo-ConstantName {
     return "$snake`_$Suffix"
 }
 
+function Test-StringConstantExists {
+    param([string] $Content, [string] $ConstantName)
+    return $Content -match "private\s+static\s+final\s+String\s+$([regex]::Escape($ConstantName))\s*="
+}
+
 function Get-FirstRepositoryQueryExpression {
     param([string] $MethodText)
 
@@ -216,6 +221,12 @@ foreach ($file in $sourceFiles) {
     if ($longLines.Count -gt 0) {
         $member = "line-$($longLines[0])"
         $candidateClass = if ($path -like "*/repository/*") { "repository_readability_cleanup" } else { "private_helper_extraction_for_readability" }
+        if ($candidateClass -eq "repository_readability_cleanup" -and
+            $lines[$longLines[0] - 1] -notmatch '^\s*private static final String [A-Z0-9_]+ = ".+";\s*$') {
+            $candidateClass = $null
+        }
+    }
+    if ($longLines.Count -gt 0 -and $candidateClass) {
         $score = 30 + 30 + 20 + 10 + $layerScore
         Add-Candidate -CandidateClass $candidateClass -AllowedTypes $allowedCandidateTypes -Bucket $candidates -Candidate ([ordered]@{
             candidateId = New-CandidateId $path $candidateClass $member
@@ -240,8 +251,14 @@ foreach ($file in $sourceFiles) {
             $hasSqlQueryCall = [regex]::IsMatch($methodText, "(?i)\.sql\s*\(")
             $hasJdbcCall = [regex]::IsMatch($methodText, "(?i)\b(jdbcClient|jdbcTemplate|entityManager|queryFor|NamedParameterJdbcTemplate|createQuery)\b")
             $inlineSqlLiteral = Get-FirstRepositoryQueryExpression -MethodText $methodText
+            if (-not $inlineSqlLiteral) {
+                continue
+            }
             if (($hasSqlToken -or $hasSqlQueryCall) -and ($hasJdbcCall -or $hasSqlQueryCall) -and ($methodLineCount -gt 8 -or $inlineSqlLiteral)) {
                 $constantName = ConvertTo-ConstantName $methodName "SQL"
+                if (Test-StringConstantExists -Content $content -ConstantName $constantName) {
+                    continue
+                }
                 $expectedDiffSummary = if ($inlineSqlLiteral) {
                     "Extract inline SQL literal from repository method '$methodName' into a private constant."
                 } else {

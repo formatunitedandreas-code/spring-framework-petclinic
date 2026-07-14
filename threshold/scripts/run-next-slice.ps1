@@ -170,6 +170,48 @@ function Assert-LeaseRuntimeState {
     }
 }
 
+function Test-AstLiteCandidate {
+    param(
+        [pscustomobject] $Candidate,
+        [string] $Path
+    )
+
+    $candidateClass = [string]$Candidate.candidateClass
+    if ($candidateClass -notin @("repository_readability_cleanup", "redundant_local_variable_simplification")) {
+        return $true
+    }
+
+    $args = @(
+        "-NoProfile",
+        "-ExecutionPolicy",
+        "Bypass",
+        "-File",
+        "threshold/scripts/verify-java-candidate-ast.ps1",
+        "-File",
+        $Path,
+        "-CandidateClass",
+        $candidateClass,
+        "-Member",
+        ([string]$Candidate.member)
+    )
+    if ($Candidate.PSObject.Properties["sqlLiteral"] -and $Candidate.sqlLiteral) {
+        $args += @("-SqlLiteral", ([string]$Candidate.sqlLiteral))
+    }
+    if ($Candidate.PSObject.Properties["constantName"] -and $Candidate.constantName) {
+        $args += @("-ConstantName", ([string]$Candidate.constantName))
+    }
+
+    $output = & powershell.exe @args 2>&1
+    foreach ($line in $output) {
+        Write-Host $line
+    }
+    if ($LASTEXITCODE -ne 0) {
+        Write-Host "candidateSkippedReason=ast_lite_verification_failed:$($Candidate.candidateId)"
+        return $false
+    }
+    return $true
+}
+
 function Resolve-ExecutionPocket {
     param(
         [string] $PocketPath,
@@ -300,6 +342,10 @@ function Get-NextCandidate {
                     break
                 }
             }
+        }
+
+        if ($applicable -and -not (Test-AstLiteCandidate -Candidate $candidate -Path $path)) {
+            $applicable = $false
         }
 
         if ($applicable) {
