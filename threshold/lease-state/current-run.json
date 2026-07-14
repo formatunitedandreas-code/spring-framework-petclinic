@@ -5,16 +5,16 @@
     "mode":  "local_refactor",
     "branch":  "threshold-governed-refactor-demo-6",
     "startHead":  "30eb4f497cb0b872b855008a84ad3a88b95a0b96",
-    "currentHead":  "c822af87a25763210a1e6bf8b1b85038dcebfe1d",
-    "currentSourceHead":  "c822af87a25763210a1e6bf8b1b85038dcebfe1d",
-    "candidatesProcessed":  1,
-    "commitsCreated":  1,
+    "currentHead":  "039c466f872aa21ecacf1eb5523f2452848b03e2",
+    "currentSourceHead":  "039c466f872aa21ecacf1eb5523f2452848b03e2",
+    "candidatesProcessed":  2,
+    "commitsCreated":  2,
     "remainingBudget":  {
-                            "candidates":  4,
-                            "commits":  4,
+                            "candidates":  3,
+                            "commits":  3,
                             "repairAttempts":  2
                         },
-    "lastReceipt":  "threshold/receipts/src-main-java-org-springframework-samples-petclinic-repository-jdbc-jdbcvetrepositoryimpl-java-repository-readability-cleanup-getspecialtyidsfor-c822af87a257.json",
+    "lastReceipt":  "threshold/receipts/src-main-java-org-springframework-samples-petclinic-repository-jdbc-jdbcvisitrepositoryimpl-java-repository-readability-cleanup-findpetbyid-039c466f872a.json",
     "terminalState":  "active",
-    "updatedAt":  "2026-07-14T05:39:33.5201683Z"
+    "updatedAt":  "2026-07-14T05:40:33.2052637Z"
 }
