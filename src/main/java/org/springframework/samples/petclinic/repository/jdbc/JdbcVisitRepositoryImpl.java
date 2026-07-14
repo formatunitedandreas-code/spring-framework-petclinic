@@ -44,6 +44,8 @@ public class JdbcVisitRepositoryImpl implements VisitRepository {
 
     private static final String FIND_PET_BY_ID_SQL = "SELECT id, name, birth_date, type_id, owner_id FROM pets WHERE id=:id";
 
+    private static final String FIND_VISITS_BY_PET_ID_SQL = "SELECT id as visit_id, visit_date, description FROM visits WHERE pet_id=:id";
+
     private final JdbcClient jdbcClient;
 
     private final SimpleJdbcInsert insertVisit;
@@ -98,7 +100,7 @@ public class JdbcVisitRepositoryImpl implements VisitRepository {
 
     private List<Visit> findVisitsByPetId(Integer petId) {
         return this.jdbcClient
-            .sql("SELECT id as visit_id, visit_date, description FROM visits WHERE pet_id=:id")
+            .sql(FIND_VISITS_BY_PET_ID_SQL)
             .param(ID, petId)
             .query(new JdbcVisitRowMapper())
             .list();
