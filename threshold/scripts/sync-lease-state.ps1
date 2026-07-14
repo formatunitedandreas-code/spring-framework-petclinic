@@ -79,21 +79,34 @@ if ($remainingRepairs -lt 0 -or $remainingRepairs -gt $maxRepairs) {
 }
 
 if ($Write.IsPresent) {
-    $state.branch = $currentBranch
-    $state.currentHead = $currentHead
-    $state.currentSourceHead = $currentHead
-    if (-not $state.PSObject.Properties["runtimeObservedHead"]) {
-        $state | Add-Member -NotePropertyName "runtimeObservedHead" -NotePropertyValue $currentHead
-    } else {
-        $state.runtimeObservedHead = $currentHead
+    $needsWrite = $false
+    if ($state.currentHead -ne $currentHead) {
+        $state.currentHead = $currentHead
+        $needsWrite = $true
     }
-    if (-not $state.PSObject.Properties["runtimeObservedAt"]) {
-        $state | Add-Member -NotePropertyName "runtimeObservedAt" -NotePropertyValue (Get-Date).ToUniversalTime().ToString("o")
-    } else {
-        $state.runtimeObservedAt = (Get-Date).ToUniversalTime().ToString("o")
+    if ($state.currentSourceHead -ne $currentHead) {
+        $state.currentSourceHead = $currentHead
+        $needsWrite = $true
     }
-    $state.updatedAt = (Get-Date).ToUniversalTime().ToString("o")
-    $state | ConvertTo-Json -Depth 10 | Set-Content $StatePath
+    if ($state.branch -ne $currentBranch) {
+        $state.branch = $currentBranch
+        $needsWrite = $true
+    }
+
+    if ($needsWrite) {
+        if (-not $state.PSObject.Properties["runtimeObservedHead"]) {
+            $state | Add-Member -NotePropertyName "runtimeObservedHead" -NotePropertyValue $currentHead
+        } else {
+            $state.runtimeObservedHead = $currentHead
+        }
+        if (-not $state.PSObject.Properties["runtimeObservedAt"]) {
+            $state | Add-Member -NotePropertyName "runtimeObservedAt" -NotePropertyValue (Get-Date).ToUniversalTime().ToString("o")
+        } else {
+            $state.runtimeObservedAt = (Get-Date).ToUniversalTime().ToString("o")
+        }
+        $state.updatedAt = (Get-Date).ToUniversalTime().ToString("o")
+        $state | ConvertTo-Json -Depth 10 | Set-Content $StatePath
+    }
 }
 
 Write-Host "Threshold lease-state sync passed"
