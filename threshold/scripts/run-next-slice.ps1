@@ -29,6 +29,17 @@ function Get-LineEnding {
     return "`n"
 }
 
+function ConvertTo-ContentLineEndings {
+    param(
+        [string] $Text,
+        [string] $Content
+    )
+
+    $lineEnding = Get-LineEnding -Content $Content
+    $normalized = $Text -replace "`r`n", "`n" -replace "`r", "`n"
+    return $normalized.Replace("`n", $lineEnding)
+}
+
 function Get-LineIndent {
     param([string] $Line)
     $match = [regex]::Match($Line, "^(?<indent>\s*)")
@@ -263,7 +274,8 @@ function Get-NextCandidate {
                     $applicable = $false
                     break
                 }
-                $literalCount = [regex]::Matches($content, [regex]::Escape([string]$candidate.sqlLiteral)).Count
+                $candidateSqlLiteral = ConvertTo-ContentLineEndings -Text ([string]$candidate.sqlLiteral) -Content $content
+                $literalCount = [regex]::Matches($content, [regex]::Escape($candidateSqlLiteral)).Count
                 if ($literalCount -lt 1) {
                     Write-Host "candidateSkippedReason=sql_literal_missing:$($candidate.candidateId)"
                     $applicable = $false
@@ -449,13 +461,13 @@ function Apply-RepositoryReadabilityCleanup {
     if (-not $Candidate.sqlLiteral) { throw "Candidate is missing sqlLiteral field." }
     if (-not $Candidate.constantName) { throw "Candidate is missing constantName field." }
 
-    $sqlLiteral = [string]$Candidate.sqlLiteral
+    $content = Get-Content $path -Raw
+    $sqlLiteral = ConvertTo-ContentLineEndings -Text ([string]$Candidate.sqlLiteral) -Content $content
     $constantName = [string]$Candidate.constantName
     if ($constantName -notmatch "^[A-Z][A-Z0-9_]*$") {
         throw "Refusing unsafe SQL constant name '$constantName'."
     }
 
-    $content = Get-Content $path -Raw
     $literalRegex = [regex]::new([regex]::Escape($sqlLiteral))
     $literalCount = $literalRegex.Matches($content).Count
     if ($literalCount -lt 1) {
