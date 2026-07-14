@@ -96,9 +96,11 @@ $validationCommand = if ($SkipMavenTest.IsPresent) { "git diff --check" } else {
     -UpdateState
 if ($LASTEXITCODE -ne 0) { throw "Receipt recording failed for source commit $sourceCommit." }
 
-$receiptChanges = @(& git diff --name-only | Where-Object { $_ -like "threshold/receipts/*" -or $_ -eq "threshold/lease-state/current-run.json" })
+$trackedReceiptChanges = @(& git diff --name-only | Where-Object { $_ -like "threshold/receipts/*" -or $_ -eq "threshold/lease-state/current-run.json" })
+$untrackedReceiptChanges = @(& git ls-files --others --exclude-standard threshold/receipts | Where-Object { $_ -like "threshold/receipts/*" })
+$receiptChanges = @($trackedReceiptChanges + $untrackedReceiptChanges | Select-Object -Unique)
 if (-not $receiptChanges) {
-    throw "Receipt recording produced no tracked receipt/state changes."
+    throw "Receipt recording produced no receipt/state changes."
 }
 
 foreach ($path in $receiptChanges) {
