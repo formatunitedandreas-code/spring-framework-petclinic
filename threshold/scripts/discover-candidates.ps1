@@ -162,6 +162,9 @@ function Test-AutoPatchableCandidate {
     if ($CandidateClass -eq "method_spacing_normalization") {
         return $Candidate.ContainsKey("member") -and ([string]$Candidate.member).StartsWith("line-")
     }
+    if ($CandidateClass -eq "comment_wrap_cleanup") {
+        return $Candidate.ContainsKey("member") -and ([string]$Candidate.member).StartsWith("line-")
+    }
     return $false
 }
 
@@ -318,6 +321,27 @@ foreach ($file in $sourceFiles) {
     $methods = @(Parse-MethodBlocks -Lines $lines)
 
     # Heuristic 4: tiny spacing normalization between adjacent methods.
+    for ($i = 0; $i -lt $lines.Count; $i++) {
+        $line = $lines[$i]
+        if ($line.Length -le 120) {
+            continue
+        }
+        if ($line -notmatch '^\s*\*\s+\S') {
+            continue
+        }
+        $member = "line-$($i + 1)"
+        Add-Candidate -CandidateClass "comment_wrap_cleanup" -AllowedTypes $allowedCandidateTypes -Bucket $candidates -Candidate ([ordered]@{
+            candidateId = New-CandidateId $path "comment_wrap_cleanup" $member
+            score = 30 + 30 + 20 + 10 + $layerScore
+            file = $path
+            member = $member
+            expectedDiffSummary = "Wrap one long Javadoc comment line without changing source behavior."
+            estimatedChangedLines = 2
+            tieBreak = [ordered]@{ layerScore = $layerScore; path = $path; member = $member }
+        })
+    }
+
+    # Heuristic 5: tiny spacing normalization between adjacent methods.
     if ($methods.Count -gt 1) {
         for ($m = 0; $m -lt ($methods.Count - 1); $m++) {
             $currentMethod = $methods[$m]
@@ -338,7 +362,7 @@ foreach ($file in $sourceFiles) {
         }
     }
 
-    # Heuristic 5: repository-specific readability candidate.
+    # Heuristic 6: repository-specific readability candidate.
     if ($path -like "*/repository/*") {
         foreach ($method in $methods) {
             $methodName = $method.Name
@@ -376,7 +400,7 @@ foreach ($file in $sourceFiles) {
         }
     }
 
-    # Heuristic 6: utility-specific readability candidate.
+    # Heuristic 7: utility-specific readability candidate.
     if ($path -like "*/util/*") {
         foreach ($method in $methods) {
             $methodName = $method.Name
@@ -407,7 +431,7 @@ foreach ($file in $sourceFiles) {
         }
     }
 
-    # Heuristic 7: duplicate literal extraction.
+    # Heuristic 8: duplicate literal extraction.
     $stringMatches = [regex]::Matches($content, '"([^"\\\r\n]|\\.)+"') |
         ForEach-Object { $_.Value } |
         Where-Object {

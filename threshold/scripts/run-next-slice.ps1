@@ -469,6 +469,27 @@ function Get-NextCandidate {
                     break
                 }
             }
+            "comment_wrap_cleanup" {
+                $member = [string]$candidate.member
+                if (-not $member.StartsWith("line-")) {
+                    Write-Host "candidateSkippedReason=unsupported_comment_marker:$($candidate.candidateId)"
+                    $applicable = $false
+                    break
+                }
+                $lineNumber = [int]($member.Substring(5))
+                $lines = Get-Content $path
+                if ($lineNumber -lt 1 -or $lineNumber -gt $lines.Count) {
+                    Write-Host "candidateSkippedReason=line_outside_file:$($candidate.candidateId)"
+                    $applicable = $false
+                    break
+                }
+                if ($lines[$lineNumber - 1].Length -le 120 -or
+                    $lines[$lineNumber - 1] -notmatch '^\s*\*\s+\S') {
+                    Write-Host "candidateSkippedReason=unsupported_comment_cleanup:$($candidate.candidateId)"
+                    $applicable = $false
+                    break
+                }
+            }
         }
 
         if ($applicable -and -not (Test-AstLiteCandidate -Candidate $candidate -Path $path)) {
@@ -806,6 +827,60 @@ function Apply-MethodSpacingNormalization {
     Write-Host "insertedBlankLineAfter=$lineNumber"
 }
 
+function Apply-CommentWrapCleanup {
+    param([pscustomobject] $Candidate)
+
+    $path = ConvertTo-RepoPath $Candidate.file
+    if (-not (Test-Path $path)) { throw "Candidate file not found: $path" }
+
+    $member = [string]$Candidate.member
+    if (-not $member.StartsWith("line-")) {
+        throw "Comment wrap cleanup requires a line marker candidate."
+    }
+
+    $lineNumber = [int]($member.Substring(5))
+    $lines = Get-Content $path
+    if ($lineNumber -lt 1 -or $lineNumber -gt $lines.Count) {
+        throw "Candidate line '$lineNumber' is outside file range in $path."
+    }
+
+    $line = $lines[$lineNumber - 1]
+    $match = [regex]::Match($line, '^(?<indent>\s*\*\s+)(?<text>\S.*)$')
+    if (-not $match.Success -or $line.Length -le 120) {
+        throw "Line '$lineNumber' is not a supported long comment line in $path."
+    }
+
+    $indent = $match.Groups["indent"].Value
+    $text = $match.Groups["text"].Value.Trim()
+    $maxTextLength = [Math]::Max(40, 112 - $indent.Length)
+    $splitIndex = $text.LastIndexOf(" ", [Math]::Min($maxTextLength, $text.Length - 1))
+    if ($splitIndex -lt 24 -or $splitIndex -ge ($text.Length - 1)) {
+        throw "Could not find a conservative split point for comment line '$lineNumber'."
+    }
+
+    $wrapped = @(
+        "$indent$($text.Substring(0, $splitIndex).TrimEnd())",
+        "$indent$($text.Substring($splitIndex + 1).TrimStart())"
+    )
+
+    $updatedLines = @()
+    if ($lineNumber -gt 1) {
+        $updatedLines += $lines[0..($lineNumber - 2)]
+    }
+    $updatedLines += $wrapped
+    if ($lineNumber -lt $lines.Count) {
+        $updatedLines += $lines[$lineNumber..($lines.Count - 1)]
+    }
+
+    $originalText = Get-Content $path -Raw
+    $updatedText = $updatedLines -join (Get-LineEnding -Content $originalText)
+    Write-TextFile -Path $path -Content $updatedText
+
+    Write-Host "appliedCandidate=$($Candidate.candidateId)"
+    Write-Host "changedFile=$path"
+    Write-Host "wrappedCommentLine=$lineNumber"
+}
+
 & powershell.exe -NoProfile -ExecutionPolicy Bypass -File "threshold/scripts/sync-lease-state.ps1" `
     -LeasePath $LeasePath `
     -StatePath $StatePath `
@@ -873,6 +948,9 @@ switch ([string]$candidate.candidateClass) {
     }
     "method_spacing_normalization" {
         Apply-MethodSpacingNormalization -Candidate $candidate
+    }
+    "comment_wrap_cleanup" {
+        Apply-CommentWrapCleanup -Candidate $candidate
     }
     default {
         throw "Candidate class '$($candidate.candidateClass)' is not yet automatically patchable by run-next-slice."
