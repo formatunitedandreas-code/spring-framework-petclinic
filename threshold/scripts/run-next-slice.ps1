@@ -57,6 +57,11 @@ function Test-SplitStringConstantLine {
     return $Line -match '^\s*private static final String [A-Z0-9_]+ = "[^"\\]+" \+\s+"[^"\\]+";\s*$'
 }
 
+function Test-SplitStringConstantStartLine {
+    param([string] $Line)
+    return $Line -match '^\s*private static final String [A-Z0-9_]+ = "[^"\\]+" \+\s*$'
+}
+
 function Test-SimpleQueryAnnotationLine {
     param([string] $Line)
     return $Line -match '^\s*@Query\("(?<value>[^"\\]+)"\)\s*$'
@@ -404,7 +409,11 @@ function Get-NextCandidate {
                         $applicable = $false
                         break
                     }
-                    if (-not (Test-SimpleStringConstantLine $lines[$lineNumber - 1])) {
+                    $line = $lines[$lineNumber - 1]
+                    $nextLine = if ($lineNumber -lt $lines.Count) { $lines[$lineNumber] } else { $null }
+                    $simpleConstant = Test-SimpleStringConstantLine $line
+                    $splitStartConstant = (Test-SplitStringConstantStartLine $line) -and $nextLine -and ($nextLine -match '^\s*"[^"\\]+";\s*$')
+                    if (-not ($simpleConstant -or $splitStartConstant)) {
                         Write-Host "candidateSkippedReason=unsupported_line_cleanup:$($candidate.candidateId)"
                         $applicable = $false
                         break
@@ -759,7 +768,22 @@ function Apply-RepositoryReadabilityCleanup {
     if (-not (Test-Path $path)) { throw "Candidate file not found: $path" }
 
     if ($Candidate.member -and ([string]$Candidate.member).StartsWith("line-")) {
-        Apply-LongStringConstantWrap -Candidate $Candidate
+        $lineNumber = [int](([string]$Candidate.member).Substring(5))
+        $lines = Get-Content $path
+        if ($lineNumber -lt 1 -or $lineNumber -gt $lines.Count) {
+            throw "Candidate line '$lineNumber' is outside file range in $path."
+        }
+
+        $line = $lines[$lineNumber - 1]
+        if (Test-SimpleStringConstantLine $line) {
+            Apply-LongStringConstantWrap -Candidate $Candidate
+            return
+        }
+        if (Test-SplitStringConstantStartLine $line) {
+            Apply-SplitStringConstantNormalization -Candidate $Candidate
+            return
+        }
+        throw "Unsupported repository readability line cleanup in $path."
         return
     }
 
@@ -814,6 +838,20 @@ function Apply-SplitStringConstantNormalization {
 
     $line = $lines[$lineNumber - 1]
     $match = [regex]::Match($line, '^(?<indent>\s*)private static final String (?<name>[A-Z0-9_]+) = "(?<first>[^"\\]+)" \+\s+"(?<second>[^"\\]+)";\s*$')
+    $multilineMatch = $null
+    if (-not $match.Success) {
+        $match = [regex]::Match($line, '^(?<indent>\s*)private static final String (?<name>[A-Z0-9_]+) = "(?<first>[^"\\]+)" \+\s*$')
+        if ($match.Success) {
+            if ($lineNumber -ge $lines.Count) {
+                throw "Candidate line '$lineNumber' is missing split continuation in $path."
+            }
+            $nextLine = $lines[$lineNumber]
+            $multilineMatch = [regex]::Match($nextLine, '^(?<indent>\s*)"(?<second>[^"\\]+)";\s*$')
+            if (-not $multilineMatch.Success) {
+                throw "Line '$lineNumber' is not a supported split string constant in $path."
+            }
+        }
+    }
     if (-not $match.Success) {
         throw "Line '$lineNumber' is not a supported split string constant in $path."
     }
@@ -821,17 +859,29 @@ function Apply-SplitStringConstantNormalization {
     $indent = $match.Groups["indent"].Value
     $name = $match.Groups["name"].Value
     $firstSegment = $match.Groups["first"].Value
-    $secondSegment = $match.Groups["second"].Value
+    if ($multilineMatch) {
+        $secondSegment = $multilineMatch.Groups["second"].Value
+        $continuationIndent = $multilineMatch.Groups["indent"].Value
+    }
+    else {
+        $secondSegment = $match.Groups["second"].Value
+        $continuationIndent = "$indent    "
+    }
     $wrapped = @()
-    $wrapped += "$indent" + "private static final String $name = `"$firstSegment`" +"
-    $wrapped += "$indent    `"$secondSegment`";"
+    $wrapped += "$indent" + "private static final String $name = `"$firstSegment`""
+    $wrapped += "$continuationIndent+ `"$secondSegment`";"
 
     $updatedLines = @()
     if ($lineNumber -gt 1) {
         $updatedLines += $lines[0..($lineNumber - 2)]
     }
     $updatedLines += $wrapped
-    if ($lineNumber -lt $lines.Count) {
+    if ($multilineMatch) {
+        if ($lineNumber + 1 -lt $lines.Count) {
+            $updatedLines += $lines[($lineNumber + 1)..($lines.Count - 1)]
+        }
+    }
+    elseif ($lineNumber -lt $lines.Count) {
         $updatedLines += $lines[$lineNumber..($lines.Count - 1)]
     }
 
