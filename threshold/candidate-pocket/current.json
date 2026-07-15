@@ -1,11 +1,27 @@
 {
     "schemaVersion":  "threshold.petclinic.candidate-pocket.v0.2",
-    "leaseName":  "petclinic-threshold-governed-refactor-lease-v5",
-    "branch":  "threshold-governed-refactor-demo-6",
-    "generatedFromHead":  "4efaa12bedf541e3b3ab191336ea9d68519bf818",
-    "generatedAt":  "2026-07-13T22:28:30.3923449Z",
+    "leaseName":  "owned-autonomous-refactor-branch-wave-v0_22",
+    "branch":  "threshold-governed-refactor-demo-14",
+    "generatedFromHead":  "a6491fc467360153fe33ff43790f8a3fe7ff2a22",
+    "generatedAt":  "2026-07-15T05:18:02.2416843Z",
     "discovery":  {
                       "method":  "static-heuristic-scan",
+                      "sourceRoot":  "src/main/java/org/springframework/samples/petclinic",
+                      "gatePath":  "threshold/gates/auto-patchable-candidate-classes.json",
+                      "approvedAutoPatchableCandidateClasses":  [
+                                                                    "comment_wrap_cleanup",
+                                                                    "duplicate_literal_local_constant_extraction",
+                                                                    "line_comment_wrap_cleanup",
+                                                                    "method_signature_wrap_cleanup",
+                                                                    "method_spacing_normalization",
+                                                                    "private_helper_extraction_for_readability",
+                                                                    "redundant_local_variable_simplification",
+                                                                    "repository_readability_cleanup",
+                                                                    "split_string_constant_normalization",
+                                                                    "spring_data_query_wrap_cleanup",
+                                                                    "string_constant_wrap_cleanup",
+                                                                    "utility_readability_cleanup"
+                                                                ],
                       "scannedFiles":  47,
                       "ranking":  [
                                       "score descending",
@@ -13,12 +29,53 @@
                                       "candidate class lexical",
                                       "file path lexical",
                                       "member lexical"
-                                  ]
+                                  ],
+                      "allowedCandidateTypes":  [
+                                                    "private_helper_extraction_for_readability",
+                                                    "redundant_local_variable_simplification",
+                                                    "duplicate_literal_local_constant_extraction",
+                                                    "controller_branch_readability_decomposition",
+                                                    "method_signature_wrap_cleanup",
+                                                    "repository_readability_cleanup",
+                                                    "spring_data_query_wrap_cleanup",
+                                                    "model_readability_cleanup",
+                                                    "split_string_constant_normalization",
+                                                    "string_constant_wrap_cleanup",
+                                                    "utility_readability_cleanup",
+                                                    "application_bootstrap_readability_cleanup",
+                                                    "comment_wrap_cleanup",
+                                                    "line_comment_wrap_cleanup",
+                                                    "method_spacing_normalization",
+                                                    "threshold_governance_artifact_update"
+                                                ]
                   },
     "candidates":  [
-
+                       {
+                           "tieBreak":  {
+                                            "layerScore":  7,
+                                            "path":  "src/main/java/org/springframework/samples/petclinic/repository/jdbc/OneToManyResultSetExtractor.java",
+                                            "member":  "line-73"
+                                        },
+                           "gate":  {
+                                        "required":  true,
+                                        "approved":  true,
+                                        "gatePath":  "threshold/gates/auto-patchable-candidate-classes.json"
+                                    },
+                           "score":  97,
+                           "autoPatchable":  true,
+                           "member":  "line-73",
+                           "reviewOnly":  false,
+                           "executionMode":  "auto_patchable",
+                           "file":  "src/main/java/org/springframework/samples/petclinic/repository/jdbc/OneToManyResultSetExtractor.java",
+                           "candidateId":  "src-main-java-org-springframework-samples-petclinic-repository-jdbc-onetomanyresultsetextractor-java-comment-wrap-cleanup-line-73",
+                           "expectedDiffSummary":  "Wrap one long Javadoc comment line without changing source behavior.",
+                           "candidateClass":  "comment_wrap_cleanup",
+                           "commentWrapSplitPointFound":  true,
+                           "estimatedChangedLines":  2
+                       }
                    ],
-    "nextRecommendedCandidateId":  null,
+    "nextRecommendedCandidateId":  "src-main-java-org-springframework-samples-petclinic-repository-jdbc-onetomanyresultsetextractor-java-comment-wrap-cleanup-line-73",
+    "nextAutoPatchableCandidateId":  "src-main-java-org-springframework-samples-petclinic-repository-jdbc-onetomanyresultsetextractor-java-comment-wrap-cleanup-line-73",
     "nonClaims":  [
                       "candidate pocket is not an implementation claim",
                       "candidate pocket does not claim behavior preservation until slice validation passes",
