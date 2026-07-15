@@ -41,7 +41,8 @@ public interface OwnerRepository {
      * with the given name.
      *
      * @param lastName Value to search for
-     * @return a <code>Collection</code> of matching <code>Owner</code>s (or an empty <code>Collection</code> if none
+     * @return a <code>Collection</code> of matching <code>Owner</code>s (or an empty
+     * <code>Collection</code> if none
      * found)
      */
     Collection<Owner> findByLastName(String lastName);
