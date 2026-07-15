@@ -73,7 +73,6 @@ public class CallMonitoringAspect {
         return this.accumulatedCallTime / this.callCount;
     }
 
-
     @Around("within(@org.springframework.stereotype.Repository *)")
     public Object invoke(ProceedingJoinPoint joinPoint) throws Throwable {
         if (!this.enabled) {
