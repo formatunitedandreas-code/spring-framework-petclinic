@@ -5,16 +5,16 @@
     "mode":  "local_refactor",
     "branch":  "threshold-governed-refactor-demo-22",
     "startHead":  "ed710ce09204aa572a28bb27d39e22a3947668c9",
-    "currentHead":  "4bb617fdd9fdf6bc11afb1d0bfeac3c19c2d5a64",
-    "currentSourceHead":  "4bb617fdd9fdf6bc11afb1d0bfeac3c19c2d5a64",
-    "candidatesProcessed":  4,
-    "commitsCreated":  4,
+    "currentHead":  "34657b528239a2c5d3b18af6487e8b7c099d6927",
+    "currentSourceHead":  "34657b528239a2c5d3b18af6487e8b7c099d6927",
+    "candidatesProcessed":  5,
+    "commitsCreated":  5,
     "remainingBudget":  {
-                            "candidates":  1,
-                            "commits":  1,
+                            "candidates":  0,
+                            "commits":  0,
                             "repairAttempts":  1
                         },
-    "lastReceipt":  "threshold/receipts/src-main-java-org-springframework-samples-petclinic-repository-jpa-jpavisitrepositoryimpl-java-method-spacing-normalization-collapse-line-56-4bb617fdd9fd.json",
-    "terminalState":  "active",
-    "updatedAt":  "2026-07-15T12:03:44.9954140Z"
+    "lastReceipt":  "threshold/receipts/src-main-java-org-springframework-samples-petclinic-util-callmonitoringaspect-java-method-spacing-normalization-collapse-line-76-34657b528239.json",
+    "terminalState":  "budget_exhausted",
+    "updatedAt":  "2026-07-15T12:04:46.0262510Z"
 }
