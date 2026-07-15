@@ -53,7 +53,6 @@ public class JpaVisitRepositoryImpl implements VisitRepository {
         this.em.merge(visit);
     }
 
-
     @Override
     public List<Visit> findByPetId(Integer petId) {
         return this.em.createQuery(
