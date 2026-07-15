@@ -143,6 +143,12 @@ function Update-CandidatePocket {
     ) -FailureMessage "Candidate discovery failed."
 }
 
+function Get-AutoPatchableCandidateCount {
+    param([string] $Path)
+    $pocket = Read-JsonFile -Path $Path
+    return @($pocket.candidates | Where-Object { $_.autoPatchable -eq $true }).Count
+}
+
 function Sync-LeaseStateWrite {
     Invoke-Checked -FilePath "powershell.exe" -ArgumentList @(
         "-ExecutionPolicy",
@@ -155,6 +161,31 @@ function Sync-LeaseStateWrite {
         $StatePath,
         "-Write"
     ) -FailureMessage "Lease-state sync write failed."
+}
+
+function Try-ExpandScopeForCandidateShortage {
+    param([string] $Reason)
+
+    $output = Invoke-Checked -FilePath "powershell.exe" -ArgumentList @(
+        "-ExecutionPolicy",
+        "Bypass",
+        "-File",
+        ".\threshold\scripts\expand-scope.ps1",
+        "-LeasePath",
+        $LeasePath,
+        "-StatePath",
+        $StatePath,
+        "-GatePath",
+        $GatePath,
+        "-Reason",
+        $Reason
+    ) -FailureMessage "Scope expansion failed."
+
+    foreach ($line in $output) {
+        Write-Host $line
+    }
+
+    return ($output -contains "scopeExpansionApplied=true")
 }
 
 function Get-PullRequestMetadata {
@@ -246,8 +277,14 @@ Invoke-Checked -FilePath "powershell.exe" -ArgumentList @(
 ) -FailureMessage "Failed to start lease."
 
 Update-CandidatePocket
-$initialPocket = Read-JsonFile -Path $PocketPath
-$initialAutoPatchableCount = @($initialPocket.candidates | Where-Object { $_.autoPatchable -eq $true }).Count
+$initialAutoPatchableCount = Get-AutoPatchableCandidateCount -Path $PocketPath
+while ($initialAutoPatchableCount -lt $MinAutoPatchableCandidates) {
+    if (-not (Try-ExpandScopeForCandidateShortage -Reason "fresh_wave_candidate_shortage")) {
+        break
+    }
+    Update-CandidatePocket
+    $initialAutoPatchableCount = Get-AutoPatchableCandidateCount -Path $PocketPath
+}
 if ($initialAutoPatchableCount -lt $MinAutoPatchableCandidates) {
     Restore-GovernancePaths
     Write-Host "ready_no_candidates_on_fresh_wave"
@@ -270,7 +307,20 @@ while ($true) {
     ) -FailureMessage "run-next-slice failed."
 
     $state = Read-JsonFile -Path $StatePath
-    if ($state.terminalState -in @("budget_exhausted_verified", "ready_no_candidates_verified")) {
+    if ($state.terminalState -eq "ready_no_candidates_verified") {
+        Update-CandidatePocket
+        $autoPatchableCandidateCount = Get-AutoPatchableCandidateCount -Path $PocketPath
+        if ($state.remainingBudget.candidates -gt 0 -and
+            $state.remainingBudget.commits -gt 0 -and
+            $autoPatchableCandidateCount -lt $MinAutoPatchableCandidates -and
+            (Try-ExpandScopeForCandidateShortage -Reason "mid_wave_candidate_shortage")) {
+            Update-CandidatePocket
+            [void](Commit-PathsIfNeeded -Paths $governancePaths -Message "Expand Threshold wave $waveNumber scope")
+            continue
+        }
+        break
+    }
+    if ($state.terminalState -eq "budget_exhausted_verified") {
         break
     }
 

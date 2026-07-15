@@ -221,11 +221,47 @@ function Apply-ReadableMethodSignatureWrap {
     Write-Host "signatureWrappedLine=$lineNumber"
 }
 
+function Test-IsRuntimeGovernancePath {
+    param([string] $Path)
+
+    $normalizedPath = ConvertTo-RepoPath $Path
+    return $normalizedPath -in @(
+        "threshold/leases/current.yaml",
+        "threshold/lease-state/current-run.json",
+        "threshold/candidate-pocket/current.json"
+    )
+}
+
 function Assert-CleanWorktree {
+    param(
+        [switch] $AllowRuntimeGovernanceArtifacts
+    )
+
     $status = @(& git status --porcelain)
-    if ($status) {
-        throw "Worktree is not clean. run-next-slice requires a clean start."
+    if (-not $status) {
+        return
     }
+
+    if ($AllowRuntimeGovernanceArtifacts.IsPresent) {
+        $unexpectedPaths = New-Object System.Collections.Generic.List[string]
+        foreach ($line in $status) {
+            if ([string]::IsNullOrWhiteSpace($line) -or $line.Length -lt 4) {
+                continue
+            }
+            $path = ConvertTo-RepoPath $line.Substring(3).Trim()
+            if (-not (Test-IsRuntimeGovernancePath -Path $path)) {
+                $unexpectedPaths.Add($path)
+            }
+        }
+
+        if ($unexpectedPaths.Count -eq 0) {
+            return
+        }
+
+        throw "Worktree contains non-runtime changes: $($unexpectedPaths -join ', ')"
+    }
+
+    throw "Worktree is not clean. run-next-slice requires a clean start."
 }
 
 function Assert-LeaseRuntimeState {
@@ -1204,10 +1240,10 @@ if ($LASTEXITCODE -ne 0) {
     throw "Threshold lease-state check failed before preflight."
 }
 
-& powershell.exe -NoProfile -ExecutionPolicy Bypass -File "threshold/scripts/preflight.ps1" -LeasePath $LeasePath
+& powershell.exe -NoProfile -ExecutionPolicy Bypass -File "threshold/scripts/preflight.ps1" -LeasePath $LeasePath -AllowDirty
 if ($LASTEXITCODE -ne 0) { throw "Threshold preflight failed." }
 
-Assert-CleanWorktree
+Assert-CleanWorktree -AllowRuntimeGovernanceArtifacts
 Assert-LeaseRuntimeState -LeasePath $LeasePath -StatePath $StatePath
 $state = Get-LeaseRunState -StatePath $StatePath
 if ([int]$state.remainingBudget.candidates -le 0 -or [int]$state.remainingBudget.commits -le 0) {
