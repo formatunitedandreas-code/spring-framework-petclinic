@@ -71,13 +71,16 @@ function Find-ConservativeCommentSplitPoint {
     param([string] $Text)
 
     $minimumPrefix = 24
+    $minimumSegmentLength = 16
     $preferredMaxIndex = [Math]::Min(112, $Text.Length - 1)
     if ($preferredMaxIndex -lt $minimumPrefix) {
         return $null
     }
 
     $spaceSplit = $Text.LastIndexOf(" ", $preferredMaxIndex)
-    if ($spaceSplit -ge $minimumPrefix -and $spaceSplit -lt ($Text.Length - 1)) {
+    if ($spaceSplit -ge $minimumPrefix -and $spaceSplit -lt ($Text.Length - 1) -and
+        $spaceSplit -ge $minimumSegmentLength -and
+        ($Text.Length - ($spaceSplit + 1)) -ge $minimumSegmentLength) {
         return [pscustomobject]@{
             Index = $spaceSplit
             KeepDelimiter = $false
@@ -86,7 +89,9 @@ function Find-ConservativeCommentSplitPoint {
 
     foreach ($delimiter in @("/", "#", "?", "&", "-", ".", ":")) {
         $splitIndex = $Text.LastIndexOf($delimiter, $preferredMaxIndex)
-        if ($splitIndex -ge $minimumPrefix -and $splitIndex -lt ($Text.Length - 1)) {
+        if ($splitIndex -ge $minimumPrefix -and $splitIndex -lt ($Text.Length - 1) -and
+            ($splitIndex + 1) -ge $minimumSegmentLength -and
+            ($Text.Length - ($splitIndex + 1)) -ge $minimumSegmentLength) {
             return [pscustomobject]@{
                 Index = $splitIndex
                 KeepDelimiter = $true
