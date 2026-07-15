@@ -34,8 +34,8 @@ import java.util.Collection;
 @Repository
 public class JpaVetRepositoryImpl implements VetRepository {
 
-    private static final String FIND_ALL_SQL = "SELECT distinct vet FROM Vet vet left join fetch vet.specialties " +
-            "ORDER BY vet.lastName, vet.firstName";
+    private static final String FIND_ALL_SQL = "SELECT distinct vet FROM Vet vet left join fetch vet.specialties "
+            + "ORDER BY vet.lastName, vet.firstName";
 
     private final EntityManager em;
 
