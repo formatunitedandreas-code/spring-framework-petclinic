@@ -107,6 +107,9 @@ function Write-TextFile {
     param([string] $Path, [string] $Content)
     $encoding = New-Object System.Text.UTF8Encoding $false
     $normalizedContent = $Content -replace "`r`n", "`n" -replace "`r", "`n"
+    if (-not $normalizedContent.EndsWith("`n")) {
+        $normalizedContent = "$normalizedContent`n"
+    }
     [System.IO.File]::WriteAllText((Resolve-Path -LiteralPath $Path), $normalizedContent, $encoding)
 }
 
