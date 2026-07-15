@@ -5,7 +5,7 @@
     "mode":  "local_refactor",
     "branch":  "threshold-governed-refactor-demo-20",
     "startHead":  "36c727fa3af96a50a95a823f4abb63ddd9027504",
-    "currentHead":  "9c541539065e92b987edc299be2c31de19130d2a",
+    "currentHead":  "ab2ca2865dc0e59dccc97f63869df95e3808cafb",
     "currentSourceHead":  "9c541539065e92b987edc299be2c31de19130d2a",
     "candidatesProcessed":  1,
     "commitsCreated":  1,
@@ -15,6 +15,8 @@
                             "repairAttempts":  1
                         },
     "lastReceipt":  "threshold/receipts/src-main-java-org-springframework-samples-petclinic-repository-jdbc-jdbcvetrepositoryimpl-java-repository-readability-cleanup-findall-9c541539065e.json",
-    "terminalState":  "active",
-    "updatedAt":  "2026-07-15T10:42:54.0583618Z"
+    "terminalState":  "ready_no_candidates_verified",
+    "updatedAt":  "2026-07-15T10:43:42.2441356Z",
+    "terminalReason":  "no applicable autoPatchable candidates after discovery canary passed",
+    "discoveryCanaryLastPassedAt":  "2026-07-15T10:43:42.2401107Z"
 }
