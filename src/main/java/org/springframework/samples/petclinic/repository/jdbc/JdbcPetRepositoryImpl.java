@@ -64,7 +64,11 @@ public class JdbcPetRepositoryImpl implements PetRepository {
 
     private final OwnerRepository ownerRepository;
 
-    public JdbcPetRepositoryImpl(JdbcClient jdbcClient, DataSource dataSource, OwnerRepository ownerRepository) {
+    public JdbcPetRepositoryImpl(
+        JdbcClient jdbcClient,
+        DataSource dataSource,
+        OwnerRepository ownerRepository
+    ) {
         this.jdbcClient = jdbcClient;
 
         this.insertPet = new SimpleJdbcInsert(dataSource)
