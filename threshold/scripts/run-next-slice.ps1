@@ -67,6 +67,11 @@ function Test-SimpleQueryAnnotationLine {
     return $Line -match '^\s*@Query\("(?<value>[^"\\]+)"\)\s*$'
 }
 
+function Test-MethodOrAnnotationBoundaryLine {
+    param([string] $Line)
+    return $Line -match '^\s*(?:@|public\b|private\b|protected\b)'
+}
+
 function Find-ConservativeCommentSplitPoint {
     param([string] $Text)
 
@@ -536,11 +541,27 @@ function Get-NextCandidate {
                     $applicable = $false
                     break
                 }
-                if ($lines[$lineNumber - 1] -notmatch '^\s*\}\s*$' -or
-                    $lines[$lineNumber] -notmatch '^\s*(?:@|public\b|private\b|protected\b)') {
-                    Write-Host "candidateSkippedReason=unsupported_spacing_cleanup:$($candidate.candidateId)"
-                    $applicable = $false
-                    break
+                $spacingAction = if ($candidate.PSObject.Properties["spacingAction"]) { [string]$candidate.spacingAction } else { "insert_blank_line" }
+                switch ($spacingAction) {
+                    "collapse_extra_blank_line" {
+                        if ($lineNumber -lt 3 -or
+                            -not [string]::IsNullOrWhiteSpace($lines[$lineNumber - 1]) -or
+                            -not [string]::IsNullOrWhiteSpace($lines[$lineNumber - 2]) -or
+                            $lines[$lineNumber - 3] -notmatch '^\s*\}\s*$' -or
+                            -not (Test-MethodOrAnnotationBoundaryLine $lines[$lineNumber])) {
+                            Write-Host "candidateSkippedReason=unsupported_spacing_cleanup:$($candidate.candidateId)"
+                            $applicable = $false
+                            break
+                        }
+                    }
+                    default {
+                        if ($lines[$lineNumber - 1] -notmatch '^\s*\}\s*$' -or
+                            -not (Test-MethodOrAnnotationBoundaryLine $lines[$lineNumber])) {
+                            Write-Host "candidateSkippedReason=unsupported_spacing_cleanup:$($candidate.candidateId)"
+                            $applicable = $false
+                            break
+                        }
+                    }
                 }
             }
             "comment_wrap_cleanup" {
@@ -991,23 +1012,51 @@ function Apply-MethodSpacingNormalization {
         throw "Candidate line '$lineNumber' is outside file range in $path."
     }
 
-    if ($lines[$lineNumber - 1] -notmatch '^\s*\}\s*$') {
-        throw "Line '$lineNumber' is not a closing method brace in $path."
-    }
-    if ($lines[$lineNumber] -notmatch '^\s*(?:@|public\b|private\b|protected\b)') {
-        throw "Line after '$lineNumber' is not a method or annotation boundary in $path."
-    }
+    $spacingAction = if ($Candidate.PSObject.Properties["spacingAction"]) { [string]$Candidate.spacingAction } else { "insert_blank_line" }
 
     $updatedLines = @()
-    if ($lineNumber -gt 1) {
-        $updatedLines += $lines[0..($lineNumber - 1)]
-    }
-    else {
-        $updatedLines += $lines[0]
-    }
-    $updatedLines += ""
-    if ($lineNumber -lt $lines.Count) {
-        $updatedLines += $lines[$lineNumber..($lines.Count - 1)]
+    switch ($spacingAction) {
+        "collapse_extra_blank_line" {
+            if ($lineNumber -lt 3) {
+                throw "Line '$lineNumber' cannot collapse blank-line spacing in $path."
+            }
+            if (-not [string]::IsNullOrWhiteSpace($lines[$lineNumber - 1]) -or
+                -not [string]::IsNullOrWhiteSpace($lines[$lineNumber - 2])) {
+                throw "Line '$lineNumber' is not an extra blank line in $path."
+            }
+            if ($lines[$lineNumber - 3] -notmatch '^\s*\}\s*$') {
+                throw "Line before collapsed spacing is not a closing method brace in $path."
+            }
+            if (-not (Test-MethodOrAnnotationBoundaryLine $lines[$lineNumber])) {
+                throw "Line after collapsed spacing is not a method or annotation boundary in $path."
+            }
+
+            if ($lineNumber -gt 1) {
+                $updatedLines += $lines[0..($lineNumber - 2)]
+            }
+            if ($lineNumber -lt $lines.Count) {
+                $updatedLines += $lines[$lineNumber..($lines.Count - 1)]
+            }
+        }
+        default {
+            if ($lines[$lineNumber - 1] -notmatch '^\s*\}\s*$') {
+                throw "Line '$lineNumber' is not a closing method brace in $path."
+            }
+            if (-not (Test-MethodOrAnnotationBoundaryLine $lines[$lineNumber])) {
+                throw "Line after '$lineNumber' is not a method or annotation boundary in $path."
+            }
+
+            if ($lineNumber -gt 1) {
+                $updatedLines += $lines[0..($lineNumber - 1)]
+            }
+            else {
+                $updatedLines += $lines[0]
+            }
+            $updatedLines += ""
+            if ($lineNumber -lt $lines.Count) {
+                $updatedLines += $lines[$lineNumber..($lines.Count - 1)]
+            }
+        }
     }
 
     $originalText = Get-Content $path -Raw
@@ -1016,7 +1065,12 @@ function Apply-MethodSpacingNormalization {
 
     Write-Host "appliedCandidate=$($Candidate.candidateId)"
     Write-Host "changedFile=$path"
-    Write-Host "insertedBlankLineAfter=$lineNumber"
+    if ($spacingAction -eq "collapse_extra_blank_line") {
+        Write-Host "removedBlankLine=$lineNumber"
+    }
+    else {
+        Write-Host "insertedBlankLineAfter=$lineNumber"
+    }
 }
 
 function Apply-CommentWrapCleanup {

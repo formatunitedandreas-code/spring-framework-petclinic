@@ -221,6 +221,11 @@ function Test-SimpleQueryAnnotationLine {
     return $Line -match '^\s*@Query\("(?<value>[^"\\]+)"\)\s*$'
 }
 
+function Test-MethodOrAnnotationBoundaryLine {
+    param([string] $Line)
+    return $Line -match '^\s*(?:@|public\b|private\b|protected\b)'
+}
+
 function Find-ConservativeCommentSplitPoint {
     param([string] $Text)
 
@@ -522,6 +527,35 @@ foreach ($file in $sourceFiles) {
                 })
             }
         }
+    }
+
+    # Heuristic 6b: collapse double blank lines before the next method or annotation.
+    for ($i = 1; $i -lt ($lines.Count - 1); $i++) {
+        if (-not [string]::IsNullOrWhiteSpace($lines[$i])) {
+            continue
+        }
+        if (-not [string]::IsNullOrWhiteSpace($lines[$i - 1])) {
+            continue
+        }
+        if ($i -lt 2 -or $lines[$i - 2] -notmatch '^\s*\}\s*$') {
+            continue
+        }
+        if (-not (Test-MethodOrAnnotationBoundaryLine $lines[$i + 1])) {
+            continue
+        }
+
+        $lineNumber = $i + 1
+        $member = "line-$lineNumber"
+        Add-Candidate -CandidateClass "method_spacing_normalization" -AllowedTypes $allowedCandidateTypes -Bucket $candidates -Candidate ([ordered]@{
+            candidateId = New-CandidateId $path "method_spacing_normalization" "collapse-$member"
+            score = 30 + 30 + 20 + 10 + $layerScore
+            file = $path
+            member = $member
+            spacingAction = "collapse_extra_blank_line"
+            expectedDiffSummary = "Collapse an extra blank line before the next method or annotation."
+            estimatedChangedLines = 1
+            tieBreak = [ordered]@{ layerScore = $layerScore; path = $path; member = "collapse-$member" }
+        })
     }
 
     # Heuristic 7: repository-specific readability candidate.
