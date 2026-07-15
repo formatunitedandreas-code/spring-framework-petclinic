@@ -58,6 +58,33 @@ function Test-StringConstantExists {
     return $Content -match "private\s+static\s+final\s+String\s+$([regex]::Escape($ConstantName))\s*="
 }
 
+function Resolve-UniqueStringConstantName {
+    param(
+        [string] $Content,
+        [string] $BaseName
+    )
+
+    if (-not (Test-StringConstantExists -Content $Content -ConstantName $BaseName)) {
+        return $BaseName
+    }
+
+    foreach ($suffix in @("INLINE_SQL", "QUERY_SQL", "LOOKUP_SQL")) {
+        $candidate = "${BaseName}_$suffix"
+        if (-not (Test-StringConstantExists -Content $Content -ConstantName $candidate)) {
+            return $candidate
+        }
+    }
+
+    for ($index = 2; $index -le 20; $index++) {
+        $candidate = "${BaseName}_$index"
+        if (-not (Test-StringConstantExists -Content $Content -ConstantName $candidate)) {
+            return $candidate
+        }
+    }
+
+    return $null
+}
+
 function Get-FirstRepositoryQueryExpression {
     param([string] $MethodText)
 
@@ -511,8 +538,8 @@ foreach ($file in $sourceFiles) {
                 continue
             }
             if (($hasSqlToken -or $hasSqlQueryCall) -and ($hasJdbcCall -or $hasSqlQueryCall) -and ($methodLineCount -gt 8 -or $inlineSqlLiteral)) {
-                $constantName = ConvertTo-ConstantName $methodName "SQL"
-                if (Test-StringConstantExists -Content $content -ConstantName $constantName) {
+                $constantName = Resolve-UniqueStringConstantName -Content $content -BaseName (ConvertTo-ConstantName $methodName "SQL")
+                if (-not $constantName) {
                     continue
                 }
                 $expectedDiffSummary = if ($inlineSqlLiteral) {
