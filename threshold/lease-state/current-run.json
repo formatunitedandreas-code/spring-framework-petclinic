@@ -5,16 +5,16 @@
     "mode":  "local_refactor",
     "branch":  "threshold-governed-refactor-demo-22",
     "startHead":  "ed710ce09204aa572a28bb27d39e22a3947668c9",
-    "currentHead":  "77d65618405946350a17803688770f22d130fff1",
-    "currentSourceHead":  "77d65618405946350a17803688770f22d130fff1",
-    "candidatesProcessed":  1,
-    "commitsCreated":  1,
+    "currentHead":  "a16fee8b95e8a67bb1665953e0681e79febe50f9",
+    "currentSourceHead":  "a16fee8b95e8a67bb1665953e0681e79febe50f9",
+    "candidatesProcessed":  2,
+    "commitsCreated":  2,
     "remainingBudget":  {
-                            "candidates":  4,
-                            "commits":  4,
+                            "candidates":  3,
+                            "commits":  3,
                             "repairAttempts":  1
                         },
-    "lastReceipt":  "threshold/receipts/src-main-java-org-springframework-samples-petclinic-service-clinicserviceimpl-java-method-spacing-normalization-collapse-line-87-77d656184059.json",
+    "lastReceipt":  "threshold/receipts/src-main-java-org-springframework-samples-petclinic-repository-jdbc-jdbcvisitrepositoryimpl-java-method-spacing-normalization-collapse-line-63-a16fee8b95e8.json",
     "terminalState":  "active",
-    "updatedAt":  "2026-07-15T11:53:24.8321562Z"
+    "updatedAt":  "2026-07-15T12:02:11.4656078Z"
 }
