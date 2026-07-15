@@ -5,7 +5,7 @@
     "mode":  "local_refactor",
     "branch":  "threshold-governed-refactor-demo-15",
     "startHead":  "b2f6640dc81063662206d4c794d90a1ddeca064c",
-    "currentHead":  "7a2f1ca",
+    "currentHead":  "a1cc03dbd8d760423349ce101492a6604966fe17",
     "currentSourceHead":  "7a2f1ca",
     "candidatesProcessed":  5,
     "commitsCreated":  5,
@@ -15,6 +15,8 @@
                             "repairAttempts":  1
                         },
     "lastReceipt":  "threshold/receipts/src-main-java-org-springframework-samples-petclinic-repository-jdbc-onetomanyresultsetextractor-java-comment-wrap-cleanup-line-39-7a2f1ca.json",
-    "terminalState":  "budget_exhausted",
-    "updatedAt":  "2026-07-15T05:59:11.7522434Z"
+    "terminalState":  "budget_exhausted_verified",
+    "updatedAt":  "2026-07-15T05:59:28.1828280Z",
+    "terminalReason":  "remaining candidate or commit budget is exhausted after discovery canary passed",
+    "discoveryCanaryLastPassedAt":  "2026-07-15T05:59:28.1788136Z"
 }
