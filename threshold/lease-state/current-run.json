@@ -5,7 +5,7 @@
     "mode":  "local_refactor",
     "branch":  "threshold-governed-refactor-demo-42",
     "startHead":  "03bd4f182f88c1da371bff3a23acb81c58bcdb88",
-    "currentHead":  "03bd4f182f88c1da371bff3a23acb81c58bcdb88",
+    "currentHead":  "b0d1619783327aee4f71fa8dc74700b464fe6a29",
     "currentSourceHead":  "03bd4f182f88c1da371bff3a23acb81c58bcdb88",
     "candidatesProcessed":  0,
     "commitsCreated":  0,
@@ -15,9 +15,11 @@
                             "repairAttempts":  1
                         },
     "lastReceipt":  null,
-    "terminalState":  "active",
-    "updatedAt":  "2026-07-15T18:58:41.4457757Z",
+    "terminalState":  "ready_no_candidates_verified",
+    "updatedAt":  "2026-07-15T18:58:52.3208094Z",
     "scopeExpansionTier":  2,
     "scopeExpansionReason":  "fresh_wave_candidate_shortage",
-    "scopeExpansionAppliedAt":  "2026-07-15T18:58:41.4362544Z"
+    "scopeExpansionAppliedAt":  "2026-07-15T18:58:41.4362544Z",
+    "terminalReason":  "no applicable autoPatchable candidates after discovery canary passed",
+    "discoveryCanaryLastPassedAt":  "2026-07-15T18:58:52.3168028Z"
 }
