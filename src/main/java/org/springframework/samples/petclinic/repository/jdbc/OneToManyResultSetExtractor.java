@@ -36,7 +36,8 @@ import org.springframework.util.Assert;
  * type C table has a
  * foreign key of type K referencing the root table's primary key.
  * <p>
- * For example, consider the relationship: "a Customer has one-to-many Addresses". When joining the Customer table with
+ * For example, consider the relationship: "a Customer has one-to-many Addresses". When joining the
+ * Customer table with
  * the Address table to build a Customer object, multiple rows would be returned for a Customer if it has more than one
  * Address. This extractor is useful in that case.
  * <p>
