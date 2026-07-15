@@ -250,7 +250,12 @@ $initialPocket = Read-JsonFile -Path $PocketPath
 $initialAutoPatchableCount = @($initialPocket.candidates | Where-Object { $_.autoPatchable -eq $true }).Count
 if ($initialAutoPatchableCount -lt $MinAutoPatchableCandidates) {
     Restore-GovernancePaths
-    throw "No autoPatchable candidates found on fresh wave branch '$branch'."
+    Write-Host "ready_no_candidates_on_fresh_wave"
+    Write-Host "branch=$branch"
+    Write-Host "head=$((& git rev-parse HEAD).Trim())"
+    Write-Host "autoPatchableCandidateCount=$initialAutoPatchableCount"
+    Write-Host "minAutoPatchableCandidates=$MinAutoPatchableCandidates"
+    exit 0
 }
 
 $waveNumber = Get-WaveNumberFromBranch -Branch $branch
