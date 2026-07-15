@@ -338,7 +338,7 @@ Invoke-Checked -FilePath "powershell.exe" -ArgumentList @(
     "-ExecutionPolicy",
     "Bypass",
     "-Command",
-    "$env:JAVA_HOME='C:\Program Files\Java\jdk-17'; .\mvnw.cmd test"
+    "`$env:JAVA_HOME='C:\Program Files\Java\jdk-17'; .\mvnw.cmd test"
 ) -FailureMessage "Final Maven test failed."
 
 if ($SkipPush.IsPresent) {
