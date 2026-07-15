@@ -5,8 +5,8 @@
     "mode":  "local_refactor",
     "branch":  "threshold-governed-refactor-demo-22",
     "startHead":  "ed710ce09204aa572a28bb27d39e22a3947668c9",
-    "currentHead":  "ed710ce09204aa572a28bb27d39e22a3947668c9",
-    "currentSourceHead":  "ed710ce09204aa572a28bb27d39e22a3947668c9",
+    "currentHead":  "6c31e058b0390f174c38a5e4997246e4273165ec",
+    "currentSourceHead":  "6c31e058b0390f174c38a5e4997246e4273165ec",
     "candidatesProcessed":  0,
     "commitsCreated":  0,
     "remainingBudget":  {
@@ -16,5 +16,7 @@
                         },
     "lastReceipt":  null,
     "terminalState":  "active",
-    "updatedAt":  "2026-07-15T11:06:48.7844384Z"
+    "updatedAt":  "2026-07-15T11:52:15.9228134Z",
+    "runtimeObservedHead":  "6c31e058b0390f174c38a5e4997246e4273165ec",
+    "runtimeObservedAt":  "2026-07-15T11:52:15.9182850Z"
 }
