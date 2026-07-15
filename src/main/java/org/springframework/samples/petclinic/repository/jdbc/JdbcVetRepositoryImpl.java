@@ -47,6 +47,8 @@ public class JdbcVetRepositoryImpl implements VetRepository {
 
     private static final String GET_SPECIALTY_IDS_FOR_SQL = "SELECT specialty_id FROM vet_specialties WHERE vet_id=?";
 
+    private static final String FIND_ALL_SQL_INLINE_SQL = "SELECT id, name FROM specialties";
+
     private final JdbcClient jdbcClient;
 
     public JdbcVetRepositoryImpl(JdbcClient jdbcClient) {
@@ -65,7 +67,7 @@ public class JdbcVetRepositoryImpl implements VetRepository {
             .list());
 
         // Retrieve the list of all possible specialties.
-        final List<Specialty> specialties = this.jdbcClient.sql("SELECT id, name FROM specialties")
+        final List<Specialty> specialties = this.jdbcClient.sql(FIND_ALL_SQL_INLINE_SQL)
             .query(BeanPropertyRowMapper.newInstance(Specialty.class))
             .list();
 
