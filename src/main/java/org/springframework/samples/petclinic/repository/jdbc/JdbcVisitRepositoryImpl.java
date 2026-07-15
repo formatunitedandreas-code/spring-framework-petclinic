@@ -72,7 +72,8 @@ public class JdbcVisitRepositoryImpl implements VisitRepository {
 
 
     /**
-     * Creates a {@link MapSqlParameterSource} based on data values from the supplied {@link Visit} instance.
+     * Creates a {@link MapSqlParameterSource} based on data values from the supplied
+     * {@link Visit} instance.
      */
     private MapSqlParameterSource createVisitParameterSource(Visit visit) {
         return new MapSqlParameterSource()

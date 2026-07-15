@@ -22,7 +22,8 @@ import java.time.LocalDate;
 import org.springframework.jdbc.core.RowMapper;
 
 /**
- * {@link RowMapper} implementation mapping data from a {@link ResultSet} to the corresponding properties
+ * {@link RowMapper} implementation mapping data from a {@link ResultSet} to the
+ * corresponding properties
  * of the {@link JdbcPet} class.
  */
 class JdbcPetRowMapper implements RowMapper<JdbcPet> {
