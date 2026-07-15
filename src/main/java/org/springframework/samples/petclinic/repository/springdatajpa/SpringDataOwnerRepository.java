@@ -32,7 +32,8 @@ import org.springframework.samples.petclinic.repository.OwnerRepository;
 public interface SpringDataOwnerRepository extends OwnerRepository, Repository<Owner, Integer> {
 
     @Override
-    @Query("SELECT DISTINCT owner FROM Owner owner left join fetch owner.pets WHERE owner.lastName LIKE :lastName%")
+    @Query("SELECT DISTINCT owner FROM Owner owner left join fetch owner.pets WHERE owner.lastName " +
+        "LIKE :lastName%")
     Collection<Owner> findByLastName(@Param("lastName") String lastName);
 
     @Override
