@@ -107,7 +107,8 @@ public class JdbcOwnerRepositoryImpl implements OwnerRepository {
     }
 
     /**
-     * Loads the {@link Owner} with the supplied <code>id</code>; also loads the {@link Pet Pets} and
+     * Loads the {@link Owner} with the supplied <code>id</
+     * code>; also loads the {@link Pet Pets} and
      * {@link Visit Visits}
      * for the corresponding owner, if not already loaded.
      */
