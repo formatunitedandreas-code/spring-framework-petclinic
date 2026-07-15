@@ -218,6 +218,34 @@ function Assert-ReadyForMerge {
     }
 }
 
+function Assert-RemoteBaseMatchesMergeCommit {
+    param([pscustomobject] $MergedPullRequest)
+
+    $mergeCommit = [string]$MergedPullRequest.merge_commit_sha
+    if ([string]::IsNullOrWhiteSpace($mergeCommit)) {
+        throw "Merged pull request did not report merge_commit_sha."
+    }
+
+    Invoke-Checked -FilePath "git" -ArgumentList @(
+        "fetch",
+        $BaseRemote
+    ) -FailureMessage "Failed to refresh $BaseRemote after merge."
+
+    $remoteBase = (Invoke-Checked -FilePath "git" -ArgumentList @(
+        "rev-parse",
+        "$BaseRemote/$BaseBranch"
+    ) -FailureMessage "Failed to resolve $BaseRemote/$BaseBranch after merge.") -join "`n"
+    $remoteBase = $remoteBase.Trim()
+
+    if ($remoteBase -ne $mergeCommit) {
+        throw "origin_main_stale_after_merge. expected=$mergeCommit actual=$remoteBase"
+    }
+
+    Write-Host "postMergeRemoteRefresh=passed"
+    Write-Host "remoteBase=$BaseRemote/$BaseBranch"
+    Write-Host "remoteHead=$remoteBase"
+}
+
 function New-PullRequestBody {
     param(
         [int] $WaveNumber,
@@ -429,9 +457,12 @@ if ($mergedPullRequest.merged -ne $true) {
     throw "Pull request #$prNumber did not reach merged state."
 }
 
+Assert-RemoteBaseMatchesMergeCommit -MergedPullRequest $mergedPullRequest
+
 Write-Host "start-next-wave completed"
 Write-Host "branch=$branch"
 Write-Host "waveNumber=$waveNumber"
 Write-Host "pullRequest=$($mergedPullRequest.url)"
 Write-Host "mergeCommit=$($mergedPullRequest.merge_commit_sha)"
 Write-Host "terminalState=$($state.terminalState)"
+Write-Host "ready_for_next_wave=true"
