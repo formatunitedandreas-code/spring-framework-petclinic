@@ -48,8 +48,10 @@ public class JpaOwnerRepositoryImpl implements OwnerRepository {
     }
 
     /**
-     * Important: in the current version of this method, we load Owners with all their Pets and Visits while
-     * we do not need Visits at all, and we only need one property from the Pet objects (the 'name' property).
+     * Important: in the current version of this method, we load Owners with all their Pets
+     * and Visits while
+     * we do not need Visits at all, and we only need one property from the Pet objects (the
+     * 'name' property).
      * There are some ways to improve it such as:
      * - creating a Lightweight class
      * - Turning on lazy-loading and using the open session in view pattern
