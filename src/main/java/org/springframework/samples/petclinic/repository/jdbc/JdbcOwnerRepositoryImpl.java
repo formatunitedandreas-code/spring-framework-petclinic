@@ -94,7 +94,8 @@ public class JdbcOwnerRepositoryImpl implements OwnerRepository {
      * Loads {@link Owner Owners} from the data store by last name, returning all owners whose last
      * name <i>starts</i>
      * with
-     * the given name; also loads the {@link Pet Pets} and {@link Visit Visits} for the corresponding owners, if not
+     * the given name; also loads the {@link Pet Pets} and {@link Visit Visits} for the
+     * corresponding owners, if not
      * already loaded.
      */
     @Override
