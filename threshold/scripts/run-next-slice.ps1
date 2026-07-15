@@ -548,7 +548,7 @@ function Get-NextCandidate {
                     $applicable = $false
                     break
                 }
-                if ($lines[$lineNumber - 1].Length -le 120 -or
+                if ($lines[$lineNumber - 1].Length -le 100 -or
                     $lines[$lineNumber - 1] -notmatch '^\s*\*\s+\S') {
                     Write-Host "candidateSkippedReason=unsupported_comment_cleanup:$($candidate.candidateId)"
                     $applicable = $false
@@ -1029,7 +1029,7 @@ function Apply-CommentWrapCleanup {
 
     $line = $lines[$lineNumber - 1]
     $match = [regex]::Match($line, '^(?<indent>\s*\*\s+)(?<text>\S.*)$')
-    if (-not $match.Success -or $line.Length -le 120) {
+    if (-not $match.Success -or $line.Length -le 100) {
         throw "Line '$lineNumber' is not a supported long comment line in $path."
     }
 

@@ -447,7 +447,7 @@ foreach ($file in $sourceFiles) {
     # Heuristic 5: tiny spacing normalization between adjacent methods.
     for ($i = 0; $i -lt $lines.Count; $i++) {
         $line = $lines[$i]
-        if ($line.Length -le 120) {
+        if ($line.Length -le 100) {
             continue
         }
         if ($line -notmatch '^\s*//\s+\S') {
