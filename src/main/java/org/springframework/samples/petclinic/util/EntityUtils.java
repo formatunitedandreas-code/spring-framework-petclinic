@@ -59,7 +59,11 @@ public class EntityUtils {
         throw new ObjectRetrievalFailureException(entityClass, entityId);
     }
 
-    private static <T extends BaseEntity> boolean isMatchingEntity(T entity, Class<T> entityClass, int entityId) {
+    private static <T extends BaseEntity> boolean isMatchingEntity(
+        T entity,
+        Class<T> entityClass,
+        int entityId
+    ) {
         return entity.getId() == entityId && entityClass.isInstance(entity);
     }
 
