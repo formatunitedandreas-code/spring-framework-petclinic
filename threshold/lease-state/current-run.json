@@ -5,19 +5,16 @@
     "mode":  "local_refactor",
     "branch":  "threshold-governed-refactor-demo-29",
     "startHead":  "0f2fb251652a11130254ddd799fbbf975a61bf8a",
-    "currentHead":  "0f2fb251652a11130254ddd799fbbf975a61bf8a",
-    "currentSourceHead":  "0f2fb251652a11130254ddd799fbbf975a61bf8a",
-    "candidatesProcessed":  0,
-    "commitsCreated":  0,
+    "currentHead":  "f395d2bb61d10764d86989d8d413244dbfd04905",
+    "currentSourceHead":  "f395d2bb61d10764d86989d8d413244dbfd04905",
+    "candidatesProcessed":  1,
+    "commitsCreated":  1,
     "remainingBudget":  {
-                            "candidates":  5,
-                            "commits":  5,
+                            "candidates":  4,
+                            "commits":  4,
                             "repairAttempts":  1
                         },
-    "lastReceipt":  null,
+    "lastReceipt":  "threshold/receipts/src-main-java-org-springframework-samples-petclinic-model-baseentity-java-comment-wrap-cleanup-line-24-f395d2bb61d1.json",
     "terminalState":  "active",
-    "updatedAt":  "2026-07-15T16:19:34.2242913Z",
-    "scopeExpansionTier":  1,
-    "scopeExpansionReason":  "fresh_wave_candidate_shortage",
-    "scopeExpansionAppliedAt":  "2026-07-15T16:19:34.2192920Z"
+    "updatedAt":  "2026-07-15T16:20:10.8518646Z"
 }
