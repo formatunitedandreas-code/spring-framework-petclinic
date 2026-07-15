@@ -17,6 +17,20 @@ function Get-LeaseScalar {
     return ($match -replace "^\s*$([regex]::Escape($Name)):\s*", "").Trim()
 }
 
+function Get-LeaseIntScalarOrDefault {
+    param(
+        [string[]] $Lines,
+        [string] $Name,
+        [int] $DefaultValue
+    )
+
+    $match = $Lines | Where-Object { $_ -match "^\s*$([regex]::Escape($Name)):\s*(\d+)\s*$" } | Select-Object -First 1
+    if (-not $match) {
+        return $DefaultValue
+    }
+    return [int]($match -replace "^\s*$([regex]::Escape($Name)):\s*", "")
+}
+
 function Get-LeaseList {
     param([string[]] $Lines, [string] $Name)
     $items = New-Object System.Collections.Generic.List[string]
@@ -313,6 +327,11 @@ $leaseName = Get-LeaseScalar $leaseLines "leaseName"
 $branch = Get-LeaseScalar $leaseLines "branch"
 $head = (& git rev-parse HEAD).Trim()
 $allowedCandidateTypes = Get-LeaseList $leaseLines "allowedCandidateTypes"
+$longLineThreshold = Get-LeaseIntScalarOrDefault -Lines $leaseLines -Name "longLineThreshold" -DefaultValue 120
+$commentWrapThreshold = Get-LeaseIntScalarOrDefault -Lines $leaseLines -Name "commentWrapThreshold" -DefaultValue 120
+$springDataQueryThreshold = Get-LeaseIntScalarOrDefault -Lines $leaseLines -Name "springDataQueryThreshold" -DefaultValue 80
+$repositoryMethodLengthThreshold = Get-LeaseIntScalarOrDefault -Lines $leaseLines -Name "repositoryMethodLengthThreshold" -DefaultValue 8
+$utilityMethodLengthThreshold = Get-LeaseIntScalarOrDefault -Lines $leaseLines -Name "utilityMethodLengthThreshold" -DefaultValue 8
 $script:ApprovedAutoPatchableCandidateClasses = Get-AutoPatchableGate -Path $GatePath
 
 $sourceFiles = @(
@@ -374,7 +393,7 @@ foreach ($file in $sourceFiles) {
     # Heuristic 3: line readability cleanup for long statements.
     $longLines = @()
     for ($i = 0; $i -lt $lines.Count; $i++) {
-        if ($lines[$i].Length -gt 120 -and $lines[$i] -match "^\s*(private|public|return|[A-Za-z0-9_]+\.)") {
+        if ($lines[$i].Length -gt $longLineThreshold -and $lines[$i] -match "^\s*(private|public|return|[A-Za-z0-9_]+\.)") {
             $longLines += ($i + 1)
         }
     }
@@ -405,7 +424,7 @@ foreach ($file in $sourceFiles) {
     # Heuristic 3b: Spring Data JPA query annotation readability cleanup.
     if ($path -like "*/repository/springdatajpa/*") {
         for ($i = 0; $i -lt $lines.Count; $i++) {
-            if ($lines[$i].Length -le 80) {
+            if ($lines[$i].Length -le $springDataQueryThreshold) {
                 continue
             }
             if (-not (Test-SimpleQueryAnnotationLine $lines[$i])) {
@@ -428,7 +447,7 @@ foreach ($file in $sourceFiles) {
     # Heuristic 3c: repository split string constant continuation cleanup.
     if ($path -like "*/repository/*") {
         for ($i = 0; $i -lt ($lines.Count - 1); $i++) {
-            if ($lines[$i].Length -le 110) {
+            if ($lines[$i].Length -le $longLineThreshold) {
                 continue
             }
             if (-not (Test-SplitStringConstantStartLine $lines[$i])) {
@@ -459,7 +478,7 @@ foreach ($file in $sourceFiles) {
     # Heuristic 4: tiny spacing normalization between adjacent methods.
     for ($i = 0; $i -lt $lines.Count; $i++) {
         $line = $lines[$i]
-        if ($line.Length -le 120) {
+        if ($line.Length -le $commentWrapThreshold) {
             continue
         }
         if ($line -notmatch '^\s*\*\s+\S') {
@@ -485,7 +504,7 @@ foreach ($file in $sourceFiles) {
     # Heuristic 5: tiny spacing normalization between adjacent methods.
     for ($i = 0; $i -lt $lines.Count; $i++) {
         $line = $lines[$i]
-        if ($line.Length -le 120) {
+        if ($line.Length -le $commentWrapThreshold) {
             continue
         }
         if ($line -notmatch '^\s*//\s+\S') {
@@ -571,7 +590,7 @@ foreach ($file in $sourceFiles) {
             if (-not $inlineSqlLiteral) {
                 continue
             }
-            if (($hasSqlToken -or $hasSqlQueryCall) -and ($hasJdbcCall -or $hasSqlQueryCall) -and ($methodLineCount -gt 8 -or $inlineSqlLiteral)) {
+            if (($hasSqlToken -or $hasSqlQueryCall) -and ($hasJdbcCall -or $hasSqlQueryCall) -and ($methodLineCount -gt $repositoryMethodLengthThreshold -or $inlineSqlLiteral)) {
                 $constantName = Resolve-UniqueStringConstantName -Content $content -BaseName (ConvertTo-ConstantName $methodName "SQL")
                 if (-not $constantName) {
                     continue
@@ -605,7 +624,7 @@ foreach ($file in $sourceFiles) {
             $hasTryFinally = [regex]::IsMatch($methodText, "(?s)\btry\b.*\bfinally\b")
             $hasStopWatch = [regex]::IsMatch($methodText, "(?i)\bStopWatch\b")
             $hasSynchronized = [regex]::IsMatch($methodText, "(?i)\bsynchronized\b")
-            if ($methodLineCount -gt 8 -and (($hasTryFinally -and $hasStopWatch) -or $hasSynchronized -or $hasStopWatch)) {
+            if ($methodLineCount -gt $utilityMethodLengthThreshold -and (($hasTryFinally -and $hasStopWatch) -or $hasSynchronized -or $hasStopWatch)) {
                 $utilityPattern = if ($hasStopWatch) { "stopwatch_start_helper" } else { "synchronized_helper" }
                 $helperName = if ($hasStopWatch) { "startInvocationStopWatch" } else { "recordInvocation" }
                 if ($content -match "private\s+StopWatch\s+$([regex]::Escape($helperName))\s*\(" -or
@@ -697,6 +716,13 @@ $pocket = [ordered]@{
             "file path lexical",
             "member lexical"
         )
+        thresholds = [ordered]@{
+            longLineThreshold = $longLineThreshold
+            commentWrapThreshold = $commentWrapThreshold
+            springDataQueryThreshold = $springDataQueryThreshold
+            repositoryMethodLengthThreshold = $repositoryMethodLengthThreshold
+            utilityMethodLengthThreshold = $utilityMethodLengthThreshold
+        }
         allowedCandidateTypes = $allowedCandidateTypes
     }
     candidates = $ranked
