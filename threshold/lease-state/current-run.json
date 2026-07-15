@@ -1,12 +1,12 @@
 {
     "schemaVersion":  "threshold.petclinic.lease-state.v0.2",
-    "invocationId":  "owned-autonomous-refactor-branch-wave-v0_automation-20260715T192352Z",
+    "invocationId":  "owned-autonomous-refactor-branch-wave-v0_automation-20260715T195552Z",
     "leaseId":  "owned-autonomous-refactor-branch-wave-v0_automation",
     "mode":  "local_refactor",
-    "branch":  "threshold-governed-refactor-demo-46",
-    "startHead":  "2a008a9c4d8f64ba41c71ec558ba3524e4a25917",
-    "currentHead":  "cb725998893bfbbcb914bcc31f022079a7b16693",
-    "currentSourceHead":  "2a008a9c4d8f64ba41c71ec558ba3524e4a25917",
+    "branch":  "threshold-governed-refactor-demo-53",
+    "startHead":  "4f35e1d75b4a9246662d3df04b758f6c044b4f2c",
+    "currentHead":  "383236dc2ea82f8a106dfe9abc0d0eb8a9965fcc",
+    "currentSourceHead":  "4f35e1d75b4a9246662d3df04b758f6c044b4f2c",
     "candidatesProcessed":  0,
     "commitsCreated":  0,
     "remainingBudget":  {
@@ -16,10 +16,36 @@
                         },
     "lastReceipt":  null,
     "terminalState":  "ready_no_candidates_verified",
-    "updatedAt":  "2026-07-15T19:24:07.9377862Z",
+    "updatedAt":  "2026-07-15T19:56:14.5134938Z",
     "scopeExpansionTier":  2,
     "scopeExpansionReason":  "fresh_wave_candidate_shortage",
-    "scopeExpansionAppliedAt":  "2026-07-15T19:23:58.3203597Z",
+    "scopeExpansionAppliedAt":  "2026-07-15T19:55:59.1033510Z",
     "terminalReason":  "no applicable autoPatchable candidates after discovery canary passed",
-    "discoveryCanaryLastPassedAt":  "2026-07-15T19:24:07.9377862Z"
+    "discoveryCanaryLastPassedAt":  "2026-07-15T19:56:09.7565926Z",
+    "candidateClassRegistry":  [
+                                   {
+                                       "candidateClass":  "line_comment_wrap_cleanup",
+                                       "totalCandidates":  2,
+                                       "autoPatchableCandidates":  2,
+                                       "executableAutoPatchableCandidates":  2,
+                                       "reviewOnlyCandidates":  0,
+                                       "executorSupported":  true
+                                   },
+                                   {
+                                       "candidateClass":  "spring_data_query_wrap_cleanup",
+                                       "totalCandidates":  1,
+                                       "autoPatchableCandidates":  1,
+                                       "executableAutoPatchableCandidates":  1,
+                                       "reviewOnlyCandidates":  0,
+                                       "executorSupported":  true
+                                   },
+                                   {
+                                       "candidateClass":  "comment_wrap_cleanup",
+                                       "totalCandidates":  7,
+                                       "autoPatchableCandidates":  7,
+                                       "executableAutoPatchableCandidates":  7,
+                                       "reviewOnlyCandidates":  0,
+                                       "executorSupported":  true
+                                   }
+                               ]
 }
