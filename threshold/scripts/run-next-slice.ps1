@@ -462,7 +462,7 @@ function Get-NextCandidate {
                     $applicable = $false
                     break
                 }
-                if ($lines[$lineNumber - 1].Length -le 110 -or
+                if ($lines[$lineNumber - 1].Length -le 80 -or
                     -not (Test-SimpleQueryAnnotationLine $lines[$lineNumber - 1])) {
                     Write-Host "candidateSkippedReason=unsupported_query_annotation_cleanup:$($candidate.candidateId)"
                     $applicable = $false
