@@ -1,22 +1,22 @@
 {
     "schemaVersion":  "threshold.petclinic.lease-state.v0.2",
-    "invocationId":  "owned-autonomous-refactor-branch-wave-v0_automation-20260715T182233Z",
+    "invocationId":  "owned-autonomous-refactor-branch-wave-v0_automation-20260715T183008Z",
     "leaseId":  "owned-autonomous-refactor-branch-wave-v0_automation",
     "mode":  "local_refactor",
-    "branch":  "threshold-governed-refactor-demo-31",
-    "startHead":  "abeb4cbe2fd2d92f1ea83e9d4afce42f7d57157c",
-    "currentHead":  "85d7822ed1941c38898ae5635e7e6f4b1e63850a",
-    "currentSourceHead":  "f9fca7f232af6cca6d145bacb6bcf04bbf496fc7",
-    "candidatesProcessed":  5,
-    "commitsCreated":  5,
+    "branch":  "threshold-governed-refactor-demo-32",
+    "startHead":  "343f81bd555e73ccb9218c8c13d9ea13f2d11427",
+    "currentHead":  "980138ad748222ac4546f9f3a5d094dd1277feb2",
+    "currentSourceHead":  "f217d78312c2f4d74c31b024a639e635e8f5936d",
+    "candidatesProcessed":  3,
+    "commitsCreated":  3,
     "remainingBudget":  {
-                            "candidates":  0,
-                            "commits":  0,
+                            "candidates":  2,
+                            "commits":  2,
                             "repairAttempts":  1
                         },
-    "lastReceipt":  "threshold/receipts/src-main-java-org-springframework-samples-petclinic-repository-jpa-jpapetrepositoryimpl-java-repository-readability-cleanup-line-39-f9fca7f232af.json",
-    "terminalState":  "budget_exhausted_verified",
-    "updatedAt":  "2026-07-15T18:26:56.9476566Z",
-    "terminalReason":  "remaining candidate or commit budget is exhausted after discovery canary passed",
-    "discoveryCanaryLastPassedAt":  "2026-07-15T18:26:56.9419660Z"
+    "lastReceipt":  "threshold/receipts/src-main-java-org-springframework-samples-petclinic-repository-jpa-jpavisitrepositoryimpl-java-repository-readability-cleanup-line-39-f217d78312c2.json",
+    "terminalState":  "ready_no_candidates_verified",
+    "updatedAt":  "2026-07-15T18:33:39.6778182Z",
+    "terminalReason":  "no applicable autoPatchable candidates after discovery canary passed",
+    "discoveryCanaryLastPassedAt":  "2026-07-15T18:33:39.6713250Z"
 }

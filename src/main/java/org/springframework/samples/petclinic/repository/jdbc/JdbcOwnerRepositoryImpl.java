@@ -50,7 +50,8 @@ public class JdbcOwnerRepositoryImpl implements OwnerRepository {
     private static final String ID = "id";
 
 
-    private static final String GET_PET_TYPES_SQL = "SELECT id, name FROM types ORDER BY name";
+    private static final String GET_PET_TYPES_SQL = "SELECT id, name FROM types ORDER BY " +
+        "name";
 
     private static final String SAVE_SQL = """
                     UPDATE owners
