@@ -60,7 +60,6 @@ public class JdbcVisitRepositoryImpl implements VisitRepository {
             .usingGeneratedKeyColumns(ID);
     }
 
-
     @Override
     public void save(Visit visit) {
         if (!visit.isNew()) {
