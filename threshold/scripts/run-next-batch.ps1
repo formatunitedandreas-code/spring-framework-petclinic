@@ -145,6 +145,27 @@ function Apply-CommentWrapCleanup {
     Write-TextFile -Path $path -Content $updatedText
 }
 
+function Test-CommentWrapCandidateApplies {
+    param([pscustomobject] $Candidate)
+
+    $path = ConvertTo-RepoPath $Candidate.file
+    if (-not (Test-Path $path)) { return $false }
+
+    $member = [string]$Candidate.member
+    if (-not $member.StartsWith("line-")) { return $false }
+
+    $lineNumber = [int]($member.Substring(5))
+    $lines = Get-Content $path
+    if ($lineNumber -lt 1 -or $lineNumber -gt $lines.Count) { return $false }
+
+    $line = $lines[$lineNumber - 1]
+    $match = [regex]::Match($line, '^(?<indent>\s*\*\s+)(?<text>\S.*)$')
+    if (-not $match.Success -or $line.Length -le 120) { return $false }
+
+    $text = $match.Groups["text"].Value.Trim()
+    return $null -ne (Find-ConservativeCommentSplitPoint -Text $text)
+}
+
 function Invoke-DiscoveryCanary {
     & powershell.exe -NoProfile -ExecutionPolicy Bypass -File "threshold/scripts/test-discovery-canary.ps1" `
         -LeasePath $LeasePath `
@@ -199,6 +220,11 @@ function Get-BatchCandidates {
     foreach ($candidate in $sameClass) {
         $path = ConvertTo-RepoPath $candidate.file
         if (-not (Test-Path $path)) { continue }
+        if ([string]$candidate.candidateClass -eq "comment_wrap_cleanup" -and
+            -not (Test-CommentWrapCandidateApplies -Candidate $candidate)) {
+            Write-Host "skippedStaleCandidate=$($candidate.candidateId)"
+            continue
+        }
         if ($selectedFiles -notcontains $path) {
             $selectedFiles += $path
         }
