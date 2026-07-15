@@ -1,12 +1,12 @@
 {
     "schemaVersion":  "threshold.petclinic.lease-state.v0.2",
-    "invocationId":  "owned-autonomous-refactor-branch-wave-v0_28-20260715T091405Z",
-    "leaseId":  "owned-autonomous-refactor-branch-wave-v0_28",
+    "invocationId":  "owned-autonomous-refactor-branch-wave-v0_29-20260715T100858Z",
+    "leaseId":  "owned-autonomous-refactor-branch-wave-v0_29",
     "mode":  "local_refactor",
-    "branch":  "threshold-governed-refactor-demo-18",
-    "startHead":  "b85225681174fa507c8aa555444fda9f24a16c8b",
-    "currentHead":  "ef5f1b8be17d21dee7bc2cbd2dff32c6e2381e2d",
-    "currentSourceHead":  "b85225681174fa507c8aa555444fda9f24a16c8b",
+    "branch":  "threshold-governed-refactor-demo-19",
+    "startHead":  "d8e0644e5b412da655feb7e1825dfd0ea61c5e3c",
+    "currentHead":  "9c2c308b4d4f866847e8cc6761d08940d216b3a0",
+    "currentSourceHead":  "d8e0644e5b412da655feb7e1825dfd0ea61c5e3c",
     "candidatesProcessed":  0,
     "commitsCreated":  0,
     "remainingBudget":  {
@@ -16,7 +16,7 @@
                         },
     "lastReceipt":  null,
     "terminalState":  "ready_no_candidates_verified",
-    "updatedAt":  "2026-07-15T09:17:19.2910133Z",
+    "updatedAt":  "2026-07-15T10:10:20.6970635Z",
     "terminalReason":  "no applicable autoPatchable candidates after discovery canary passed",
-    "discoveryCanaryLastPassedAt":  "2026-07-15T09:17:19.2869831Z"
+    "discoveryCanaryLastPassedAt":  "2026-07-15T10:10:20.6930606Z"
 }
