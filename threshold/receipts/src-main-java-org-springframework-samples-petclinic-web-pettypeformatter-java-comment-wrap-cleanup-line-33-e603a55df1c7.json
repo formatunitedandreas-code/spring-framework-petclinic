@@ -1,0 +1,50 @@
+{
+    "schemaVersion":  "threshold.petclinic.slice-receipt.v0.2",
+    "candidateId":  "src-main-java-org-springframework-samples-petclinic-web-pettypeformatter-java-comment-wrap-cleanup-line-33",
+    "leaseName":  "owned-autonomous-refactor-branch-wave-v0_15",
+    "branch":  "threshold-governed-refactor-demo-10",
+    "candidateClass":  "comment_wrap_cleanup",
+    "leaseStartHead":  "63a561fbfc1aa7ec85ee0434cdd18c0a60a1045c",
+    "baseHead":  "9b37aeff5d6ddeb4fbb540edc19561276dbaa99b",
+    "commitHash":  "e603a55df1c7b22bceffcc447bca4e8ca8fc34cf",
+    "receiptMaterialization":  "post-commit",
+    "perCommitValidationLogAvailable":  true,
+    "branchFinalValidationPassed":  false,
+    "changedFiles":  [
+                         {
+                             "path":  "src/main/java/org/springframework/samples/petclinic/web/PetTypeFormatter.java",
+                             "beforeSha256":  "20e91404d9e502bd2e1a0a0aaa85aacdfbadaa2e7a7d1cecd52f2f6287e09d8e",
+                             "afterSha256":  "5588cc8ca0015e73699aeb0dd8fbccc0c026af39b9842df57d234739f19890f6"
+                         }
+                     ],
+    "diffSummary":  "Refactor PetClinic Wrap one long Javadoc comment line without changing so",
+    "diffStat":  {
+                     "filesChanged":  1,
+                     "insertions":  3,
+                     "deletions":  2
+                 },
+    "validation":  {
+                       "diffCheck":  "passed",
+                       "command":  ".\\mvnw.cmd test",
+                       "result":  "BUILD SUCCESS",
+                       "testsRun":  75,
+                       "failures":  0,
+                       "errors":  0,
+                       "skipped":  0
+                   },
+    "nonClaims":  [
+                      "no push in candidate slice",
+                      "no PR update in candidate slice",
+                      "no upstream interaction",
+                      "no pom.xml change",
+                      "no dependency change",
+                      "no src/test change",
+                      "no merge",
+                      "no release",
+                      "no deploy",
+                      "no public readiness claim",
+                      "no public correctness claim",
+                      "no public security claim",
+                      "no public compliance claim"
+                  ]
+}
