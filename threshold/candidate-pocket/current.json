@@ -1,9 +1,9 @@
 {
     "schemaVersion":  "threshold.petclinic.candidate-pocket.v0.2",
     "leaseName":  "owned-autonomous-refactor-branch-wave-v0_automation",
-    "branch":  "threshold-governed-refactor-demo-29",
-    "generatedFromHead":  "b072c353d20641c146f0dc984f768b85f2c13b17",
-    "generatedAt":  "2026-07-15T16:22:56.3936047Z",
+    "branch":  "threshold-governed-refactor-demo-30",
+    "generatedFromHead":  "498a0b4505fbe5e30b05cc2f87440e86872e3c11",
+    "generatedAt":  "2026-07-15T18:12:39.9927413Z",
     "discovery":  {
                       "method":  "static-heuristic-scan",
                       "sourceRoot":  "src/main/java/org/springframework/samples/petclinic",
@@ -61,7 +61,7 @@
                            "tieBreak":  {
                                             "layerScore":  5,
                                             "path":  "src/main/java/org/springframework/samples/petclinic/util/EntityUtils.java",
-                                            "member":  "line-25"
+                                            "member":  "line-62"
                                         },
                            "gate":  {
                                         "required":  true,
@@ -70,128 +70,14 @@
                                     },
                            "score":  95,
                            "autoPatchable":  true,
-                           "member":  "line-25",
+                           "member":  "line-62",
                            "reviewOnly":  false,
                            "executionMode":  "auto_patchable",
                            "file":  "src/main/java/org/springframework/samples/petclinic/util/EntityUtils.java",
-                           "candidateId":  "src-main-java-org-springframework-samples-petclinic-util-entityutils-java-comment-wrap-cleanup-line-25",
-                           "expectedDiffSummary":  "Wrap one long Javadoc comment line without changing source behavior.",
-                           "candidateClass":  "comment_wrap_cleanup",
-                           "commentWrapSplitPointFound":  true,
-                           "estimatedChangedLines":  2
-                       },
-                       {
-                           "tieBreak":  {
-                                            "layerScore":  5,
-                                            "path":  "src/main/java/org/springframework/samples/petclinic/web/PetTypeFormatter.java",
-                                            "member":  "line-29"
-                                        },
-                           "gate":  {
-                                        "required":  true,
-                                        "approved":  true,
-                                        "gatePath":  "threshold/gates/auto-patchable-candidate-classes.json"
-                                    },
-                           "score":  95,
-                           "autoPatchable":  true,
-                           "member":  "line-29",
-                           "reviewOnly":  false,
-                           "executionMode":  "auto_patchable",
-                           "file":  "src/main/java/org/springframework/samples/petclinic/web/PetTypeFormatter.java",
-                           "candidateId":  "src-main-java-org-springframework-samples-petclinic-web-pettypeformatter-java-comment-wrap-cleanup-line-29",
-                           "expectedDiffSummary":  "Wrap one long Javadoc comment line without changing source behavior.",
-                           "candidateClass":  "comment_wrap_cleanup",
-                           "commentWrapSplitPointFound":  true,
-                           "estimatedChangedLines":  2
-                       },
-                       {
-                           "tieBreak":  {
-                                            "layerScore":  5,
-                                            "path":  "src/main/java/org/springframework/samples/petclinic/web/PetTypeFormatter.java",
-                                            "member":  "line-30"
-                                        },
-                           "gate":  {
-                                        "required":  true,
-                                        "approved":  true,
-                                        "gatePath":  "threshold/gates/auto-patchable-candidate-classes.json"
-                                    },
-                           "score":  95,
-                           "autoPatchable":  true,
-                           "member":  "line-30",
-                           "reviewOnly":  false,
-                           "executionMode":  "auto_patchable",
-                           "file":  "src/main/java/org/springframework/samples/petclinic/web/PetTypeFormatter.java",
-                           "candidateId":  "src-main-java-org-springframework-samples-petclinic-web-pettypeformatter-java-comment-wrap-cleanup-line-30",
-                           "expectedDiffSummary":  "Wrap one long Javadoc comment line without changing source behavior.",
-                           "candidateClass":  "comment_wrap_cleanup",
-                           "commentWrapSplitPointFound":  true,
-                           "estimatedChangedLines":  2
-                       },
-                       {
-                           "tieBreak":  {
-                                            "layerScore":  5,
-                                            "path":  "src/main/java/org/springframework/samples/petclinic/web/PetValidator.java",
-                                            "member":  "line-27"
-                                        },
-                           "gate":  {
-                                        "required":  true,
-                                        "approved":  true,
-                                        "gatePath":  "threshold/gates/auto-patchable-candidate-classes.json"
-                                    },
-                           "score":  95,
-                           "autoPatchable":  true,
-                           "member":  "line-27",
-                           "reviewOnly":  false,
-                           "executionMode":  "auto_patchable",
-                           "file":  "src/main/java/org/springframework/samples/petclinic/web/PetValidator.java",
-                           "candidateId":  "src-main-java-org-springframework-samples-petclinic-web-petvalidator-java-comment-wrap-cleanup-line-27",
-                           "expectedDiffSummary":  "Wrap one long Javadoc comment line without changing source behavior.",
-                           "candidateClass":  "comment_wrap_cleanup",
-                           "commentWrapSplitPointFound":  true,
-                           "estimatedChangedLines":  2
-                       },
-                       {
-                           "tieBreak":  {
-                                            "layerScore":  5,
-                                            "path":  "src/main/java/org/springframework/samples/petclinic/web/OwnerController.java",
-                                            "member":  "line-43"
-                                        },
-                           "gate":  {
-                                        "required":  true,
-                                        "approved":  true,
-                                        "gatePath":  "threshold/gates/auto-patchable-candidate-classes.json"
-                                    },
-                           "score":  95,
-                           "autoPatchable":  true,
-                           "member":  "line-43",
-                           "reviewOnly":  false,
-                           "executionMode":  "auto_patchable",
-                           "file":  "src/main/java/org/springframework/samples/petclinic/web/OwnerController.java",
-                           "candidateId":  "src-main-java-org-springframework-samples-petclinic-web-ownercontroller-java-string-constant-wrap-cleanup-line-43",
-                           "expectedDiffSummary":  "Wrap a long constant or method signature readability line without changing behavior.",
-                           "candidateClass":  "string_constant_wrap_cleanup",
-                           "estimatedChangedLines":  2
-                       },
-                       {
-                           "tieBreak":  {
-                                            "layerScore":  5,
-                                            "path":  "src/main/java/org/springframework/samples/petclinic/util/EntityUtils.java",
-                                            "member":  "line-48"
-                                        },
-                           "gate":  {
-                                        "required":  true,
-                                        "approved":  true,
-                                        "gatePath":  "threshold/gates/auto-patchable-candidate-classes.json"
-                                    },
-                           "score":  95,
-                           "autoPatchable":  true,
-                           "member":  "line-48",
-                           "reviewOnly":  false,
-                           "executionMode":  "auto_patchable",
-                           "file":  "src/main/java/org/springframework/samples/petclinic/util/EntityUtils.java",
-                           "candidateId":  "src-main-java-org-springframework-samples-petclinic-util-entityutils-java-method-signature-wrap-cleanup-line-48",
+                           "candidateId":  "src-main-java-org-springframework-samples-petclinic-util-entityutils-java-method-signature-wrap-cleanup-line-62",
                            "expectedDiffSummary":  "Wrap a long constant or method signature readability line without changing behavior.",
                            "candidateClass":  "method_signature_wrap_cleanup",
-                           "estimatedChangedLines":  4
+                           "estimatedChangedLines":  2
                        },
                        {
                            "tieBreak":  {
@@ -239,8 +125,8 @@
                            "estimatedChangedLines":  2
                        }
                    ],
-    "nextRecommendedCandidateId":  "src-main-java-org-springframework-samples-petclinic-util-entityutils-java-comment-wrap-cleanup-line-25",
-    "nextAutoPatchableCandidateId":  "src-main-java-org-springframework-samples-petclinic-util-entityutils-java-comment-wrap-cleanup-line-25",
+    "nextRecommendedCandidateId":  "src-main-java-org-springframework-samples-petclinic-util-entityutils-java-method-signature-wrap-cleanup-line-62",
+    "nextAutoPatchableCandidateId":  "src-main-java-org-springframework-samples-petclinic-util-entityutils-java-method-signature-wrap-cleanup-line-62",
     "nonClaims":  [
                       "candidate pocket is not an implementation claim",
                       "candidate pocket does not claim behavior preservation until slice validation passes",

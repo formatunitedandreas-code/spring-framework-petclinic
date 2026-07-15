@@ -220,6 +220,20 @@ function Test-SimpleStringConstantLine {
     return $Line -match '^\s*private static final String [A-Z0-9_]+ = "[^"\\]+";\s*$'
 }
 
+function Test-SimpleStringConstantWrapCandidateLine {
+    param([string] $Line)
+
+    $match = [regex]::Match($Line, '^\s*private static final String [A-Z0-9_]+ = "(?<value>[^"\\]+)";\s*$')
+    if (-not $match.Success) {
+        return $false
+    }
+
+    $value = $match.Groups["value"].Value
+    $maxFirstSegmentLength = [Math]::Min(88, $value.Length - 1)
+    $splitIndex = $value.LastIndexOf(" ", $maxFirstSegmentLength)
+    return $splitIndex -ge 24 -and $splitIndex -lt ($value.Length - 1)
+}
+
 function Test-SplitStringConstantLine {
     param([string] $Line)
     return $Line -match '^\s*private static final String [A-Z0-9_]+ = "[^"\\]+" \+\s+"[^"\\]+";\s*$'
@@ -401,7 +415,7 @@ foreach ($file in $sourceFiles) {
         $member = "line-$($longLines[0])"
         $candidateLine = $lines[$longLines[0] - 1]
         $candidateClass = $null
-        if (Test-SimpleStringConstantLine $candidateLine) {
+        if (Test-SimpleStringConstantWrapCandidateLine $candidateLine) {
             $candidateClass = if ($path -like "*/repository/*") { "repository_readability_cleanup" } else { "string_constant_wrap_cleanup" }
         }
         elseif ($candidateLine -match "^\s*(public|private|protected)\s+.+\)\s*\{\s*$") {

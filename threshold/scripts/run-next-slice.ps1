@@ -52,6 +52,20 @@ function Test-SimpleStringConstantLine {
     return $Line -match '^\s*private static final String [A-Z0-9_]+ = "[^"\\]+";\s*$'
 }
 
+function Test-SimpleStringConstantWrapCandidateLine {
+    param([string] $Line)
+
+    $match = [regex]::Match($Line, '^\s*private static final String [A-Z0-9_]+ = "(?<value>[^"\\]+)";\s*$')
+    if (-not $match.Success) {
+        return $false
+    }
+
+    $value = $match.Groups["value"].Value
+    $maxFirstSegmentLength = [Math]::Min(88, $value.Length - 1)
+    $splitIndex = $value.LastIndexOf(" ", $maxFirstSegmentLength)
+    return $splitIndex -ge 24 -and $splitIndex -lt ($value.Length - 1)
+}
+
 function Test-SplitStringConstantLine {
     param([string] $Line)
     return $Line -match '^\s*private static final String [A-Z0-9_]+ = "[^"\\]+" \+\s+"[^"\\]+";\s*$'
@@ -461,7 +475,7 @@ function Get-NextCandidate {
                     }
                     $line = $lines[$lineNumber - 1]
                     $nextLine = if ($lineNumber -lt $lines.Count) { $lines[$lineNumber] } else { $null }
-                    $simpleConstant = Test-SimpleStringConstantLine $line
+                    $simpleConstant = Test-SimpleStringConstantWrapCandidateLine $line
                     $splitStartConstant = (Test-SplitStringConstantStartLine $line) -and $nextLine -and ($nextLine -match '^\s*"[^"\\]+";\s*$')
                     if (-not ($simpleConstant -or $splitStartConstant)) {
                         Write-Host "candidateSkippedReason=unsupported_line_cleanup:$($candidate.candidateId)"
@@ -524,7 +538,7 @@ function Get-NextCandidate {
                     $applicable = $false
                     break
                 }
-                if (-not (Test-SimpleStringConstantLine $lines[$lineNumber - 1])) {
+                if (-not (Test-SimpleStringConstantWrapCandidateLine $lines[$lineNumber - 1])) {
                     Write-Host "candidateSkippedReason=unsupported_line_cleanup:$($candidate.candidateId)"
                     $applicable = $false
                     break
