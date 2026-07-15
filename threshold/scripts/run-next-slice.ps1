@@ -71,13 +71,16 @@ function Find-ConservativeCommentSplitPoint {
     param([string] $Text)
 
     $minimumPrefix = 24
+    $minimumSegmentLength = 16
     $preferredMaxIndex = [Math]::Min(112, $Text.Length - 1)
     if ($preferredMaxIndex -lt $minimumPrefix) {
         return $null
     }
 
     $spaceSplit = $Text.LastIndexOf(" ", $preferredMaxIndex)
-    if ($spaceSplit -ge $minimumPrefix -and $spaceSplit -lt ($Text.Length - 1)) {
+    if ($spaceSplit -ge $minimumPrefix -and $spaceSplit -lt ($Text.Length - 1) -and
+        $spaceSplit -ge $minimumSegmentLength -and
+        ($Text.Length - ($spaceSplit + 1)) -ge $minimumSegmentLength) {
         return [pscustomobject]@{
             Index = $spaceSplit
             KeepDelimiter = $false
@@ -86,7 +89,9 @@ function Find-ConservativeCommentSplitPoint {
 
     foreach ($delimiter in @("/", "#", "?", "&", "-", ".", ":")) {
         $splitIndex = $Text.LastIndexOf($delimiter, $preferredMaxIndex)
-        if ($splitIndex -ge $minimumPrefix -and $splitIndex -lt ($Text.Length - 1)) {
+        if ($splitIndex -ge $minimumPrefix -and $splitIndex -lt ($Text.Length - 1) -and
+            ($splitIndex + 1) -ge $minimumSegmentLength -and
+            ($Text.Length - ($splitIndex + 1)) -ge $minimumSegmentLength) {
             return [pscustomobject]@{
                 Index = $splitIndex
                 KeepDelimiter = $true
@@ -548,9 +553,30 @@ function Get-NextCandidate {
                     $applicable = $false
                     break
                 }
-                if ($lines[$lineNumber - 1].Length -le 120 -or
+                if ($lines[$lineNumber - 1].Length -le 100 -or
                     $lines[$lineNumber - 1] -notmatch '^\s*\*\s+\S') {
                     Write-Host "candidateSkippedReason=unsupported_comment_cleanup:$($candidate.candidateId)"
+                    $applicable = $false
+                    break
+                }
+            }
+            "line_comment_wrap_cleanup" {
+                $member = [string]$candidate.member
+                if (-not $member.StartsWith("line-")) {
+                    Write-Host "candidateSkippedReason=unsupported_line_comment_marker:$($candidate.candidateId)"
+                    $applicable = $false
+                    break
+                }
+                $lineNumber = [int]($member.Substring(5))
+                $lines = Get-Content $path
+                if ($lineNumber -lt 1 -or $lineNumber -gt $lines.Count) {
+                    Write-Host "candidateSkippedReason=line_outside_file:$($candidate.candidateId)"
+                    $applicable = $false
+                    break
+                }
+                if ($lines[$lineNumber - 1].Length -le 120 -or
+                    $lines[$lineNumber - 1] -notmatch '^\s*//\s+\S') {
+                    Write-Host "candidateSkippedReason=unsupported_line_comment_cleanup:$($candidate.candidateId)"
                     $applicable = $false
                     break
                 }
@@ -1008,7 +1034,7 @@ function Apply-CommentWrapCleanup {
 
     $line = $lines[$lineNumber - 1]
     $match = [regex]::Match($line, '^(?<indent>\s*\*\s+)(?<text>\S.*)$')
-    if (-not $match.Success -or $line.Length -le 120) {
+    if (-not $match.Success -or $line.Length -le 100) {
         throw "Line '$lineNumber' is not a supported long comment line in $path."
     }
 
@@ -1049,6 +1075,67 @@ function Apply-CommentWrapCleanup {
     Write-Host "appliedCandidate=$($Candidate.candidateId)"
     Write-Host "changedFile=$path"
     Write-Host "wrappedCommentLine=$lineNumber"
+}
+
+function Apply-LineCommentWrapCleanup {
+    param([pscustomobject] $Candidate)
+
+    $path = ConvertTo-RepoPath $Candidate.file
+    if (-not (Test-Path $path)) { throw "Candidate file not found: $path" }
+
+    $member = [string]$Candidate.member
+    if (-not $member.StartsWith("line-")) {
+        throw "Line comment wrap cleanup requires a line marker candidate."
+    }
+
+    $lineNumber = [int]($member.Substring(5))
+    $lines = Get-Content $path
+    if ($lineNumber -lt 1 -or $lineNumber -gt $lines.Count) {
+        throw "Candidate line '$lineNumber' is outside file range in $path."
+    }
+
+    $line = $lines[$lineNumber - 1]
+    $match = [regex]::Match($line, '^(?<indent>\s*//\s+)(?<text>\S.*)$')
+    if (-not $match.Success -or $line.Length -le 120) {
+        throw "Line '$lineNumber' is not a supported long line comment in $path."
+    }
+
+    $indent = $match.Groups["indent"].Value
+    $text = $match.Groups["text"].Value.Trim()
+    $splitPoint = Find-ConservativeCommentSplitPoint -Text $text
+    if (-not $splitPoint) {
+        throw "Could not find a conservative split point for line comment '$lineNumber' using space or URL punctuation."
+    }
+
+    $splitIndex = [int]$splitPoint.Index
+    $firstSegment = if ([bool]$splitPoint.KeepDelimiter) {
+        $text.Substring(0, $splitIndex + 1).TrimEnd()
+    }
+    else {
+        $text.Substring(0, $splitIndex).TrimEnd()
+    }
+    $secondSegment = $text.Substring($splitIndex + 1).TrimStart()
+    $wrapped = @(
+        "$indent$firstSegment",
+        "$indent$secondSegment"
+    )
+
+    $updatedLines = @()
+    if ($lineNumber -gt 1) {
+        $updatedLines += $lines[0..($lineNumber - 2)]
+    }
+    $updatedLines += $wrapped
+    if ($lineNumber -lt $lines.Count) {
+        $updatedLines += $lines[$lineNumber..($lines.Count - 1)]
+    }
+
+    $originalText = Get-Content $path -Raw
+    $updatedText = $updatedLines -join (Get-LineEnding -Content $originalText)
+    Write-TextFile -Path $path -Content $updatedText
+
+    Write-Host "appliedCandidate=$($Candidate.candidateId)"
+    Write-Host "changedFile=$path"
+    Write-Host "wrappedLineComment=$lineNumber"
 }
 
 & powershell.exe -NoProfile -ExecutionPolicy Bypass -File "threshold/scripts/sync-lease-state.ps1" `
@@ -1124,6 +1211,9 @@ switch ([string]$candidate.candidateClass) {
     }
     "comment_wrap_cleanup" {
         Apply-CommentWrapCleanup -Candidate $candidate
+    }
+    "line_comment_wrap_cleanup" {
+        Apply-LineCommentWrapCleanup -Candidate $candidate
     }
     default {
         throw "Candidate class '$($candidate.candidateClass)' is not yet automatically patchable by run-next-slice."

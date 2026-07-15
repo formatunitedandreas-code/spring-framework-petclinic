@@ -1,9 +1,9 @@
-leaseName: owned-autonomous-refactor-branch-wave-v0_15
+leaseName: owned-autonomous-refactor-branch-wave-v0_20
 repository: C:\dev\spring-framework-petclinic
-branch: threshold-governed-refactor-demo-10
+branch: threshold-governed-refactor-demo-13
 baseRemote: origin
 baseRef: origin/main
-startHead: 63a561fbfc1aa7ec85ee0434cdd18c0a60a1045c
+startHead: d4ad1e5659d7b6458c68a306f6e33605e7b6d554
 headPolicy: descendantOfStartHead
 
 budget:
@@ -67,6 +67,7 @@ allowedCandidateTypes:
   - utility_readability_cleanup
   - application_bootstrap_readability_cleanup
   - comment_wrap_cleanup
+  - line_comment_wrap_cleanup
   - method_spacing_normalization
   - threshold_governance_artifact_update
 

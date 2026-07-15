@@ -165,6 +165,9 @@ function Test-AutoPatchableCandidate {
     if ($CandidateClass -eq "comment_wrap_cleanup") {
         return $Candidate.ContainsKey("member") -and ([string]$Candidate.member).StartsWith("line-") -and $Candidate.ContainsKey("commentWrapSplitPointFound") -and $Candidate.commentWrapSplitPointFound -eq $true
     }
+    if ($CandidateClass -eq "line_comment_wrap_cleanup") {
+        return $Candidate.ContainsKey("member") -and ([string]$Candidate.member).StartsWith("line-") -and $Candidate.ContainsKey("commentWrapSplitPointFound") -and $Candidate.commentWrapSplitPointFound -eq $true
+    }
     if ($CandidateClass -eq "spring_data_query_wrap_cleanup") {
         return $Candidate.ContainsKey("member") -and ([string]$Candidate.member).StartsWith("line-")
     }
@@ -195,13 +198,16 @@ function Find-ConservativeCommentSplitPoint {
     param([string] $Text)
 
     $minimumPrefix = 24
+    $minimumSegmentLength = 16
     $preferredMaxIndex = [Math]::Min(112, $Text.Length - 1)
     if ($preferredMaxIndex -lt $minimumPrefix) {
         return $null
     }
 
     $spaceSplit = $Text.LastIndexOf(" ", $preferredMaxIndex)
-    if ($spaceSplit -ge $minimumPrefix -and $spaceSplit -lt ($Text.Length - 1)) {
+    if ($spaceSplit -ge $minimumPrefix -and $spaceSplit -lt ($Text.Length - 1) -and
+        $spaceSplit -ge $minimumSegmentLength -and
+        ($Text.Length - ($spaceSplit + 1)) -ge $minimumSegmentLength) {
         return [pscustomobject]@{
             Index = $spaceSplit
             KeepDelimiter = $false
@@ -210,7 +216,9 @@ function Find-ConservativeCommentSplitPoint {
 
     foreach ($delimiter in @("/", "#", "?", "&", "-", ".", ":")) {
         $splitIndex = $Text.LastIndexOf($delimiter, $preferredMaxIndex)
-        if ($splitIndex -ge $minimumPrefix -and $splitIndex -lt ($Text.Length - 1)) {
+        if ($splitIndex -ge $minimumPrefix -and $splitIndex -lt ($Text.Length - 1) -and
+            ($splitIndex + 1) -ge $minimumSegmentLength -and
+            ($Text.Length - ($splitIndex + 1)) -ge $minimumSegmentLength) {
             return [pscustomobject]@{
                 Index = $splitIndex
                 KeepDelimiter = $true
@@ -418,7 +426,7 @@ foreach ($file in $sourceFiles) {
     # Heuristic 4: tiny spacing normalization between adjacent methods.
     for ($i = 0; $i -lt $lines.Count; $i++) {
         $line = $lines[$i]
-        if ($line.Length -le 120) {
+        if ($line.Length -le 100) {
             continue
         }
         if ($line -notmatch '^\s*\*\s+\S') {
@@ -442,6 +450,32 @@ foreach ($file in $sourceFiles) {
     }
 
     # Heuristic 5: tiny spacing normalization between adjacent methods.
+    for ($i = 0; $i -lt $lines.Count; $i++) {
+        $line = $lines[$i]
+        if ($line.Length -le 120) {
+            continue
+        }
+        if ($line -notmatch '^\s*//\s+\S') {
+            continue
+        }
+        $commentText = ($line -replace '^\s*//\s+', '')
+        if (-not (Find-ConservativeCommentSplitPoint -Text $commentText)) {
+            continue
+        }
+        $member = "line-$($i + 1)"
+        Add-Candidate -CandidateClass "line_comment_wrap_cleanup" -AllowedTypes $allowedCandidateTypes -Bucket $candidates -Candidate ([ordered]@{
+            candidateId = New-CandidateId $path "line_comment_wrap_cleanup" $member
+            score = 30 + 30 + 20 + 10 + $layerScore
+            file = $path
+            member = $member
+            commentWrapSplitPointFound = $true
+            expectedDiffSummary = "Wrap one long line comment without changing source behavior."
+            estimatedChangedLines = 2
+            tieBreak = [ordered]@{ layerScore = $layerScore; path = $path; member = $member }
+        })
+    }
+
+    # Heuristic 6: tiny spacing normalization between adjacent methods.
     if ($methods.Count -gt 1) {
         for ($m = 0; $m -lt ($methods.Count - 1); $m++) {
             $currentMethod = $methods[$m]
@@ -462,7 +496,7 @@ foreach ($file in $sourceFiles) {
         }
     }
 
-    # Heuristic 6: repository-specific readability candidate.
+    # Heuristic 7: repository-specific readability candidate.
     if ($path -like "*/repository/*") {
         foreach ($method in $methods) {
             $methodName = $method.Name
