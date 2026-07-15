@@ -1,12 +1,12 @@
 {
     "schemaVersion":  "threshold.petclinic.lease-state.v0.2",
-    "invocationId":  "owned-autonomous-refactor-branch-wave-v0_automation-20260715T185546Z",
+    "invocationId":  "owned-autonomous-refactor-branch-wave-v0_automation-20260715T185834Z",
     "leaseId":  "owned-autonomous-refactor-branch-wave-v0_automation",
     "mode":  "local_refactor",
-    "branch":  "threshold-governed-refactor-demo-41",
-    "startHead":  "5919cb8fb2e002ef1bb9f3427bf21e028ecb4d82",
-    "currentHead":  "e22ecc509836102b58c406d5e41dc1c43f72b4e8",
-    "currentSourceHead":  "5919cb8fb2e002ef1bb9f3427bf21e028ecb4d82",
+    "branch":  "threshold-governed-refactor-demo-42",
+    "startHead":  "03bd4f182f88c1da371bff3a23acb81c58bcdb88",
+    "currentHead":  "b0d1619783327aee4f71fa8dc74700b464fe6a29",
+    "currentSourceHead":  "03bd4f182f88c1da371bff3a23acb81c58bcdb88",
     "candidatesProcessed":  0,
     "commitsCreated":  0,
     "remainingBudget":  {
@@ -16,10 +16,10 @@
                         },
     "lastReceipt":  null,
     "terminalState":  "ready_no_candidates_verified",
-    "updatedAt":  "2026-07-15T18:56:01.8255795Z",
+    "updatedAt":  "2026-07-15T18:58:52.3208094Z",
     "scopeExpansionTier":  2,
     "scopeExpansionReason":  "fresh_wave_candidate_shortage",
-    "scopeExpansionAppliedAt":  "2026-07-15T18:55:52.0326418Z",
+    "scopeExpansionAppliedAt":  "2026-07-15T18:58:41.4362544Z",
     "terminalReason":  "no applicable autoPatchable candidates after discovery canary passed",
-    "discoveryCanaryLastPassedAt":  "2026-07-15T18:56:01.8195645Z"
+    "discoveryCanaryLastPassedAt":  "2026-07-15T18:58:52.3168028Z"
 }
