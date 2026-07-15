@@ -77,19 +77,32 @@ function Find-ConservativeCommentSplitPoint {
         return $null
     }
 
-    $spaceSplit = $Text.LastIndexOf(" ", $preferredMaxIndex)
-    if ($spaceSplit -ge $minimumPrefix -and $spaceSplit -lt ($Text.Length - 1) -and
-        $spaceSplit -ge $minimumSegmentLength -and
-        ($Text.Length - ($spaceSplit + 1)) -ge $minimumSegmentLength) {
-        return [pscustomobject]@{
-            Index = $spaceSplit
-            KeepDelimiter = $false
+    $spaceSplit = $preferredMaxIndex
+    while ($spaceSplit -ge $minimumPrefix) {
+        $spaceSplit = $Text.LastIndexOf(" ", $spaceSplit)
+        if ($spaceSplit -lt $minimumPrefix) {
+            break
         }
+        $beforeSplit = $Text.Substring(0, $spaceSplit)
+        $lastInlineTagStart = $beforeSplit.LastIndexOf("{@")
+        $lastInlineTagEnd = $beforeSplit.LastIndexOf("}")
+        if ($lastInlineTagStart -gt $lastInlineTagEnd) {
+            $spaceSplit--
+            continue
+        }
+        if ($spaceSplit -lt ($Text.Length - 1) -and
+            $spaceSplit -ge $minimumSegmentLength -and
+            ($Text.Length - ($spaceSplit + 1)) -ge $minimumSegmentLength) {
+            return [pscustomobject]@{
+                Index = $spaceSplit
+                KeepDelimiter = $false
+            }
+        }
+        $spaceSplit--
     }
 
     return $null
 }
-
 function Write-TextFile {
     param([string] $Path, [string] $Content)
     $encoding = New-Object System.Text.UTF8Encoding $false
