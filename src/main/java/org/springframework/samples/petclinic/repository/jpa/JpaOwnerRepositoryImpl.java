@@ -75,7 +75,6 @@ public class JpaOwnerRepositoryImpl implements OwnerRepository {
             .getSingleResult();
     }
 
-
     @Override
     public void save(Owner owner) {
         if (owner.getId() == null) {
