@@ -400,7 +400,7 @@ foreach ($file in $sourceFiles) {
     # Heuristic 3b: Spring Data JPA query annotation readability cleanup.
     if ($path -like "*/repository/springdatajpa/*") {
         for ($i = 0; $i -lt $lines.Count; $i++) {
-            if ($lines[$i].Length -le 110) {
+            if ($lines[$i].Length -le 80) {
                 continue
             }
             if (-not (Test-SimpleQueryAnnotationLine $lines[$i])) {
