@@ -5,16 +5,16 @@
     "mode":  "local_refactor",
     "branch":  "threshold-governed-refactor-demo-22",
     "startHead":  "ed710ce09204aa572a28bb27d39e22a3947668c9",
-    "currentHead":  "a16fee8b95e8a67bb1665953e0681e79febe50f9",
-    "currentSourceHead":  "a16fee8b95e8a67bb1665953e0681e79febe50f9",
-    "candidatesProcessed":  2,
-    "commitsCreated":  2,
+    "currentHead":  "d30b89a2ecfca5a3716dc4886550cd13d21e165b",
+    "currentSourceHead":  "d30b89a2ecfca5a3716dc4886550cd13d21e165b",
+    "candidatesProcessed":  3,
+    "commitsCreated":  3,
     "remainingBudget":  {
-                            "candidates":  3,
-                            "commits":  3,
+                            "candidates":  2,
+                            "commits":  2,
                             "repairAttempts":  1
                         },
-    "lastReceipt":  "threshold/receipts/src-main-java-org-springframework-samples-petclinic-repository-jdbc-jdbcvisitrepositoryimpl-java-method-spacing-normalization-collapse-line-63-a16fee8b95e8.json",
+    "lastReceipt":  "threshold/receipts/src-main-java-org-springframework-samples-petclinic-repository-jpa-jpaownerrepositoryimpl-java-method-spacing-normalization-collapse-line-78-d30b89a2ecfc.json",
     "terminalState":  "active",
-    "updatedAt":  "2026-07-15T12:02:11.4656078Z"
+    "updatedAt":  "2026-07-15T12:02:54.5547179Z"
 }
