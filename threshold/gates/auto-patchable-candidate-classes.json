@@ -48,6 +48,12 @@
       "requiresCanary": true
     },
     {
+      "candidateClass": "line_comment_wrap_cleanup",
+      "authorizedBy": "scope-executor-expansion-v0-1",
+      "scope": "single long Java // comment line wrapping only",
+      "requiresCanary": true
+    },
+    {
       "candidateClass": "duplicate_literal_local_constant_extraction",
       "authorizedBy": "governance-hardening-bootstrap",
       "scope": "same-class private string constant extraction for repeated literals",

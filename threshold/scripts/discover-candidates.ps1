@@ -165,6 +165,9 @@ function Test-AutoPatchableCandidate {
     if ($CandidateClass -eq "comment_wrap_cleanup") {
         return $Candidate.ContainsKey("member") -and ([string]$Candidate.member).StartsWith("line-") -and $Candidate.ContainsKey("commentWrapSplitPointFound") -and $Candidate.commentWrapSplitPointFound -eq $true
     }
+    if ($CandidateClass -eq "line_comment_wrap_cleanup") {
+        return $Candidate.ContainsKey("member") -and ([string]$Candidate.member).StartsWith("line-") -and $Candidate.ContainsKey("commentWrapSplitPointFound") -and $Candidate.commentWrapSplitPointFound -eq $true
+    }
     if ($CandidateClass -eq "spring_data_query_wrap_cleanup") {
         return $Candidate.ContainsKey("member") -and ([string]$Candidate.member).StartsWith("line-")
     }
@@ -442,6 +445,32 @@ foreach ($file in $sourceFiles) {
     }
 
     # Heuristic 5: tiny spacing normalization between adjacent methods.
+    for ($i = 0; $i -lt $lines.Count; $i++) {
+        $line = $lines[$i]
+        if ($line.Length -le 120) {
+            continue
+        }
+        if ($line -notmatch '^\s*//\s+\S') {
+            continue
+        }
+        $commentText = ($line -replace '^\s*//\s+', '')
+        if (-not (Find-ConservativeCommentSplitPoint -Text $commentText)) {
+            continue
+        }
+        $member = "line-$($i + 1)"
+        Add-Candidate -CandidateClass "line_comment_wrap_cleanup" -AllowedTypes $allowedCandidateTypes -Bucket $candidates -Candidate ([ordered]@{
+            candidateId = New-CandidateId $path "line_comment_wrap_cleanup" $member
+            score = 30 + 30 + 20 + 10 + $layerScore
+            file = $path
+            member = $member
+            commentWrapSplitPointFound = $true
+            expectedDiffSummary = "Wrap one long line comment without changing source behavior."
+            estimatedChangedLines = 2
+            tieBreak = [ordered]@{ layerScore = $layerScore; path = $path; member = $member }
+        })
+    }
+
+    # Heuristic 6: tiny spacing normalization between adjacent methods.
     if ($methods.Count -gt 1) {
         for ($m = 0; $m -lt ($methods.Count - 1); $m++) {
             $currentMethod = $methods[$m]
@@ -462,7 +491,7 @@ foreach ($file in $sourceFiles) {
         }
     }
 
-    # Heuristic 6: repository-specific readability candidate.
+    # Heuristic 7: repository-specific readability candidate.
     if ($path -like "*/repository/*") {
         foreach ($method in $methods) {
             $methodName = $method.Name
