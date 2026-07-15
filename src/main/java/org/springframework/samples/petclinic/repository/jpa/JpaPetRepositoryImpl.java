@@ -36,7 +36,8 @@ import org.springframework.stereotype.Repository;
 @Repository
 public class JpaPetRepositoryImpl implements PetRepository {
 
-    private static final String FIND_PET_TYPES_SQL = "SELECT ptype FROM PetType ptype ORDER BY ptype.name";
+    private static final String FIND_PET_TYPES_SQL = "SELECT ptype FROM PetType ptype ORDER BY " +
+        "ptype.name";
 
     private final EntityManager em;
 
