@@ -1,9 +1,9 @@
 leaseName: owned-autonomous-refactor-branch-wave-v0_automation
 repository: C:\dev\spring-framework-petclinic
-branch: threshold-governed-refactor-demo-30
+branch: threshold-governed-refactor-demo-31
 baseRemote: origin
 baseRef: origin/main
-startHead: 9725b72ccb4a298ef531c95b2d01be6f062ba474
+startHead: abeb4cbe2fd2d92f1ea83e9d4afce42f7d57157c
 headPolicy: descendantOfStartHead
 scopeExpansionTier: 1
 longLineThreshold: 100
