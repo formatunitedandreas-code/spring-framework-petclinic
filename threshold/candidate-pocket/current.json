@@ -2,8 +2,8 @@
     "schemaVersion":  "threshold.petclinic.candidate-pocket.v0.2",
     "leaseName":  "owned-autonomous-refactor-branch-wave-v0_30",
     "branch":  "threshold-governed-refactor-demo-20",
-    "generatedFromHead":  "36c727fa3af96a50a95a823f4abb63ddd9027504",
-    "generatedAt":  "2026-07-15T10:41:46.3994685Z",
+    "generatedFromHead":  "708b26e20c7a6a0ab3b0c40ab772ee98d2c36745",
+    "generatedAt":  "2026-07-15T10:43:07.4050331Z",
     "discovery":  {
                       "method":  "static-heuristic-scan",
                       "sourceRoot":  "src/main/java/org/springframework/samples/petclinic",
@@ -50,33 +50,10 @@
                                                 ]
                   },
     "candidates":  [
-                       {
-                           "candidateClass":  "repository_readability_cleanup",
-                           "member":  "findAll",
-                           "gate":  {
-                                        "required":  true,
-                                        "approved":  true,
-                                        "gatePath":  "threshold/gates/auto-patchable-candidate-classes.json"
-                                    },
-                           "sqlLiteral":  "\"SELECT id, name FROM specialties\"",
-                           "reviewOnly":  false,
-                           "tieBreak":  {
-                                            "layerScore":  7,
-                                            "path":  "src/main/java/org/springframework/samples/petclinic/repository/jdbc/JdbcVetRepositoryImpl.java",
-                                            "member":  "findAll"
-                                        },
-                           "score":  105,
-                           "expectedDiffSummary":  "Extract inline SQL literal from repository method \u0027findAll\u0027 into a private constant.",
-                           "file":  "src/main/java/org/springframework/samples/petclinic/repository/jdbc/JdbcVetRepositoryImpl.java",
-                           "estimatedChangedLines":  4,
-                           "constantName":  "FIND_ALL_SQL_INLINE_SQL",
-                           "autoPatchable":  true,
-                           "candidateId":  "src-main-java-org-springframework-samples-petclinic-repository-jdbc-jdbcvetrepositoryimpl-java-repository-readability-cleanup-findall",
-                           "executionMode":  "auto_patchable"
-                       }
+
                    ],
-    "nextRecommendedCandidateId":  "src-main-java-org-springframework-samples-petclinic-repository-jdbc-jdbcvetrepositoryimpl-java-repository-readability-cleanup-findall",
-    "nextAutoPatchableCandidateId":  "src-main-java-org-springframework-samples-petclinic-repository-jdbc-jdbcvetrepositoryimpl-java-repository-readability-cleanup-findall",
+    "nextRecommendedCandidateId":  null,
+    "nextAutoPatchableCandidateId":  null,
     "nonClaims":  [
                       "candidate pocket is not an implementation claim",
                       "candidate pocket does not claim behavior preservation until slice validation passes",
