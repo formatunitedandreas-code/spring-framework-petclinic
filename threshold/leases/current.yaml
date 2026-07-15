@@ -1,14 +1,14 @@
-leaseName: owned-autonomous-refactor-branch-wave-v0_21
+leaseName: owned-autonomous-refactor-branch-wave-v0_22
 repository: C:\dev\spring-framework-petclinic
 branch: threshold-governed-refactor-demo-14
 baseRemote: origin
 baseRef: origin/main
-startHead: 07d31ae93ba8b074efd0701066b7ffa7ff9fe0dd
+startHead: a6491fc467360153fe33ff43790f8a3fe7ff2a22
 headPolicy: descendantOfStartHead
 
 budget:
-  maxCandidatesThisRun: 3
-  maxCommitsThisRun: 3
+  maxCandidatesThisRun: 1
+  maxCommitsThisRun: 1
   maxFilesPerCandidate: 1
   maxGovernanceFilesPerCandidate: 8
   maxChangedLinesPerCandidate: 80
