@@ -26,7 +26,8 @@ import jakarta.servlet.ServletContext;
 
 
 /**
- * In Servlet 3.0+ environments, this class replaces the traditional {@code web.xml}-based approach in order to
+ * In Servlet 3.0+ environments, this class replaces the traditional {@code web.xml}-based
+ * approach in order to
  * configure the
  * {@link ServletContext} programmatically.
  * <p/>
