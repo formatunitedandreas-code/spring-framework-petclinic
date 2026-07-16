@@ -3,10 +3,10 @@ param(
     [string] $BaseRemote = "origin",
     [string] $BaseBranch = "main",
     [string] $BranchPrefix = "threshold-governed-refactor-demo-",
-    [string] $LeasePath = "threshold/leases/current.yaml",
-    [string] $StatePath = "threshold/lease-state/current-run.json",
-    [string] $PocketPath = "threshold/candidate-pocket/current.json",
-    [string] $GatePath = "threshold/gates/auto-patchable-candidate-classes.json",
+    [string] $LeasePath = "",
+    [string] $StatePath = "",
+    [string] $PocketPath = "",
+    [string] $GatePath = "",
     [string] $LeaseName = "owned-autonomous-refactor-branch-wave-v0_automation",
     [int] $MaxCandidatesThisRun = 5,
     [int] $MaxCommitsThisRun = 5,
@@ -22,6 +22,22 @@ param(
 
 Set-StrictMode -Version Latest
 $ErrorActionPreference = "Stop"
+
+. (Join-Path $PSScriptRoot "lib/runtime-paths.ps1")
+
+$runtimePaths = Get-ThresholdRuntimePaths
+if ([string]::IsNullOrWhiteSpace($LeasePath)) {
+    $LeasePath = $runtimePaths.LeasePath
+}
+if ([string]::IsNullOrWhiteSpace($StatePath)) {
+    $StatePath = $runtimePaths.LeaseStatePath
+}
+if ([string]::IsNullOrWhiteSpace($PocketPath)) {
+    $PocketPath = $runtimePaths.CandidatePocketPath
+}
+if ([string]::IsNullOrWhiteSpace($GatePath)) {
+    $GatePath = $runtimePaths.AutoPatchableGatePath
+}
 
 function ConvertTo-RepoPath {
     param([string] $Path)
