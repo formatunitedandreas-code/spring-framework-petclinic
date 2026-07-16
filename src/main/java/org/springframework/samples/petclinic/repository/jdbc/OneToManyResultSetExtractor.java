@@ -47,7 +47,8 @@ import org.springframework.util.Assert;
  * has more than one
  * Address. This extractor is useful in that case.
  * <p>
- * This class comes from the Spring Data JDBC Extensions project that has been archived in 2019:
+ * This class comes from the Spring Data JDBC Extensions project that has been
+ * archived in 2019:
  * <a href="https://github.com/spring-attic/spring-data-jdbc-ext">Spring Data JDBC
  * Extensions for the Oracle
  * database</a>.
