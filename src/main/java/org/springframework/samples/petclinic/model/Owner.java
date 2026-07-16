@@ -152,15 +152,17 @@ public class Owner extends Person {
 
     @Override
     public String toString() {
-        return new ToStringCreator(this)
+        return appendOwnerToStringFields(new ToStringCreator(this)).toString();
+    }
 
+    private ToStringCreator appendOwnerToStringFields(ToStringCreator toStringCreator) {
+        return toStringCreator
             .append("id", this.getId())
             .append("new", this.isNew())
             .append("lastName", this.getLastName())
             .append("firstName", this.getFirstName())
             .append(ADDRESS, this.address)
             .append(CITY, this.city)
-            .append(TELEPHONE, this.telephone)
-            .toString();
+            .append(TELEPHONE, this.telephone);
     }
 }
