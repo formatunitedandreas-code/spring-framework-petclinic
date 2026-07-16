@@ -121,7 +121,8 @@ public class JdbcPetRepositoryImpl implements PetRepository {
     }
 
     /**
-     * Creates a {@link MapSqlParameterSource} based on data values from the supplied
+     * Creates a {@link MapSqlParameterSource} based on data values
+     * from the supplied
      * {@link Pet} instance.
      */
     private MapSqlParameterSource createPetParameterSource(Pet pet) {
