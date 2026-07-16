@@ -1,0 +1,55 @@
+{
+    "schemaVersion":  "threshold.petclinic.slice-receipt.v0.2",
+    "candidateId":  "src-main-java-org-springframework-samples-petclinic-repository-springdatajpa-springdataownerrepository-java-spring-data-query-concat-wrap-cleanup-line-35",
+    "leaseName":  "owned-autonomous-refactor-branch-wave-v0_automation",
+    "branch":  "threshold-governed-refactor-demo-105",
+    "candidateClass":  "spring_data_query_concat_wrap_cleanup",
+    "leaseStartHead":  "c8471e6741db8a8582701839f3c44873206d32a0",
+    "baseHead":  "9f2e2de08c7be5cd1954e41d9a1852f3cdaa4452",
+    "commitHash":  "15098dcec1d2a27b2a831f539f391d6fe3ce1ddf",
+    "receiptMaterialization":  "post-commit",
+    "perCommitValidationLogAvailable":  true,
+    "branchFinalValidationPassed":  false,
+    "changedFiles":  [
+                         {
+                             "path":  "src/main/java/org/springframework/samples/petclinic/repository/springdatajpa/SpringDataOwnerRepository.java",
+                             "beforeSha256":  "bb8c1019e47c10c6e0c5db9cdb402e6db34f5e4e94ca86dc8096e281c67aeda3",
+                             "afterSha256":  "08177e993d4561e1e88f9b65d78f6ad9565d7859c8629a9609b0368cf1a9840c"
+                         },
+                         {
+                             "path":  "threshold/lease-state/current-run.json",
+                             "beforeSha256":  "5867dd3778003217c592a802ed2535c5947466c7285fbcfff5d2fa0060a1529e",
+                             "afterSha256":  "90ea59bfead4e116ac47d5e07eb2894e41cc58aa311ddb7ae65a174b2e0d3ed0"
+                         }
+                     ],
+    "diffSummary":  "Refactor PetClinic Normalize a concatenated Spring Data @Query annotation",
+    "diffStat":  {
+                     "filesChanged":  2,
+                     "insertions":  14,
+                     "deletions":  18
+                 },
+    "validation":  {
+                       "diffCheck":  "passed",
+                       "command":  ".\\mvnw.cmd test",
+                       "result":  "BUILD SUCCESS",
+                       "testsRun":  75,
+                       "failures":  0,
+                       "errors":  0,
+                       "skipped":  0
+                   },
+    "nonClaims":  [
+                      "no push in candidate slice",
+                      "no PR update in candidate slice",
+                      "no upstream interaction",
+                      "no pom.xml change",
+                      "no dependency change",
+                      "no src/test change",
+                      "no merge",
+                      "no release",
+                      "no deploy",
+                      "no public readiness claim",
+                      "no public correctness claim",
+                      "no public security claim",
+                      "no public compliance claim"
+                  ]
+}
