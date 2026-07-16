@@ -137,7 +137,9 @@ if (-not $changedPaths) {
 }
 
 $runtimeGovernanceArtifacts = @(
+    "threshold/leases/current.yaml",
     "threshold/lease-state/current-run.json"
+    "threshold/candidate-pocket/current.json"
 )
 $effectiveChangedPaths = @($changedPaths | Where-Object { $runtimeGovernanceArtifacts -notcontains ($_ -replace "\\", "/") })
 if (-not $effectiveChangedPaths -and -not $RequireHeadReceipt -and $changedPaths.Count -gt 0) {
@@ -166,8 +168,8 @@ foreach ($path in $effectiveChangedPaths) {
 }
 
 $changedLineCount = 0
-$numstat = & git diff --numstat
-if (-not $numstat) { $numstat = & git diff --cached --numstat }
+$numstat = & git diff --numstat -- @effectiveChangedPaths
+if (-not $numstat) { $numstat = & git diff --cached --numstat -- @effectiveChangedPaths }
 foreach ($line in $numstat) {
     $parts = $line -split "\s+"
     if ($parts.Count -ge 2 -and $parts[0] -match "^\d+$" -and $parts[1] -match "^\d+$") {
@@ -175,7 +177,9 @@ foreach ($line in $numstat) {
     }
 }
 foreach ($path in $untrackedPaths) {
-    if (Test-Path $path) { $changedLineCount += (Get-Content $path).Count }
+    if (Test-Path $path -and ($runtimeGovernanceArtifacts -notcontains (($path -replace "\\", "/").Trim()))) {
+        $changedLineCount += (Get-Content $path).Count
+    }
 }
 $changedLineBudget = $maxChangedLines
 if ($governancePaths.Count -eq $effectiveChangedPaths.Count) { $changedLineBudget = $maxGovernanceChangedLines }

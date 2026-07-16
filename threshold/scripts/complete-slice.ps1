@@ -50,7 +50,9 @@ if (-not $changedPaths) {
 
 if ($AllowedPath.Count -gt 0) {
     $runtimeAllowed = @(
+        "threshold/leases/current.yaml",
         "threshold/lease-state/current-run.json"
+        "threshold/candidate-pocket/current.json"
     )
     $allowedNormalized = @(
         @($AllowedPath | ForEach-Object { ConvertTo-RepoPath $_ }) +
