@@ -39,19 +39,31 @@
           "utilityMethodLengthThreshold": 6
         }
       },
-      {
-        "tier": 2,
-        "name": "aggressive_readability_thresholds",
-        "description": "Final bounded expansion tier for the same candidate classes before the runner reports scope exhaustion.",
-        "thresholds": {
-          "longLineThreshold": 92,
-          "commentWrapThreshold": 96,
-          "springDataQueryThreshold": 60,
-          "repositoryMethodLengthThreshold": 5,
-          "utilityMethodLengthThreshold": 5
-        }
+    {
+      "tier": 2,
+      "name": "aggressive_readability_thresholds",
+      "description": "Final bounded expansion tier for the same candidate classes before the runner reports scope exhaustion.",
+      "thresholds": {
+        "longLineThreshold": 92,
+        "commentWrapThreshold": 96,
+        "springDataQueryThreshold": 60,
+        "repositoryMethodLengthThreshold": 5,
+        "utilityMethodLengthThreshold": 5
       }
-    ]
+    },
+    {
+      "tier": 3,
+      "name": "portfolio_expansion_readability_push",
+      "description": "Additional exploratory readability expansion designed for authorized portfolio-restart lanes.",
+      "thresholds": {
+        "longLineThreshold": 80,
+        "commentWrapThreshold": 84,
+        "springDataQueryThreshold": 50,
+        "repositoryMethodLengthThreshold": 4,
+        "utilityMethodLengthThreshold": 4
+      }
+    }
+  ]
   },
   "batchReceiptMode": {
     "schemaVersion": "threshold.petclinic.batch-receipt-mode.v0.1",
