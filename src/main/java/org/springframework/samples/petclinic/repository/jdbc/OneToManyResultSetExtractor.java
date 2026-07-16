@@ -34,7 +34,8 @@ import org.springframework.util.Assert;
  * child rows returned
  * per parent root.
  * <p>
- * It's assumed that the root type R table has a primary key (id) of type K and that the child
+ * It's assumed that the root type R table has a primary key (id) of type K
+ * and that the child
  * type C table has a
  * foreign key of type K referencing the root table's primary key.
  * <p>
