@@ -1,13 +1,29 @@
 [CmdletBinding()]
 param(
-    [string] $LeasePath = "threshold/leases/current.yaml",
-    [string] $StatePath = "threshold/lease-state/current-run.json",
-    [string] $PocketPath = "threshold/candidate-pocket/current.json",
-    [string] $GatePath = "threshold/gates/auto-patchable-candidate-classes.json"
+    [string] $LeasePath = "",
+    [string] $StatePath = "",
+    [string] $PocketPath = "",
+    [string] $GatePath = ""
 )
 
 Set-StrictMode -Version Latest
 $ErrorActionPreference = "Stop"
+
+. (Join-Path $PSScriptRoot "lib/runtime-paths.ps1")
+
+$runtimePaths = Get-ThresholdRuntimePaths
+if ([string]::IsNullOrWhiteSpace($LeasePath)) {
+    $LeasePath = $runtimePaths.LeasePath
+}
+if ([string]::IsNullOrWhiteSpace($StatePath)) {
+    $StatePath = $runtimePaths.LeaseStatePath
+}
+if ([string]::IsNullOrWhiteSpace($PocketPath)) {
+    $PocketPath = $runtimePaths.CandidatePocketPath
+}
+if ([string]::IsNullOrWhiteSpace($GatePath)) {
+    $GatePath = $runtimePaths.AutoPatchableGatePath
+}
 
 function ConvertTo-RepoPath {
     param([string] $Path)
@@ -128,9 +144,9 @@ if ($pocket.branch -ne $branch -or $pocket.generatedFromHead -ne $head) {
 }
 
 $runtimePaths = @(
-    "threshold/leases/current.yaml",
-    "threshold/lease-state/current-run.json",
-    "threshold/candidate-pocket/current.json"
+    $LeasePath,
+    $StatePath,
+    $PocketPath
 )
 foreach ($runtimePath in $runtimePaths) {
     $isTracked = $false
