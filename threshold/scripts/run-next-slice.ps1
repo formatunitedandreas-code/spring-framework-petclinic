@@ -81,6 +81,11 @@ function Test-SimpleQueryAnnotationLine {
     return $Line -match '^\s*@Query\(\s*(?:value\s*=\s*)?"(?<value>[^"\\]+)"\s*\)\s*$'
 }
 
+function Test-BootstrapStringInvocationWrapCandidateLine {
+    param([string] $Line)
+    return $Line -match '^\s*[A-Za-z0-9_.]+\(\s*"[^"\\]+"\s*(,\s*"[^"\\]+"\s*)+\);\s*$'
+}
+
 function Test-MethodOrAnnotationBoundaryLine {
     param([string] $Line)
     return $Line -match '^\s*(?:@|public\b|private\b|protected\b)'
@@ -649,6 +654,26 @@ function Get-NextCandidate {
                 }
                 if ($lines[$lineNumber - 1] -notmatch '^\s*//\s+\S') {
                     Write-Host "candidateSkippedReason=unsupported_line_comment_cleanup:$($candidate.candidateId)"
+                    $applicable = $false
+                    break
+                }
+            }
+            "application_bootstrap_readability_cleanup" {
+                $member = [string]$candidate.member
+                if (-not $member.StartsWith("line-")) {
+                    Write-Host "candidateSkippedReason=unsupported_bootstrap_marker:$($candidate.candidateId)"
+                    $applicable = $false
+                    break
+                }
+                $lineNumber = [int]($member.Substring(5))
+                $lines = Get-Content $path
+                if ($lineNumber -lt 1 -or $lineNumber -gt $lines.Count) {
+                    Write-Host "candidateSkippedReason=line_outside_file:$($candidate.candidateId)"
+                    $applicable = $false
+                    break
+                }
+                if (-not (Test-BootstrapStringInvocationWrapCandidateLine $lines[$lineNumber - 1])) {
+                    Write-Host "candidateSkippedReason=unsupported_bootstrap_cleanup:$($candidate.candidateId)"
                     $applicable = $false
                     break
                 }
@@ -1243,6 +1268,62 @@ function Apply-LineCommentWrapCleanup {
     Write-Host "wrappedLineComment=$lineNumber"
 }
 
+function Apply-ApplicationBootstrapReadabilityCleanup {
+    param([pscustomobject] $Candidate)
+
+    $path = ConvertTo-RepoPath $Candidate.file
+    if (-not (Test-Path $path)) { throw "Candidate file not found: $path" }
+
+    $member = [string]$Candidate.member
+    if (-not $member.StartsWith("line-")) {
+        throw "Application bootstrap cleanup requires a line marker candidate."
+    }
+
+    $lineNumber = [int]($member.Substring(5))
+    $lines = Get-Content $path
+    if ($lineNumber -lt 1 -or $lineNumber -gt $lines.Count) {
+        throw "Candidate line '$lineNumber' is outside file range in $path."
+    }
+
+    $line = $lines[$lineNumber - 1]
+    $match = [regex]::Match($line, '^(?<indent>\s*)(?<invocation>[A-Za-z0-9_.]+)\(\s*(?<args>"[^"\\]+"\s*(?:,\s*"[^"\\]+"\s*)+)\);\s*$')
+    if (-not $match.Success) {
+        throw "Line '$lineNumber' is not a supported bootstrap invocation in $path."
+    }
+
+    $indent = $match.Groups["indent"].Value
+    $invocation = $match.Groups["invocation"].Value
+    $args = [regex]::Matches($match.Groups["args"].Value, '"(?:[^"\\]|\\.)*"') | ForEach-Object { $_.Value }
+    if ($args.Count -lt 2) {
+        throw "Bootstrap invocation on line '$lineNumber' does not have enough arguments to wrap in $path."
+    }
+
+    $wrapped = @()
+    $wrapped += "$indent$invocation("
+    for ($i = 0; $i -lt $args.Count; $i++) {
+        $suffix = if ($i -lt $args.Count - 1) { "," } else { "" }
+        $wrapped += "$indent    $($args[$i])$suffix"
+    }
+    $wrapped += "$indent);"
+
+    $updatedLines = @()
+    if ($lineNumber -gt 1) {
+        $updatedLines += $lines[0..($lineNumber - 2)]
+    }
+    $updatedLines += $wrapped
+    if ($lineNumber -lt $lines.Count) {
+        $updatedLines += $lines[$lineNumber..($lines.Count - 1)]
+    }
+
+    $originalText = Get-Content $path -Raw
+    $updatedText = $updatedLines -join (Get-LineEnding -Content $originalText)
+    Write-TextFile -Path $path -Content $updatedText
+
+    Write-Host "appliedCandidate=$($Candidate.candidateId)"
+    Write-Host "changedFile=$path"
+    Write-Host "wrappedBootstrapInvocation=$lineNumber"
+}
+
 & powershell.exe -NoProfile -ExecutionPolicy Bypass -File "threshold/scripts/sync-lease-state.ps1" `
     -LeasePath $LeasePath `
     -StatePath $StatePath `
@@ -1319,6 +1400,9 @@ switch ([string]$candidate.candidateClass) {
     }
     "line_comment_wrap_cleanup" {
         Apply-LineCommentWrapCleanup -Candidate $candidate
+    }
+    "application_bootstrap_readability_cleanup" {
+        Apply-ApplicationBootstrapReadabilityCleanup -Candidate $candidate
     }
     default {
         throw "Candidate class '$($candidate.candidateClass)' is not yet automatically patchable by run-next-slice."

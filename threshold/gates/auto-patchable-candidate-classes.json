@@ -155,6 +155,12 @@
       "authorizedBy": "governance-hardening-bootstrap",
       "scope": "runner-supported StopWatch helper extraction only",
       "requiresCanary": true
+    },
+    {
+      "candidateClass": "application_bootstrap_readability_cleanup",
+      "authorizedBy": "scope-executor-expansion-v0-3",
+      "scope": "format-only wrapping of long top-level Spring bootstrap invocation lines with string arguments",
+      "requiresCanary": true
     }
   ],
   "nonClaims": [

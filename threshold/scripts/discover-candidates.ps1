@@ -212,6 +212,12 @@ function Test-AutoPatchableCandidate {
     if ($CandidateClass -eq "spring_data_query_wrap_cleanup") {
         return $Candidate.ContainsKey("member") -and ([string]$Candidate.member).StartsWith("line-")
     }
+    if ($CandidateClass -eq "application_bootstrap_readability_cleanup") {
+        return $Candidate.ContainsKey("member") -and
+            ([string]$Candidate.member).StartsWith("line-") -and
+            $Candidate.ContainsKey("bootstrapWrapPattern") -and
+            [string]$Candidate.bootstrapWrapPattern -eq "string_argument_invocation_wrap"
+    }
     return $false
 }
 
@@ -247,6 +253,11 @@ function Test-SplitStringConstantStartLine {
 function Test-SimpleQueryAnnotationLine {
     param([string] $Line)
     return $Line -match '^\s*@Query\("(?<value>[^"\\]+)"\)\s*$'
+}
+
+function Test-BootstrapStringInvocationWrapCandidateLine {
+    param([string] $Line)
+    return $Line -match '^\s*[A-Za-z0-9_.]+\(\s*"[^"\\]+"\s*(,\s*"[^"\\]+"\s*)+\);\s*$'
 }
 
 function Test-MethodOrAnnotationBoundaryLine {
@@ -433,6 +444,30 @@ foreach ($file in $sourceFiles) {
                     estimatedChangedLines = [Math]::Min(8, $longLines.Count * 2)
                     tieBreak = [ordered]@{ layerScore = $layerScore; path = $path; member = $member }
                 })
+    }
+
+    # Heuristic 3a: top-level bootstrap invocation readability cleanup.
+    if ($path -match '^src/main/java/org/springframework/samples/petclinic/[^/]+\.java$') {
+        for ($i = 0; $i -lt $lines.Count; $i++) {
+            if ($lines[$i].Length -le $longLineThreshold) {
+                continue
+            }
+            if (-not (Test-BootstrapStringInvocationWrapCandidateLine $lines[$i])) {
+                continue
+            }
+
+            $member = "line-$($i + 1)"
+            Add-Candidate -CandidateClass "application_bootstrap_readability_cleanup" -AllowedTypes $allowedCandidateTypes -Bucket $candidates -Candidate ([ordered]@{
+                candidateId = New-CandidateId $path "application_bootstrap_readability_cleanup" $member
+                score = 30 + 30 + 20 + 10
+                file = $path
+                member = $member
+                bootstrapWrapPattern = "string_argument_invocation_wrap"
+                expectedDiffSummary = "Wrap a long Spring bootstrap invocation across multiple lines without changing behavior."
+                estimatedChangedLines = 4
+                tieBreak = [ordered]@{ layerScore = 4; path = $path; member = $member }
+            })
+        }
     }
 
     # Heuristic 3b: Spring Data JPA query annotation readability cleanup.
