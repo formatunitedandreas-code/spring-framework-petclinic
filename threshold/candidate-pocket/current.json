@@ -1,9 +1,9 @@
 {
     "schemaVersion":  "threshold.petclinic.candidate-pocket.v0.2",
     "leaseName":  "owned-autonomous-refactor-branch-wave-v0_automation",
-    "branch":  "threshold-governed-refactor-demo-108",
-    "generatedFromHead":  "a3b25d73cf8096bbef5d425f407ffccf1334046e",
-    "generatedAt":  "2026-07-16T19:14:36.0335963Z",
+    "branch":  "threshold-governed-refactor-demo-110",
+    "generatedFromHead":  "d039ca6fe980313d93c5945de2729c015e399d48",
+    "generatedAt":  "2026-07-16T20:16:48.2060940Z",
     "discovery":  {
                       "method":  "static-heuristic-scan",
                       "sourceRoot":  "src/main/java/org/springframework/samples/petclinic",
@@ -15,6 +15,7 @@
                                                                     "line_comment_wrap_cleanup",
                                                                     "method_signature_wrap_cleanup",
                                                                     "method_spacing_normalization",
+                                                                    "model_readability_cleanup",
                                                                     "private_helper_extraction_for_readability",
                                                                     "redundant_local_variable_simplification",
                                                                     "repository_readability_cleanup",
@@ -33,11 +34,11 @@
                                       "member lexical"
                                   ],
                       "thresholds":  {
-                                         "longLineThreshold":  92,
-                                         "commentWrapThreshold":  96,
-                                         "springDataQueryThreshold":  60,
-                                         "repositoryMethodLengthThreshold":  5,
-                                         "utilityMethodLengthThreshold":  5
+                                         "longLineThreshold":  120,
+                                         "commentWrapThreshold":  120,
+                                         "springDataQueryThreshold":  80,
+                                         "repositoryMethodLengthThreshold":  8,
+                                         "utilityMethodLengthThreshold":  8
                                      },
                       "allowedCandidateTypes":  [
                                                     "private_helper_extraction_for_readability",
@@ -60,10 +61,32 @@
                                                 ]
                   },
     "candidates":  [
-
+                       {
+                           "tieBreak":  {
+                                            "layerScore":  6,
+                                            "path":  "src/main/java/org/springframework/samples/petclinic/model/Owner.java",
+                                            "member":  "toString"
+                                        },
+                           "gate":  {
+                                        "required":  true,
+                                        "approved":  true,
+                                        "gatePath":  "threshold/gates/auto-patchable-candidate-classes.json"
+                                    },
+                           "score":  98,
+                           "autoPatchable":  true,
+                           "member":  "line-154",
+                           "helperName":  "appendOwnerToStringFields",
+                           "executionMode":  "auto_patchable",
+                           "file":  "src/main/java/org/springframework/samples/petclinic/model/Owner.java",
+                           "candidateId":  "src-main-java-org-springframework-samples-petclinic-model-owner-java-model-readability-cleanup-tostring",
+                           "expectedDiffSummary":  "Extract the model toString append chain from \u0027Owner\u0027 into a private helper.",
+                           "candidateClass":  "model_readability_cleanup",
+                           "estimatedChangedLines":  12,
+                           "reviewOnly":  false
+                       }
                    ],
-    "nextRecommendedCandidateId":  null,
-    "nextAutoPatchableCandidateId":  null,
+    "nextRecommendedCandidateId":  "src-main-java-org-springframework-samples-petclinic-model-owner-java-model-readability-cleanup-tostring",
+    "nextAutoPatchableCandidateId":  "src-main-java-org-springframework-samples-petclinic-model-owner-java-model-readability-cleanup-tostring",
     "nonClaims":  [
                       "candidate pocket is not an implementation claim",
                       "candidate pocket does not claim behavior preservation until slice validation passes",
