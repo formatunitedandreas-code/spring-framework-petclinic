@@ -1,12 +1,12 @@
 {
     "schemaVersion":  "threshold.petclinic.lease-state.v0.2",
-    "invocationId":  "owned-autonomous-refactor-branch-wave-v0_automation-20260716T221556Z",
+    "invocationId":  "owned-autonomous-refactor-branch-wave-v0_automation-20260716T223217Z",
     "leaseId":  "owned-autonomous-refactor-branch-wave-v0_automation",
     "mode":  "local_refactor",
-    "branch":  "threshold-governed-refactor-demo-117",
-    "startHead":  "c70b168ba23a6b724c3fb95871fa6165543456f6",
-    "currentHead":  "3bb2e5d114f6c3699f39e1280bc7be26480583a3",
-    "currentSourceHead":  "8a2def84d792181cc8e720e1e36b929c8187be92",
+    "branch":  "threshold-governed-refactor-demo-118",
+    "startHead":  "c521b217a563d45d5a7eaf79896db95d7d18d78f",
+    "currentHead":  "cc66605a9f9e1eb552d5fe029dffaa251470e01d",
+    "currentSourceHead":  "77474f6902aa34e4de740cddb6c6c9cc1e500f0f",
     "candidatesProcessed":  5,
     "commitsCreated":  5,
     "remainingBudget":  {
@@ -14,9 +14,9 @@
                             "commits":  0,
                             "repairAttempts":  1
                         },
-    "lastReceipt":  "threshold/receipts/src-main-java-org-springframework-samples-petclinic-repository-jdbc-onetomanyresultsetextractor-java-leading-tab-indentation-cleanup-line-81-8a2def84d792.json",
+    "lastReceipt":  "threshold/receipts/src-main-java-org-springframework-samples-petclinic-repository-jdbc-onetomanyresultsetextractor-java-leading-tab-indentation-cleanup-line-149-77474f6902aa.json",
     "terminalState":  "budget_exhausted_verified",
-    "updatedAt":  "2026-07-16T22:20:43.2704247Z",
+    "updatedAt":  "2026-07-16T22:38:43.2006080Z",
     "terminalReason":  "remaining candidate or commit budget is exhausted after discovery canary passed",
-    "discoveryCanaryLastPassedAt":  "2026-07-16T22:20:43.2621536Z"
+    "discoveryCanaryLastPassedAt":  "2026-07-16T22:38:43.1900889Z"
 }

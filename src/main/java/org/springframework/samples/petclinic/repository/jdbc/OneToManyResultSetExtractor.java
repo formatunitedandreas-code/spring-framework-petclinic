@@ -88,55 +88,55 @@ public abstract class OneToManyResultSetExtractor<R, C, K> implements ResultSetE
 	 */
     protected OneToManyResultSetExtractor(RowMapper<R> rootMapper, RowMapper<C> childMapper, ExpectedResults expectedResults) {
 
-		Assert.notNull(rootMapper, "Root RowMapper must not be null!");
-		Assert.notNull(childMapper, "Child RowMapper must not be null!");
+        Assert.notNull(rootMapper, "Root RowMapper must not be null!");
+        Assert.notNull(childMapper, "Child RowMapper must not be null!");
 
-		this.childMapper = childMapper;
-		this.rootMapper = rootMapper;
-		this.expectedResults = expectedResults == null ? ExpectedResults.ANY : expectedResults;
-	}
+        this.childMapper = childMapper;
+        this.rootMapper = rootMapper;
+        this.expectedResults = expectedResults == null ? ExpectedResults.ANY : expectedResults;
+    }
 
-	public List<R> extractData(ResultSet rs) throws SQLException {
-		List<R> results = new ArrayList<>();
-		int row = 0;
-		boolean more = rs.next();
-		if (more) {
-			row++;
-		}
-		while (more) {
-			R root = rootMapper.mapRow(rs, row);
-			K primaryKey = mapPrimaryKey(rs);
-			K foreignKey = mapForeignKey(rs);
-			if (foreignKey != null) {
-				while (more && primaryKey.equals(foreignKey)) {
-					addChild(root, childMapper.mapRow(rs, row));
-					more = rs.next();
-					if (more) {
-						row++;
-						foreignKey = mapForeignKey(rs);
-					}
-				}
-			}
-			else {
-				more = rs.next();
-				if (more) {
-					row++;
-				}
-			}
-			results.add(root);
-		}
-		if ((expectedResults == ExpectedResults.ONE_AND_ONLY_ONE || expectedResults == ExpectedResults.ONE_OR_NONE) &&
-				results.size() > 1) {
-			throw new IncorrectResultSizeDataAccessException(1, results.size());
-		}
-		if ((expectedResults == ExpectedResults.ONE_AND_ONLY_ONE || expectedResults == ExpectedResults.AT_LEAST_ONE) &&
-				results.isEmpty()) {
-			throw new IncorrectResultSizeDataAccessException(1, 0);
-		}
-		return results;
-	}
+    public List<R> extractData(ResultSet rs) throws SQLException {
+        List<R> results = new ArrayList<>();
+        int row = 0;
+        boolean more = rs.next();
+        if (more) {
+            row++;
+        }
+        while (more) {
+            R root = rootMapper.mapRow(rs, row);
+            K primaryKey = mapPrimaryKey(rs);
+            K foreignKey = mapForeignKey(rs);
+            if (foreignKey != null) {
+                while (more && primaryKey.equals(foreignKey)) {
+                    addChild(root, childMapper.mapRow(rs, row));
+                    more = rs.next();
+                    if (more) {
+                        row++;
+                        foreignKey = mapForeignKey(rs);
+                    }
+                }
+            }
+            else {
+                more = rs.next();
+                if (more) {
+                    row++;
+                }
+            }
+            results.add(root);
+        }
+        if ((expectedResults == ExpectedResults.ONE_AND_ONLY_ONE || expectedResults == ExpectedResults.ONE_OR_NONE) &&
+                results.size() > 1) {
+            throw new IncorrectResultSizeDataAccessException(1, results.size());
+        }
+        if ((expectedResults == ExpectedResults.ONE_AND_ONLY_ONE || expectedResults == ExpectedResults.AT_LEAST_ONE) &&
+                results.isEmpty()) {
+            throw new IncorrectResultSizeDataAccessException(1, 0);
+        }
+        return results;
+    }
 
-	/**
+    /**
 	 * Map the primary key value to the required type.
 	 * This method must be implemented by subclasses.
 	 * This method should not call <code>next()</code> on
@@ -146,7 +146,7 @@ public abstract class OneToManyResultSetExtractor<R, C, K> implements ResultSetE
 	 * @return the primary key value
 	 * @throws SQLException
 	 */
-	protected abstract K mapPrimaryKey(ResultSet rs) throws SQLException;
+    protected abstract K mapPrimaryKey(ResultSet rs) throws SQLException;
 
 	/**
 	 * Map the foreign key value to the required type.
