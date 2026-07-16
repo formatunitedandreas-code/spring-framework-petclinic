@@ -91,10 +91,10 @@ public abstract class OneToManyResultSetExtractor<R, C, K> implements ResultSetE
         Assert.notNull(rootMapper, "Root RowMapper must not be null!");
         Assert.notNull(childMapper, "Child RowMapper must not be null!");
 
-		this.childMapper = childMapper;
-		this.rootMapper = rootMapper;
-		this.expectedResults = expectedResults == null ? ExpectedResults.ANY : expectedResults;
-	}
+        this.childMapper = childMapper;
+        this.rootMapper = rootMapper;
+        this.expectedResults = expectedResults == null ? ExpectedResults.ANY : expectedResults;
+    }
 
 	public List<R> extractData(ResultSet rs) throws SQLException {
 		List<R> results = new ArrayList<>();
