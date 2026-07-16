@@ -173,6 +173,12 @@
       "authorizedBy": "scope-executor-expansion-v0-3",
       "scope": "format-only wrapping of long top-level Spring bootstrap invocation lines with string arguments",
       "requiresCanary": true
+    },
+    {
+      "candidateClass": "model_readability_cleanup",
+      "authorizedBy": "scope-executor-expansion-v0-model-toString",
+      "scope": "model toString helper extraction for chained ToStringCreator append blocks",
+      "requiresCanary": true
     }
   ],
   "nonClaims": [

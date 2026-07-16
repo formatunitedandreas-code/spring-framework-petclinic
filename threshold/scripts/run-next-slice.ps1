@@ -1152,6 +1152,101 @@ function Apply-UtilityReadabilityCleanup {
     Write-Host "helperName=$helperName"
 }
 
+function Apply-ModelReadabilityCleanup {
+    param([pscustomobject] $Candidate)
+
+    $path = ConvertTo-RepoPath $Candidate.file
+    if (-not (Test-Path $path)) { throw "Candidate file not found: $path" }
+
+    $member = [string]$Candidate.member
+    if (-not $member.StartsWith("line-")) {
+        throw "Model readability cleanup requires a line marker candidate."
+    }
+
+    $helperName = [string]$Candidate.helperName
+    if ($helperName -notmatch "^[a-z][A-Za-z0-9_]*$") {
+        throw "Refusing unsafe model helper name '$helperName'."
+    }
+
+    $lineNumber = [int]($member.Substring(5))
+    $lines = Get-Content $path
+    if ($lineNumber -lt 1 -or $lineNumber -gt $lines.Count) {
+        throw "Candidate line '$lineNumber' is outside file range in $path."
+    }
+
+    $line = $lines[$lineNumber - 1]
+    if ($line -notmatch "^\s*public\s+String\s+toString\(\)\s*\{\s*$") {
+        throw "Candidate line '$lineNumber' is not a supported model toString method in $path."
+    }
+
+    $braceDepth = 0
+    $endLine = -1
+    for ($i = $lineNumber - 1; $i -lt $lines.Count; $i++) {
+        $text = $lines[$i]
+        $braceDepth += ([regex]::Matches($text, '\{').Count - [regex]::Matches($text, '\}').Count)
+        if ($i -gt ($lineNumber - 1) -and $braceDepth -eq 0) {
+            $endLine = $i
+            break
+        }
+    }
+    if ($endLine -lt 0) {
+        throw "Could not locate model toString method end in $path."
+    }
+
+    $methodLines = @($lines[($lineNumber - 1)..$endLine])
+    $methodText = $methodLines -join (Get-LineEnding -Content (Get-Content $path -Raw))
+    if (-not ([regex]::IsMatch($methodText, 'new\s+ToStringCreator\(this\)') -and
+        ([regex]::Matches($methodText, '\.append\(').Count -ge 3))) {
+        throw "Candidate line '$lineNumber' does not contain a supported ToStringCreator append chain in $path."
+    }
+
+    $returnIndex = -1
+    $toStringIndex = -1
+    for ($i = 0; $i -lt $methodLines.Count; $i++) {
+        if ($methodLines[$i] -match 'return\s+new\s+ToStringCreator\(this\)') {
+            $returnIndex = $i
+        }
+        if ($methodLines[$i] -match '\.toString\(\);\s*$') {
+            $toStringIndex = $i
+        }
+    }
+    if ($returnIndex -lt 0 -or $toStringIndex -lt 0 -or $toStringIndex -le $returnIndex) {
+        throw "Could not rewrite model toString chain in $path."
+    }
+
+    $helperLines = @($methodLines)
+    $helperLines[0] = $helperLines[0] -replace 'public\s+String\s+toString\(\)', "private ToStringCreator $helperName(ToStringCreator toStringCreator)"
+    $helperLines[$returnIndex] = $helperLines[$returnIndex] -replace 'return\s+new\s+ToStringCreator\(this\)', 'return toStringCreator'
+    $helperLines[$toStringIndex - 1] = ($helperLines[$toStringIndex - 1]).TrimEnd() + ';'
+    $helperLines = @($helperLines[0..($toStringIndex - 1)])
+
+    $wrapperLines = @(
+        "    public String toString() {",
+        "        return $helperName(new ToStringCreator(this)).toString();",
+        "    }"
+    )
+
+    $originalText = Get-Content $path -Raw
+    $lineEnding = Get-LineEnding -Content $originalText
+    $updatedLines = @()
+    if ($lineNumber -gt 1) {
+        $updatedLines += $lines[0..($lineNumber - 2)]
+    }
+    $updatedLines += $wrapperLines
+    $updatedLines += ""
+    $updatedLines += $helperLines
+    if ($endLine -lt ($lines.Count - 1)) {
+        $updatedLines += $lines[($endLine + 1)..($lines.Count - 1)]
+    }
+
+    $updatedText = $updatedLines -join $lineEnding
+    Write-TextFile -Path $path -Content $updatedText
+
+    Write-Host "appliedCandidate=$($Candidate.candidateId)"
+    Write-Host "changedFile=$path"
+    Write-Host "helperName=$helperName"
+}
+
 function Apply-MethodSpacingNormalization {
     param([pscustomobject] $Candidate)
 
@@ -1479,6 +1574,9 @@ switch ([string]$candidate.candidateClass) {
     }
     "utility_readability_cleanup" {
         Apply-UtilityReadabilityCleanup -Candidate $candidate
+    }
+    "model_readability_cleanup" {
+        Apply-ModelReadabilityCleanup -Candidate $candidate
     }
     "method_spacing_normalization" {
         Apply-MethodSpacingNormalization -Candidate $candidate

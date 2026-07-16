@@ -1,0 +1,27 @@
+{
+  "schemaVersion": "threshold.petclinic.no-candidate-receipt.v0.1",
+  "leaseName": "owned-autonomous-refactor-branch-wave-v0_automation",
+  "branch": "threshold-governed-refactor-demo-109",
+  "startHead": "32509c6403c2a2535734309d2d0e2f1fc50db37f",
+  "currentHead": "32509c6403c2a2535734309d2d0e2f1fc50db37f",
+  "terminalState": "ready_no_candidates_on_fresh_wave",
+  "candidateCount": 0,
+  "autoPatchableCandidateCount": 0,
+  "scopeExpansionTier": 2,
+  "scopeExpansionReason": "fresh_wave_candidate_shortage",
+  "scopeExpansionExhausted": true,
+  "recordedAt": "2026-07-16T19:14:37.0699519Z",
+  "nonClaims": [
+    "no source commit materialized",
+    "no push in candidate slice",
+    "no PR update in candidate slice",
+    "no upstream interaction",
+    "no merge",
+    "no release",
+    "no deploy",
+    "no public readiness claim",
+    "no public correctness claim",
+    "no public security claim",
+    "no public compliance claim"
+  ]
+}
