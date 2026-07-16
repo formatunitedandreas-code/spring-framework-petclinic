@@ -28,7 +28,8 @@ import org.springframework.util.StopWatch;
  * therefore can be
  * monitored using any JMX console such as the jConsole
  * <p/>
- * This is only useful if you use JPA or JDBC.  Spring-data-jpa doesn't have any correctly annotated
+ * This is only useful if you use JPA or JDBC.  Spring-data-jpa doesn't have any
+ * correctly annotated
  * classes to join on
  *
  * @author Rob Harrop
