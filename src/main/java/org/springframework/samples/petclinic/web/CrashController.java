@@ -23,7 +23,8 @@ import org.springframework.web.bind.annotation.GetMapping;
  *
  * @author Michael Isvy
  *         <p/>
- *         Also see how the bean of type 'SimpleMappingExceptionResolver' has been declared inside
+ *         Also see how the bean of type 'SimpleMappingExceptionResolver' has
+ *         been declared inside
  *         /WEB-INF/mvc-core-config.xml
  */
 @Controller
