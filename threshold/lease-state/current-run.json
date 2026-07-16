@@ -5,16 +5,16 @@
     "mode":  "local_refactor",
     "branch":  "threshold-governed-refactor-demo-118",
     "startHead":  "c521b217a563d45d5a7eaf79896db95d7d18d78f",
-    "currentHead":  "f6caa1ff04d6687ae44281fc442f3c52916fa85c",
-    "currentSourceHead":  "f6caa1ff04d6687ae44281fc442f3c52916fa85c",
-    "candidatesProcessed":  2,
-    "commitsCreated":  2,
+    "currentHead":  "408aed97a1f328ca8d36cc4764e6b540d505f3a0",
+    "currentSourceHead":  "408aed97a1f328ca8d36cc4764e6b540d505f3a0",
+    "candidatesProcessed":  3,
+    "commitsCreated":  3,
     "remainingBudget":  {
-                            "candidates":  3,
-                            "commits":  3,
+                            "candidates":  2,
+                            "commits":  2,
                             "repairAttempts":  1
                         },
-    "lastReceipt":  "threshold/receipts/src-main-java-org-springframework-samples-petclinic-repository-jdbc-onetomanyresultsetextractor-java-leading-tab-indentation-cleanup-line-94-f6caa1ff04d6.json",
+    "lastReceipt":  "threshold/receipts/src-main-java-org-springframework-samples-petclinic-repository-jdbc-onetomanyresultsetextractor-java-leading-tab-indentation-cleanup-line-99-408aed97a1f3.json",
     "terminalState":  "active",
-    "updatedAt":  "2026-07-16T22:34:47.5197092Z"
+    "updatedAt":  "2026-07-16T22:35:57.5725096Z"
 }
