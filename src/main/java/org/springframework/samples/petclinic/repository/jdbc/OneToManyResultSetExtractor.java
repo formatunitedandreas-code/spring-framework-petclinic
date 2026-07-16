@@ -29,7 +29,8 @@ import org.springframework.util.Assert;
 /**
  * An abstract results extractor for row mapping operations that map multiple rows to a single
  * root object. This is
- * useful when joining a one-to-many relationship where there can be multiple child rows returned
+ * useful when joining a one-to-many relationship where there can be multiple
+ * child rows returned
  * per parent root.
  * <p>
  * It's assumed that the root type R table has a primary key (id) of type K and that the child
