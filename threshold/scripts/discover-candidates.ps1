@@ -212,6 +212,9 @@ function Test-AutoPatchableCandidate {
     if ($CandidateClass -eq "spring_data_query_wrap_cleanup") {
         return $Candidate.ContainsKey("member") -and ([string]$Candidate.member).StartsWith("line-")
     }
+    if ($CandidateClass -eq "spring_data_query_concat_wrap_cleanup") {
+        return $Candidate.ContainsKey("member") -and ([string]$Candidate.member).StartsWith("line-")
+    }
     if ($CandidateClass -eq "application_bootstrap_readability_cleanup") {
         return $Candidate.ContainsKey("member") -and
             ([string]$Candidate.member).StartsWith("line-") -and
@@ -253,6 +256,11 @@ function Test-SplitStringConstantStartLine {
 function Test-SimpleQueryAnnotationLine {
     param([string] $Line)
     return $Line -match '^\s*@Query\("(?<value>[^"\\]+)"\)\s*$'
+}
+
+function Test-SplitQueryAnnotationStartLine {
+    param([string] $Line)
+    return $Line -match '^\s*@Query\(\s*(?:value\s*=\s*)?"(?<value>[^"\\]+)"\s*\+\s*$'
 }
 
 function Test-BootstrapStringInvocationWrapCandidateLine {
@@ -476,7 +484,34 @@ foreach ($file in $sourceFiles) {
             if ($lines[$i].Length -le $springDataQueryThreshold) {
                 continue
             }
-            if (-not (Test-SimpleQueryAnnotationLine $lines[$i])) {
+            $line = $lines[$i]
+            if ((-not (Test-SimpleQueryAnnotationLine $line)) -and (-not (Test-SplitQueryAnnotationStartLine $line))) {
+                continue
+            }
+            if (Test-SplitQueryAnnotationStartLine $line) {
+                if ($i -eq ($lines.Count - 1)) {
+                    continue
+                }
+                if ($lines[$i + 1] -notmatch '^\s*"[^"\\]+"\s*\)\s*$' -and
+                    $lines[$i + 1] -notmatch '^\s*"[^"\\]+";\s*$') {
+                    continue
+                }
+
+                $member = "line-$($i + 1)"
+                Add-Candidate -CandidateClass "spring_data_query_concat_wrap_cleanup" -AllowedTypes $allowedCandidateTypes -Bucket $candidates -Candidate ([ordered]@{
+                    candidateId = New-CandidateId $path "spring_data_query_concat_wrap_cleanup" $member
+                    score = 30 + 30 + 20 + 10 + $layerScore
+                    file = $path
+                    member = $member
+                    springDataQueryWrapPattern = "split_query_annotation_wrap"
+                    expectedDiffSummary = "Normalize a concatenated Spring Data @Query annotation into a stable wrapped two-line format."
+                    estimatedChangedLines = 2
+                    tieBreak = [ordered]@{ layerScore = $layerScore; path = $path; member = $member }
+                })
+                continue
+            }
+
+            if (-not (Test-SimpleQueryAnnotationLine $line)) {
                 continue
             }
 

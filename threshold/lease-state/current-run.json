@@ -1,25 +1,20 @@
 {
     "schemaVersion":  "threshold.petclinic.lease-state.v0.2",
-    "invocationId":  "owned-autonomous-refactor-branch-wave-v0_automation-20260716T173003Z",
+    "invocationId":  "owned-autonomous-refactor-branch-wave-v0_automation-20260716T183303Z",
     "leaseId":  "owned-autonomous-refactor-branch-wave-v0_automation",
     "mode":  "local_refactor",
-    "branch":  "threshold-governed-refactor-demo-100",
-    "startHead":  "c20653dbd71a7df2847f5e2de9b32c18206aaad5",
-    "currentHead":  "136913f1e9417443f33c3ac587b1f2934a26dd8e",
-    "currentSourceHead":  "b98bd817f99a25d5012059f4b42b7303a633c21e",
-    "candidatesProcessed":  1,
-    "commitsCreated":  1,
+    "branch":  "threshold-governed-refactor-demo-105",
+    "startHead":  "c8471e6741db8a8582701839f3c44873206d32a0",
+    "currentHead":  "ffe90d7884da2513ae5fa4b81f55afaca78f1af4",
+    "currentSourceHead":  "ffe90d7884da2513ae5fa4b81f55afaca78f1af4",
+    "candidatesProcessed":  2,
+    "commitsCreated":  2,
     "remainingBudget":  {
-                            "candidates":  4,
-                            "commits":  4,
+                            "candidates":  3,
+                            "commits":  3,
                             "repairAttempts":  1
                         },
-    "lastReceipt":  "threshold/receipts/src-main-java-org-springframework-samples-petclinic-petclinicinitializer-java-application-bootstrap-readability-cleanup-line-59-b98bd817f99a.json",
-    "terminalState":  "ready_no_candidates_verified",
-    "updatedAt":  "2026-07-16T17:31:41.4198579Z",
-    "terminalReason":  "no applicable autoPatchable candidates after discovery canary passed",
-    "discoveryCanaryLastPassedAt":  "2026-07-16T17:31:41.4136538Z",
-    "scopeExpansionTier":  2,
-    "scopeExpansionReason":  "mid_wave_candidate_shortage",
-    "scopeExpansionAppliedAt":  "2026-07-16T17:31:30.7352200Z"
+    "lastReceipt":  "threshold/receipts/src-main-java-org-springframework-samples-petclinic-repository-springdatajpa-springdataownerrepository-java-spring-data-query-concat-wrap-cleanup-line-41-ffe90d7884da.json",
+    "terminalState":  "active",
+    "updatedAt":  "2026-07-16T18:43:42.3620108Z"
 }
