@@ -292,193 +292,234 @@ function New-PullRequestBody {
 "@
 }
 
-$governancePaths = @($LeasePath, $StatePath, $PocketPath)
+function Invoke-LocalWave {
+    $governancePaths = @($LeasePath, $StatePath, $PocketPath)
 
-Assert-CleanWorktree
-Invoke-Checked -FilePath "git" -ArgumentList @("fetch", $BaseRemote) -FailureMessage "Failed to fetch $BaseRemote."
+    Assert-CleanWorktree
+    Invoke-Checked -FilePath "git" -ArgumentList @("fetch", $BaseRemote) -FailureMessage "Failed to fetch $BaseRemote."
 
-$branch = Get-NextWaveBranchName
-Invoke-Checked -FilePath "git" -ArgumentList @("switch", "-c", $branch, "$BaseRemote/$BaseBranch") -FailureMessage "Failed to switch to new branch '$branch'."
+    $branch = Get-NextWaveBranchName
+    Invoke-Checked -FilePath "git" -ArgumentList @("switch", "-c", $branch, "$BaseRemote/$BaseBranch") -FailureMessage "Failed to switch to new branch '$branch'."
 
-Invoke-Checked -FilePath "powershell.exe" -ArgumentList @(
-    "-ExecutionPolicy",
-    "Bypass",
-    "-File",
-    ".\threshold\scripts\start-lease.ps1",
-    "-LeaseName",
-    $LeaseName,
-    "-MaxCandidatesThisRun",
-    "$MaxCandidatesThisRun",
-    "-MaxCommitsThisRun",
-    "$MaxCommitsThisRun",
-    "-MaxFilesPerCandidate",
-    "$MaxFilesPerCandidate",
-    "-MaxChangedLinesPerCandidate",
-    "$MaxChangedLinesPerCandidate",
-    "-MaxRepairAttemptsPerCandidate",
-    "$MaxRepairAttemptsPerCandidate",
-    "-DraftPrAllowed"
-) -FailureMessage "Failed to start lease."
-
-Update-CandidatePocket
-$initialAutoPatchableCount = Get-AutoPatchableCandidateCount -Path $PocketPath
-while ($initialAutoPatchableCount -lt $MinAutoPatchableCandidates) {
-    if (-not (Try-ExpandScopeForCandidateShortage -Reason "fresh_wave_candidate_shortage")) {
-        break
-    }
-    Update-CandidatePocket
-    $initialAutoPatchableCount = Get-AutoPatchableCandidateCount -Path $PocketPath
-}
-if ($initialAutoPatchableCount -lt $MinAutoPatchableCandidates) {
-    Restore-GovernancePaths
-    Write-Host "ready_no_candidates_on_fresh_wave"
-    Write-Host "branch=$branch"
-    Write-Host "head=$((& git rev-parse HEAD).Trim())"
-    Write-Host "autoPatchableCandidateCount=$initialAutoPatchableCount"
-    Write-Host "minAutoPatchableCandidates=$MinAutoPatchableCandidates"
-    exit 0
-}
-
-$waveNumber = Get-WaveNumberFromBranch -Branch $branch
-[void](Commit-PathsIfNeeded -Paths $governancePaths -Message "Start Threshold wave $waveNumber candidate pocket")
-
-while ($true) {
     Invoke-Checked -FilePath "powershell.exe" -ArgumentList @(
         "-ExecutionPolicy",
         "Bypass",
         "-File",
-        ".\threshold\scripts\run-next-slice.ps1"
-    ) -FailureMessage "run-next-slice failed."
+        ".\threshold\scripts\start-lease.ps1",
+        "-LeaseName",
+        $LeaseName,
+        "-MaxCandidatesThisRun",
+        "$MaxCandidatesThisRun",
+        "-MaxCommitsThisRun",
+        "$MaxCommitsThisRun",
+        "-MaxFilesPerCandidate",
+        "$MaxFilesPerCandidate",
+        "-MaxChangedLinesPerCandidate",
+        "$MaxChangedLinesPerCandidate",
+        "-MaxRepairAttemptsPerCandidate",
+        "$MaxRepairAttemptsPerCandidate",
+        "-DraftPrAllowed"
+    ) -FailureMessage "Failed to start lease."
 
-    $state = Read-JsonFile -Path $StatePath
-    if ($state.terminalState -eq "ready_no_candidates_verified") {
-        Update-CandidatePocket
-        $autoPatchableCandidateCount = Get-AutoPatchableCandidateCount -Path $PocketPath
-        if ($state.remainingBudget.candidates -gt 0 -and
-            $state.remainingBudget.commits -gt 0 -and
-            $autoPatchableCandidateCount -lt $MinAutoPatchableCandidates -and
-            (Try-ExpandScopeForCandidateShortage -Reason "mid_wave_candidate_shortage")) {
-            Update-CandidatePocket
-            [void](Commit-PathsIfNeeded -Paths $governancePaths -Message "Expand Threshold wave $waveNumber scope")
-            continue
+    Update-CandidatePocket
+    $initialAutoPatchableCount = Get-AutoPatchableCandidateCount -Path $PocketPath
+    while ($initialAutoPatchableCount -lt $MinAutoPatchableCandidates) {
+        if (-not (Try-ExpandScopeForCandidateShortage -Reason "fresh_wave_candidate_shortage")) {
+            break
         }
-        break
+        Update-CandidatePocket
+        $initialAutoPatchableCount = Get-AutoPatchableCandidateCount -Path $PocketPath
     }
-    if ($state.terminalState -eq "budget_exhausted_verified") {
-        break
+    if ($initialAutoPatchableCount -lt $MinAutoPatchableCandidates) {
+        Restore-GovernancePaths
+        Write-Host "ready_no_candidates_on_fresh_wave"
+        Write-Host "branch=$branch"
+        Write-Host "head=$((& git rev-parse HEAD).Trim())"
+        Write-Host "autoPatchableCandidateCount=$initialAutoPatchableCount"
+        Write-Host "minAutoPatchableCandidates=$MinAutoPatchableCandidates"
+        exit 0
+    }
+
+    $waveNumber = Get-WaveNumberFromBranch -Branch $branch
+    [void](Commit-PathsIfNeeded -Paths $governancePaths -Message "Start Threshold wave $waveNumber candidate pocket")
+
+    while ($true) {
+        Invoke-Checked -FilePath "powershell.exe" -ArgumentList @(
+            "-ExecutionPolicy",
+            "Bypass",
+            "-File",
+            ".\threshold\scripts\run-next-slice.ps1"
+        ) -FailureMessage "run-next-slice failed."
+
+        $state = Read-JsonFile -Path $StatePath
+        if ($state.terminalState -eq "ready_no_candidates_verified") {
+            Update-CandidatePocket
+            $autoPatchableCandidateCount = Get-AutoPatchableCandidateCount -Path $PocketPath
+            if ($state.remainingBudget.candidates -gt 0 -and
+                $state.remainingBudget.commits -gt 0 -and
+                $autoPatchableCandidateCount -lt $MinAutoPatchableCandidates -and
+                (Try-ExpandScopeForCandidateShortage -Reason "mid_wave_candidate_shortage")) {
+                Update-CandidatePocket
+                [void](Commit-PathsIfNeeded -Paths $governancePaths -Message "Expand Threshold wave $waveNumber scope")
+                continue
+            }
+            break
+        }
+        if ($state.terminalState -eq "budget_exhausted_verified") {
+            break
+        }
+
+        Update-CandidatePocket
+        [void](Commit-PathsIfNeeded -Paths @($PocketPath) -Message "Record Threshold wave $waveNumber updated candidate pocket")
     }
 
     Update-CandidatePocket
-    [void](Commit-PathsIfNeeded -Paths @($PocketPath) -Message "Record Threshold wave $waveNumber updated candidate pocket")
+    $state = Read-JsonFile -Path $StatePath
+    [void](Commit-PathsIfNeeded -Paths $governancePaths -Message "Record Threshold wave $waveNumber terminal state")
+
+    return [pscustomobject]@{
+        Branch = $branch
+        WaveNumber = $waveNumber
+        State = $state
+    }
 }
 
-Update-CandidatePocket
-$state = Read-JsonFile -Path $StatePath
-[void](Commit-PathsIfNeeded -Paths $governancePaths -Message "Record Threshold wave $waveNumber terminal state")
-
-Assert-CleanWorktree
-Invoke-Checked -FilePath "git" -ArgumentList @("diff", "--check") -FailureMessage "git diff --check failed."
-Invoke-Checked -FilePath "powershell.exe" -ArgumentList @(
-    "-ExecutionPolicy",
-    "Bypass",
-    "-Command",
-    "`$env:JAVA_HOME='C:\Program Files\Java\jdk-17'; .\mvnw.cmd test"
-) -FailureMessage "Final Maven test failed."
-
-if ($SkipPush.IsPresent) {
-    Write-Host "start-next-wave completed without push"
-    Write-Host "branch=$branch"
-    Write-Host "head=$((& git rev-parse HEAD).Trim())"
-    Write-Host "terminalState=$($state.terminalState)"
-    exit 0
+function Invoke-LocalWaveValidation {
+    Assert-CleanWorktree
+    Invoke-Checked -FilePath "git" -ArgumentList @("diff", "--check") -FailureMessage "git diff --check failed."
+    Invoke-Checked -FilePath "powershell.exe" -ArgumentList @(
+        "-ExecutionPolicy",
+        "Bypass",
+        "-Command",
+        "`$env:JAVA_HOME='C:\Program Files\Java\jdk-17'; .\mvnw.cmd test"
+    ) -FailureMessage "Final Maven test failed."
 }
 
-Invoke-Checked -FilePath "git" -ArgumentList @("push", $BaseRemote, $branch) -FailureMessage "Failed to push branch '$branch'."
+function Invoke-PullRequestPublish {
+    param([pscustomobject] $Wave)
 
-if ($SkipPullRequest.IsPresent) {
-    Write-Host "start-next-wave completed without pull request"
-    Write-Host "branch=$branch"
-    Write-Host "head=$((& git rev-parse HEAD).Trim())"
-    Write-Host "terminalState=$($state.terminalState)"
-    exit 0
+    Invoke-Checked -FilePath "git" -ArgumentList @("push", $BaseRemote, $Wave.Branch) -FailureMessage "Failed to push branch '$($Wave.Branch)'."
+
+    if ($SkipPullRequest.IsPresent) {
+        Write-Host "start-next-wave completed without pull request"
+        Write-Host "branch=$($Wave.Branch)"
+        Write-Host "head=$((& git rev-parse HEAD).Trim())"
+        Write-Host "terminalState=$($Wave.State.terminalState)"
+        exit 0
+    }
+
+    $prTitle = "Refactor PetClinic autonomous wave $($Wave.WaveNumber)"
+    $prBody = New-PullRequestBody -WaveNumber $Wave.WaveNumber -State $Wave.State
+    $prCreateOutput = Invoke-Checked -FilePath "gh" -ArgumentList @(
+        "pr",
+        "create",
+        "--repo",
+        $OwnedRepo,
+        "--base",
+        $BaseBranch,
+        "--head",
+        $Wave.Branch,
+        "--title",
+        $prTitle,
+        "--body",
+        $prBody
+    ) -FailureMessage "Failed to create pull request."
+
+    $prUrl = ($prCreateOutput | Select-Object -Last 1).Trim()
+    $prMatch = [regex]::Match($prUrl, "/pull/(?<number>\d+)$")
+    if (-not $prMatch.Success) {
+        throw "Could not parse pull request number from '$prUrl'."
+    }
+    $prNumber = [int]$prMatch.Groups["number"].Value
+
+    return [pscustomobject]@{
+        Number = $prNumber
+        Url = $prUrl
+        Title = $prTitle
+    }
 }
 
-$prTitle = "Refactor PetClinic autonomous wave $waveNumber"
-$prBody = New-PullRequestBody -WaveNumber $waveNumber -State $state
-$prCreateOutput = Invoke-Checked -FilePath "gh" -ArgumentList @(
-    "pr",
-    "create",
-    "--repo",
-    $OwnedRepo,
-    "--base",
-    $BaseBranch,
-    "--head",
-    $branch,
-    "--title",
-    $prTitle,
-    "--body",
-    $prBody
-) -FailureMessage "Failed to create pull request."
+function Invoke-PullRequestVerification {
+    param([pscustomobject] $PullRequest)
 
-$prUrl = ($prCreateOutput | Select-Object -Last 1).Trim()
-$prMatch = [regex]::Match($prUrl, "/pull/(?<number>\d+)$")
-if (-not $prMatch.Success) {
-    throw "Could not parse pull request number from '$prUrl'."
-}
-$prNumber = [int]$prMatch.Groups["number"].Value
+    Invoke-Checked -FilePath "gh" -ArgumentList @(
+        "pr",
+        "checks",
+        "$($PullRequest.Number)",
+        "--repo",
+        $OwnedRepo,
+        "--watch"
+    ) -FailureMessage "Pull request checks did not complete successfully for #$($PullRequest.Number)."
 
-Invoke-Checked -FilePath "gh" -ArgumentList @(
-    "pr",
-    "checks",
-    "$prNumber",
-    "--repo",
-    $OwnedRepo,
-    "--watch"
-) -FailureMessage "Pull request checks did not complete successfully for #$prNumber."
-
-$pullRequest = Get-PullRequestMetadata -Number $prNumber
-Assert-ReadyForMerge -PullRequest $pullRequest
-
-if ($SkipMerge.IsPresent) {
-    Write-Host "start-next-wave completed without merge"
-    Write-Host "branch=$branch"
-    Write-Host "pullRequest=$prUrl"
-    Write-Host "terminalState=$($state.terminalState)"
-    exit 0
+    $pullRequestMetadata = Get-PullRequestMetadata -Number $PullRequest.Number
+    Assert-ReadyForMerge -PullRequest $pullRequestMetadata
+    return $pullRequestMetadata
 }
 
-$mergeBody = @"
-PR #$prNumber
-branch $branch
+function Invoke-AuthorizedMerge {
+    param(
+        [pscustomobject] $Wave,
+        [pscustomobject] $PullRequest
+    )
+
+    $mergeBody = @"
+PR #$($PullRequest.Number)
+branch $($Wave.Branch)
 local validation: Maven test BUILD SUCCESS
 CI: all visible checks passed
 non-claims: no upstream interaction, no release, no deploy, no public readiness/correctness/security/compliance claim
 "@
 
-Invoke-Checked -FilePath "gh" -ArgumentList @(
-    "pr",
-    "merge",
-    "$prNumber",
-    "--repo",
-    $OwnedRepo,
-    "--squash",
-    "--subject",
-    $prTitle,
-    "--body",
-    $mergeBody
-) -FailureMessage "Failed to merge pull request #$prNumber."
+    Invoke-Checked -FilePath "gh" -ArgumentList @(
+        "pr",
+        "merge",
+        "$($PullRequest.Number)",
+        "--repo",
+        $OwnedRepo,
+        "--squash",
+        "--subject",
+        $PullRequest.Title,
+        "--body",
+        $mergeBody
+    ) -FailureMessage "Failed to merge pull request #$($PullRequest.Number)."
 
-$mergedPullRequest = Get-PullRequestMetadata -Number $prNumber
-if ($mergedPullRequest.merged -ne $true) {
-    throw "Pull request #$prNumber did not reach merged state."
+    $mergedPullRequest = Get-PullRequestMetadata -Number $PullRequest.Number
+    if ($mergedPullRequest.merged -ne $true) {
+        throw "Pull request #$($PullRequest.Number) did not reach merged state."
+    }
+
+    Assert-RemoteBaseMatchesMergeCommit -MergedPullRequest $mergedPullRequest
+    return $mergedPullRequest
 }
 
-Assert-RemoteBaseMatchesMergeCommit -MergedPullRequest $mergedPullRequest
+$wave = Invoke-LocalWave
+Invoke-LocalWaveValidation
+
+if ($SkipPush.IsPresent) {
+    Write-Host "start-next-wave completed without push"
+    Write-Host "branch=$($wave.Branch)"
+    Write-Host "head=$((& git rev-parse HEAD).Trim())"
+    Write-Host "terminalState=$($wave.State.terminalState)"
+    exit 0
+}
+
+$pullRequest = Invoke-PullRequestPublish -Wave $wave
+$pullRequestMetadata = Invoke-PullRequestVerification -PullRequest $pullRequest
+
+if ($SkipMerge.IsPresent) {
+    Write-Host "start-next-wave completed without merge"
+    Write-Host "branch=$($wave.Branch)"
+    Write-Host "pullRequest=$($pullRequest.Url)"
+    Write-Host "terminalState=$($wave.State.terminalState)"
+    exit 0
+}
+
+$mergedPullRequest = Invoke-AuthorizedMerge -Wave $wave -PullRequest $pullRequest
 
 Write-Host "start-next-wave completed"
-Write-Host "branch=$branch"
-Write-Host "waveNumber=$waveNumber"
+Write-Host "branch=$($wave.Branch)"
+Write-Host "waveNumber=$($wave.WaveNumber)"
 Write-Host "pullRequest=$($mergedPullRequest.url)"
 Write-Host "mergeCommit=$($mergedPullRequest.merge_commit_sha)"
-Write-Host "terminalState=$($state.terminalState)"
+Write-Host "terminalState=$($wave.State.terminalState)"
 Write-Host "ready_for_next_wave=true"
