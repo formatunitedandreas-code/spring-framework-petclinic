@@ -1,0 +1,50 @@
+{
+    "schemaVersion":  "threshold.petclinic.slice-receipt.v0.2",
+    "candidateId":  "src-main-java-org-springframework-samples-petclinic-repository-springdatajpa-springdataownerrepository-java-spring-data-query-concat-wrap-cleanup-line-41",
+    "leaseName":  "owned-autonomous-refactor-branch-wave-v0_automation",
+    "branch":  "threshold-governed-refactor-demo-105",
+    "candidateClass":  "spring_data_query_concat_wrap_cleanup",
+    "leaseStartHead":  "c8471e6741db8a8582701839f3c44873206d32a0",
+    "baseHead":  "5adaa30113a29e9ce5aee7c2a3a63ee05e2cb1ac",
+    "commitHash":  "ffe90d7884da2513ae5fa4b81f55afaca78f1af4",
+    "receiptMaterialization":  "post-commit",
+    "perCommitValidationLogAvailable":  true,
+    "branchFinalValidationPassed":  false,
+    "changedFiles":  [
+                         {
+                             "path":  "src/main/java/org/springframework/samples/petclinic/repository/springdatajpa/SpringDataOwnerRepository.java",
+                             "beforeSha256":  "08177e993d4561e1e88f9b65d78f6ad9565d7859c8629a9609b0368cf1a9840c",
+                             "afterSha256":  "484a2efa9668bf91e87453074a1b847a4662dda9c28b8ef48c4321cf386d7ad7"
+                         }
+                     ],
+    "diffSummary":  "Refactor PetClinic Normalize a concatenated Spring Data @Query annotation",
+    "diffStat":  {
+                     "filesChanged":  1,
+                     "insertions":  2,
+                     "deletions":  1
+                 },
+    "validation":  {
+                       "diffCheck":  "passed",
+                       "command":  ".\\mvnw.cmd test",
+                       "result":  "BUILD SUCCESS",
+                       "testsRun":  75,
+                       "failures":  0,
+                       "errors":  0,
+                       "skipped":  0
+                   },
+    "nonClaims":  [
+                      "no push in candidate slice",
+                      "no PR update in candidate slice",
+                      "no upstream interaction",
+                      "no pom.xml change",
+                      "no dependency change",
+                      "no src/test change",
+                      "no merge",
+                      "no release",
+                      "no deploy",
+                      "no public readiness claim",
+                      "no public correctness claim",
+                      "no public security claim",
+                      "no public compliance claim"
+                  ]
+}
