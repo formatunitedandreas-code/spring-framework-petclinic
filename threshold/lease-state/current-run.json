@@ -1,22 +1,22 @@
 {
     "schemaVersion":  "threshold.petclinic.lease-state.v0.2",
-    "invocationId":  "owned-autonomous-refactor-branch-wave-v0_automation-20260716T142527Z",
+    "invocationId":  "owned-autonomous-refactor-branch-wave-v0_automation-20260716T170859Z",
     "leaseId":  "owned-autonomous-refactor-branch-wave-v0_automation",
     "mode":  "local_refactor",
-    "branch":  "threshold-governed-refactor-demo-96",
-    "startHead":  "cc4273934ce9056ce04a2d9f58f1393e2d2a588e",
-    "currentHead":  "fb300729d05a0ea99e7dfcfb632c05851bcc77a1",
-    "currentSourceHead":  "4aa99d83b5b2a95e03a840d22df21fa94e5fc413",
-    "candidatesProcessed":  5,
-    "commitsCreated":  5,
+    "branch":  "threshold-governed-refactor-demo-98",
+    "startHead":  "70958def093b5b7efeb5f81c6f0ee59cd5b4d69b",
+    "currentHead":  "15f5091b10f85b8711a16dc6903ddd8da39b8d2d",
+    "currentSourceHead":  "934747ceb963462af3cc11f53a9e96ddf5427a03",
+    "candidatesProcessed":  3,
+    "commitsCreated":  3,
     "remainingBudget":  {
-                            "candidates":  0,
-                            "commits":  0,
+                            "candidates":  2,
+                            "commits":  2,
                             "repairAttempts":  1
                         },
-    "lastReceipt":  "threshold/receipts/src-main-java-org-springframework-samples-petclinic-web-pettypeformatter-java-comment-wrap-cleanup-line-29-4aa99d83b5b2.json",
-    "terminalState":  "budget_exhausted_verified",
-    "updatedAt":  "2026-07-16T16:40:08.2538571Z",
-    "terminalReason":  "remaining candidate or commit budget is exhausted after discovery canary passed",
-    "discoveryCanaryLastPassedAt":  "2026-07-16T16:40:08.2440980Z"
+    "lastReceipt":  "threshold/receipts/src-main-java-org-springframework-samples-petclinic-web-vetcontroller-java-line-comment-wrap-cleanup-line-72-934747ceb963.json",
+    "terminalState":  "ready_no_candidates_verified",
+    "updatedAt":  "2026-07-16T17:12:45.7707863Z",
+    "terminalReason":  "no applicable autoPatchable candidates after discovery canary passed",
+    "discoveryCanaryLastPassedAt":  "2026-07-16T17:12:45.7643440Z"
 }

@@ -45,7 +45,8 @@ public class VetController {
 
     @GetMapping("/vets")
     public String showVetList(Map<String, Object> model) {
-        // Here we are returning an object of type 'Vets' rather than a collection of Vet objects
+        // Here we are returning an object of type 'Vets' rather than a
+        // collection of Vet objects
         // so it is simpler for Object-Xml mapping
         addVetsToModel(model);
         return VIEWS_VET_LIST;
@@ -68,7 +69,8 @@ public class VetController {
     }
 
     private Vets getVets() {
-        // Here we are returning an object of type 'Vets' rather than a collection of Vet objects
+        // Here we are returning an object of type 'Vets' rather than a
+        // collection of Vet objects
         // so it is simpler for JSon/Object mapping
         return createVets(this.clinicService.findVets());
     }
