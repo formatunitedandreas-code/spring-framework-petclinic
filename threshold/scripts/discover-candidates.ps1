@@ -227,6 +227,13 @@ function Test-AutoPatchableCandidate {
             $Candidate.ContainsKey("bootstrapWrapPattern") -and
             [string]$Candidate.bootstrapWrapPattern -eq "string_argument_invocation_wrap"
     }
+    if ($CandidateClass -eq "leading_tab_indentation_cleanup") {
+        return $Candidate.ContainsKey("member") -and
+            ([string]$Candidate.member).StartsWith("line-") -and
+            $Candidate.ContainsKey("lineCount") -and
+            [int]$Candidate.lineCount -gt 0 -and
+            [int]$Candidate.lineCount -le 40
+    }
     return $false
 }
 
@@ -394,6 +401,35 @@ foreach ($file in $sourceFiles) {
     elseif ($path -like "*/model/*") { $layerScore = 6 }
     elseif ($path -like "*/web/*") { $layerScore = 5 }
     elseif ($path -like "*/util/*") { $layerScore = 5 }
+
+    # Heuristic 0: normalize a small contiguous block of leading tab indentation.
+    $tabBlockStart = $null
+    $tabBlockLength = 0
+    for ($i = 0; $i -lt $lines.Count; $i++) {
+        if ($lines[$i] -match "^\t+\S") {
+            if ($null -eq $tabBlockStart) {
+                $tabBlockStart = $i
+            }
+            $tabBlockLength++
+            continue
+        }
+        if ($null -ne $tabBlockStart) {
+            break
+        }
+    }
+    if ($null -ne $tabBlockStart -and $tabBlockLength -gt 0 -and $tabBlockLength -le 40) {
+        $member = "line-$($tabBlockStart + 1)"
+        Add-Candidate -CandidateClass "leading_tab_indentation_cleanup" -AllowedTypes $allowedCandidateTypes -Bucket $candidates -Candidate ([ordered]@{
+            candidateId = New-CandidateId $path "leading_tab_indentation_cleanup" $member
+            score = 30 + 30 + 20 + 10 + $layerScore
+            file = $path
+            member = $member
+            lineCount = $tabBlockLength
+            expectedDiffSummary = "Normalize a contiguous leading-tab indentation block to spaces without changing behavior."
+            estimatedChangedLines = $tabBlockLength
+            tieBreak = [ordered]@{ layerScore = $layerScore; path = $path; member = $member }
+        })
+    }
 
     # Heuristic 1: remove redundant local variable if assigned once and directly returned.
     $returnLocalPattern = "(?ms)(?<type>[A-Z][A-Za-z0-9_<>, ?]+)\s+(?<name>[a-z][A-Za-z0-9_]*)\s*=\s*(?<expr>[^;]+);\s*return\s+\k<name>\s*;"
