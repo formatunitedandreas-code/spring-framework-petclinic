@@ -2,8 +2,8 @@
     "schemaVersion":  "threshold.petclinic.candidate-pocket.v0.2",
     "leaseName":  "owned-autonomous-refactor-branch-wave-v0_automation",
     "branch":  "threshold-governed-refactor-demo-117",
-    "generatedFromHead":  "95748dea8561eec34a74272f995d7fd01d93c496",
-    "generatedAt":  "2026-07-16T22:19:41.9518773Z",
+    "generatedFromHead":  "1d7054fc5a2e59d1c951241dbe63157ffec7e08b",
+    "generatedAt":  "2026-07-16T22:20:37.6092645Z",
     "discovery":  {
                       "method":  "static-heuristic-scan",
                       "sourceRoot":  "src/main/java/org/springframework/samples/petclinic",
@@ -67,7 +67,7 @@
                            "tieBreak":  {
                                             "layerScore":  7,
                                             "path":  "src/main/java/org/springframework/samples/petclinic/repository/jdbc/OneToManyResultSetExtractor.java",
-                                            "member":  "line-81"
+                                            "member":  "line-91"
                                         },
                            "gate":  {
                                         "required":  true,
@@ -76,19 +76,19 @@
                                     },
                            "score":  97,
                            "autoPatchable":  true,
-                           "member":  "line-81",
+                           "member":  "line-91",
                            "reviewOnly":  false,
                            "executionMode":  "auto_patchable",
                            "file":  "src/main/java/org/springframework/samples/petclinic/repository/jdbc/OneToManyResultSetExtractor.java",
-                           "lineCount":  1,
-                           "candidateId":  "src-main-java-org-springframework-samples-petclinic-repository-jdbc-onetomanyresultsetextractor-java-leading-tab-indentation-cleanup-line-81",
+                           "lineCount":  2,
+                           "candidateId":  "src-main-java-org-springframework-samples-petclinic-repository-jdbc-onetomanyresultsetextractor-java-leading-tab-indentation-cleanup-line-91",
                            "expectedDiffSummary":  "Normalize a contiguous leading-tab indentation block to spaces without changing behavior.",
                            "candidateClass":  "leading_tab_indentation_cleanup",
-                           "estimatedChangedLines":  1
+                           "estimatedChangedLines":  2
                        }
                    ],
-    "nextRecommendedCandidateId":  "src-main-java-org-springframework-samples-petclinic-repository-jdbc-onetomanyresultsetextractor-java-leading-tab-indentation-cleanup-line-81",
-    "nextAutoPatchableCandidateId":  "src-main-java-org-springframework-samples-petclinic-repository-jdbc-onetomanyresultsetextractor-java-leading-tab-indentation-cleanup-line-81",
+    "nextRecommendedCandidateId":  "src-main-java-org-springframework-samples-petclinic-repository-jdbc-onetomanyresultsetextractor-java-leading-tab-indentation-cleanup-line-91",
+    "nextAutoPatchableCandidateId":  "src-main-java-org-springframework-samples-petclinic-repository-jdbc-onetomanyresultsetextractor-java-leading-tab-indentation-cleanup-line-91",
     "nonClaims":  [
                       "candidate pocket is not an implementation claim",
                       "candidate pocket does not claim behavior preservation until slice validation passes",
