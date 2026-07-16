@@ -96,45 +96,45 @@ public abstract class OneToManyResultSetExtractor<R, C, K> implements ResultSetE
         this.expectedResults = expectedResults == null ? ExpectedResults.ANY : expectedResults;
     }
 
-	public List<R> extractData(ResultSet rs) throws SQLException {
-		List<R> results = new ArrayList<>();
-		int row = 0;
-		boolean more = rs.next();
-		if (more) {
-			row++;
-		}
-		while (more) {
-			R root = rootMapper.mapRow(rs, row);
-			K primaryKey = mapPrimaryKey(rs);
-			K foreignKey = mapForeignKey(rs);
-			if (foreignKey != null) {
-				while (more && primaryKey.equals(foreignKey)) {
-					addChild(root, childMapper.mapRow(rs, row));
-					more = rs.next();
-					if (more) {
-						row++;
-						foreignKey = mapForeignKey(rs);
-					}
-				}
-			}
-			else {
-				more = rs.next();
-				if (more) {
-					row++;
-				}
-			}
-			results.add(root);
-		}
-		if ((expectedResults == ExpectedResults.ONE_AND_ONLY_ONE || expectedResults == ExpectedResults.ONE_OR_NONE) &&
-				results.size() > 1) {
-			throw new IncorrectResultSizeDataAccessException(1, results.size());
-		}
-		if ((expectedResults == ExpectedResults.ONE_AND_ONLY_ONE || expectedResults == ExpectedResults.AT_LEAST_ONE) &&
-				results.isEmpty()) {
-			throw new IncorrectResultSizeDataAccessException(1, 0);
-		}
-		return results;
-	}
+    public List<R> extractData(ResultSet rs) throws SQLException {
+        List<R> results = new ArrayList<>();
+        int row = 0;
+        boolean more = rs.next();
+        if (more) {
+            row++;
+        }
+        while (more) {
+            R root = rootMapper.mapRow(rs, row);
+            K primaryKey = mapPrimaryKey(rs);
+            K foreignKey = mapForeignKey(rs);
+            if (foreignKey != null) {
+                while (more && primaryKey.equals(foreignKey)) {
+                    addChild(root, childMapper.mapRow(rs, row));
+                    more = rs.next();
+                    if (more) {
+                        row++;
+                        foreignKey = mapForeignKey(rs);
+                    }
+                }
+            }
+            else {
+                more = rs.next();
+                if (more) {
+                    row++;
+                }
+            }
+            results.add(root);
+        }
+        if ((expectedResults == ExpectedResults.ONE_AND_ONLY_ONE || expectedResults == ExpectedResults.ONE_OR_NONE) &&
+                results.size() > 1) {
+            throw new IncorrectResultSizeDataAccessException(1, results.size());
+        }
+        if ((expectedResults == ExpectedResults.ONE_AND_ONLY_ONE || expectedResults == ExpectedResults.AT_LEAST_ONE) &&
+                results.isEmpty()) {
+            throw new IncorrectResultSizeDataAccessException(1, 0);
+        }
+        return results;
+    }
 
 	/**
 	 * Map the primary key value to the required type.
