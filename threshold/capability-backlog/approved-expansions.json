@@ -1,0 +1,40 @@
+{
+  "schemaVersion": "threshold.petclinic.capability-backlog.v0.1",
+  "purpose": "Pre-authorized capability expansion registry for the owned PetClinic autonomous cycle launcher.",
+  "policy": {
+    "missingEntryMeansStop": true,
+    "enabledFalseMeansStop": true,
+    "statusMustBeReady": true,
+    "applyScriptMustBeUnderThresholdScripts": true,
+    "allowedChangedPathsRequired": true,
+    "fullValidationRequiredBeforeCommit": true,
+    "ownedRepositoryOnly": true,
+    "upstreamInteractionForbidden": true,
+    "forcePushForbidden": true,
+    "releaseDeployForbidden": true
+  },
+  "approvedExpansions": [],
+  "heldExpansions": [
+    {
+      "id": "example-next-format-only-executor",
+      "status": "held",
+      "enabled": false,
+      "triggerTerminalStates": [
+        "ready_no_candidates_on_fresh_wave"
+      ],
+      "reason": "Template entry only. A real expansion requires an explicit applyScript, allowedChangedPaths, validationCommands, and commitMessage.",
+      "nonClaims": [
+        "held entries are not execution authority",
+        "held entries do not authorize source mutation",
+        "held entries do not authorize push, PR, merge, release, or deploy"
+      ]
+    }
+  ],
+  "nonClaims": [
+    "registry entry is not a behavior-preservation claim",
+    "registry entry is not a public readiness claim",
+    "registry entry is not a public correctness claim",
+    "registry entry does not authorize upstream interaction",
+    "registry entry does not authorize force push, release, or deploy"
+  ]
+}
