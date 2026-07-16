@@ -148,7 +148,7 @@ public abstract class OneToManyResultSetExtractor<R, C, K> implements ResultSetE
 	 */
     protected abstract K mapPrimaryKey(ResultSet rs) throws SQLException;
 
-	/**
+    /**
 	 * Map the foreign key value to the required type.
 	 * This method must be implemented by subclasses.
 	 * This method should not call <code>next()</code> on
