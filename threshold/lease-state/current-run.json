@@ -5,7 +5,7 @@
     "mode":  "local_refactor",
     "branch":  "threshold-governed-refactor-demo-119",
     "startHead":  "c172dbc464a57e920fd4588ed61152a3de7bfc8d",
-    "currentHead":  "dc9fe2c5ecf470737878fc44e8e3c3de5a022198",
+    "currentHead":  "eccd148799a81d979ac460e7d9eaf251bb1201ee",
     "currentSourceHead":  "a42adff40f4ec25cf1557ccfe1bc4c69eef8071d",
     "candidatesProcessed":  4,
     "commitsCreated":  4,
@@ -16,10 +16,10 @@
                         },
     "lastReceipt":  "threshold/receipts/src-main-java-org-springframework-samples-petclinic-repository-jdbc-onetomanyresultsetextractor-java-leading-tab-indentation-cleanup-line-170-a42adff40f4e.json",
     "terminalState":  "active",
-    "updatedAt":  "2026-07-16T22:50:57.1085657Z",
+    "updatedAt":  "2026-07-16T22:51:11.1085044Z",
     "terminalReason":  "no applicable autoPatchable candidates after discovery canary passed",
-    "discoveryCanaryLastPassedAt":  "2026-07-16T22:50:54.1251329Z",
-    "scopeExpansionTier":  1,
+    "discoveryCanaryLastPassedAt":  "2026-07-16T22:51:07.7093923Z",
+    "scopeExpansionTier":  2,
     "scopeExpansionReason":  "mid_wave_candidate_shortage",
-    "scopeExpansionAppliedAt":  "2026-07-16T22:50:57.1013299Z"
+    "scopeExpansionAppliedAt":  "2026-07-16T22:51:11.0951850Z"
 }

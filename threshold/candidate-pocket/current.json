@@ -2,8 +2,8 @@
     "schemaVersion":  "threshold.petclinic.candidate-pocket.v0.2",
     "leaseName":  "owned-autonomous-refactor-branch-wave-v0_automation",
     "branch":  "threshold-governed-refactor-demo-119",
-    "generatedFromHead":  "dc9fe2c5ecf470737878fc44e8e3c3de5a022198",
-    "generatedAt":  "2026-07-16T22:50:59.3252821Z",
+    "generatedFromHead":  "eccd148799a81d979ac460e7d9eaf251bb1201ee",
+    "generatedAt":  "2026-07-16T22:51:14.1508028Z",
     "discovery":  {
                       "method":  "static-heuristic-scan",
                       "sourceRoot":  "src/main/java/org/springframework/samples/petclinic",
@@ -35,11 +35,11 @@
                                       "member lexical"
                                   ],
                       "thresholds":  {
-                                         "longLineThreshold":  100,
-                                         "commentWrapThreshold":  100,
-                                         "springDataQueryThreshold":  70,
-                                         "repositoryMethodLengthThreshold":  6,
-                                         "utilityMethodLengthThreshold":  6
+                                         "longLineThreshold":  92,
+                                         "commentWrapThreshold":  96,
+                                         "springDataQueryThreshold":  60,
+                                         "repositoryMethodLengthThreshold":  5,
+                                         "utilityMethodLengthThreshold":  5
                                      },
                       "allowedCandidateTypes":  [
                                                     "private_helper_extraction_for_readability",
