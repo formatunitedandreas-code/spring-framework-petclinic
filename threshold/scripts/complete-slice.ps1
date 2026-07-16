@@ -1,7 +1,7 @@
 [CmdletBinding()]
 param(
-    [string] $LeasePath = "threshold/leases/current.yaml",
-    [string] $StatePath = "threshold/lease-state/current-run.json",
+    [string] $LeasePath = "",
+    [string] $StatePath = "",
     [Parameter(Mandatory = $true)]
     [string] $CandidateId,
     [Parameter(Mandatory = $true)]
@@ -14,6 +14,16 @@ param(
 
 Set-StrictMode -Version Latest
 $ErrorActionPreference = "Stop"
+
+. (Join-Path $PSScriptRoot "lib/runtime-paths.ps1")
+
+$runtimePaths = Get-ThresholdRuntimePaths
+if ([string]::IsNullOrWhiteSpace($LeasePath)) {
+    $LeasePath = $runtimePaths.LeasePath
+}
+if ([string]::IsNullOrWhiteSpace($StatePath)) {
+    $StatePath = $runtimePaths.LeaseStatePath
+}
 
 function ConvertTo-RepoPath {
     param([string] $Path)
@@ -50,9 +60,9 @@ if (-not $changedPaths) {
 
 if ($AllowedPath.Count -gt 0) {
     $runtimeAllowed = @(
-        "threshold/leases/current.yaml",
-        "threshold/lease-state/current-run.json"
-        "threshold/candidate-pocket/current.json"
+        $runtimePaths.LeasePath,
+        $runtimePaths.LeaseStatePath,
+        $runtimePaths.CandidatePocketPath
     )
     $allowedNormalized = @(
         @($AllowedPath | ForEach-Object { ConvertTo-RepoPath $_ }) +
