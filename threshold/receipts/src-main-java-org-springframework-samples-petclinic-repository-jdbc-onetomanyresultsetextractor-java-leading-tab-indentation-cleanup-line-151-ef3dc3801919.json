@@ -1,0 +1,50 @@
+{
+    "schemaVersion":  "threshold.petclinic.slice-receipt.v0.2",
+    "candidateId":  "src-main-java-org-springframework-samples-petclinic-repository-jdbc-onetomanyresultsetextractor-java-leading-tab-indentation-cleanup-line-151",
+    "leaseName":  "owned-autonomous-refactor-branch-wave-v0_automation",
+    "branch":  "threshold-governed-refactor-demo-119",
+    "candidateClass":  "leading_tab_indentation_cleanup",
+    "leaseStartHead":  "c172dbc464a57e920fd4588ed61152a3de7bfc8d",
+    "baseHead":  "743969a97fc03f4a038f357e6a8641171ec93e21",
+    "commitHash":  "ef3dc3801919ce05004363035327fb2c4850f9b9",
+    "receiptMaterialization":  "post-commit",
+    "perCommitValidationLogAvailable":  true,
+    "branchFinalValidationPassed":  false,
+    "changedFiles":  [
+                         {
+                             "path":  "src/main/java/org/springframework/samples/petclinic/repository/jdbc/OneToManyResultSetExtractor.java",
+                             "beforeSha256":  "c55ef97b6beffa364ba448eb9e08c12a1f18fd45db466ff83f636844ef939f49",
+                             "afterSha256":  "aedb8f1c3b4110e2839dccf2a88728b4010f9526022eb01a293e6a7f06798dc3"
+                         }
+                     ],
+    "diffSummary":  "Refactor PetClinic Normalize a contiguous leading-tab indentation block t",
+    "diffStat":  {
+                     "filesChanged":  1,
+                     "insertions":  1,
+                     "deletions":  1
+                 },
+    "validation":  {
+                       "diffCheck":  "passed",
+                       "command":  ".\\mvnw.cmd test",
+                       "result":  "BUILD SUCCESS",
+                       "testsRun":  75,
+                       "failures":  0,
+                       "errors":  0,
+                       "skipped":  0
+                   },
+    "nonClaims":  [
+                      "no push in candidate slice",
+                      "no PR update in candidate slice",
+                      "no upstream interaction",
+                      "no pom.xml change",
+                      "no dependency change",
+                      "no src/test change",
+                      "no merge",
+                      "no release",
+                      "no deploy",
+                      "no public readiness claim",
+                      "no public correctness claim",
+                      "no public security claim",
+                      "no public compliance claim"
+                  ]
+}
