@@ -500,7 +500,7 @@ non-claims: no upstream interaction, no release, no deploy, no public readiness/
     return $mergedPullRequest
 }
 
-$wave = Invoke-LocalWave
+$wave = @(Invoke-LocalWave) | Select-Object -Last 1
 Invoke-LocalWaveValidation
 
 if ($SkipPush.IsPresent -or $Phase -eq "LocalOnly") {
@@ -512,7 +512,7 @@ if ($SkipPush.IsPresent -or $Phase -eq "LocalOnly") {
     exit 0
 }
 
-$pullRequest = Invoke-PullRequestPublish -Wave $wave
+$pullRequest = @(Invoke-PullRequestPublish -Wave $wave) | Select-Object -Last 1
 
 if ($Phase -eq "PublishDraftPr") {
     Write-Host "start-next-wave completed after pull request publication"
@@ -523,7 +523,7 @@ if ($Phase -eq "PublishDraftPr") {
     exit 0
 }
 
-$pullRequestMetadata = Invoke-PullRequestVerification -PullRequest $pullRequest
+$pullRequestMetadata = @(Invoke-PullRequestVerification -PullRequest $pullRequest) | Select-Object -Last 1
 
 if ($SkipMerge.IsPresent -or $Phase -eq "VerifyPr") {
     Write-Host "start-next-wave completed without merge"
@@ -535,7 +535,7 @@ if ($SkipMerge.IsPresent -or $Phase -eq "VerifyPr") {
     exit 0
 }
 
-$mergedPullRequest = Invoke-AuthorizedMerge -Wave $wave -PullRequest $pullRequest
+$mergedPullRequest = @(Invoke-AuthorizedMerge -Wave $wave -PullRequest $pullRequest) | Select-Object -Last 1
 
 Write-Host "start-next-wave completed"
 Write-Host "branch=$($wave.Branch)"
