@@ -88,8 +88,8 @@ public abstract class OneToManyResultSetExtractor<R, C, K> implements ResultSetE
 	 */
     protected OneToManyResultSetExtractor(RowMapper<R> rootMapper, RowMapper<C> childMapper, ExpectedResults expectedResults) {
 
-		Assert.notNull(rootMapper, "Root RowMapper must not be null!");
-		Assert.notNull(childMapper, "Child RowMapper must not be null!");
+        Assert.notNull(rootMapper, "Root RowMapper must not be null!");
+        Assert.notNull(childMapper, "Child RowMapper must not be null!");
 
 		this.childMapper = childMapper;
 		this.rootMapper = rootMapper;
