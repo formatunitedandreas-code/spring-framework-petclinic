@@ -27,7 +27,8 @@ import org.springframework.jdbc.core.RowMapper;
 import org.springframework.util.Assert;
 
 /**
- * An abstract results extractor for row mapping operations that map multiple rows to a single
+ * An abstract results extractor for row mapping operations that map multiple
+ * rows to a single
  * root object. This is
  * useful when joining a one-to-many relationship where there can be multiple
  * child rows returned
