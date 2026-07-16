@@ -158,7 +158,7 @@ public abstract class OneToManyResultSetExtractor<R, C, K> implements ResultSetE
 	 * @return the foreign key value
 	 * @throws SQLException
 	 */
-	protected abstract K mapForeignKey(ResultSet rs) throws SQLException;
+    protected abstract K mapForeignKey(ResultSet rs) throws SQLException;
 
 	/**
 	 * Add the child object to the root object
