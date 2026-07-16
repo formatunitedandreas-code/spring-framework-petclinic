@@ -1,11 +1,18 @@
 [CmdletBinding()]
 param(
-    [string] $LeasePath = "threshold/leases/current.yaml",
+    [string] $LeasePath = "",
     [switch] $AllowDirty
 )
 
 Set-StrictMode -Version Latest
 $ErrorActionPreference = "Stop"
+
+. (Join-Path $PSScriptRoot "lib/runtime-paths.ps1")
+
+$runtimePaths = Get-ThresholdRuntimePaths
+if ([string]::IsNullOrWhiteSpace($LeasePath)) {
+    $LeasePath = $runtimePaths.LeasePath
+}
 
 function Get-LeaseScalar {
     param(

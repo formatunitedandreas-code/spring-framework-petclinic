@@ -1,13 +1,23 @@
 [CmdletBinding()]
 param(
-    [string] $LeasePath = "threshold/leases/current.yaml",
-    [string] $StatePath = "threshold/lease-state/current-run.json",
+    [string] $LeasePath = "",
+    [string] $StatePath = "",
     [switch] $SkipMavenTest,
     [switch] $RequireHeadReceipt
 )
 
 Set-StrictMode -Version Latest
 $ErrorActionPreference = "Stop"
+
+. (Join-Path $PSScriptRoot "lib/runtime-paths.ps1")
+
+$runtimePaths = Get-ThresholdRuntimePaths
+if ([string]::IsNullOrWhiteSpace($LeasePath)) {
+    $LeasePath = $runtimePaths.LeasePath
+}
+if ([string]::IsNullOrWhiteSpace($StatePath)) {
+    $StatePath = $runtimePaths.LeaseStatePath
+}
 
 function Get-LeaseScalar {
     param([string[]] $Lines, [string] $Name)
@@ -50,7 +60,7 @@ function Test-GovernancePath {
 
 function Get-ReceiptForCommit {
     param([string] $CommitHash)
-    $receiptPaths = @(Get-ChildItem threshold/receipts -Filter *.json -ErrorAction SilentlyContinue)
+    $receiptPaths = @(Get-ChildItem $runtimePaths.ReceiptDirectory -Filter *.json -ErrorAction SilentlyContinue)
     foreach ($receiptPath in $receiptPaths) {
         $receipt = Get-Content $receiptPath.FullName -Raw | ConvertFrom-Json
         if ($receipt.commitHash -eq $CommitHash) { return $receiptPath.FullName }
@@ -137,7 +147,9 @@ if (-not $changedPaths) {
 }
 
 $runtimeGovernanceArtifacts = @(
-    "threshold/lease-state/current-run.json"
+    $runtimePaths.LeasePath,
+    $runtimePaths.LeaseStatePath,
+    $runtimePaths.CandidatePocketPath
 )
 $effectiveChangedPaths = @($changedPaths | Where-Object { $runtimeGovernanceArtifacts -notcontains ($_ -replace "\\", "/") })
 if (-not $effectiveChangedPaths -and -not $RequireHeadReceipt -and $changedPaths.Count -gt 0) {
@@ -166,8 +178,8 @@ foreach ($path in $effectiveChangedPaths) {
 }
 
 $changedLineCount = 0
-$numstat = & git diff --numstat
-if (-not $numstat) { $numstat = & git diff --cached --numstat }
+$numstat = & git diff --numstat -- @effectiveChangedPaths
+if (-not $numstat) { $numstat = & git diff --cached --numstat -- @effectiveChangedPaths }
 foreach ($line in $numstat) {
     $parts = $line -split "\s+"
     if ($parts.Count -ge 2 -and $parts[0] -match "^\d+$" -and $parts[1] -match "^\d+$") {
@@ -175,7 +187,9 @@ foreach ($line in $numstat) {
     }
 }
 foreach ($path in $untrackedPaths) {
-    if (Test-Path $path) { $changedLineCount += (Get-Content $path).Count }
+    if (Test-Path $path -and ($runtimeGovernanceArtifacts -notcontains (($path -replace "\\", "/").Trim()))) {
+        $changedLineCount += (Get-Content $path).Count
+    }
 }
 $changedLineBudget = $maxChangedLines
 if ($governancePaths.Count -eq $effectiveChangedPaths.Count) { $changedLineBudget = $maxGovernanceChangedLines }

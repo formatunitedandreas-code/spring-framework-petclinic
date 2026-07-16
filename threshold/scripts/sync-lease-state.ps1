@@ -1,7 +1,7 @@
 [CmdletBinding(DefaultParameterSetName = "Check")]
 param(
-    [string] $LeasePath = "threshold/leases/current.yaml",
-    [string] $StatePath = "threshold/lease-state/current-run.json",
+    [string] $LeasePath = "",
+    [string] $StatePath = "",
     [Parameter(ParameterSetName = "Check")]
     [switch] $CheckOnly,
     [Parameter(ParameterSetName = "Write")]
@@ -10,6 +10,16 @@ param(
 
 Set-StrictMode -Version Latest
 $ErrorActionPreference = "Stop"
+
+. (Join-Path $PSScriptRoot "lib/runtime-paths.ps1")
+
+$runtimePaths = Get-ThresholdRuntimePaths
+if ([string]::IsNullOrWhiteSpace($LeasePath)) {
+    $LeasePath = $runtimePaths.LeasePath
+}
+if ([string]::IsNullOrWhiteSpace($StatePath)) {
+    $StatePath = $runtimePaths.LeaseStatePath
+}
 
 function Get-LeaseScalar {
     param([string[]] $Lines, [string] $Name)

@@ -1,25 +1,22 @@
 {
     "schemaVersion":  "threshold.petclinic.lease-state.v0.2",
-    "invocationId":  "owned-autonomous-refactor-branch-wave-v0_automation-20260716T191423Z",
+    "invocationId":  "owned-autonomous-refactor-branch-wave-v0_automation-20260716T210611Z",
     "leaseId":  "owned-autonomous-refactor-branch-wave-v0_automation",
     "mode":  "local_refactor",
-    "branch":  "threshold-governed-refactor-demo-108",
-    "startHead":  "a3b25d73cf8096bbef5d425f407ffccf1334046e",
-    "currentHead":  "a3b25d73cf8096bbef5d425f407ffccf1334046e",
-    "currentSourceHead":  "a3b25d73cf8096bbef5d425f407ffccf1334046e",
-    "candidatesProcessed":  0,
-    "commitsCreated":  0,
+    "branch":  "threshold-governed-refactor-demo-113",
+    "startHead":  "d039ca6fe980313d93c5945de2729c015e399d48",
+    "currentHead":  "e2724a5b990d6dd5589ef239fe2cf44320b574e8",
+    "currentSourceHead":  "1234132549a442f922f31a74d2ab79b1bc9569b4",
+    "candidatesProcessed":  1,
+    "commitsCreated":  1,
     "remainingBudget":  {
-                            "candidates":  5,
-                            "commits":  5,
+                            "candidates":  4,
+                            "commits":  4,
                             "repairAttempts":  1
                         },
-    "lastReceipt":  null,
+    "lastReceipt":  "threshold/receipts/src-main-java-org-springframework-samples-petclinic-model-owner-java-model-readability-cleanup-tostring-1234132549a4.json",
     "terminalState":  "ready_no_candidates_verified",
-    "updatedAt":  "2026-07-16T19:14:37.0699519Z",
-    "scopeExpansionTier":  2,
-    "scopeExpansionReason":  "fresh_wave_candidate_shortage",
-    "scopeExpansionAppliedAt":  "2026-07-16T19:14:33.7198097Z",
-    "runtimeObservedHead":  "a3b25d73cf8096bbef5d425f407ffccf1334046e",
-    "runtimeObservedAt":  "2026-07-16T19:14:37.0635189Z"
+    "updatedAt":  "2026-07-16T21:32:36.8966328Z",
+    "terminalReason":  "no applicable autoPatchable candidates after discovery canary passed",
+    "discoveryCanaryLastPassedAt":  "2026-07-16T21:32:36.8909216Z"
 }
