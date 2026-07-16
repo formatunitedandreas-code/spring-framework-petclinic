@@ -70,17 +70,23 @@
         "scope": "pilot batch mode for independent single-line Javadoc comment wraps only",
         "requiresDiscoveryCanary": true,
         "requiresSameCandidateClassPerBatch": true
-      }
-    ],
-    "heldCandidateClasses": [
+      },
       {
         "candidateClass": "repository_readability_cleanup",
-        "reason": "hold until batch executor has a dedicated promotion receipt for repository readability changes"
+        "authorizedBy": "scope-push-v0-repository-readability-auto-patchable",
+        "scope": "repository SQL constant extraction and split-string normalization cleanup",
+        "requiresDiscoveryCanary": true,
+        "requiresSameCandidateClassPerBatch": true
       },
       {
         "candidateClass": "spring_data_query_wrap_cleanup",
-        "reason": "hold until query wrapping has a dedicated batch canary and promotion receipt"
+        "authorizedBy": "scope-push-v0-spring-data-query-auto-patchable",
+        "scope": "format-only wrapping of long Spring Data @Query annotation lines",
+        "requiresDiscoveryCanary": true,
+        "requiresSameCandidateClassPerBatch": true
       }
+    ],
+    "heldCandidateClasses": [
     ]
   },
   "approvedAutoPatchableCandidateClasses": [
