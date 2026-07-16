@@ -57,28 +57,28 @@ import org.springframework.util.Assert;
  */
 public abstract class OneToManyResultSetExtractor<R, C, K> implements ResultSetExtractor<List<R>> {
 
-	public enum ExpectedResults {
-		ANY,
-		ONE_AND_ONLY_ONE,
-		ONE_OR_NONE,
-		AT_LEAST_ONE
-	}
+    public enum ExpectedResults {
+        ANY,
+        ONE_AND_ONLY_ONE,
+        ONE_OR_NONE,
+        AT_LEAST_ONE
+    }
 
-	protected final ExpectedResults expectedResults;
-	protected final RowMapper<R> rootMapper;
-	protected final RowMapper<C> childMapper;
+    protected final ExpectedResults expectedResults;
+    protected final RowMapper<R> rootMapper;
+    protected final RowMapper<C> childMapper;
 
-	/**
+    /**
 	 * Creates a new {@link OneToManyResultSetExtractor} from the given {@link RowMapper}s.
 	 *
 	 * @param rootMapper {@link RowMapper} to map the root entity, must not be {@literal null}.
 	 * @param childMapper {@link RowMapper} to map the root entities, must not be {@literal null}.
 	 */
-	protected OneToManyResultSetExtractor(RowMapper<R> rootMapper, RowMapper<C> childMapper) {
-		this(rootMapper, childMapper, null);
-	}
+    protected OneToManyResultSetExtractor(RowMapper<R> rootMapper, RowMapper<C> childMapper) {
+        this(rootMapper, childMapper, null);
+    }
 
-	/**
+    /**
 	 * Creates a new {@link OneToManyResultSetExtractor} from the given {@link RowMapper}s and
 	 * {@link ExpectedResults}.
 	 *
