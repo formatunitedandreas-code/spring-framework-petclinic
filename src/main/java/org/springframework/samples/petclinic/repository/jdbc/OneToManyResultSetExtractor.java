@@ -167,6 +167,6 @@ public abstract class OneToManyResultSetExtractor<R, C, K> implements ResultSetE
 	 * @param root the Root object
 	 * @param child the Child object
 	 */
-	protected abstract void addChild(R root, C child);
+    protected abstract void addChild(R root, C child);
 
 }
