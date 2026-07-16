@@ -194,6 +194,12 @@ function Test-AutoPatchableCandidate {
             $Candidate.ContainsKey("helperName") -and
             -not [string]::IsNullOrWhiteSpace([string]$Candidate.helperName)
     }
+    if ($CandidateClass -eq "model_readability_cleanup") {
+        return $Candidate.ContainsKey("helperName") -and
+            -not [string]::IsNullOrWhiteSpace([string]$Candidate.helperName) -and
+            $Candidate.ContainsKey("member") -and
+            ([string]$Candidate.member).StartsWith("line-")
+    }
     if ($CandidateClass -eq "split_string_constant_normalization") {
         return $Candidate.ContainsKey("member") -and ([string]$Candidate.member).StartsWith("line-")
     }
@@ -727,6 +733,39 @@ foreach ($file in $sourceFiles) {
                     tieBreak = [ordered]@{ layerScore = $layerScore; path = $path; member = $methodName }
                 })
             }
+        }
+    }
+
+    # Heuristic 7b: model-specific readability candidate.
+    if ($path -like "*/model/*") {
+        foreach ($method in $methods) {
+            $methodName = $method.Name
+            if ($methodName -ne "toString") {
+                continue
+            }
+
+            $methodText = $method.Text
+            if (-not ([regex]::IsMatch($methodText, 'new\s+ToStringCreator\(this\)') -and
+                ([regex]::Matches($methodText, '\.append\(').Count -ge 3))) {
+                continue
+            }
+
+            $className = Split-Path -Path $path -LeafBase
+            $helperName = "append$($className)ToStringFields"
+            if ($content -match "private\s+ToStringCreator\s+$([regex]::Escape($helperName))\s*\(") {
+                continue
+            }
+
+            Add-Candidate -CandidateClass "model_readability_cleanup" -AllowedTypes $allowedCandidateTypes -Bucket $candidates -Candidate ([ordered]@{
+                candidateId = New-CandidateId $path "model_readability_cleanup" $methodName
+                score = 30 + 30 + 20 + 12 + $layerScore
+                file = $path
+                member = "line-$($method.StartLine + 1)"
+                helperName = $helperName
+                expectedDiffSummary = "Extract the model toString append chain from '$className' into a private helper."
+                estimatedChangedLines = 12
+                tieBreak = [ordered]@{ layerScore = $layerScore; path = $path; member = $methodName }
+            })
         }
     }
 
