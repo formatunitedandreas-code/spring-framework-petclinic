@@ -1,14 +1,15 @@
 {
     "schemaVersion":  "threshold.petclinic.candidate-pocket.v0.2",
     "leaseName":  "owned-autonomous-refactor-branch-wave-v0_automation",
-    "branch":  "threshold-governed-refactor-demo-98",
-    "generatedFromHead":  "15f5091b10f85b8711a16dc6903ddd8da39b8d2d",
-    "generatedAt":  "2026-07-16T17:12:51.0964075Z",
+    "branch":  "threshold-governed-refactor-demo-100",
+    "generatedFromHead":  "136913f1e9417443f33c3ac587b1f2934a26dd8e",
+    "generatedAt":  "2026-07-16T17:31:46.1305610Z",
     "discovery":  {
                       "method":  "static-heuristic-scan",
                       "sourceRoot":  "src/main/java/org/springframework/samples/petclinic",
                       "gatePath":  "threshold/gates/auto-patchable-candidate-classes.json",
                       "approvedAutoPatchableCandidateClasses":  [
+                                                                    "application_bootstrap_readability_cleanup",
                                                                     "comment_wrap_cleanup",
                                                                     "duplicate_literal_local_constant_extraction",
                                                                     "line_comment_wrap_cleanup",

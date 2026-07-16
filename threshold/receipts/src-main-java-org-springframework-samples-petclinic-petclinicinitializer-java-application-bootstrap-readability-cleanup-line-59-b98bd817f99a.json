@@ -1,0 +1,50 @@
+{
+    "schemaVersion":  "threshold.petclinic.slice-receipt.v0.2",
+    "candidateId":  "src-main-java-org-springframework-samples-petclinic-petclinicinitializer-java-application-bootstrap-readability-cleanup-line-59",
+    "leaseName":  "owned-autonomous-refactor-branch-wave-v0_automation",
+    "branch":  "threshold-governed-refactor-demo-100",
+    "candidateClass":  "application_bootstrap_readability_cleanup",
+    "leaseStartHead":  "c20653dbd71a7df2847f5e2de9b32c18206aaad5",
+    "baseHead":  "e4b387ff7280445cd2e7fb8f3624c0560bbfff3e",
+    "commitHash":  "b98bd817f99a25d5012059f4b42b7303a633c21e",
+    "receiptMaterialization":  "post-commit",
+    "perCommitValidationLogAvailable":  true,
+    "branchFinalValidationPassed":  false,
+    "changedFiles":  [
+                         {
+                             "path":  "src/main/java/org/springframework/samples/petclinic/PetclinicInitializer.java",
+                             "beforeSha256":  "a9168cd44338ad5a8e64d454bc723583d70174456a659bb0604c7997ae9aaac5",
+                             "afterSha256":  "5d7ba4717bb9af412d78fd3a44668a3a2ccfe8efd5a6d2049e252b51e19d838e"
+                         }
+                     ],
+    "diffSummary":  "Refactor PetClinic Wrap a long Spring bootstrap invocation across multipl",
+    "diffStat":  {
+                     "filesChanged":  1,
+                     "insertions":  4,
+                     "deletions":  1
+                 },
+    "validation":  {
+                       "diffCheck":  "passed",
+                       "command":  ".\\mvnw.cmd test",
+                       "result":  "BUILD SUCCESS",
+                       "testsRun":  75,
+                       "failures":  0,
+                       "errors":  0,
+                       "skipped":  0
+                   },
+    "nonClaims":  [
+                      "no push in candidate slice",
+                      "no PR update in candidate slice",
+                      "no upstream interaction",
+                      "no pom.xml change",
+                      "no dependency change",
+                      "no src/test change",
+                      "no merge",
+                      "no release",
+                      "no deploy",
+                      "no public readiness claim",
+                      "no public correctness claim",
+                      "no public security claim",
+                      "no public compliance claim"
+                  ]
+}
