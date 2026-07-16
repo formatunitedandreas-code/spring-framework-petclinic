@@ -64,9 +64,9 @@ public abstract class OneToManyResultSetExtractor<R, C, K> implements ResultSetE
         AT_LEAST_ONE
     }
 
-	protected final ExpectedResults expectedResults;
-	protected final RowMapper<R> rootMapper;
-	protected final RowMapper<C> childMapper;
+    protected final ExpectedResults expectedResults;
+    protected final RowMapper<R> rootMapper;
+    protected final RowMapper<C> childMapper;
 
 	/**
 	 * Creates a new {@link OneToManyResultSetExtractor} from the given {@link RowMapper}s.
