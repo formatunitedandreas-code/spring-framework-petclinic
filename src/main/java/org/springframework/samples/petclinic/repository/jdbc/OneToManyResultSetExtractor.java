@@ -72,7 +72,8 @@ public abstract class OneToManyResultSetExtractor<R, C, K> implements ResultSetE
     protected final RowMapper<C> childMapper;
 
     /**
-	 * Creates a new {@link OneToManyResultSetExtractor} from the given {@link RowMapper}s.
+	 * Creates a new {@link OneToManyResultSetExtractor} from the given
+	 * {@link RowMapper}s.
 	 *
 	 * @param rootMapper {@link RowMapper} to map the root entity, must not be {@literal null}.
 	 * @param childMapper {@link RowMapper} to map the root entities, must not be {@literal null}.
