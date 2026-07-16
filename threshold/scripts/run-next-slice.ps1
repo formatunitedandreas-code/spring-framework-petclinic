@@ -1341,28 +1341,24 @@ if ($shortSummary.Length -gt 54) {
 }
 
 $commitMessage = "Refactor PetClinic $shortSummary"
-$completeArgs = @(
-    "-NoProfile",
-    "-ExecutionPolicy",
-    "Bypass",
-    "-File",
-    "threshold/scripts/complete-slice.ps1",
-    "-LeasePath",
-    $LeasePath,
-    "-StatePath",
-    $StatePath,
-    "-CandidateId",
-    $candidate.candidateId,
-    "-CandidateClass",
-    $candidate.candidateClass,
-    "-CommitMessage",
-    $commitMessage,
-    "-AllowedPath",
-    @($candidate.file, "threshold/lease-state/current-run.json")
-)
-if ($SkipMavenTest.IsPresent) { $completeArgs += "-SkipMavenTest" }
-
-& powershell.exe @completeArgs
+if ($SkipMavenTest.IsPresent) {
+    & powershell.exe -NoProfile -ExecutionPolicy Bypass -File "threshold/scripts/complete-slice.ps1" `
+        -LeasePath $LeasePath `
+        -StatePath $StatePath `
+        -CandidateId $candidate.candidateId `
+        -CandidateClass $candidate.candidateClass `
+        -CommitMessage $commitMessage `
+        -AllowedPath $candidate.file `
+        -SkipMavenTest
+} else {
+    & powershell.exe -NoProfile -ExecutionPolicy Bypass -File "threshold/scripts/complete-slice.ps1" `
+        -LeasePath $LeasePath `
+        -StatePath $StatePath `
+        -CandidateId $candidate.candidateId `
+        -CandidateClass $candidate.candidateClass `
+        -CommitMessage $commitMessage `
+        -AllowedPath $candidate.file
+}
 if ($LASTEXITCODE -ne 0) { throw "complete-slice failed." }
 
 Write-Host "run-next-slice completed"

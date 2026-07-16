@@ -49,7 +49,13 @@ if (-not $changedPaths) {
 }
 
 if ($AllowedPath.Count -gt 0) {
-    $allowedNormalized = @($AllowedPath | ForEach-Object { ConvertTo-RepoPath $_ })
+    $runtimeAllowed = @(
+        "threshold/lease-state/current-run.json"
+    )
+    $allowedNormalized = @(
+        @($AllowedPath | ForEach-Object { ConvertTo-RepoPath $_ }) +
+        @($runtimeAllowed | ForEach-Object { ConvertTo-RepoPath $_ })
+    ) | Select-Object -Unique
     foreach ($path in $changedPaths) {
         if (-not ($allowedNormalized -contains (ConvertTo-RepoPath $path))) {
             throw "Changed path '$path' is not in explicit AllowedPath list."

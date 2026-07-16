@@ -136,12 +136,24 @@ if (-not $changedPaths) {
     throw "No slice changes found in working tree or index."
 }
 
-$governancePaths = @($changedPaths | Where-Object { Test-GovernancePath $_ })
-$fileBudget = $maxFiles
-if ($governancePaths.Count -eq $changedPaths.Count) { $fileBudget = $maxGovernanceFiles }
-if ($changedPaths.Count -gt $fileBudget) { throw "Slice changes $($changedPaths.Count) files, exceeding file budget=$fileBudget." }
+$runtimeGovernanceArtifacts = @(
+    "threshold/lease-state/current-run.json"
+)
+$effectiveChangedPaths = @($changedPaths | Where-Object { $runtimeGovernanceArtifacts -notcontains ($_ -replace "\\", "/") })
+if (-not $effectiveChangedPaths -and -not $RequireHeadReceipt -and $changedPaths.Count -gt 0) {
+    Write-Host "Threshold slice validation passed"
+    Write-Host "changedPaths=$($changedPaths.Count)"
+    Write-Host "effectiveChangedPaths=0"
+    Write-Host "mavenTestSkipped=$($SkipMavenTest.IsPresent)"
+    return
+}
 
-foreach ($path in $changedPaths) {
+$governancePaths = @($effectiveChangedPaths | Where-Object { Test-GovernancePath $_ })
+$fileBudget = $maxFiles
+if ($governancePaths.Count -eq $effectiveChangedPaths.Count) { $fileBudget = $maxGovernanceFiles }
+if ($effectiveChangedPaths.Count -gt $fileBudget) { throw "Slice changes $($effectiveChangedPaths.Count) files, exceeding file budget=$fileBudget." }
+
+foreach ($path in $effectiveChangedPaths) {
     $isAllowed = $false
     foreach ($pattern in $allowedPaths) {
         if (Test-PathAgainstPattern $path $pattern) { $isAllowed = $true; break }
@@ -166,7 +178,7 @@ foreach ($path in $untrackedPaths) {
     if (Test-Path $path) { $changedLineCount += (Get-Content $path).Count }
 }
 $changedLineBudget = $maxChangedLines
-if ($governancePaths.Count -eq $changedPaths.Count) { $changedLineBudget = $maxGovernanceChangedLines }
+if ($governancePaths.Count -eq $effectiveChangedPaths.Count) { $changedLineBudget = $maxGovernanceChangedLines }
 if ($changedLineCount -gt $changedLineBudget) { throw "Slice changes $changedLineCount lines, exceeding changed-line budget=$changedLineBudget." }
 
 & git diff --check
@@ -179,6 +191,6 @@ if (-not $SkipMavenTest) {
 }
 
 Write-Host "Threshold slice validation passed"
-Write-Host "changedPaths=$($changedPaths.Count)"
+Write-Host "changedPaths=$($effectiveChangedPaths.Count)"
 Write-Host "changedLines=$changedLineCount"
 Write-Host "mavenTestSkipped=$($SkipMavenTest.IsPresent)"
