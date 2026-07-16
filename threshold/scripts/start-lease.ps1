@@ -111,6 +111,7 @@ allowedCandidateTypes:
   - method_signature_wrap_cleanup
   - repository_readability_cleanup
   - spring_data_query_wrap_cleanup
+  - spring_data_query_concat_wrap_cleanup
   - model_readability_cleanup
   - split_string_constant_normalization
   - string_constant_wrap_cleanup

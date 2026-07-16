@@ -145,6 +145,12 @@
       "requiresCanary": true
     },
     {
+      "candidateClass": "spring_data_query_concat_wrap_cleanup",
+      "authorizedBy": "scope-expansion-v0-spring-data-concat",
+      "scope": "format-only wrapping of concatenated Spring Data @Query annotations",
+      "requiresCanary": true
+    },
+    {
       "candidateClass": "split_string_constant_normalization",
       "authorizedBy": "governance-hardening-bootstrap",
       "scope": "canonical two-line continuation for already split string constants",

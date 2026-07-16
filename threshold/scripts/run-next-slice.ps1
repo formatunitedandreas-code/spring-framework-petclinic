@@ -81,6 +81,11 @@ function Test-SimpleQueryAnnotationLine {
     return $Line -match '^\s*@Query\(\s*(?:value\s*=\s*)?"(?<value>[^"\\]+)"\s*\)\s*$'
 }
 
+function Test-SplitQueryAnnotationStartLine {
+    param([string] $Line)
+    return $Line -match '^\s*@Query\(\s*(?:value\s*=\s*)?"(?<value>[^"\\]+)"\s*\+\s*$'
+}
+
 function Test-BootstrapStringInvocationWrapCandidateLine {
     param([string] $Line)
     return $Line -match '^\s*[A-Za-z0-9_.]+\(\s*"[^"\\]+"\s*(,\s*"[^"\\]+"\s*)+\);\s*$'
@@ -528,6 +533,26 @@ function Get-NextCandidate {
                     break
                 }
             }
+            "spring_data_query_concat_wrap_cleanup" {
+                $member = [string]$candidate.member
+                if (-not $member.StartsWith("line-")) {
+                    Write-Host "candidateSkippedReason=unsupported_line_marker:$($candidate.candidateId)"
+                    $applicable = $false
+                    break
+                }
+                $lineNumber = [int]($member.Substring(5))
+                $lines = Get-Content $path
+                if ($lineNumber -lt 1 -or $lineNumber -gt $lines.Count) {
+                    Write-Host "candidateSkippedReason=line_outside_file:$($candidate.candidateId)"
+                    $applicable = $false
+                    break
+                }
+                if (-not (Test-SplitQueryAnnotationStartLine $lines[$lineNumber - 1])) {
+                    Write-Host "candidateSkippedReason=unsupported_query_annotation_cleanup:$($candidate.candidateId)"
+                    $applicable = $false
+                    break
+                }
+            }
             "string_constant_wrap_cleanup" {
                 $member = [string]$candidate.member
                 if (-not $member.StartsWith("line-")) {
@@ -873,6 +898,66 @@ function Apply-SpringDataQueryWrapCleanup {
     $updatedLines += $wrapped
     if ($lineNumber -lt $lines.Count) {
         $updatedLines += $lines[$lineNumber..($lines.Count - 1)]
+    }
+
+    $originalText = Get-Content $path -Raw
+    $updatedText = $updatedLines -join (Get-LineEnding -Content $originalText)
+    Write-TextFile -Path $path -Content $updatedText
+
+    Write-Host "appliedCandidate=$($Candidate.candidateId)"
+    Write-Host "changedFile=$path"
+    Write-Host "wrappedQueryAnnotationLine=$lineNumber"
+}
+
+function Apply-SpringDataQueryConcatWrapCleanup {
+    param([pscustomobject] $Candidate)
+
+    $path = ConvertTo-RepoPath $Candidate.file
+    if (-not (Test-Path $path)) { throw "Candidate file not found: $path" }
+
+    $member = [string]$Candidate.member
+    if (-not $member.StartsWith("line-")) {
+        throw "Spring Data concatenated query wrap cleanup requires a line marker candidate."
+    }
+
+    $lineNumber = [int]($member.Substring(5))
+    $lines = Get-Content $path
+    if ($lineNumber -lt 1 -or $lineNumber -gt $lines.Count) {
+        throw "Candidate line '$lineNumber' is outside file range in $path."
+    }
+
+    $line = $lines[$lineNumber - 1]
+    $firstMatch = [regex]::Match($line, '^(?<indent>\s*)@Query\(\s*(?:value\s*=\s*)?"(?<value>[^"\\]+)"\s*\+\s*$')
+    if (-not $firstMatch.Success) {
+        throw "Line '$lineNumber' is not a supported split Spring Data @Query annotation in $path."
+    }
+
+    if ($lineNumber -ge $lines.Count) {
+        throw "Line '$lineNumber' has no continuation line in $path."
+    }
+
+    $secondLine = $lines[$lineNumber]
+    $secondMatch = [regex]::Match($secondLine, '^(?<indent>\s*)"(.*)"\)\s*;?\s*$')
+    if (-not $secondMatch.Success) {
+        throw "Line '$($lineNumber + 1)' is not a supported continuation string line in $path."
+    }
+
+    $indent = $firstMatch.Groups["indent"].Value
+    $value = $firstMatch.Groups["value"].Value
+    $secondValue = $secondMatch.Groups[1].Value
+
+    $wrapped = @()
+    $wrapped += "$indent@Query("
+    $wrapped += "$indent    `"$value`" +"
+    $wrapped += "$indent    `"$secondValue`")"
+
+    $updatedLines = @()
+    if ($lineNumber -gt 1) {
+        $updatedLines += $lines[0..($lineNumber - 2)]
+    }
+    $updatedLines += $wrapped
+    if (($lineNumber + 1) -lt $lines.Count) {
+        $updatedLines += $lines[($lineNumber + 1)..($lines.Count - 1)]
     }
 
     $originalText = Get-Content $path -Raw
@@ -1382,6 +1467,9 @@ switch ([string]$candidate.candidateClass) {
     }
     "spring_data_query_wrap_cleanup" {
         Apply-SpringDataQueryWrapCleanup -Candidate $candidate
+    }
+    "spring_data_query_concat_wrap_cleanup" {
+        Apply-SpringDataQueryConcatWrapCleanup -Candidate $candidate
     }
     "string_constant_wrap_cleanup" {
         Apply-StringConstantWrapCleanup -Candidate $candidate
