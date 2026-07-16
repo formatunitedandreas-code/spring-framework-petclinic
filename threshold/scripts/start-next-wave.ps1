@@ -15,6 +15,14 @@ param(
     [int] $MaxRepairAttemptsPerCandidate = 1,
     [int] $MinAutoPatchableCandidates = 1,
     [string] $OwnedRepo = "formatunitedandreas-code/spring-framework-petclinic",
+    [ValidateSet(
+        "LocalOnly",
+        "PublishDraftPr",
+        "VerifyPr",
+        "MergeIfAuthorized",
+        "FullLifecycle"
+    )]
+    [string] $Phase = "FullLifecycle",
     [switch] $SkipPush,
     [switch] $SkipPullRequest,
     [switch] $SkipMerge
@@ -495,8 +503,9 @@ non-claims: no upstream interaction, no release, no deploy, no public readiness/
 $wave = Invoke-LocalWave
 Invoke-LocalWaveValidation
 
-if ($SkipPush.IsPresent) {
+if ($SkipPush.IsPresent -or $Phase -eq "LocalOnly") {
     Write-Host "start-next-wave completed without push"
+    Write-Host "phase=$Phase"
     Write-Host "branch=$($wave.Branch)"
     Write-Host "head=$((& git rev-parse HEAD).Trim())"
     Write-Host "terminalState=$($wave.State.terminalState)"
@@ -504,12 +513,24 @@ if ($SkipPush.IsPresent) {
 }
 
 $pullRequest = Invoke-PullRequestPublish -Wave $wave
-$pullRequestMetadata = Invoke-PullRequestVerification -PullRequest $pullRequest
 
-if ($SkipMerge.IsPresent) {
-    Write-Host "start-next-wave completed without merge"
+if ($Phase -eq "PublishDraftPr") {
+    Write-Host "start-next-wave completed after pull request publication"
+    Write-Host "phase=$Phase"
     Write-Host "branch=$($wave.Branch)"
     Write-Host "pullRequest=$($pullRequest.Url)"
+    Write-Host "terminalState=$($wave.State.terminalState)"
+    exit 0
+}
+
+$pullRequestMetadata = Invoke-PullRequestVerification -PullRequest $pullRequest
+
+if ($SkipMerge.IsPresent -or $Phase -eq "VerifyPr") {
+    Write-Host "start-next-wave completed without merge"
+    Write-Host "phase=$Phase"
+    Write-Host "branch=$($wave.Branch)"
+    Write-Host "pullRequest=$($pullRequest.Url)"
+    Write-Host "mergeableState=$($pullRequestMetadata.mergeable_state)"
     Write-Host "terminalState=$($wave.State.terminalState)"
     exit 0
 }
