@@ -78,7 +78,7 @@ function Test-SplitStringConstantStartLine {
 
 function Test-SimpleQueryAnnotationLine {
     param([string] $Line)
-    return $Line -match '^\s*@Query\("(?<value>[^"\\]+)"\)\s*$'
+    return $Line -match '^\s*@Query\(\s*(?:value\s*=\s*)?"(?<value>[^"\\]+)"\s*\)\s*$'
 }
 
 function Test-MethodOrAnnotationBoundaryLine {
@@ -517,8 +517,7 @@ function Get-NextCandidate {
                     $applicable = $false
                     break
                 }
-                if ($lines[$lineNumber - 1].Length -le 80 -or
-                    -not (Test-SimpleQueryAnnotationLine $lines[$lineNumber - 1])) {
+                if (-not (Test-SimpleQueryAnnotationLine $lines[$lineNumber - 1])) {
                     Write-Host "candidateSkippedReason=unsupported_query_annotation_cleanup:$($candidate.candidateId)"
                     $applicable = $false
                     break
@@ -628,8 +627,7 @@ function Get-NextCandidate {
                     $applicable = $false
                     break
                 }
-                if ($lines[$lineNumber - 1].Length -le 100 -or
-                    $lines[$lineNumber - 1] -notmatch '^\s*\*\s+\S') {
+                if ($lines[$lineNumber - 1] -notmatch '^\s*\*\s+\S') {
                     Write-Host "candidateSkippedReason=unsupported_comment_cleanup:$($candidate.candidateId)"
                     $applicable = $false
                     break
@@ -649,8 +647,7 @@ function Get-NextCandidate {
                     $applicable = $false
                     break
                 }
-                if ($lines[$lineNumber - 1].Length -le 120 -or
-                    $lines[$lineNumber - 1] -notmatch '^\s*//\s+\S') {
+                if ($lines[$lineNumber - 1] -notmatch '^\s*//\s+\S') {
                     Write-Host "candidateSkippedReason=unsupported_line_comment_cleanup:$($candidate.candidateId)"
                     $applicable = $false
                     break
@@ -824,7 +821,7 @@ function Apply-SpringDataQueryWrapCleanup {
     }
 
     $line = $lines[$lineNumber - 1]
-    $match = [regex]::Match($line, '^(?<indent>\s*)@Query\("(?<value>[^"\\]+)"\)\s*$')
+    $match = [regex]::Match($line, '^(?<indent>\s*)@Query\(\s*(?:value\s*=\s*)?"(?<value>[^"\\]+)"\s*\)\s*$')
     if (-not $match.Success) {
         throw "Line '$lineNumber' is not a supported Spring Data @Query annotation in $path."
     }
@@ -1142,7 +1139,7 @@ function Apply-CommentWrapCleanup {
 
     $line = $lines[$lineNumber - 1]
     $match = [regex]::Match($line, '^(?<indent>\s*\*\s+)(?<text>\S.*)$')
-    if (-not $match.Success -or $line.Length -le 100) {
+    if (-not $match.Success) {
         throw "Line '$lineNumber' is not a supported long comment line in $path."
     }
 
@@ -1204,7 +1201,7 @@ function Apply-LineCommentWrapCleanup {
 
     $line = $lines[$lineNumber - 1]
     $match = [regex]::Match($line, '^(?<indent>\s*//\s+)(?<text>\S.*)$')
-    if (-not $match.Success -or $line.Length -le 120) {
+    if (-not $match.Success) {
         throw "Line '$lineNumber' is not a supported long line comment in $path."
     }
 
