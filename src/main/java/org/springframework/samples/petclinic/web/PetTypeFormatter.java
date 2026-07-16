@@ -26,7 +26,8 @@ import org.springframework.samples.petclinic.model.PetType;
 import org.springframework.samples.petclinic.service.ClinicService;
 
 /**
- * Instructs Spring MVC on how to parse and print elements of type 'PetType'. Starting from Spring
+ * Instructs Spring MVC on how to parse and print elements of type 'PetType'.
+ * Starting from Spring
  * 3.0, Formatters have
  * come as an improvement in comparison to legacy PropertyEditors. See the following links for
  * more details: - The

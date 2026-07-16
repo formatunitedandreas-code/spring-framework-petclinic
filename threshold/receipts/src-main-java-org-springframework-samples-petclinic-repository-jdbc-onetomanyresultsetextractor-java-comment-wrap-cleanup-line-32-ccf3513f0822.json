@@ -1,0 +1,55 @@
+{
+    "schemaVersion":  "threshold.petclinic.slice-receipt.v0.2",
+    "candidateId":  "src-main-java-org-springframework-samples-petclinic-repository-jdbc-onetomanyresultsetextractor-java-comment-wrap-cleanup-line-32",
+    "leaseName":  "owned-autonomous-refactor-branch-wave-v0_automation",
+    "branch":  "threshold-governed-refactor-demo-96",
+    "candidateClass":  "comment_wrap_cleanup",
+    "leaseStartHead":  "cc4273934ce9056ce04a2d9f58f1393e2d2a588e",
+    "baseHead":  "1c37aa8d4af8815dc35f8a5102a5bdb3a6ae7600",
+    "commitHash":  "ccf3513f0822d560cf7f6b00735ef8a27ca83fdd",
+    "receiptMaterialization":  "post-commit",
+    "perCommitValidationLogAvailable":  true,
+    "branchFinalValidationPassed":  false,
+    "changedFiles":  [
+                         {
+                             "path":  "src/main/java/org/springframework/samples/petclinic/repository/jdbc/OneToManyResultSetExtractor.java",
+                             "beforeSha256":  "7bfa44d10ab6e358ff8888943ad613533fa409bb3dcdd4998e57a72753a53b58",
+                             "afterSha256":  "4a34e9208cf09c31edd8aa5e45fb3dc5df875b68204905dd7a68195aa01626f2"
+                         },
+                         {
+                             "path":  "threshold/lease-state/current-run.json",
+                             "beforeSha256":  "82ee9c1efbc1d23b015274bae7cfe5721f11bbe7952bd51ae59dda1063975a17",
+                             "afterSha256":  "0dc2962cd222b46cb1278e5ee744049d3eef84232fac572b0adcd8e93ebdf287"
+                         }
+                     ],
+    "diffSummary":  "Refactor PetClinic Wrap one long Javadoc comment line without changing so",
+    "diffStat":  {
+                     "filesChanged":  2,
+                     "insertions":  8,
+                     "deletions":  5
+                 },
+    "validation":  {
+                       "diffCheck":  "passed",
+                       "command":  ".\\mvnw.cmd test",
+                       "result":  "BUILD SUCCESS",
+                       "testsRun":  75,
+                       "failures":  0,
+                       "errors":  0,
+                       "skipped":  0
+                   },
+    "nonClaims":  [
+                      "no push in candidate slice",
+                      "no PR update in candidate slice",
+                      "no upstream interaction",
+                      "no pom.xml change",
+                      "no dependency change",
+                      "no src/test change",
+                      "no merge",
+                      "no release",
+                      "no deploy",
+                      "no public readiness claim",
+                      "no public correctness claim",
+                      "no public security claim",
+                      "no public compliance claim"
+                  ]
+}
