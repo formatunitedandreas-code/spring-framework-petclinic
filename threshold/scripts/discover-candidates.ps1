@@ -750,7 +750,7 @@ foreach ($file in $sourceFiles) {
                 continue
             }
 
-            $className = Split-Path -Path $path -LeafBase
+            $className = [System.IO.Path]::GetFileNameWithoutExtension($path)
             $helperName = "append$($className)ToStringFields"
             if ($content -match "private\s+ToStringCreator\s+$([regex]::Escape($helperName))\s*\(") {
                 continue
