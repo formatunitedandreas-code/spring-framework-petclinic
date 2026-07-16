@@ -78,7 +78,7 @@ public abstract class OneToManyResultSetExtractor<R, C, K> implements ResultSetE
         this(rootMapper, childMapper, null);
     }
 
-	/**
+    /**
 	 * Creates a new {@link OneToManyResultSetExtractor} from the given {@link RowMapper}s and
 	 * {@link ExpectedResults}.
 	 *
