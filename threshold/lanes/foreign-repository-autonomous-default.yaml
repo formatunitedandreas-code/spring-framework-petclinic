@@ -2,6 +2,7 @@ laneName: foreign_repository_autonomous_lane_default_entrypoint_slice_v0_1
 targetRepo: spring-framework-petclinic
 laneImplementation: threshold/scripts/run-next-slice.ps1
 candidateSource: threshold/scripts/discover-candidates.ps1
+cycleLauncher: threshold/scripts/start-next-wave-cycle.ps1
 stateSource:
   lease: threshold/leases/current.yaml
   leaseState: threshold/lease-state/current-run.json
