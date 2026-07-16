@@ -1358,7 +1358,7 @@ $completeArgs = @(
     "-CommitMessage",
     $commitMessage,
     "-AllowedPath",
-    $candidate.file
+    @($candidate.file, "threshold/lease-state/current-run.json")
 )
 if ($SkipMavenTest.IsPresent) { $completeArgs += "-SkipMavenTest" }
 
