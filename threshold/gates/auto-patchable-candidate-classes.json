@@ -175,6 +175,12 @@
       "requiresCanary": true
     },
     {
+      "candidateClass": "leading_tab_indentation_cleanup",
+      "authorizedBy": "scope-executor-expansion-v0-leading-tab-indentation",
+      "scope": "format-only normalization of one contiguous leading-tab indentation block to spaces",
+      "requiresCanary": true
+    },
+    {
       "candidateClass": "model_readability_cleanup",
       "authorizedBy": "scope-executor-expansion-v0-model-toString",
       "scope": "model toString helper extraction for chained ToStringCreator append blocks",

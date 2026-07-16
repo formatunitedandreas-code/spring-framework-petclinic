@@ -6,7 +6,8 @@
     "method_spacing_normalization",
     "repository_readability_cleanup",
     "spring_data_query_wrap_cleanup",
-    "spring_data_query_concat_wrap_cleanup"
+    "spring_data_query_concat_wrap_cleanup",
+    "leading_tab_indentation_cleanup"
   ],
   "nonClaims": [
     "canary verifies discovery visibility for known fixture patterns only",

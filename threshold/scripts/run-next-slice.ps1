@@ -1520,6 +1520,49 @@ function Apply-ApplicationBootstrapReadabilityCleanup {
     Write-Host "wrappedBootstrapInvocation=$lineNumber"
 }
 
+function Apply-LeadingTabIndentationCleanup {
+    param([pscustomobject] $Candidate)
+
+    $path = ConvertTo-RepoPath $Candidate.file
+    if (-not (Test-Path $path)) { throw "Candidate file not found: $path" }
+
+    $member = [string]$Candidate.member
+    if (-not $member.StartsWith("line-")) {
+        throw "Leading tab indentation cleanup requires a line marker candidate."
+    }
+
+    $lineNumber = [int]($member.Substring(5))
+    $lineCount = [int]$Candidate.lineCount
+    $lines = Get-Content $path
+    if ($lineNumber -lt 1 -or $lineNumber -gt $lines.Count) {
+        throw "Candidate line '$lineNumber' is outside file range in $path."
+    }
+    if ($lineCount -lt 1 -or ($lineNumber + $lineCount - 1) -gt $lines.Count -or $lineCount -gt 40) {
+        throw "Candidate line count '$lineCount' is outside the indentation cleanup bounds in $path."
+    }
+
+    $updatedLines = @($lines)
+    for ($offset = 0; $offset -lt $lineCount; $offset++) {
+        $index = ($lineNumber - 1) + $offset
+        if ($updatedLines[$index] -notmatch "^\t+\S") {
+            throw "Line '$($index + 1)' is not a leading-tab indentation line in $path."
+        }
+        $updatedLines[$index] = [regex]::Replace($updatedLines[$index], "^\t+", {
+            param($match)
+            return " " * (4 * $match.Value.Length)
+        })
+    }
+
+    $originalText = Get-Content $path -Raw
+    $updatedText = $updatedLines -join (Get-LineEnding -Content $originalText)
+    Write-TextFile -Path $path -Content $updatedText
+
+    Write-Host "appliedCandidate=$($Candidate.candidateId)"
+    Write-Host "changedFile=$path"
+    Write-Host "normalizedLeadingTabBlock=$lineNumber"
+    Write-Host "normalizedLineCount=$lineCount"
+}
+
 & powershell.exe -NoProfile -ExecutionPolicy Bypass -File "threshold/scripts/sync-lease-state.ps1" `
     -LeasePath $LeasePath `
     -StatePath $StatePath `
@@ -1605,6 +1648,9 @@ switch ([string]$candidate.candidateClass) {
     }
     "application_bootstrap_readability_cleanup" {
         Apply-ApplicationBootstrapReadabilityCleanup -Candidate $candidate
+    }
+    "leading_tab_indentation_cleanup" {
+        Apply-LeadingTabIndentationCleanup -Candidate $candidate
     }
     default {
         throw "Candidate class '$($candidate.candidateClass)' is not yet automatically patchable by run-next-slice."
