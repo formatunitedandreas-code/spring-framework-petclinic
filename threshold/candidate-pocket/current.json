@@ -1,14 +1,15 @@
 {
     "schemaVersion":  "threshold.petclinic.candidate-pocket.v0.2",
     "leaseName":  "owned-autonomous-refactor-branch-wave-v0_automation",
-    "branch":  "threshold-governed-refactor-demo-98",
-    "generatedFromHead":  "15f5091b10f85b8711a16dc6903ddd8da39b8d2d",
-    "generatedAt":  "2026-07-16T17:12:51.0964075Z",
+    "branch":  "threshold-governed-refactor-demo-100",
+    "generatedFromHead":  "c20653dbd71a7df2847f5e2de9b32c18206aaad5",
+    "generatedAt":  "2026-07-16T17:30:10.5464598Z",
     "discovery":  {
                       "method":  "static-heuristic-scan",
                       "sourceRoot":  "src/main/java/org/springframework/samples/petclinic",
                       "gatePath":  "threshold/gates/auto-patchable-candidate-classes.json",
                       "approvedAutoPatchableCandidateClasses":  [
+                                                                    "application_bootstrap_readability_cleanup",
                                                                     "comment_wrap_cleanup",
                                                                     "duplicate_literal_local_constant_extraction",
                                                                     "line_comment_wrap_cleanup",
@@ -31,11 +32,11 @@
                                       "member lexical"
                                   ],
                       "thresholds":  {
-                                         "longLineThreshold":  92,
-                                         "commentWrapThreshold":  96,
-                                         "springDataQueryThreshold":  60,
-                                         "repositoryMethodLengthThreshold":  5,
-                                         "utilityMethodLengthThreshold":  5
+                                         "longLineThreshold":  100,
+                                         "commentWrapThreshold":  100,
+                                         "springDataQueryThreshold":  70,
+                                         "repositoryMethodLengthThreshold":  6,
+                                         "utilityMethodLengthThreshold":  6
                                      },
                       "allowedCandidateTypes":  [
                                                     "private_helper_extraction_for_readability",
@@ -57,10 +58,32 @@
                                                 ]
                   },
     "candidates":  [
-
+                       {
+                           "tieBreak":  {
+                                            "layerScore":  4,
+                                            "path":  "src/main/java/org/springframework/samples/petclinic/PetclinicInitializer.java",
+                                            "member":  "line-59"
+                                        },
+                           "gate":  {
+                                        "required":  true,
+                                        "approved":  true,
+                                        "gatePath":  "threshold/gates/auto-patchable-candidate-classes.json"
+                                    },
+                           "score":  90,
+                           "bootstrapWrapPattern":  "string_argument_invocation_wrap",
+                           "member":  "line-59",
+                           "reviewOnly":  false,
+                           "executionMode":  "auto_patchable",
+                           "file":  "src/main/java/org/springframework/samples/petclinic/PetclinicInitializer.java",
+                           "candidateId":  "src-main-java-org-springframework-samples-petclinic-petclinicinitializer-java-application-bootstrap-readability-cleanup-line-59",
+                           "autoPatchable":  true,
+                           "expectedDiffSummary":  "Wrap a long Spring bootstrap invocation across multiple lines without changing behavior.",
+                           "candidateClass":  "application_bootstrap_readability_cleanup",
+                           "estimatedChangedLines":  4
+                       }
                    ],
-    "nextRecommendedCandidateId":  null,
-    "nextAutoPatchableCandidateId":  null,
+    "nextRecommendedCandidateId":  "src-main-java-org-springframework-samples-petclinic-petclinicinitializer-java-application-bootstrap-readability-cleanup-line-59",
+    "nextAutoPatchableCandidateId":  "src-main-java-org-springframework-samples-petclinic-petclinicinitializer-java-application-bootstrap-readability-cleanup-line-59",
     "nonClaims":  [
                       "candidate pocket is not an implementation claim",
                       "candidate pocket does not claim behavior preservation until slice validation passes",
