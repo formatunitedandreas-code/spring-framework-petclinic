@@ -57,12 +57,12 @@ import org.springframework.util.Assert;
  */
 public abstract class OneToManyResultSetExtractor<R, C, K> implements ResultSetExtractor<List<R>> {
 
-	public enum ExpectedResults {
-		ANY,
-		ONE_AND_ONLY_ONE,
-		ONE_OR_NONE,
-		AT_LEAST_ONE
-	}
+    public enum ExpectedResults {
+        ANY,
+        ONE_AND_ONLY_ONE,
+        ONE_OR_NONE,
+        AT_LEAST_ONE
+    }
 
 	protected final ExpectedResults expectedResults;
 	protected final RowMapper<R> rootMapper;
