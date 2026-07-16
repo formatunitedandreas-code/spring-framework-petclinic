@@ -88,7 +88,12 @@ public class PetController {
     }
 
     @PostMapping(value = PET_NEW_PATH)
-    public String processCreationForm(Owner owner, @Valid Pet pet, BindingResult result, ModelMap model) {
+    public String processCreationForm(
+        Owner owner,
+        @Valid Pet pet,
+        BindingResult result,
+        ModelMap model
+    ) {
         return savePetFormResult(owner, pet, result, model, hasDuplicatePetName(owner, pet));
     }
 

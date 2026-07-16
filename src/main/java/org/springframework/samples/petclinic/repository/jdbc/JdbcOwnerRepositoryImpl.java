@@ -50,7 +50,8 @@ public class JdbcOwnerRepositoryImpl implements OwnerRepository {
     private static final String ID = "id";
 
 
-    private static final String GET_PET_TYPES_SQL = "SELECT id, name FROM types ORDER BY name";
+    private static final String GET_PET_TYPES_SQL = "SELECT id, name FROM types ORDER BY " +
+        "name";
 
     private static final String SAVE_SQL = """
                     UPDATE owners
@@ -91,9 +92,11 @@ public class JdbcOwnerRepositoryImpl implements OwnerRepository {
 
 
     /**
-     * Loads {@link Owner Owners} from the data store by last name, returning all owners whose last name
-     * <i>starts</i> with
-     * the given name; also loads the {@link Pet Pets} and {@link Visit Visits} for the corresponding owners, if not
+     * Loads {@link Owner Owners} from the data store by last name, returning all owners whose last
+     * name <i>starts</i>
+     * with
+     * the given name; also loads the {@link Pet Pets} and {@link Visit Visits} for the
+     * corresponding owners, if not
      * already loaded.
      */
     @Override
@@ -107,8 +110,9 @@ public class JdbcOwnerRepositoryImpl implements OwnerRepository {
     }
 
     /**
-     * Loads the {@link Owner} with the supplied <code>id</code>; also loads the {@link Pet Pets} and {@link
-     * Visit Visits}
+     * Loads the {@link Owner} with the supplied <code>id</code>; also loads the
+     * {@link Pet Pets} and
+     * {@link Visit Visits}
      * for the corresponding owner, if not already loaded.
      */
     @Override
@@ -162,7 +166,8 @@ public class JdbcOwnerRepositoryImpl implements OwnerRepository {
     }
 
     /**
-     * Loads the {@link Pet} and {@link Visit} data for the supplied {@link List} of {@link Owner Owners}.
+     * Loads the {@link Pet} and {@link Visit} data for the supplied {@link List} of
+     * {@link Owner Owners}.
      *
      * @param owners the list of owners for whom the pet and visit data should be loaded
      * @see #loadPetsAndVisits(Owner)

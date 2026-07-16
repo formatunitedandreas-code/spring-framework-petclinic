@@ -3,6 +3,7 @@
   "fixtureRoot": "threshold/discovery-canaries/fixtures/src/main/java/org/springframework/samples/petclinic",
   "requiredAutoPatchableCandidateClasses": [
     "comment_wrap_cleanup",
+    "method_spacing_normalization",
     "repository_readability_cleanup",
     "spring_data_query_wrap_cleanup"
   ],

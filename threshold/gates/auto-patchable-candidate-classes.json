@@ -10,6 +10,49 @@
     "gateEntryDoesNotBypassLeaseAllowlist": true,
     "gateEntryDoesNotBypassValidation": true
   },
+  "scopeExpansionPolicy": {
+    "enabled": true,
+    "minimumAutoPatchableCandidates": 1,
+    "description": "When the current lease scope yields too few auto-patchable candidates, advance through pre-authorized threshold tiers instead of stopping at the baseline thresholds.",
+    "tiers": [
+      {
+        "tier": 0,
+        "name": "baseline",
+        "description": "Conservative baseline thresholds for already approved Java readability candidates.",
+        "thresholds": {
+          "longLineThreshold": 120,
+          "commentWrapThreshold": 120,
+          "springDataQueryThreshold": 80,
+          "repositoryMethodLengthThreshold": 8,
+          "utilityMethodLengthThreshold": 8
+        }
+      },
+      {
+        "tier": 1,
+        "name": "expanded_readability_thresholds",
+        "description": "Lower line-length and method-size thresholds for the same already approved candidate classes.",
+        "thresholds": {
+          "longLineThreshold": 100,
+          "commentWrapThreshold": 100,
+          "springDataQueryThreshold": 70,
+          "repositoryMethodLengthThreshold": 6,
+          "utilityMethodLengthThreshold": 6
+        }
+      },
+      {
+        "tier": 2,
+        "name": "aggressive_readability_thresholds",
+        "description": "Final bounded expansion tier for the same candidate classes before the runner reports scope exhaustion.",
+        "thresholds": {
+          "longLineThreshold": 92,
+          "commentWrapThreshold": 96,
+          "springDataQueryThreshold": 60,
+          "repositoryMethodLengthThreshold": 5,
+          "utilityMethodLengthThreshold": 5
+        }
+      }
+    ]
+  },
   "batchReceiptMode": {
     "schemaVersion": "threshold.petclinic.batch-receipt-mode.v0.1",
     "enabled": true,
@@ -45,6 +88,12 @@
       "candidateClass": "comment_wrap_cleanup",
       "authorizedBy": "governance-hardening-bootstrap",
       "scope": "single long Javadoc comment line wrapping only",
+      "requiresCanary": true
+    },
+    {
+      "candidateClass": "line_comment_wrap_cleanup",
+      "authorizedBy": "scope-executor-expansion-v0-1",
+      "scope": "single long Java // comment line wrapping only",
       "requiresCanary": true
     },
     {

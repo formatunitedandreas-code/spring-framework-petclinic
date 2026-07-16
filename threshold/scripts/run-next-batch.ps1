@@ -145,6 +145,27 @@ function Apply-CommentWrapCleanup {
     Write-TextFile -Path $path -Content $updatedText
 }
 
+function Test-CommentWrapCandidateApplies {
+    param([pscustomobject] $Candidate)
+
+    $path = ConvertTo-RepoPath $Candidate.file
+    if (-not (Test-Path $path)) { return $false }
+
+    $member = [string]$Candidate.member
+    if (-not $member.StartsWith("line-")) { return $false }
+
+    $lineNumber = [int]($member.Substring(5))
+    $lines = Get-Content $path
+    if ($lineNumber -lt 1 -or $lineNumber -gt $lines.Count) { return $false }
+
+    $line = $lines[$lineNumber - 1]
+    $match = [regex]::Match($line, '^(?<indent>\s*\*\s+)(?<text>\S.*)$')
+    if (-not $match.Success -or $line.Length -le 120) { return $false }
+
+    $text = $match.Groups["text"].Value.Trim()
+    return $null -ne (Find-ConservativeCommentSplitPoint -Text $text)
+}
+
 function Invoke-DiscoveryCanary {
     & powershell.exe -NoProfile -ExecutionPolicy Bypass -File "threshold/scripts/test-discovery-canary.ps1" `
         -LeasePath $LeasePath `
@@ -157,12 +178,15 @@ function New-CandidatePocket {
     $path = Join-Path ([System.IO.Path]::GetTempPath()) "threshold-batch-candidate-pocket-$head.json"
     if (Test-Path $path) { Remove-Item -LiteralPath $path -Force }
 
-    & powershell.exe -NoProfile -ExecutionPolicy Bypass -File "threshold/scripts/discover-candidates.ps1" `
+    $discoveryOutput = @(& powershell.exe -NoProfile -ExecutionPolicy Bypass -File "threshold/scripts/discover-candidates.ps1" `
         -LeasePath $LeasePath `
         -GatePath $GatePath `
         -PocketPath $path `
-        -Limit 100
+        -Limit 100)
     if ($LASTEXITCODE -ne 0) { throw "Candidate discovery failed." }
+    foreach ($line in $discoveryOutput) {
+        Write-Host $line
+    }
     if (-not (Test-Path $path)) { throw "Candidate discovery produced no pocket." }
     return $path
 }
@@ -190,19 +214,26 @@ function Get-BatchCandidates {
 
     $firstClass = [string]$eligible[0].candidateClass
     $sameClass = @($eligible | Where-Object { [string]$_.candidateClass -eq $firstClass })
-    $selected = New-Object System.Collections.Generic.List[object]
-    $selectedFiles = New-Object System.Collections.Generic.HashSet[string]
+    $selected = @()
+    $selectedFiles = @()
 
     foreach ($candidate in $sameClass) {
         $path = ConvertTo-RepoPath $candidate.file
         if (-not (Test-Path $path)) { continue }
-        [void]$selectedFiles.Add($path)
-        if ($selectedFiles.Count -gt $MaxFilesPerBatch) { break }
-        $selected.Add($candidate) | Out-Null
+        if ([string]$candidate.candidateClass -eq "comment_wrap_cleanup" -and
+            -not (Test-CommentWrapCandidateApplies -Candidate $candidate)) {
+            Write-Host "skippedStaleCandidate=$($candidate.candidateId)"
+            continue
+        }
+        if ($selectedFiles -notcontains $path) {
+            $selectedFiles += $path
+        }
+        if (@($selectedFiles).Count -gt $MaxFilesPerBatch) { break }
+        $selected += $candidate
         if ($selected.Count -ge $MaxSlicesPerBatch) { break }
     }
 
-    return @($selected)
+    return $selected
 }
 
 function Get-ChangedLineCount {

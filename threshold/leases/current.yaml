@@ -1,14 +1,20 @@
-leaseName: petclinic-threshold-governed-refactor-lease-v17
+leaseName: owned-autonomous-refactor-branch-wave-v0_automation
 repository: C:\dev\spring-framework-petclinic
-branch: threshold-governed-refactor-demo-7
+branch: threshold-governed-refactor-demo-58
 baseRemote: origin
 baseRef: origin/main
-startHead: 7b359bacfcad3e96a69f5177dceb2415ac09e75a
+startHead: 5c830033cc889b2271724f5c32be31bb784806f9
 headPolicy: descendantOfStartHead
+scopeExpansionTier: 2
+longLineThreshold: 92
+commentWrapThreshold: 96
+springDataQueryThreshold: 60
+repositoryMethodLengthThreshold: 5
+utilityMethodLengthThreshold: 5
 
 budget:
-  maxCandidatesThisRun: 2
-  maxCommitsThisRun: 2
+  maxCandidatesThisRun: 5
+  maxCommitsThisRun: 5
   maxFilesPerCandidate: 1
   maxGovernanceFilesPerCandidate: 8
   maxChangedLinesPerCandidate: 80
@@ -67,6 +73,7 @@ allowedCandidateTypes:
   - utility_readability_cleanup
   - application_bootstrap_readability_cleanup
   - comment_wrap_cleanup
+  - line_comment_wrap_cleanup
   - method_spacing_normalization
   - threshold_governance_artifact_update
 
@@ -91,5 +98,5 @@ validation:
 
 terminalBoundary:
   afterLocalCommit: hold_at_local_commit_boundary
-  draftPrAllowed: false
+  draftPrAllowed: true
   mergeAllowed: false

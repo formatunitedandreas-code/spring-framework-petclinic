@@ -27,18 +27,25 @@ import org.springframework.jdbc.core.RowMapper;
 import org.springframework.util.Assert;
 
 /**
- * An abstract results extractor for row mapping operations that map multiple rows to a single root object. This is
- * useful when joining a one-to-many relationship where there can be multiple child rows returned per parent root.
+ * An abstract results extractor for row mapping operations that map multiple rows to a single
+ * root object. This is
+ * useful when joining a one-to-many relationship where there can be multiple child rows returned
+ * per parent root.
  * <p>
- * It's assumed that the root type R table has a primary key (id) of type K and that the child type C table has a
+ * It's assumed that the root type R table has a primary key (id) of type K and that the child
+ * type C table has a
  * foreign key of type K referencing the root table's primary key.
  * <p>
- * For example, consider the relationship: "a Customer has one-to-many Addresses". When joining the Customer table with
- * the Address table to build a Customer object, multiple rows would be returned for a Customer if it has more than one
+ * For example, consider the relationship: "a Customer has one-to-many Addresses". When joining the
+ * Customer table with
+ * the Address table to build a Customer object, multiple rows would be returned for
+ * a Customer if it
+ * has more than one
  * Address. This extractor is useful in that case.
  * <p>
  * This class comes from the Spring Data JDBC Extensions project that has been archived in 2019:
- * <a href="https://github.com/spring-attic/spring-data-jdbc-ext">Spring Data JDBC Extensions for the Oracle
+ * <a href="https://github.com/spring-attic/spring-data-jdbc-ext">Spring Data JDBC
+ * Extensions for the Oracle
  * database</a>.
  *
  * @author Thomas Risberg
@@ -70,7 +77,8 @@ public abstract class OneToManyResultSetExtractor<R, C, K> implements ResultSetE
 	}
 
 	/**
-	 * Creates a new {@link OneToManyResultSetExtractor} from the given {@link RowMapper}s and {@link ExpectedResults}.
+	 * Creates a new {@link OneToManyResultSetExtractor} from the given {@link RowMapper}s and
+	 * {@link ExpectedResults}.
 	 *
 	 * @param rootMapper {@link RowMapper} to map the root entity, must not be {@literal null}.
 	 * @param childMapper {@link RowMapper} to map the root entities, must not be {@literal null}.

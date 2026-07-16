@@ -49,6 +49,12 @@ baseRemote: origin
 baseRef: origin/main
 startHead: $head
 headPolicy: descendantOfStartHead
+scopeExpansionTier: 0
+longLineThreshold: 120
+commentWrapThreshold: 120
+springDataQueryThreshold: 80
+repositoryMethodLengthThreshold: 8
+utilityMethodLengthThreshold: 8
 
 budget:
   maxCandidatesThisRun: $MaxCandidatesThisRun
@@ -111,6 +117,7 @@ allowedCandidateTypes:
   - utility_readability_cleanup
   - application_bootstrap_readability_cleanup
   - comment_wrap_cleanup
+  - line_comment_wrap_cleanup
   - method_spacing_normalization
   - threshold_governance_artifact_update
 

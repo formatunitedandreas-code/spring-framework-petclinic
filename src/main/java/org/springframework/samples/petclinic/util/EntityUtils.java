@@ -22,7 +22,8 @@ import org.springframework.orm.ObjectRetrievalFailureException;
 import org.springframework.samples.petclinic.model.BaseEntity;
 
 /**
- * Utility methods for handling entities. Separate from the BaseEntity class mainly because of dependency on the
+ * Utility methods for handling entities. Separate from the BaseEntity class mainly because of
+ * dependency on the
  * ORM-associated ObjectRetrievalFailureException.
  *
  * @author Juergen Hoeller
@@ -45,7 +46,11 @@ public class EntityUtils {
      * @return the found entity
      * @throws ObjectRetrievalFailureException if the entity was not found
      */
-    public static <T extends BaseEntity> T getById(Collection<T> entities, Class<T> entityClass, int entityId) {
+    public static <T extends BaseEntity> T getById(
+        Collection<T> entities,
+        Class<T> entityClass,
+        int entityId
+    ) {
         for (T entity : entities) {
             if (isMatchingEntity(entity, entityClass, entityId)) {
                 return entity;
@@ -54,7 +59,11 @@ public class EntityUtils {
         throw new ObjectRetrievalFailureException(entityClass, entityId);
     }
 
-    private static <T extends BaseEntity> boolean isMatchingEntity(T entity, Class<T> entityClass, int entityId) {
+    private static <T extends BaseEntity> boolean isMatchingEntity(
+        T entity,
+        Class<T> entityClass,
+        int entityId
+    ) {
         return entity.getId() == entityId && entityClass.isInstance(entity);
     }
 

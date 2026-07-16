@@ -17,6 +17,20 @@ function Get-LeaseScalar {
     return ($match -replace "^\s*$([regex]::Escape($Name)):\s*", "").Trim()
 }
 
+function Get-LeaseIntScalarOrDefault {
+    param(
+        [string[]] $Lines,
+        [string] $Name,
+        [int] $DefaultValue
+    )
+
+    $match = $Lines | Where-Object { $_ -match "^\s*$([regex]::Escape($Name)):\s*(\d+)\s*$" } | Select-Object -First 1
+    if (-not $match) {
+        return $DefaultValue
+    }
+    return [int]($match -replace "^\s*$([regex]::Escape($Name)):\s*", "")
+}
+
 function Get-LeaseList {
     param([string[]] $Lines, [string] $Name)
     $items = New-Object System.Collections.Generic.List[string]
@@ -56,6 +70,33 @@ function ConvertTo-ConstantName {
 function Test-StringConstantExists {
     param([string] $Content, [string] $ConstantName)
     return $Content -match "private\s+static\s+final\s+String\s+$([regex]::Escape($ConstantName))\s*="
+}
+
+function Resolve-UniqueStringConstantName {
+    param(
+        [string] $Content,
+        [string] $BaseName
+    )
+
+    if (-not (Test-StringConstantExists -Content $Content -ConstantName $BaseName)) {
+        return $BaseName
+    }
+
+    foreach ($suffix in @("INLINE_SQL", "QUERY_SQL", "LOOKUP_SQL")) {
+        $candidate = "${BaseName}_$suffix"
+        if (-not (Test-StringConstantExists -Content $Content -ConstantName $candidate)) {
+            return $candidate
+        }
+    }
+
+    for ($index = 2; $index -le 20; $index++) {
+        $candidate = "${BaseName}_$index"
+        if (-not (Test-StringConstantExists -Content $Content -ConstantName $candidate)) {
+            return $candidate
+        }
+    }
+
+    return $null
 }
 
 function Get-FirstRepositoryQueryExpression {
@@ -165,6 +206,9 @@ function Test-AutoPatchableCandidate {
     if ($CandidateClass -eq "comment_wrap_cleanup") {
         return $Candidate.ContainsKey("member") -and ([string]$Candidate.member).StartsWith("line-") -and $Candidate.ContainsKey("commentWrapSplitPointFound") -and $Candidate.commentWrapSplitPointFound -eq $true
     }
+    if ($CandidateClass -eq "line_comment_wrap_cleanup") {
+        return $Candidate.ContainsKey("member") -and ([string]$Candidate.member).StartsWith("line-") -and $Candidate.ContainsKey("commentWrapSplitPointFound") -and $Candidate.commentWrapSplitPointFound -eq $true
+    }
     if ($CandidateClass -eq "spring_data_query_wrap_cleanup") {
         return $Candidate.ContainsKey("member") -and ([string]$Candidate.member).StartsWith("line-")
     }
@@ -174,6 +218,20 @@ function Test-AutoPatchableCandidate {
 function Test-SimpleStringConstantLine {
     param([string] $Line)
     return $Line -match '^\s*private static final String [A-Z0-9_]+ = "[^"\\]+";\s*$'
+}
+
+function Test-SimpleStringConstantWrapCandidateLine {
+    param([string] $Line)
+
+    $match = [regex]::Match($Line, '^\s*private static final String [A-Z0-9_]+ = "(?<value>[^"\\]+)";\s*$')
+    if (-not $match.Success) {
+        return $false
+    }
+
+    $value = $match.Groups["value"].Value
+    $maxFirstSegmentLength = [Math]::Min(88, $value.Length - 1)
+    $splitIndex = $value.LastIndexOf(" ", $maxFirstSegmentLength)
+    return $splitIndex -ge 24 -and $splitIndex -lt ($value.Length - 1)
 }
 
 function Test-SplitStringConstantLine {
@@ -191,36 +249,47 @@ function Test-SimpleQueryAnnotationLine {
     return $Line -match '^\s*@Query\("(?<value>[^"\\]+)"\)\s*$'
 }
 
+function Test-MethodOrAnnotationBoundaryLine {
+    param([string] $Line)
+    return $Line -match '^\s*(?:@|public\b|private\b|protected\b)'
+}
+
 function Find-ConservativeCommentSplitPoint {
     param([string] $Text)
 
     $minimumPrefix = 24
+    $minimumSegmentLength = 16
     $preferredMaxIndex = [Math]::Min(112, $Text.Length - 1)
     if ($preferredMaxIndex -lt $minimumPrefix) {
         return $null
     }
 
-    $spaceSplit = $Text.LastIndexOf(" ", $preferredMaxIndex)
-    if ($spaceSplit -ge $minimumPrefix -and $spaceSplit -lt ($Text.Length - 1)) {
-        return [pscustomobject]@{
-            Index = $spaceSplit
-            KeepDelimiter = $false
+    $spaceSplit = $preferredMaxIndex
+    while ($spaceSplit -ge $minimumPrefix) {
+        $spaceSplit = $Text.LastIndexOf(" ", $spaceSplit)
+        if ($spaceSplit -lt $minimumPrefix) {
+            break
         }
-    }
-
-    foreach ($delimiter in @("/", "#", "?", "&", "-", ".", ":")) {
-        $splitIndex = $Text.LastIndexOf($delimiter, $preferredMaxIndex)
-        if ($splitIndex -ge $minimumPrefix -and $splitIndex -lt ($Text.Length - 1)) {
+        $beforeSplit = $Text.Substring(0, $spaceSplit)
+        $lastInlineTagStart = $beforeSplit.LastIndexOf("{@")
+        $lastInlineTagEnd = $beforeSplit.LastIndexOf("}")
+        if ($lastInlineTagStart -gt $lastInlineTagEnd) {
+            $spaceSplit--
+            continue
+        }
+        if ($spaceSplit -lt ($Text.Length - 1) -and
+            $spaceSplit -ge $minimumSegmentLength -and
+            ($Text.Length - ($spaceSplit + 1)) -ge $minimumSegmentLength) {
             return [pscustomobject]@{
-                Index = $splitIndex
-                KeepDelimiter = $true
+                Index = $spaceSplit
+                KeepDelimiter = $false
             }
         }
+        $spaceSplit--
     }
 
     return $null
 }
-
 function Parse-MethodBlocks {
     param([string[]] $Lines)
     $methods = New-Object System.Collections.Generic.List[psobject]
@@ -272,6 +341,11 @@ $leaseName = Get-LeaseScalar $leaseLines "leaseName"
 $branch = Get-LeaseScalar $leaseLines "branch"
 $head = (& git rev-parse HEAD).Trim()
 $allowedCandidateTypes = Get-LeaseList $leaseLines "allowedCandidateTypes"
+$longLineThreshold = Get-LeaseIntScalarOrDefault -Lines $leaseLines -Name "longLineThreshold" -DefaultValue 120
+$commentWrapThreshold = Get-LeaseIntScalarOrDefault -Lines $leaseLines -Name "commentWrapThreshold" -DefaultValue 120
+$springDataQueryThreshold = Get-LeaseIntScalarOrDefault -Lines $leaseLines -Name "springDataQueryThreshold" -DefaultValue 80
+$repositoryMethodLengthThreshold = Get-LeaseIntScalarOrDefault -Lines $leaseLines -Name "repositoryMethodLengthThreshold" -DefaultValue 8
+$utilityMethodLengthThreshold = Get-LeaseIntScalarOrDefault -Lines $leaseLines -Name "utilityMethodLengthThreshold" -DefaultValue 8
 $script:ApprovedAutoPatchableCandidateClasses = Get-AutoPatchableGate -Path $GatePath
 
 $sourceFiles = @(
@@ -333,7 +407,7 @@ foreach ($file in $sourceFiles) {
     # Heuristic 3: line readability cleanup for long statements.
     $longLines = @()
     for ($i = 0; $i -lt $lines.Count; $i++) {
-        if ($lines[$i].Length -gt 120 -and $lines[$i] -match "^\s*(private|public|return|[A-Za-z0-9_]+\.)") {
+        if ($lines[$i].Length -gt $longLineThreshold -and $lines[$i] -match "^\s*(private|public|return|[A-Za-z0-9_]+\.)") {
             $longLines += ($i + 1)
         }
     }
@@ -341,7 +415,7 @@ foreach ($file in $sourceFiles) {
         $member = "line-$($longLines[0])"
         $candidateLine = $lines[$longLines[0] - 1]
         $candidateClass = $null
-        if (Test-SimpleStringConstantLine $candidateLine) {
+        if (Test-SimpleStringConstantWrapCandidateLine $candidateLine) {
             $candidateClass = if ($path -like "*/repository/*") { "repository_readability_cleanup" } else { "string_constant_wrap_cleanup" }
         }
         elseif ($candidateLine -match "^\s*(public|private|protected)\s+.+\)\s*\{\s*$") {
@@ -364,7 +438,7 @@ foreach ($file in $sourceFiles) {
     # Heuristic 3b: Spring Data JPA query annotation readability cleanup.
     if ($path -like "*/repository/springdatajpa/*") {
         for ($i = 0; $i -lt $lines.Count; $i++) {
-            if ($lines[$i].Length -le 110) {
+            if ($lines[$i].Length -le $springDataQueryThreshold) {
                 continue
             }
             if (-not (Test-SimpleQueryAnnotationLine $lines[$i])) {
@@ -387,7 +461,7 @@ foreach ($file in $sourceFiles) {
     # Heuristic 3c: repository split string constant continuation cleanup.
     if ($path -like "*/repository/*") {
         for ($i = 0; $i -lt ($lines.Count - 1); $i++) {
-            if ($lines[$i].Length -le 110) {
+            if ($lines[$i].Length -le $longLineThreshold) {
                 continue
             }
             if (-not (Test-SplitStringConstantStartLine $lines[$i])) {
@@ -418,7 +492,7 @@ foreach ($file in $sourceFiles) {
     # Heuristic 4: tiny spacing normalization between adjacent methods.
     for ($i = 0; $i -lt $lines.Count; $i++) {
         $line = $lines[$i]
-        if ($line.Length -le 120) {
+        if ($line.Length -le $commentWrapThreshold) {
             continue
         }
         if ($line -notmatch '^\s*\*\s+\S') {
@@ -442,6 +516,32 @@ foreach ($file in $sourceFiles) {
     }
 
     # Heuristic 5: tiny spacing normalization between adjacent methods.
+    for ($i = 0; $i -lt $lines.Count; $i++) {
+        $line = $lines[$i]
+        if ($line.Length -le $commentWrapThreshold) {
+            continue
+        }
+        if ($line -notmatch '^\s*//\s+\S') {
+            continue
+        }
+        $commentText = ($line -replace '^\s*//\s+', '')
+        if (-not (Find-ConservativeCommentSplitPoint -Text $commentText)) {
+            continue
+        }
+        $member = "line-$($i + 1)"
+        Add-Candidate -CandidateClass "line_comment_wrap_cleanup" -AllowedTypes $allowedCandidateTypes -Bucket $candidates -Candidate ([ordered]@{
+            candidateId = New-CandidateId $path "line_comment_wrap_cleanup" $member
+            score = 30 + 30 + 20 + 10 + $layerScore
+            file = $path
+            member = $member
+            commentWrapSplitPointFound = $true
+            expectedDiffSummary = "Wrap one long line comment without changing source behavior."
+            estimatedChangedLines = 2
+            tieBreak = [ordered]@{ layerScore = $layerScore; path = $path; member = $member }
+        })
+    }
+
+    # Heuristic 6: tiny spacing normalization between adjacent methods.
     if ($methods.Count -gt 1) {
         for ($m = 0; $m -lt ($methods.Count - 1); $m++) {
             $currentMethod = $methods[$m]
@@ -462,7 +562,36 @@ foreach ($file in $sourceFiles) {
         }
     }
 
-    # Heuristic 6: repository-specific readability candidate.
+    # Heuristic 6b: collapse double blank lines before the next method or annotation.
+    for ($i = 1; $i -lt ($lines.Count - 1); $i++) {
+        if (-not [string]::IsNullOrWhiteSpace($lines[$i])) {
+            continue
+        }
+        if (-not [string]::IsNullOrWhiteSpace($lines[$i - 1])) {
+            continue
+        }
+        if ($i -lt 2 -or $lines[$i - 2] -notmatch '^\s*\}\s*$') {
+            continue
+        }
+        if (-not (Test-MethodOrAnnotationBoundaryLine $lines[$i + 1])) {
+            continue
+        }
+
+        $lineNumber = $i + 1
+        $member = "line-$lineNumber"
+        Add-Candidate -CandidateClass "method_spacing_normalization" -AllowedTypes $allowedCandidateTypes -Bucket $candidates -Candidate ([ordered]@{
+            candidateId = New-CandidateId $path "method_spacing_normalization" "collapse-$member"
+            score = 30 + 30 + 20 + 10 + $layerScore
+            file = $path
+            member = $member
+            spacingAction = "collapse_extra_blank_line"
+            expectedDiffSummary = "Collapse an extra blank line before the next method or annotation."
+            estimatedChangedLines = 1
+            tieBreak = [ordered]@{ layerScore = $layerScore; path = $path; member = "collapse-$member" }
+        })
+    }
+
+    # Heuristic 7: repository-specific readability candidate.
     if ($path -like "*/repository/*") {
         foreach ($method in $methods) {
             $methodName = $method.Name
@@ -475,9 +604,9 @@ foreach ($file in $sourceFiles) {
             if (-not $inlineSqlLiteral) {
                 continue
             }
-            if (($hasSqlToken -or $hasSqlQueryCall) -and ($hasJdbcCall -or $hasSqlQueryCall) -and ($methodLineCount -gt 8 -or $inlineSqlLiteral)) {
-                $constantName = ConvertTo-ConstantName $methodName "SQL"
-                if (Test-StringConstantExists -Content $content -ConstantName $constantName) {
+            if (($hasSqlToken -or $hasSqlQueryCall) -and ($hasJdbcCall -or $hasSqlQueryCall) -and ($methodLineCount -gt $repositoryMethodLengthThreshold -or $inlineSqlLiteral)) {
+                $constantName = Resolve-UniqueStringConstantName -Content $content -BaseName (ConvertTo-ConstantName $methodName "SQL")
+                if (-not $constantName) {
                     continue
                 }
                 $expectedDiffSummary = if ($inlineSqlLiteral) {
@@ -509,7 +638,7 @@ foreach ($file in $sourceFiles) {
             $hasTryFinally = [regex]::IsMatch($methodText, "(?s)\btry\b.*\bfinally\b")
             $hasStopWatch = [regex]::IsMatch($methodText, "(?i)\bStopWatch\b")
             $hasSynchronized = [regex]::IsMatch($methodText, "(?i)\bsynchronized\b")
-            if ($methodLineCount -gt 8 -and (($hasTryFinally -and $hasStopWatch) -or $hasSynchronized -or $hasStopWatch)) {
+            if ($methodLineCount -gt $utilityMethodLengthThreshold -and (($hasTryFinally -and $hasStopWatch) -or $hasSynchronized -or $hasStopWatch)) {
                 $utilityPattern = if ($hasStopWatch) { "stopwatch_start_helper" } else { "synchronized_helper" }
                 $helperName = if ($hasStopWatch) { "startInvocationStopWatch" } else { "recordInvocation" }
                 if ($content -match "private\s+StopWatch\s+$([regex]::Escape($helperName))\s*\(" -or
@@ -601,6 +730,13 @@ $pocket = [ordered]@{
             "file path lexical",
             "member lexical"
         )
+        thresholds = [ordered]@{
+            longLineThreshold = $longLineThreshold
+            commentWrapThreshold = $commentWrapThreshold
+            springDataQueryThreshold = $springDataQueryThreshold
+            repositoryMethodLengthThreshold = $repositoryMethodLengthThreshold
+            utilityMethodLengthThreshold = $utilityMethodLengthThreshold
+        }
         allowedCandidateTypes = $allowedCandidateTypes
     }
     candidates = $ranked

@@ -84,7 +84,6 @@ public class ClinicServiceImpl implements ClinicService {
         visitRepository.save(visit);
     }
 
-
     @Override
     @Transactional(readOnly = true)
     public Pet findPetById(int id) {

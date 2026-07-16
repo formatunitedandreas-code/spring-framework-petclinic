@@ -47,7 +47,8 @@ public class JdbcPetRepositoryImpl implements PetRepository {
     private static final String ID = "id";
 
 
-    private static final String FIND_OWNER_ID_BY_PET_ID_SQL = "SELECT owner_id FROM pets WHERE id=:id";
+    private static final String FIND_OWNER_ID_BY_PET_ID_SQL = "SELECT owner_id FROM pets WHERE "
+        + "id=:id";
 
     private static final String FIND_PET_TYPES_SQL = "SELECT id, name FROM types ORDER BY name";
 
@@ -63,7 +64,11 @@ public class JdbcPetRepositoryImpl implements PetRepository {
 
     private final OwnerRepository ownerRepository;
 
-    public JdbcPetRepositoryImpl(JdbcClient jdbcClient, DataSource dataSource, OwnerRepository ownerRepository) {
+    public JdbcPetRepositoryImpl(
+        JdbcClient jdbcClient,
+        DataSource dataSource,
+        OwnerRepository ownerRepository
+    ) {
         this.jdbcClient = jdbcClient;
 
         this.insertPet = new SimpleJdbcInsert(dataSource)
@@ -116,7 +121,8 @@ public class JdbcPetRepositoryImpl implements PetRepository {
     }
 
     /**
-     * Creates a {@link MapSqlParameterSource} based on data values from the supplied {@link Pet} instance.
+     * Creates a {@link MapSqlParameterSource} based on data values from the supplied
+     * {@link Pet} instance.
      */
     private MapSqlParameterSource createPetParameterSource(Pet pet) {
         return new MapSqlParameterSource()
