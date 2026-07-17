@@ -58,6 +58,9 @@ jobs:
             return (
               $normalized -like "threshold/scripts/*" -or
               $normalized -like "threshold/leases/*" -or
+              $normalized -like "threshold/lease-state/*" -or
+              $normalized -like "threshold/receipts/*" -or
+              $normalized -like "threshold/docs/*" -or
               $normalized -like "threshold/gates/*" -or
               $normalized -like "threshold/authority/*" -or
               $normalized -eq ".github/workflows/threshold-governance.yml" -or
