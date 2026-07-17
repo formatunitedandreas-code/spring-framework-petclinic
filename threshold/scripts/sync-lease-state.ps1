@@ -12,6 +12,7 @@ Set-StrictMode -Version Latest
 $ErrorActionPreference = "Stop"
 
 . (Join-Path $PSScriptRoot "lib/runtime-paths.ps1")
+. (Join-Path $PSScriptRoot "lib/lease-policy.ps1")
 
 $runtimePaths = Get-ThresholdRuntimePaths
 if ([string]::IsNullOrWhiteSpace($LeasePath)) {
@@ -43,8 +44,6 @@ $state = Get-Content $StatePath -Raw | ConvertFrom-Json
 
 $leaseName = Get-LeaseScalar $leaseLines "leaseName"
 $expectedBranch = Get-LeaseScalar $leaseLines "branch"
-$startHead = Get-LeaseScalar $leaseLines "startHead"
-$headPolicy = Get-LeaseScalar $leaseLines "headPolicy"
 $maxCandidates = Get-LeaseBudgetValue $leaseLines "maxCandidatesThisRun"
 $maxCommits = Get-LeaseBudgetValue $leaseLines "maxCommitsThisRun"
 $maxRepairs = Get-LeaseBudgetValue $leaseLines "maxRepairAttemptsPerCandidate"
@@ -56,16 +55,7 @@ if ($currentBranch -ne $expectedBranch) {
     throw "Branch mismatch. expected=$expectedBranch actual=$currentBranch"
 }
 
-if ($headPolicy -eq "exactStartHead" -and $currentHead -ne $startHead) {
-    throw "HEAD mismatch. expected=$startHead actual=$currentHead"
-}
-
-if ($headPolicy -eq "descendantOfStartHead") {
-    & git merge-base --is-ancestor $startHead HEAD
-    if ($LASTEXITCODE -ne 0) {
-        throw "HEAD '$currentHead' is not a descendant of lease startHead '$startHead'."
-    }
-}
+Assert-ThresholdHeadPolicy -LeaseLines $leaseLines -LeasePath $LeasePath -CurrentHead $currentHead -CurrentBranch $currentBranch
 
 if ($state.leaseId -ne $leaseName) {
     throw "State leaseId mismatch. expected=$leaseName actual=$($state.leaseId)"

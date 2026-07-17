@@ -1,0 +1,7 @@
+# Threshold governance enforcement paths require explicit owner review.
+/threshold/scripts/ @formatunitedandreas-code
+/threshold/leases/ @formatunitedandreas-code
+/threshold/gates/ @formatunitedandreas-code
+/threshold/authority/ @formatunitedandreas-code
+/.github/workflows/threshold-governance.yml @formatunitedandreas-code
+/.github/CODEOWNERS @formatunitedandreas-code

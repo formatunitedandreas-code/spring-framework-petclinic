@@ -32,6 +32,7 @@ Set-StrictMode -Version Latest
 $ErrorActionPreference = "Stop"
 
 . (Join-Path $PSScriptRoot "lib/runtime-paths.ps1")
+. (Join-Path $PSScriptRoot "lib/lease-policy.ps1")
 
 $runtimePaths = Get-ThresholdRuntimePaths
 if ([string]::IsNullOrWhiteSpace($LeasePath)) {
@@ -114,6 +115,13 @@ function Read-JsonFile {
         throw "JSON file not found: $Path"
     }
     return Get-Content $Path -Raw | ConvertFrom-Json
+}
+
+function Read-LeaseLines {
+    if (-not (Test-Path $LeasePath)) {
+        throw "Lease file not found: $LeasePath"
+    }
+    return @(Get-Content $LeasePath)
 }
 
 function Commit-PathsIfNeeded {
@@ -406,6 +414,9 @@ function Invoke-LocalWaveValidation {
 function Invoke-PullRequestPublish {
     param([pscustomobject] $Wave)
 
+    $leaseLines = Read-LeaseLines
+    Assert-ThresholdActionAllowed -LeaseLines $leaseLines -LeasePath $LeasePath -Action "pr"
+
     Invoke-Checked -FilePath "git" -ArgumentList @("push", $BaseRemote, $Wave.Branch) -FailureMessage "Failed to push branch '$($Wave.Branch)'."
 
     if ($SkipPullRequest.IsPresent) {
@@ -469,6 +480,9 @@ function Invoke-AuthorizedMerge {
         [pscustomobject] $Wave,
         [pscustomobject] $PullRequest
     )
+
+    $leaseLines = Read-LeaseLines
+    Assert-ThresholdActionAllowed -LeaseLines $leaseLines -LeasePath $LeasePath -Action "merge"
 
     $mergeBody = @"
 PR #$($PullRequest.Number)
