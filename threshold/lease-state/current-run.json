@@ -8,18 +8,18 @@
   "repository": "C:\\dev\\spring-framework-petclinic",
   "branch": "agent/owner-search-spring-data-jpa-adapter",
   "startHead": "c153e309cacd620f37e35059dfaee5c8735e9fea",
-  "currentHead": "c153e309cacd620f37e35059dfaee5c8735e9fea",
-  "currentSourceHead": "c153e309cacd620f37e35059dfaee5c8735e9fea",
+  "currentHead": "7e4479c7607cc2f73fdaba7baeb2030c627dd30c",
+  "currentSourceHead": "7e4479c7607cc2f73fdaba7baeb2030c627dd30c",
   "originMainAtActivation": "c153e309cacd620f37e35059dfaee5c8735e9fea",
   "headPolicy": "descendantOfOriginMainAtActivation",
-  "candidatesProcessed": 0,
+  "candidatesProcessed": 1,
   "commitsCreated": 0,
   "remainingBudget": {
-    "candidates": 1,
+    "candidates": 0,
     "commits": 2,
     "repairAttempts": 1
   },
-  "lastReceipt": "threshold/receipts/owner-search-p2-08-authority-activation-20260717T182000Z.json",
-  "terminalState": "active",
-  "updatedAt": "2026-07-17T18:20:00Z"
+  "lastReceipt": "threshold/receipts/owner-search-p2-08-spring-data-jpa-adapter-20260717T183000Z.json",
+  "terminalState": "validated_local_change_pending_commit",
+  "updatedAt": "2026-07-17T18:50:00Z"
 }
