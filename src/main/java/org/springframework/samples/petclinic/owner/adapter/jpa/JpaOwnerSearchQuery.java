@@ -17,6 +17,8 @@ public class JpaOwnerSearchQuery implements OwnerSearchQuery {
 
     private static final String LAST_NAME = "lastName";
 
+    private static final String OWNER_ID = "ownerId";
+
     private static final String SEARCH_BY_LAST_NAME_JPQL = """
         SELECT owner.id AS ownerId,
                owner.firstName AS firstName,
@@ -41,7 +43,7 @@ public class JpaOwnerSearchQuery implements OwnerSearchQuery {
     public List<OwnerListItem> searchByLastName(String lastName) {
         Map<Integer, OwnerListItemBuilder> owners = new LinkedHashMap<>();
         for (Tuple row : queryRows(lastName)) {
-            OwnerListItemBuilder owner = owners.computeIfAbsent(row.get("ownerId", Integer.class),
+            OwnerListItemBuilder owner = owners.computeIfAbsent(row.get(OWNER_ID, Integer.class),
                 ignored -> newOwner(row));
             String petName = row.get("petName", String.class);
             if (petName != null) {
@@ -58,7 +60,7 @@ public class JpaOwnerSearchQuery implements OwnerSearchQuery {
     }
 
     private OwnerListItemBuilder newOwner(Tuple row) {
-        return new OwnerListItemBuilder(row.get("ownerId", Integer.class), row.get("firstName", String.class),
+        return new OwnerListItemBuilder(row.get(OWNER_ID, Integer.class), row.get("firstName", String.class),
             row.get(LAST_NAME, String.class), row.get("address", String.class), row.get("city", String.class),
             row.get("telephone", String.class), new ArrayList<>());
     }
