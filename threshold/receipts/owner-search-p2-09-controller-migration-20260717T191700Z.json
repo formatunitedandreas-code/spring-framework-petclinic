@@ -1,0 +1,99 @@
+{
+  "schemaVersion": "threshold.petclinic.phase2.receipt.v0.1",
+  "runId": "p2-09-owner-search-controller-migration-20260717T185400Z",
+  "phaseId": "P2-09",
+  "repository": "C:\\dev\\spring-framework-petclinic",
+  "branch": "agent/owner-search-controller-migration",
+  "inputHead": "4235f1194506634868fb55318a12092d5fd431b0",
+  "baseHead": "755b4802bf657b2bb0d03c642260b09a7c47467c",
+  "outputHead": "pending_local_commit",
+  "lane": "product_refactor",
+  "feature": "owner_search_vertical_refactoring",
+  "candidateClass": "owner_search_controller_migration",
+  "effectClasses": [
+    "controller_dependency_migration",
+    "jsp_projection_binding_update",
+    "test_fixture_update",
+    "local_evidence_update"
+  ],
+  "scopeMatch": true,
+  "changedPaths": [
+    "src/main/java/org/springframework/samples/petclinic/owner/api/OwnerListItem.java",
+    "src/main/java/org/springframework/samples/petclinic/owner/application/SearchOwners.java",
+    "src/main/java/org/springframework/samples/petclinic/web/OwnerController.java",
+    "src/main/resources/spring/business-config.xml",
+    "src/main/webapp/WEB-INF/jsp/owners/ownersList.jsp",
+    "src/test/java/org/springframework/samples/petclinic/web/OwnerControllerTests.java",
+    "src/test/java/org/springframework/samples/petclinic/web/WebTestMocks.java",
+    "src/test/resources/spring/mvc-test-config.xml",
+    "threshold/docs/OWNER_SEARCH_CONTROLLER_MIGRATION_V0_1.md",
+    "threshold/receipts/owner-search-p2-09-controller-migration-20260717T191700Z.json",
+    "threshold/lease-state/current-run.json"
+  ],
+  "validation": {
+    "gitDiffCheck": "pass",
+    "ownerControllerTests": {
+      "command": ".\\mvnw.cmd -Dtest=OwnerControllerTests test",
+      "testsRun": 14,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    "webControllerRegressionTests": {
+      "command": ".\\mvnw.cmd \"-Dtest=OwnerControllerTests,CrashControllerTests,PetControllerTests,VetControllerTests\" test",
+      "testsRun": 24,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    "ownerSearchTests": {
+      "command": ".\\mvnw.cmd -Dtest=*OwnerSearch* test",
+      "testsRun": 33,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    "defaultSuite": {
+      "command": ".\\mvnw.cmd test",
+      "testsRun": 119,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    "profiles": {
+      "jdbc": {
+        "command": ".\\mvnw.cmd \"-Dspring.profiles.active=jdbc\" test",
+        "testsRun": 119,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      "jpa": {
+        "command": ".\\mvnw.cmd \"-Dspring.profiles.active=jpa\" test",
+        "testsRun": 119,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      "springDataJpa": {
+        "command": ".\\mvnw.cmd \"-Dspring.profiles.active=spring-data-jpa\" test",
+        "testsRun": 119,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      }
+    }
+  },
+  "behaviorEquivalent": true,
+  "profileParityVerified": true,
+  "queryBudgetVerified": false,
+  "architectureRulesVerified": false,
+  "fullSuitePassed": true,
+  "publicationPerformed": false,
+  "mergePerformed": false,
+  "releasePerformed": false,
+  "deploymentPerformed": false,
+  "humanReviewRequired": true,
+  "outcome": "validated_local_change_pending_commit",
+  "stopReasons": []
+}

@@ -5,8 +5,10 @@ import java.util.Objects;
 
 import org.springframework.samples.petclinic.owner.api.OwnerListItem;
 import org.springframework.samples.petclinic.owner.port.OwnerSearchQuery;
+import org.springframework.stereotype.Service;
 
-public final class SearchOwners {
+@Service
+public class SearchOwners {
 
     private final OwnerSearchQuery ownerSearchQuery;
 

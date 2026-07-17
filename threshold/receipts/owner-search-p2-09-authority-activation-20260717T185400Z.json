@@ -1,0 +1,20 @@
+{
+  "runId": "owner-search-p2-09-authority-activation-20260717T185400Z",
+  "repository": "spring-petclinic/spring-framework-petclinic",
+  "localPath": "C:\\dev\\spring-framework-petclinic",
+  "phaseId": "P2-09",
+  "lane": "product_refactor",
+  "feature": "owner_search_vertical_refactoring",
+  "decision": "active",
+  "authoritySource": "user_one_shot_grant_2026-07-17-p2-09",
+  "installedLease": "p2-09-owner-search-controller-migration",
+  "branch": "agent/owner-search-controller-migration",
+  "head": "755b4802bf657b2bb0d03c642260b09a7c47467c",
+  "originMain": "755b4802bf657b2bb0d03c642260b09a7c47467c",
+  "priorMergedPullRequest": {
+    "number": 112,
+    "mergeCommit": "755b4802bf657b2bb0d03c642260b09a7c47467c",
+    "mergedAt": "2026-07-17T16:53:50Z"
+  },
+  "recommendedNextAction": "Migrate Owner Search controller path to SearchOwners."
+}

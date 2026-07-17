@@ -15,4 +15,32 @@ public record OwnerListItem(
     public OwnerListItem {
         petNames = List.copyOf(petNames);
     }
+
+    public int getId() {
+        return id;
+    }
+
+    public String getFirstName() {
+        return firstName;
+    }
+
+    public String getLastName() {
+        return lastName;
+    }
+
+    public String getAddress() {
+        return address;
+    }
+
+    public String getCity() {
+        return city;
+    }
+
+    public String getTelephone() {
+        return telephone;
+    }
+
+    public List<String> getPetNames() {
+        return petNames;
+    }
 }
