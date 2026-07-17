@@ -1,0 +1,46 @@
+{
+  "runId": "owner-search-p2-06-jdbc-adapter-20260717T154500Z",
+  "phaseId": "P2-06",
+  "repository": "formatunitedandreas-code/spring-framework-petclinic",
+  "baseHead": "e2bb17e0f108825be744e2a52bb3763c4bfce82f",
+  "inputHead": "45d98772528aa4accd251cdbdcfea45dacc5112b",
+  "finalHead": "",
+  "lane": "product_refactor",
+  "feature": "owner_search_vertical_refactoring",
+  "candidateClass": "owner_search_jdbc_adapter",
+  "scopeMatch": true,
+  "changedPaths": [
+    "src/main/java/org/springframework/samples/petclinic/owner/adapter/jdbc/JdbcOwnerSearchQuery.java",
+    "src/main/resources/spring/business-config.xml",
+    "src/test/java/org/springframework/samples/petclinic/service/JdbcOwnerSearchQueryTests.java",
+    "threshold/docs/OWNER_SEARCH_JDBC_ADAPTER_V0_1.md",
+    "threshold/receipts/owner-search-p2-06-jdbc-adapter-20260717T154500Z.json",
+    "threshold/lease-state/current-run.json"
+  ],
+  "effectClasses": [
+    "R2_REVERSIBLE_LOCAL_MUTATION",
+    "R3_LOCAL_COMMIT",
+    "R4_OWNED_REPO_BRANCH_PUSH",
+    "R4_OWNED_REPO_DRAFT_PR_UPDATE"
+  ],
+  "databaseSchemaChanges": 0,
+  "jdbcOwnerSearchQueryCount": 1,
+  "jdbcOwnerSearchVisitMaterialization": 0,
+  "behaviorEquivalent": false,
+  "profileParityVerified": false,
+  "queryBudgetVerified": true,
+  "architectureRulesVerified": false,
+  "fullSuitePassed": false,
+  "publicationPerformed": false,
+  "mergePerformed": false,
+  "releasePerformed": false,
+  "deploymentPerformed": false,
+  "humanReviewRequired": true,
+  "validation": {
+    "gitDiffCheck": "pass",
+    "jdbcOwnerSearchQueryTests": "pass: 3 tests, 0 failures, 0 errors, 0 skipped",
+    "ownerSearchTests": "pass: 27 tests, 0 failures, 0 errors, 0 skipped",
+    "fullMavenTest": "pass: 113 tests, 0 failures, 0 errors, 0 skipped"
+  },
+  "terminalState": "validated_local_change_pending_commit"
+}
