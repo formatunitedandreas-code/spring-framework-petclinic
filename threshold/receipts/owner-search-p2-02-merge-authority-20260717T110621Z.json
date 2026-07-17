@@ -1,0 +1,81 @@
+{
+  "runId": "owner-search-p2-02-merge-authority-20260717T110621Z",
+  "repository": "formatunitedandreas-code/spring-framework-petclinic",
+  "localPath": "C:\\dev\\spring-framework-petclinic",
+  "phaseId": "P2-02",
+  "lane": "product_refactor",
+  "feature": "owner_search_vertical_refactoring",
+  "decision": "merge_authorized",
+  "authoritySource": "user_one_shot_grant_2026-07-17-p2-02-merge",
+  "branch": "agent/owner-search-behavior-baseline",
+  "head": "f51a77ec91f38f3229c9901865ddc236a0dfe67d",
+  "originBranchHead": "f51a77ec91f38f3229c9901865ddc236a0dfe67d",
+  "originMain": "04f7e344e51ed6c75e9e3062ebc8ee7fa9415b1c",
+  "pullRequest": {
+    "number": 106,
+    "url": "https://github.com/formatunitedandreas-code/spring-framework-petclinic/pull/106",
+    "state": "OPEN",
+    "isDraft": true,
+    "mergeable": "MERGEABLE",
+    "baseRefName": "main",
+    "headRefName": "agent/owner-search-behavior-baseline",
+    "headRefOid": "f51a77ec91f38f3229c9901865ddc236a0dfe67d"
+  },
+  "validationEvidence": {
+    "local": {
+      "gitDiffCheck": "passed",
+      "ownerSearchTests": {
+        "command": ".\\mvnw.cmd -Dtest=*OwnerSearch* test",
+        "testsRun": 18,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0,
+        "profiles": [
+          "jdbc",
+          "jpa",
+          "spring-data-jpa"
+        ]
+      }
+    },
+    "remote": [
+      {
+        "name": "threshold-governance",
+        "conclusion": "SKIPPED"
+      },
+      {
+        "name": "test",
+        "conclusion": "SUCCESS"
+      },
+      {
+        "name": "test",
+        "conclusion": "SUCCESS"
+      },
+      {
+        "name": "build (17)",
+        "conclusion": "SUCCESS"
+      },
+      {
+        "name": "build (21)",
+        "conclusion": "SUCCESS"
+      }
+    ]
+  },
+  "allowedActions": [
+    "mark_pr_ready_for_review_if_required",
+    "merge_pr_106_after_head_and_checks_reverify"
+  ],
+  "forbiddenActions": [
+    "force_push",
+    "push_to_upstream",
+    "release",
+    "deploy",
+    "public_readiness_claim",
+    "public_correctness_claim",
+    "public_security_claim",
+    "public_compliance_claim"
+  ],
+  "mergePerformed": false,
+  "releasePerformed": false,
+  "deploymentPerformed": false,
+  "recommendedNextAction": "Re-verify PR #106 head and checks, mark ready if needed, then merge PR #106."
+}
