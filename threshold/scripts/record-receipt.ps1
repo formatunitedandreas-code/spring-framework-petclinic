@@ -25,6 +25,8 @@ param(
 Set-StrictMode -Version Latest
 $ErrorActionPreference = "Stop"
 
+. (Join-Path $PSScriptRoot "lib/content-hash.ps1")
+
 function Get-LeaseScalar {
     param([string[]] $Lines, [string] $Name, [string] $Default = "")
     $match = $Lines | Where-Object { $_ -match "^\s*$([regex]::Escape($Name)):\s*(.+?)\s*$" } | Select-Object -First 1
@@ -35,28 +37,9 @@ function Get-LeaseScalar {
     return ($match -replace "^\s*$([regex]::Escape($Name)):\s*", "").Trim()
 }
 
-function Get-FileSha256 {
-    param([string] $Path)
-    if (-not (Test-Path $Path)) {
-        throw "Cannot hash missing file: $Path"
-    }
-    return (Get-FileHash -Algorithm SHA256 -Path $Path).Hash.ToLowerInvariant()
-}
-
 function Get-CommitParent {
     param([string] $Commit)
     return (& git rev-parse "$Commit^").Trim()
-}
-
-function Get-GitBlobSha256 {
-    param([string] $Revision, [string] $Path)
-    & git cat-file -e "$Revision`:$Path" 2>$null
-    if ($LASTEXITCODE -ne 0) { return $null }
-    $content = (& git show "$Revision`:$Path") -join "`n"
-    $bytes = [System.Text.Encoding]::UTF8.GetBytes($content)
-    $sha = [System.Security.Cryptography.SHA256]::Create()
-    try { return ($sha.ComputeHash($bytes) | ForEach-Object { $_.ToString("x2") }) -join "" }
-    finally { $sha.Dispose() }
 }
 
 function ConvertTo-RepoPath {
@@ -70,11 +53,13 @@ $leaseLines = Get-Content $LeasePath
 $leaseName = Get-LeaseScalar $leaseLines "leaseName"
 $branch = Get-LeaseScalar $leaseLines "branch"
 $leaseStartHead = Get-LeaseScalar $leaseLines "startHead"
-$leaseDigest = Get-FileSha256 -Path $LeasePath
-
 if ([string]::IsNullOrWhiteSpace($CommitHash)) { $CommitHash = (& git rev-parse HEAD).Trim() }
 if ([string]::IsNullOrWhiteSpace($BaseHead)) { $BaseHead = Get-CommitParent $CommitHash }
 if ([string]::IsNullOrWhiteSpace($DiffSummary)) { $DiffSummary = ((& git show --format=%s --no-patch $CommitHash) -join " ").Trim() }
+$leaseDigest = Get-ThresholdGitBlobSha256 -Revision $CommitHash -Path $LeasePath
+if ([string]::IsNullOrWhiteSpace($leaseDigest)) {
+    throw "Could not compute lease blob digest for $LeasePath at $CommitHash"
+}
 
 $changedPaths = @(& git diff --name-only "$BaseHead..$CommitHash" | Where-Object { -not [string]::IsNullOrWhiteSpace($_) })
 if (-not $changedPaths) { throw "No changed files detected for commit range $BaseHead..$CommitHash" }
@@ -92,8 +77,8 @@ $changedFiles = @()
 foreach ($path in $changedPaths) {
     $changedFiles += [ordered]@{
         path = ConvertTo-RepoPath $path
-        beforeSha256 = Get-GitBlobSha256 $BaseHead $path
-        afterSha256 = Get-GitBlobSha256 $CommitHash $path
+        beforeSha256 = Get-ThresholdGitBlobSha256 -Revision $BaseHead -Path $path
+        afterSha256 = Get-ThresholdGitBlobSha256 -Revision $CommitHash -Path $path
     }
 }
 

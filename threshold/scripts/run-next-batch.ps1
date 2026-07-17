@@ -13,6 +13,8 @@ param(
 Set-StrictMode -Version Latest
 $ErrorActionPreference = "Stop"
 
+. (Join-Path $PSScriptRoot "lib/content-hash.ps1")
+
 function ConvertTo-RepoPath {
     param([string] $Path)
     return ($Path -replace "\\", "/").Trim()
@@ -29,12 +31,6 @@ function Write-TextFile {
     $encoding = New-Object System.Text.UTF8Encoding $false
     $normalizedContent = $Content -replace "`r`n", "`n" -replace "`r", "`n"
     [System.IO.File]::WriteAllText((Resolve-Path -LiteralPath $Path), $normalizedContent, $encoding)
-}
-
-function Get-FileSha256 {
-    param([string] $Path)
-    if (-not (Test-Path $Path)) { throw "File not found for hashing: $Path" }
-    return (Get-FileHash -Algorithm SHA256 -LiteralPath $Path).Hash
 }
 
 function Assert-CleanWorktree {
@@ -297,9 +293,9 @@ try {
         }
 
         $path = ConvertTo-RepoPath $candidate.file
-        $beforeHash = Get-FileSha256 -Path $path
+        $beforeHash = Get-ThresholdFileSha256 -Path $path
         Apply-CommentWrapCleanup -Candidate $candidate
-        $afterHash = Get-FileSha256 -Path $path
+        $afterHash = Get-ThresholdFileSha256 -Path $path
         if ($beforeHash -eq $afterHash) {
             throw "Candidate '$($candidate.candidateId)' produced no materialized file change."
         }
@@ -351,7 +347,7 @@ try {
         schemaVersion = "threshold.petclinic.batch-receipt.v0.1"
         batchId = $batchId
         leaseId = [string]$state.leaseId
-        leaseDigest = (Get-FileSha256 -Path $LeasePath).ToLowerInvariant()
+        leaseDigest = Get-ThresholdGitBlobSha256 -Revision $sourceCommit -Path $LeasePath
         branch = [string]$state.branch
         baseHead = $baseHead
         sourceCommit = $sourceCommit
