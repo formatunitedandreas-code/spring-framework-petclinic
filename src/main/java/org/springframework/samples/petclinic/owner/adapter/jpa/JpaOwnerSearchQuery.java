@@ -15,6 +15,8 @@ import org.springframework.stereotype.Repository;
 @Repository
 public class JpaOwnerSearchQuery implements OwnerSearchQuery {
 
+    private static final String LAST_NAME = "lastName";
+
     private static final String SEARCH_BY_LAST_NAME_JPQL = """
         SELECT owner.id AS ownerId,
                owner.firstName AS firstName,
@@ -51,13 +53,13 @@ public class JpaOwnerSearchQuery implements OwnerSearchQuery {
 
     private List<Tuple> queryRows(String lastName) {
         return this.entityManager.createQuery(SEARCH_BY_LAST_NAME_JPQL, Tuple.class)
-            .setParameter("lastName", lastName + "%")
+            .setParameter(LAST_NAME, lastName + "%")
             .getResultList();
     }
 
     private OwnerListItemBuilder newOwner(Tuple row) {
         return new OwnerListItemBuilder(row.get("ownerId", Integer.class), row.get("firstName", String.class),
-            row.get("lastName", String.class), row.get("address", String.class), row.get("city", String.class),
+            row.get(LAST_NAME, String.class), row.get("address", String.class), row.get("city", String.class),
             row.get("telephone", String.class), new ArrayList<>());
     }
 
