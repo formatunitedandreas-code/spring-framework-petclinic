@@ -90,6 +90,7 @@
             PersistenceExceptions will be auto-translated due to @Repository.
         -->
         <context:component-scan base-package="org.springframework.samples.petclinic.repository.jpa"/>
+        <context:component-scan base-package="org.springframework.samples.petclinic.owner.adapter.jpa"/>
     </beans>
 
     <beans profile="spring-data-jpa">
