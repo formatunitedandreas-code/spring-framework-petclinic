@@ -62,6 +62,18 @@
         "repositoryMethodLengthThreshold": 4,
         "utilityMethodLengthThreshold": 4
       }
+    },
+    {
+      "tier": 4,
+      "name": "portfolio_readability_push_deepen",
+      "description": "Final targeted deepening used for continued autonomous progress when prior portfolio expansion is exhausted.",
+      "thresholds": {
+        "longLineThreshold": 74,
+        "commentWrapThreshold": 76,
+        "springDataQueryThreshold": 44,
+        "repositoryMethodLengthThreshold": 3,
+        "utilityMethodLengthThreshold": 3
+      }
     }
   ]
   },

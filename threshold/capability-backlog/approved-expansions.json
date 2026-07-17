@@ -15,9 +15,29 @@
   },
   "approvedExpansions": [
     {
-      "id": "expand-scope-tier3-portfolio-readability-push",
+      "id": "expand-scope-tier4-portfolio-readability-deepen",
       "status": "ready",
       "enabled": true,
+      "triggerTerminalStates": [
+        "ready_no_candidates_on_fresh_wave"
+      ],
+      "applyScript": "threshold/scripts/expand-scope.ps1",
+      "allowedChangedPaths": [
+        "threshold/leases/current.yaml",
+        "threshold/lease-state/current-run.json"
+      ],
+      "validationCommands": [
+        "git diff --check",
+        "powershell -ExecutionPolicy Bypass -File threshold/scripts/discover-candidates.ps1 -LeasePath threshold/leases/current.yaml -GatePath threshold/gates/auto-patchable-candidate-classes.json -PocketPath threshold/candidate-pocket/current.json -Limit 20"
+      ],
+      "arguments": [],
+      "commitMessage": "feat: authorize candidate portfolio scope tier4 expansion",
+      "prTitle": "Authorize candidate portfolio scope tier4 deep expansion"
+    },
+    {
+      "id": "expand-scope-tier3-portfolio-readability-push",
+      "status": "ready",
+      "enabled": false,
       "triggerTerminalStates": [
         "ready_no_candidates_on_fresh_wave"
       ],
