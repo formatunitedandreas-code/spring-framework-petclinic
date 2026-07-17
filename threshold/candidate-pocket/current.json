@@ -2,8 +2,8 @@
     "schemaVersion":  "threshold.petclinic.candidate-pocket.v0.2",
     "leaseName":  "owned-autonomous-refactor-branch-wave-v0_automation",
     "branch":  "threshold-governed-refactor-demo-153",
-    "generatedFromHead":  "8dc0a435899d907adec8ede3e188c8c5d8839109",
-    "generatedAt":  "2026-07-17T22:09:43.3986816Z",
+    "generatedFromHead":  "276c95837f787fd4dec62e5960500a4a900d264e",
+    "generatedAt":  "2026-07-17T22:09:56.4283822Z",
     "discovery":  {
                       "method":  "static-heuristic-scan",
                       "sourceRoot":  "src/main/java/org/springframework/samples/petclinic",
@@ -35,11 +35,11 @@
                                       "member lexical"
                                   ],
                       "thresholds":  {
-                                         "longLineThreshold":  92,
-                                         "commentWrapThreshold":  96,
-                                         "springDataQueryThreshold":  60,
-                                         "repositoryMethodLengthThreshold":  5,
-                                         "utilityMethodLengthThreshold":  5
+                                         "longLineThreshold":  80,
+                                         "commentWrapThreshold":  84,
+                                         "springDataQueryThreshold":  50,
+                                         "repositoryMethodLengthThreshold":  4,
+                                         "utilityMethodLengthThreshold":  4
                                      },
                       "allowedCandidateTypes":  [
                                                     "private_helper_extraction_for_readability",
@@ -63,10 +63,31 @@
                                                 ]
                   },
     "candidates":  [
-
+                       {
+                           "tieBreak":  {
+                                            "layerScore":  0,
+                                            "path":  "src/main/java/org/springframework/samples/petclinic/owner/adapter/springdata/SpringDataJpaOwnerSearchQuery.java",
+                                            "member":  "line-17"
+                                        },
+                           "gate":  {
+                                        "required":  true,
+                                        "approved":  true,
+                                        "gatePath":  "threshold/gates/auto-patchable-candidate-classes.json"
+                                    },
+                           "score":  90,
+                           "autoPatchable":  true,
+                           "member":  "line-17",
+                           "reviewOnly":  false,
+                           "executionMode":  "auto_patchable",
+                           "file":  "src/main/java/org/springframework/samples/petclinic/owner/adapter/springdata/SpringDataJpaOwnerSearchQuery.java",
+                           "candidateId":  "src-main-java-org-springframework-samples-petclinic-owner-adapter-springdata-springdatajpaownersearchquery-java-method-signature-wrap-cleanup-line-17",
+                           "expectedDiffSummary":  "Wrap a long constant or method signature readability line without changing behavior.",
+                           "candidateClass":  "method_signature_wrap_cleanup",
+                           "estimatedChangedLines":  8
+                       }
                    ],
-    "nextRecommendedCandidateId":  null,
-    "nextAutoPatchableCandidateId":  null,
+    "nextRecommendedCandidateId":  "src-main-java-org-springframework-samples-petclinic-owner-adapter-springdata-springdatajpaownersearchquery-java-method-signature-wrap-cleanup-line-17",
+    "nextAutoPatchableCandidateId":  "src-main-java-org-springframework-samples-petclinic-owner-adapter-springdata-springdatajpaownersearchquery-java-method-signature-wrap-cleanup-line-17",
     "nonClaims":  [
                       "candidate pocket is not an implementation claim",
                       "candidate pocket does not claim behavior preservation until slice validation passes",
