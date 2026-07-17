@@ -1,0 +1,91 @@
+{
+  "runId": "owner-search-p2-03-query-baseline-20260717T133536Z",
+  "repository": "spring-petclinic/spring-framework-petclinic",
+  "localPath": "C:\\dev\\spring-framework-petclinic",
+  "phaseId": "P2-03",
+  "lane": "product_refactor",
+  "feature": "owner_search_vertical_refactoring",
+  "inputHead": "264ec6501cc5410b7024e77ae9b97e3c9d2276c1",
+  "inputDigest": {
+    "branch": "agent/owner-search-query-baseline",
+    "originMain": "7a4e871184071d9affda8224a5cc66a0f7665d30",
+    "activeGrant": "p2-03-owner-search-query-measurement-baseline"
+  },
+  "allowedPaths": [
+    "src/test/java/org/springframework/samples/petclinic/**",
+    "threshold/docs/**",
+    "threshold/receipts/**",
+    "threshold/lease-state/**",
+    "threshold/leases/**"
+  ],
+  "expectedEffect": "Add reproducible test-local Owner Search query/fetch baseline measurement.",
+  "changedPaths": [
+    "src/test/java/org/springframework/samples/petclinic/service/SqlStatementCounter.java",
+    "src/test/java/org/springframework/samples/petclinic/service/SqlCountingDataSourcePostProcessor.java",
+    "src/test/java/org/springframework/samples/petclinic/service/owner-search-query-counting-config.xml",
+    "src/test/java/org/springframework/samples/petclinic/service/AbstractOwnerSearchQueryMeasurementTests.java",
+    "src/test/java/org/springframework/samples/petclinic/service/JdbcOwnerSearchQueryMeasurementTests.java",
+    "src/test/java/org/springframework/samples/petclinic/service/JpaOwnerSearchQueryMeasurementTests.java",
+    "src/test/java/org/springframework/samples/petclinic/service/SpringDataJpaOwnerSearchQueryMeasurementTests.java",
+    "threshold/docs/OWNER_SEARCH_QUERY_BASELINE_V0_1.md",
+    "threshold/receipts/owner-search-p2-03-query-baseline-20260717T133536Z.json"
+  ],
+  "queryEvidence": {
+    "jdbc": {
+      "n1": {"queryCount": 3, "loadedOwnerCount": 1, "loadedPetCount": 1, "loadedVisitCount": 0, "resultCount": 1, "duplicateResultCount": 0},
+      "allSeededOwners": {"queryCount": 21, "loadedOwnerCount": 10, "loadedPetCount": 13, "loadedVisitCount": 4, "resultCount": 10, "duplicateResultCount": 0},
+      "jdbcOwnerSearchComplexity": "1_plus_2N_confirmed_for_seeded_baseline"
+    },
+    "jpa": {
+      "n1": {"queryCount": 3, "loadedOwnerCount": 1, "loadedPetCount": 1, "loadedVisitCount": 0, "resultCount": 1, "duplicateResultCount": 0},
+      "allSeededOwners": {"queryCount": 20, "loadedOwnerCount": 10, "loadedPetCount": 13, "loadedVisitCount": 4, "resultCount": 10, "duplicateResultCount": 0}
+    },
+    "springDataJpa": {
+      "n1": {"queryCount": 3, "loadedOwnerCount": 1, "loadedPetCount": 1, "loadedVisitCount": 0, "resultCount": 1, "duplicateResultCount": 0},
+      "allSeededOwners": {"queryCount": 20, "loadedOwnerCount": 10, "loadedPetCount": 13, "loadedVisitCount": 4, "resultCount": 10, "duplicateResultCount": 0}
+    }
+  },
+  "validationCommands": [
+    "git diff --check",
+    "$env:JAVA_HOME='C:\\Program Files\\Java\\jdk-17'; .\\mvnw.cmd -Dtest=*OwnerSearchQueryMeasurement* test"
+  ],
+  "validationResults": {
+    "gitDiffCheck": "passed",
+    "ownerSearchQueryMeasurementTests": {
+      "testsRun": 6,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "profiles": {
+        "jdbc": "passed",
+        "jpa": "passed",
+        "spring-data-jpa": "passed"
+      }
+    }
+  },
+  "outputHead": "pending_local_commit",
+  "outcome": "query_baseline_recorded",
+  "stopReasons": [],
+  "receiptRef": "threshold/receipts/owner-search-p2-03-query-baseline-20260717T133536Z.json",
+  "effectClasses": ["R2_REVERSIBLE_LOCAL_MUTATION"],
+  "candidateClass": "owner_search_query_measurement_baseline",
+  "scopeMatch": true,
+  "testEvidence": {
+    "queryMeasurementBaseline": "OwnerSearchQueryMeasurement tests passed for jdbc, jpa, and spring-data-jpa"
+  },
+  "architectureEvidence": {
+    "executed": false,
+    "reason": "P2-03 does not introduce architecture rules"
+  },
+  "recommendedDisposition": "admitted_for_next_local_phase",
+  "behaviorEquivalent": true,
+  "profileParityVerified": true,
+  "queryBudgetVerified": false,
+  "architectureRulesVerified": false,
+  "fullSuitePassed": false,
+  "publicationPerformed": false,
+  "mergePerformed": false,
+  "releasePerformed": false,
+  "deploymentPerformed": false,
+  "humanReviewRequired": true
+}
