@@ -1,24 +1,24 @@
 {
     "schemaVersion":  "threshold.petclinic.slice-receipt.v0.2",
-    "candidateId":  "src-main-java-org-springframework-samples-petclinic-owner-adapter-jdbc-jdbcownersearchquery-java-duplicate-literal-local-constant-extraction-owner-id",
+    "candidateId":  "src-main-java-org-springframework-samples-petclinic-owner-adapter-jpa-jpaownersearchquery-java-duplicate-literal-local-constant-extraction-ownerid",
     "leaseName":  "owned-autonomous-refactor-branch-wave-v0_automation",
-    "leaseDigest":  "ff90614a6ada91fa3296c9fe0a108c97651514f663a704610faee4bc0452da55",
+    "leaseDigest":  "a3b5b6907c08d31d32d52331dc6399ba4c730a9cfc340147233d9445c583bd6b",
     "branch":  "threshold-governed-refactor-demo-153",
     "candidateClass":  "duplicate_literal_local_constant_extraction",
     "leaseStartHead":  "3d45871b6180cee722e4e159839101c46fa780ae",
-    "baseHead":  "e8245ea3de5378bbe8dd7b6b32c3d9ee53312582",
-    "commitHash":  "0627ebbb1a77bdbd206626c97cdc0725561e5d96",
-    "receiptMaterialization":  "post-commit",
+    "baseHead":  "dde60a6e216d956aa1c74ab2291c4eda63ad7d5e",
+    "commitHash":  "9dc5fb4eff79c41c688f5b23c520b0a76802e04b",
+    "receiptMaterialization":  "post-rebase-rebind",
     "perCommitValidationLogAvailable":  true,
-    "branchFinalValidationPassed":  false,
+    "branchFinalValidationPassed":  true,
     "changedFiles":  [
                          {
-                             "path":  "src/main/java/org/springframework/samples/petclinic/owner/adapter/jdbc/JdbcOwnerSearchQuery.java",
-                             "beforeSha256":  "30e78ea81bd0d81e3afb131a12bfc748fedf5f3326cf0fabfa4a40861ad43871",
-                             "afterSha256":  "d9a6bcdcae048b8821b0df278811cc78e6fa6485d16e72dd89ea73f311f8cd42"
+                             "path":  "src/main/java/org/springframework/samples/petclinic/owner/adapter/jpa/JpaOwnerSearchQuery.java",
+                             "beforeSha256":  "c93f1840d927b1b1abc5f1d69b45a6826912777baeb30fd4afbd799a084f968a",
+                             "afterSha256":  "eb12781985f4c44a2b7820f256055873414c671d3c34edc20c1e507931adeb4c"
                          }
                      ],
-    "diffSummary":  "Refactor PetClinic Extract repeated literal owner_id to a same-class pr",
+    "diffSummary":  "Refactor PetClinic Extract repeated literal ownerId to a same-class pri",
     "diffStat":  {
                      "filesChanged":  1,
                      "insertions":  4,
