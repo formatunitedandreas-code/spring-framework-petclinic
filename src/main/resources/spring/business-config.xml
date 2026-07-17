@@ -95,5 +95,7 @@
 
     <beans profile="spring-data-jpa">
         <jpa:repositories base-package="org.springframework.samples.petclinic.repository.springdatajpa"/>
+        <jpa:repositories base-package="org.springframework.samples.petclinic.owner.adapter.springdata"/>
+        <context:component-scan base-package="org.springframework.samples.petclinic.owner.adapter.springdata"/>
     </beans>
 </beans>

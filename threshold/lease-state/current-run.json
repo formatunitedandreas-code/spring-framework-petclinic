@@ -1,16 +1,16 @@
 {
   "schemaVersion": "threshold.petclinic.lease-state.v0.2",
-  "invocationId": "p2-07-owner-search-jpa-adapter-20260717T165000Z",
-  "leaseId": "p2-07-owner-search-jpa-adapter",
-  "phaseId": "P2-07",
+  "invocationId": "p2-08-owner-search-spring-data-jpa-adapter-20260717T182000Z",
+  "leaseId": "p2-08-owner-search-spring-data-jpa-adapter",
+  "phaseId": "P2-08",
   "mode": "product_refactor",
   "feature": "owner_search_vertical_refactoring",
   "repository": "C:\\dev\\spring-framework-petclinic",
-  "branch": "agent/owner-search-jpa-adapter",
-  "startHead": "226a5bd17fb030d154090b66c071b4e5b7515113",
-  "currentHead": "97c737fa5a36e8cc89c41b0bb6e8511daab5002a",
-  "currentSourceHead": "97c737fa5a36e8cc89c41b0bb6e8511daab5002a",
-  "originMainAtActivation": "226a5bd17fb030d154090b66c071b4e5b7515113",
+  "branch": "agent/owner-search-spring-data-jpa-adapter",
+  "startHead": "c153e309cacd620f37e35059dfaee5c8735e9fea",
+  "currentHead": "7e4479c7607cc2f73fdaba7baeb2030c627dd30c",
+  "currentSourceHead": "7e4479c7607cc2f73fdaba7baeb2030c627dd30c",
+  "originMainAtActivation": "c153e309cacd620f37e35059dfaee5c8735e9fea",
   "headPolicy": "descendantOfOriginMainAtActivation",
   "candidatesProcessed": 1,
   "commitsCreated": 0,
@@ -19,7 +19,7 @@
     "commits": 2,
     "repairAttempts": 1
   },
-  "lastReceipt": "threshold/receipts/owner-search-p2-07-jpa-adapter-20260717T171000Z.json",
+  "lastReceipt": "threshold/receipts/owner-search-p2-08-spring-data-jpa-adapter-20260717T183000Z.json",
   "terminalState": "validated_local_change_pending_commit",
-  "updatedAt": "2026-07-17T17:11:00Z"
+  "updatedAt": "2026-07-17T18:50:00Z"
 }
