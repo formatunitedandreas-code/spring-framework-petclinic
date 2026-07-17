@@ -1,28 +1,28 @@
 schemaVersion: threshold.petclinic.phase2.grant.v0.1
 status: active
-phaseId: P2-08
-leaseName: p2-08-owner-search-spring-data-jpa-adapter
+phaseId: P2-09
+leaseName: p2-09-owner-search-controller-migration
 repository: C:\dev\spring-framework-petclinic
 repositorySlug: spring-petclinic/spring-framework-petclinic
 lane: product_refactor
 feature: owner_search_vertical_refactoring
 
-activatedAt: 2026-07-17T18:20:00Z
+activatedAt: 2026-07-17T18:54:00Z
 activatedBy: codex
-authoritySource: user_one_shot_grant_2026-07-17-p2-08
+authoritySource: user_one_shot_grant_2026-07-17-p2-09
 
-branch: agent/owner-search-spring-data-jpa-adapter
+branch: agent/owner-search-controller-migration
 baseRemote: origin
 baseRef: origin/main
-startHead: c153e309cacd620f37e35059dfaee5c8735e9fea
-originMainAtActivation: c153e309cacd620f37e35059dfaee5c8735e9fea
+startHead: 755b4802bf657b2bb0d03c642260b09a7c47467c
+originMainAtActivation: 755b4802bf657b2bb0d03c642260b09a7c47467c
 headPolicy: descendantOfOriginMainAtActivation
 
 authority:
-  replacesLease: p2-07-owner-search-jpa-adapter
-  replacementReason: explicit_user_authority_for_phase_2_owner_search_spring_data_jpa_adapter
+  replacesLease: p2-08-owner-search-spring-data-jpa-adapter
+  replacementReason: explicit_user_authority_for_phase_2_owner_search_controller_migration
   priorTerminalState: merged
-  priorStopReason: p2_07_merged_pr_111
+  priorStopReason: p2_08_merged_pr_112
   githubPrStateVerified: true
   mergedPullRequests:
     - number: 106
@@ -49,6 +49,10 @@ authority:
       repositorySlug: formatunitedandreas-code/spring-framework-petclinic
       mergeCommit: c153e309cacd620f37e35059dfaee5c8735e9fea
       mergedAt: 2026-07-17T16:03:58Z
+    - number: 112
+      repositorySlug: formatunitedandreas-code/spring-framework-petclinic
+      mergeCommit: 755b4802bf657b2bb0d03c642260b09a7c47467c
+      mergedAt: 2026-07-17T16:53:50Z
   legacyPullRequestsNotAuthority:
     - number: 104
       state: OPEN
@@ -108,7 +112,7 @@ validation:
     - git rev-parse HEAD
     - git rev-parse origin/main
     - git rev-list --left-right --count main...origin/main
-    - gh pr view 111 --json number,state,isDraft,mergedAt,mergeCommit,headRefName,headRefOid,baseRefName,statusCheckRollup
+    - gh pr view 112 --json number,state,isDraft,mergedAt,mergeCommit,headRefName,headRefOid,baseRefName,statusCheckRollup
     - gh pr list --state open --json number,title,isDraft,headRefName,headRefOid,baseRefName,mergeable,url
   diffCheckCommand: git diff --check
   mavenTestCommand: .\mvnw.cmd test
