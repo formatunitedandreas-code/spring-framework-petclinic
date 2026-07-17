@@ -227,7 +227,7 @@ function Apply-ReadableMethodSignatureWrap {
     }
 
     $paramsRaw = $signatureMatch.Groups["params"].Value.Trim()
-    $parameters = $paramsRaw -split "," | ForEach-Object { $_.Trim() } | Where-Object { -not [string]::IsNullOrWhiteSpace($_) }
+    $parameters = @($paramsRaw -split "," | ForEach-Object { $_.Trim() } | Where-Object { -not [string]::IsNullOrWhiteSpace($_) })
     if ($parameters.Count -lt 2) {
         throw "Candidate line '$lineNumber' has no multi-parameter signature to wrap in $path."
     }
