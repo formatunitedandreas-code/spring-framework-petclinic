@@ -1,0 +1,20 @@
+{
+  "runId": "owner-search-p2-04-authority-activation-20260717T135000Z",
+  "repository": "spring-petclinic/spring-framework-petclinic",
+  "localPath": "C:\\dev\\spring-framework-petclinic",
+  "phaseId": "P2-04",
+  "lane": "product_refactor",
+  "feature": "owner_search_vertical_refactoring",
+  "decision": "active",
+  "authoritySource": "user_one_shot_grant_2026-07-17-p2-04",
+  "installedLease": "p2-04-owner-search-read-model",
+  "branch": "agent/owner-search-read-model",
+  "head": "07071e96ce997ff8e57a43dd2b6506d6b860787d",
+  "originMain": "07071e96ce997ff8e57a43dd2b6506d6b860787d",
+  "priorMergedPullRequest": {
+    "number": 107,
+    "mergeCommit": "07071e96ce997ff8e57a43dd2b6506d6b860787d",
+    "mergedAt": "2026-07-17T11:49:40Z"
+  },
+  "recommendedNextAction": "Introduce immutable OwnerListItem read model."
+}
