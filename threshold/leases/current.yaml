@@ -1,39 +1,39 @@
 schemaVersion: threshold.petclinic.phase2.grant.v0.1
 status: active
-phaseId: P2-14
-leaseName: p2-14-owner-search-before-after-readout
+phaseId: P2-15
+leaseName: p2-15-owner-search-local-terminalization
 repository: C:\dev\spring-framework-petclinic
 repositorySlug: formatunitedandreas-code/spring-framework-petclinic
 lane: product_refactor
 feature: owner_search_vertical_refactoring
 
-activatedAt: 2026-07-17T19:33:00Z
+activatedAt: 2026-07-17T19:45:00Z
 activatedBy: codex
-authoritySource: user_one_shot_grant_2026-07-17-p2-14
+authoritySource: user_one_shot_grant_2026-07-17-p2-15
 
-branch: agent/owner-search-before-after-readout
+branch: agent/owner-search-local-terminalization
 baseRemote: origin
 baseRef: origin/main
-startHead: f5b6c63eabe4b34af67cc8d38cd0df32373a58bf
-originMainAtActivation: f5b6c63eabe4b34af67cc8d38cd0df32373a58bf
+startHead: 2938154a7c2ca7067c90bc966a48d73f8385c2a3
+originMainAtActivation: 2938154a7c2ca7067c90bc966a48d73f8385c2a3
 headPolicy: equalsOriginMainAtActivation
 
 authority:
-  replacesLease: p2-13-owner-search-full-validation-matrix
-  replacementReason: explicit_user_authority_for_phase_2_owner_search_before_after_readout
+  replacesLease: p2-14-owner-search-before-after-readout
+  replacementReason: explicit_user_authority_for_phase_2_owner_search_local_terminalization
   priorTerminalState: merged
-  priorStopReason: p2_13_merged_pr_117
+  priorStopReason: p2_14_merged_pr_118
   githubPrStateVerified: true
   mergedPullRequests:
-    - number: 117
+    - number: 118
       repositorySlug: formatunitedandreas-code/spring-framework-petclinic
-      mergeCommit: f5b6c63eabe4b34af67cc8d38cd0df32373a58bf
-      mergedAt: 2026-07-17T19:30:23Z
+      mergeCommit: 2938154a7c2ca7067c90bc966a48d73f8385c2a3
+      mergedAt: 2026-07-17T19:42:44Z
 
 budget:
   maxCandidatesThisRun: 1
-  maxCommitsThisRun: 2
-  maxFilesPerCandidate: 8
+  maxCommitsThisRun: 1
+  maxFilesPerCandidate: 6
   maxGovernanceFilesPerCandidate: 8
   maxChangedLinesPerCandidate: 160
   maxGovernanceChangedLinesPerCandidate: 1200
@@ -75,7 +75,9 @@ validation:
   diffCheckCommand: git diff --check
   requiredCommands:
     - git diff --check
-    - .\mvnw.cmd test
+    - git status --short --branch
+    - git rev-parse origin/main
+    - gh pr view 118 --repo formatunitedandreas-code/spring-framework-petclinic --json number,state,isDraft,mergedAt,mergeCommit,baseRefName,headRefName,url
 
 terminalBoundary:
   afterLocalCommit: hold_at_local_commit_boundary
