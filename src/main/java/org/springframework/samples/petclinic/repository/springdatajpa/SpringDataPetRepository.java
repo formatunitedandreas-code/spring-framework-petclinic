@@ -19,6 +19,7 @@ import java.util.List;
 
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.Repository;
+import org.springframework.data.repository.query.Param;
 import org.springframework.samples.petclinic.model.Pet;
 import org.springframework.samples.petclinic.model.PetType;
 import org.springframework.samples.petclinic.repository.PetRepository;
@@ -36,4 +37,13 @@ public interface SpringDataPetRepository extends PetRepository, Repository<Pet, 
         "SELECT ptype FROM PetType ptype ORDER BY " +
         "ptype.name")
     List<PetType> findPetTypes();
+
+    @Override
+    @Query(
+        "SELECT DISTINCT pet FROM Pet pet " +
+        "left join fetch pet.owner " +
+        "left join fetch pet.type " +
+        "left join fetch pet.visits " +
+        "WHERE pet.id = :id")
+    Pet findById(@Param("id") int id);
 }

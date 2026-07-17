@@ -19,4 +19,9 @@ class JdbcOwnerSearchQueryMeasurementTests extends AbstractOwnerSearchQueryMeasu
         return 21;
     }
 
+    @Override
+    protected int expectedAllOwnersLoadedVisitCount() {
+        return 4;
+    }
+
 }

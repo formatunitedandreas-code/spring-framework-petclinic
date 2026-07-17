@@ -39,6 +39,15 @@ public class JpaPetRepositoryImpl implements PetRepository {
     private static final String FIND_PET_TYPES_SQL = "SELECT ptype FROM PetType ptype ORDER BY "
         + "ptype.name";
 
+    private static final String FIND_BY_ID_SQL = """
+            SELECT DISTINCT pet
+            FROM Pet pet
+            LEFT JOIN FETCH pet.owner
+            LEFT JOIN FETCH pet.type
+            LEFT JOIN FETCH pet.visits
+            WHERE pet.id = :id
+            """;
+
     private final EntityManager em;
 
     public JpaPetRepositoryImpl(EntityManager em) {
@@ -54,7 +63,9 @@ public class JpaPetRepositoryImpl implements PetRepository {
 
     @Override
     public Pet findById(int id) {
-        return this.em.find(Pet.class, id);
+        return this.em.createQuery(FIND_BY_ID_SQL, Pet.class)
+            .setParameter("id", id)
+            .getSingleResult();
     }
 
     @Override
