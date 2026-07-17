@@ -1,42 +1,24 @@
-schemaVersion: threshold.petclinic.standing-governance-hardening.v0.1
-status: active
-phaseId: governance-hardening-batch-20260717
-leaseName: standing-governance-hardening-batch
+leaseName: owned-autonomous-refactor-branch-wave-v0_automation
 repository: C:\dev\spring-framework-petclinic
-repositorySlug: formatunitedandreas-code/spring-framework-petclinic
-lane: governance_hardening
-feature: fail_closed_threshold_governance
-
-activatedAt: 2026-07-17T00:00:00Z
-activatedBy: codex
-authoritySource: user_standing_lease_request_2026-07-17
-
-branch: codex/governance-hardening-batch
+branch: threshold-governed-refactor-demo-153
 baseRemote: origin
 baseRef: origin/main
-startHead: 8f4d4a1a1a6e77d0926fc87737f2fd3081b27f77
-originMainAtActivation: 8f4d4a1a1a6e77d0926fc87737f2fd3081b27f77
+startHead: 3d45871b6180cee722e4e159839101c46fa780ae
 headPolicy: descendantOfStartHead
-
-authority:
-  purpose: close_phase_2_partial_governance_findings
-  standingLease: true
-  allowedExecutionMode: batch
-  technicalFindingsAddressed:
-    - unsupported_head_policy_values_must_fail_closed
-    - equals_origin_main_at_activation_must_be_executable
-    - merge_allowed_false_must_block_merges
-    - threshold_governance_must_not_depend_on_label
-    - main_must_be_protected_by_required_checks
-    - receipts_must_include_machine_verifiable_lease_digest
+scopeExpansionTier: 0
+longLineThreshold: 120
+commentWrapThreshold: 120
+springDataQueryThreshold: 80
+repositoryMethodLengthThreshold: 8
+utilityMethodLengthThreshold: 8
 
 budget:
-  maxCandidatesThisRun: 1
-  maxCommitsThisRun: 1
-  maxFilesPerCandidate: 16
-  maxGovernanceFilesPerCandidate: 16
-  maxChangedLinesPerCandidate: 2000
-  maxGovernanceChangedLinesPerCandidate: 4000
+  maxCandidatesThisRun: 5
+  maxCommitsThisRun: 5
+  maxFilesPerCandidate: 1
+  maxGovernanceFilesPerCandidate: 8
+  maxChangedLinesPerCandidate: 80
+  maxGovernanceChangedLinesPerCandidate: 1200
   maxRepairAttemptsPerCandidate: 1
 
 allowedRiskClasses:
@@ -46,27 +28,65 @@ allowedRiskClasses:
   - R3_LOCAL_COMMIT
   - R4_OWNED_REPO_BRANCH_PUSH
   - R4_OWNED_REPO_DRAFT_PR_UPDATE
-  - R5_OWNED_REPO_READY_PR
-  - R5_OWNED_REPO_MERGE_WITH_REQUIRED_GATES
 
 allowedPaths:
-  - .github/CODEOWNERS
+  - src/main/java/org/springframework/samples/petclinic/service/*.java
+  - src/main/java/org/springframework/samples/petclinic/service/**/*.java
+  - src/main/java/org/springframework/samples/petclinic/web/*.java
+  - src/main/java/org/springframework/samples/petclinic/web/**/*.java
+  - src/main/java/org/springframework/samples/petclinic/repository/*.java
+  - src/main/java/org/springframework/samples/petclinic/repository/**/*.java
+  - src/main/java/org/springframework/samples/petclinic/model/*.java
+  - src/main/java/org/springframework/samples/petclinic/model/**/*.java
+  - src/main/java/org/springframework/samples/petclinic/util/*.java
+  - src/main/java/org/springframework/samples/petclinic/util/**/*.java
+  - src/main/java/org/springframework/samples/petclinic/*.java
+  - threshold/leases/*.yaml
+  - threshold/receipts/*.json
+  - threshold/lease-state/*.json
+  - threshold/candidate-pocket/*.json
+  - threshold/discovery-canaries/**/*.java
+  - threshold/discovery-canaries/*.json
+  - threshold/gates/*.json
+  - threshold/lanes/*.yaml
+  - threshold/scripts/*.ps1
   - .github/workflows/threshold-governance.yml
-  - threshold/scripts/**
-  - threshold/leases/**
-  - threshold/lease-state/**
-  - threshold/receipts/**
-  - threshold/docs/**
 
-conditionallyAllowedPaths:
-  - path: src/**
-    condition: not_allowed_in_governance_hardening_batch
+forbiddenPaths:
+  - pom.xml
+  - src/main/resources/**
+  - src/test/**
+  - target/**
+  - .github/dependabot.yml
+
+allowedCandidateTypes:
+  - private_helper_extraction_for_readability
+  - redundant_local_variable_simplification
+  - duplicate_literal_local_constant_extraction
+  - controller_branch_readability_decomposition
+  - method_signature_wrap_cleanup
+  - repository_readability_cleanup
+  - spring_data_query_wrap_cleanup
+  - spring_data_query_concat_wrap_cleanup
+  - model_readability_cleanup
+  - split_string_constant_normalization
+  - string_constant_wrap_cleanup
+  - utility_readability_cleanup
+  - application_bootstrap_readability_cleanup
+  - leading_tab_indentation_cleanup
+  - comment_wrap_cleanup
+  - line_comment_wrap_cleanup
+  - method_spacing_normalization
+  - threshold_governance_artifact_update
 
 forbiddenActions:
   - push_to_upstream
   - force_push
+  - merge
   - release
   - deploy
+  - dependency_or_pom_changes
+  - src_test_changes
   - public_readiness_claim
   - public_correctness_claim
   - public_security_claim
@@ -75,12 +95,10 @@ forbiddenActions:
 validation:
   javaHome: C:\Program Files\Java\jdk-17
   diffCheckCommand: git diff --check
-  requiredCommands:
-    - threshold/scripts/test-governance-enforcement.ps1
-    - threshold/scripts/test-current-governance-consistency.ps1
-    - gh api repos/formatunitedandreas-code/spring-framework-petclinic/branches/main/protection
+  mavenTestCommand: .\mvnw.cmd test
+  fullMavenTestRequiredPerCandidate: true
 
 terminalBoundary:
-  afterLocalCommit: open_pull_request_with_required_gates
+  afterLocalCommit: hold_at_local_commit_boundary
   draftPrAllowed: true
-  mergeAllowed: true
+  mergeAllowed: false
