@@ -8,8 +8,8 @@
   "repository": "C:\\dev\\spring-framework-petclinic",
   "branch": "agent/owner-search-jdbc-adapter",
   "startHead": "e2bb17e0f108825be744e2a52bb3763c4bfce82f",
-  "currentHead": "e2bb17e0f108825be744e2a52bb3763c4bfce82f",
-  "currentSourceHead": "e2bb17e0f108825be744e2a52bb3763c4bfce82f",
+  "currentHead": "45d98772528aa4accd251cdbdcfea45dacc5112b",
+  "currentSourceHead": "45d98772528aa4accd251cdbdcfea45dacc5112b",
   "originMainAtActivation": "e2bb17e0f108825be744e2a52bb3763c4bfce82f",
   "headPolicy": "descendantOfOriginMainAtActivation",
   "candidatesProcessed": 1,
@@ -19,7 +19,7 @@
     "commits": 0,
     "repairAttempts": 1
   },
-  "lastReceipt": "threshold/receipts/owner-search-p2-06-authority-activation-20260717T154500Z.json",
-  "terminalState": "active",
-  "updatedAt": "2026-07-17T15:45:00Z"
+  "lastReceipt": "threshold/receipts/owner-search-p2-06-jdbc-adapter-20260717T154500Z.json",
+  "terminalState": "validated_local_change_pending_commit",
+  "updatedAt": "2026-07-17T15:55:30Z"
 }
