@@ -226,8 +226,7 @@ function Apply-ReadableMethodSignatureWrap {
         throw "Candidate line '$lineNumber' is not a method declaration in $path."
     }
 
-    $paramsRaw = $signatureMatch.Groups["params"].Value.Trim()
-    $parameters = @($paramsRaw -split "," | ForEach-Object { $_.Trim() } | Where-Object { -not [string]::IsNullOrWhiteSpace($_) })
+    $parameters = @(Get-WrappableMethodSignatureParameters -Line $line)
     if ($parameters.Count -lt 2) {
         throw "Candidate line '$lineNumber' has no multi-parameter signature to wrap in $path."
     }
@@ -259,6 +258,28 @@ function Apply-ReadableMethodSignatureWrap {
     Write-Host "appliedCandidate=$($Candidate.candidateId)"
     Write-Host "changedFile=$path"
     Write-Host "signatureWrappedLine=$lineNumber"
+}
+
+function Get-WrappableMethodSignatureParameters {
+    param([string] $Line)
+
+    $signatureMatch = [regex]::Match($Line, "^(?<indent>\s*)(?<signature>.+?)\(\s*(?<params>.*)\)\s*\{\s*$")
+    if (-not $signatureMatch.Success) {
+        return @()
+    }
+
+    $paramsRaw = $signatureMatch.Groups["params"].Value.Trim()
+    if ([string]::IsNullOrWhiteSpace($paramsRaw)) {
+        return @()
+    }
+
+    return @($paramsRaw -split "," | ForEach-Object { $_.Trim() } | Where-Object { -not [string]::IsNullOrWhiteSpace($_) })
+}
+
+function Test-WrappableMethodSignatureLine {
+    param([string] $Line)
+
+    return @(Get-WrappableMethodSignatureParameters -Line $Line).Count -ge 2
 }
 
 function Test-IsRuntimeGovernancePath {
@@ -525,6 +546,26 @@ function Get-NextCandidate {
                 }
                 if ($content -match "private\s+static\s+final\s+String\s+$([regex]::Escape([string]$candidate.constantName))\s*=") {
                     Write-Host "candidateSkippedReason=constant_already_exists:$($candidate.candidateId)"
+                    $applicable = $false
+                    break
+                }
+            }
+            "method_signature_wrap_cleanup" {
+                $member = [string]$candidate.member
+                if (-not $member.StartsWith("line-")) {
+                    Write-Host "candidateSkippedReason=unsupported_line_marker:$($candidate.candidateId)"
+                    $applicable = $false
+                    break
+                }
+                $lineNumber = [int]($member.Substring(5))
+                $lines = Get-Content $path
+                if ($lineNumber -lt 1 -or $lineNumber -gt $lines.Count) {
+                    Write-Host "candidateSkippedReason=line_outside_file:$($candidate.candidateId)"
+                    $applicable = $false
+                    break
+                }
+                if (-not (Test-WrappableMethodSignatureLine -Line $lines[$lineNumber - 1])) {
+                    Write-Host "candidateSkippedReason=no_multi_parameter_signature:$($candidate.candidateId)"
                     $applicable = $false
                     break
                 }

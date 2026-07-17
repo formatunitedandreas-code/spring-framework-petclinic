@@ -237,6 +237,23 @@ function Test-AutoPatchableCandidate {
     return $false
 }
 
+function Test-WrappableMethodSignatureCandidateLine {
+    param([string] $Line)
+
+    $signatureMatch = [regex]::Match($Line, "^\s*(public|private|protected)\s+.+\(\s*(?<params>.*)\)\s*\{\s*$")
+    if (-not $signatureMatch.Success) {
+        return $false
+    }
+
+    $paramsRaw = $signatureMatch.Groups["params"].Value.Trim()
+    if ([string]::IsNullOrWhiteSpace($paramsRaw)) {
+        return $false
+    }
+
+    $parameters = @($paramsRaw -split "," | ForEach-Object { $_.Trim() } | Where-Object { -not [string]::IsNullOrWhiteSpace($_) })
+    return $parameters.Count -ge 2
+}
+
 function Test-SimpleStringConstantLine {
     param([string] $Line)
     return $Line -match '^\s*private static final String [A-Z0-9_]+ = "[^"\\]+";\s*$'
@@ -479,7 +496,7 @@ foreach ($file in $sourceFiles) {
         if (Test-SimpleStringConstantWrapCandidateLine $candidateLine) {
             $candidateClass = if ($path -like "*/repository/*") { "repository_readability_cleanup" } else { "string_constant_wrap_cleanup" }
         }
-        elseif ($candidateLine -match "^\s*(public|private|protected)\s+.+\)\s*\{\s*$") {
+        elseif (Test-WrappableMethodSignatureCandidateLine -Line $candidateLine) {
             $candidateClass = "method_signature_wrap_cleanup"
         }
     }
