@@ -1,58 +1,34 @@
 schemaVersion: threshold.petclinic.phase2.grant.v0.1
 status: active
-phaseId: P2-09
-leaseName: p2-09-owner-search-controller-migration
+phaseId: P2-10
+leaseName: p2-10-owner-search-compatibility-path
 repository: C:\dev\spring-framework-petclinic
-repositorySlug: spring-petclinic/spring-framework-petclinic
+repositorySlug: formatunitedandreas-code/spring-framework-petclinic
 lane: product_refactor
 feature: owner_search_vertical_refactoring
 
-activatedAt: 2026-07-17T18:54:00Z
+activatedAt: 2026-07-17T19:40:00Z
 activatedBy: codex
-authoritySource: user_one_shot_grant_2026-07-17-p2-09
+authoritySource: user_one_shot_grant_2026-07-17-p2-10
 
-branch: agent/owner-search-controller-migration
+branch: agent/owner-search-compatibility-path
 baseRemote: origin
 baseRef: origin/main
-startHead: 755b4802bf657b2bb0d03c642260b09a7c47467c
-originMainAtActivation: 755b4802bf657b2bb0d03c642260b09a7c47467c
-headPolicy: descendantOfOriginMainAtActivation
+startHead: 8087dfcd68dba6736e99a066b399b1d4a1ea2aa3
+originMainAtActivation: 8087dfcd68dba6736e99a066b399b1d4a1ea2aa3
+headPolicy: equalsOriginMainAtActivation
 
 authority:
-  replacesLease: p2-08-owner-search-spring-data-jpa-adapter
-  replacementReason: explicit_user_authority_for_phase_2_owner_search_controller_migration
+  replacesLease: p2-09-owner-search-controller-migration
+  replacementReason: explicit_user_authority_for_phase_2_owner_search_compatibility_path
   priorTerminalState: merged
-  priorStopReason: p2_08_merged_pr_112
+  priorStopReason: p2_09_merged_pr_113
   githubPrStateVerified: true
   mergedPullRequests:
-    - number: 106
+    - number: 113
       repositorySlug: formatunitedandreas-code/spring-framework-petclinic
-      mergeCommit: 7a4e871184071d9affda8224a5cc66a0f7665d30
-      mergedAt: 2026-07-17T11:23:37Z
-    - number: 107
-      repositorySlug: formatunitedandreas-code/spring-framework-petclinic
-      mergeCommit: 07071e96ce997ff8e57a43dd2b6506d6b860787d
-      mergedAt: 2026-07-17T11:49:40Z
-    - number: 108
-      repositorySlug: formatunitedandreas-code/spring-framework-petclinic
-      mergeCommit: 1ff62729bbf806decb41fbdf7a269f2079982a0e
-      mergedAt: 2026-07-17T12:54:40Z
-    - number: 109
-      repositorySlug: formatunitedandreas-code/spring-framework-petclinic
-      mergeCommit: e2bb17e0f108825be744e2a52bb3763c4bfce82f
-      mergedAt: 2026-07-17T13:34:38Z
-    - number: 110
-      repositorySlug: formatunitedandreas-code/spring-framework-petclinic
-      mergeCommit: 226a5bd17fb030d154090b66c071b4e5b7515113
-      mergedAt: 2026-07-17T14:45:30Z
-    - number: 111
-      repositorySlug: formatunitedandreas-code/spring-framework-petclinic
-      mergeCommit: c153e309cacd620f37e35059dfaee5c8735e9fea
-      mergedAt: 2026-07-17T16:03:58Z
-    - number: 112
-      repositorySlug: formatunitedandreas-code/spring-framework-petclinic
-      mergeCommit: 755b4802bf657b2bb0d03c642260b09a7c47467c
-      mergedAt: 2026-07-17T16:53:50Z
+      mergeCommit: 8087dfcd68dba6736e99a066b399b1d4a1ea2aa3
+      mergedAt: 2026-07-17T17:36:34Z
   legacyPullRequestsNotAuthority:
     - number: 104
       state: OPEN
@@ -89,10 +65,6 @@ allowedPaths:
   - threshold/lease-state/**
   - threshold/leases/**
 
-conditionallyAllowedPaths:
-  - path: pom.xml
-    condition: explicitly_admitted_test_dependency_only
-
 forbiddenActions:
   - push_to_upstream
   - force_push
@@ -105,18 +77,9 @@ forbiddenActions:
 
 validation:
   javaHome: C:\Program Files\Java\jdk-17
-  preflightCommands:
-    - git fetch --all --prune
-    - git status --short --branch
-    - git branch --show-current
-    - git rev-parse HEAD
-    - git rev-parse origin/main
-    - git rev-list --left-right --count main...origin/main
-    - gh pr view 112 --json number,state,isDraft,mergedAt,mergeCommit,headRefName,headRefOid,baseRefName,statusCheckRollup
-    - gh pr list --state open --json number,title,isDraft,headRefName,headRefOid,baseRefName,mergeable,url
   diffCheckCommand: git diff --check
-  mavenTestCommand: .\mvnw.cmd test
-  fullMavenTestRequiredPerCandidate: true
+  compatibilityValidationCommand: .\mvnw.cmd -Dtest=ClinicServiceJdbcTests,ClinicServiceJpaTests,ClinicServiceSpringDataJpaTests test
+  ownerControllerValidationCommand: .\mvnw.cmd -Dtest=OwnerControllerTests test
 
 terminalBoundary:
   afterLocalCommit: hold_at_local_commit_boundary
