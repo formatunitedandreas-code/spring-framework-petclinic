@@ -1,0 +1,28 @@
+{
+  "runId": "p2-15-owner-search-local-terminalization-20260717T194500Z",
+  "phaseId": "P2-15",
+  "repository": "formatunitedandreas-code/spring-framework-petclinic",
+  "branch": "agent/owner-search-local-terminalization",
+  "sourceHead": "2938154a7c2ca7067c90bc966a48d73f8385c2a3",
+  "finalProductHead": "2938154a7c2ca7067c90bc966a48d73f8385c2a3",
+  "lane": "product_refactor",
+  "feature": "owner_search_vertical_refactoring",
+  "mergedPullRequest": {
+    "number": 118,
+    "baseRefName": "main",
+    "headRefName": "agent/owner-search-before-after-readout",
+    "mergeCommit": "2938154a7c2ca7067c90bc966a48d73f8385c2a3",
+    "mergedAt": "2026-07-17T19:42:44Z"
+  },
+  "behaviorEquivalent": true,
+  "profileParityVerified": true,
+  "queryBudgetVerified": true,
+  "architectureRulesVerified": false,
+  "fullSuitePassed": true,
+  "publicationPerformed": false,
+  "mergePerformed": true,
+  "releasePerformed": false,
+  "deploymentPerformed": false,
+  "humanReviewRequired": true,
+  "outcome": "phase_2_terminalized_on_main"
+}
