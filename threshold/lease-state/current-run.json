@@ -1,16 +1,16 @@
 {
   "schemaVersion": "threshold.petclinic.lease-state.v0.2",
-  "invocationId": "p2-04-owner-search-read-model-20260717T135000Z",
-  "leaseId": "p2-04-owner-search-read-model",
-  "phaseId": "P2-04",
+  "invocationId": "p2-05-owner-search-port-and-use-case-20260717T140500Z",
+  "leaseId": "p2-05-owner-search-port-and-use-case",
+  "phaseId": "P2-05",
   "mode": "product_refactor",
   "feature": "owner_search_vertical_refactoring",
   "repository": "C:\\dev\\spring-framework-petclinic",
-  "branch": "agent/owner-search-read-model",
-  "startHead": "07071e96ce997ff8e57a43dd2b6506d6b860787d",
-  "currentHead": "pending_local_commit",
-  "currentSourceHead": "07071e96ce997ff8e57a43dd2b6506d6b860787d",
-  "originMainAtActivation": "07071e96ce997ff8e57a43dd2b6506d6b860787d",
+  "branch": "agent/owner-search-use-case",
+  "startHead": "1ff62729bbf806decb41fbdf7a269f2079982a0e",
+  "currentHead": "1ff62729bbf806decb41fbdf7a269f2079982a0e",
+  "currentSourceHead": "1ff62729bbf806decb41fbdf7a269f2079982a0e",
+  "originMainAtActivation": "1ff62729bbf806decb41fbdf7a269f2079982a0e",
   "headPolicy": "descendantOfOriginMainAtActivation",
   "candidatesProcessed": 1,
   "commitsCreated": 2,
@@ -19,7 +19,7 @@
     "commits": 0,
     "repairAttempts": 1
   },
-  "lastReceipt": "threshold/receipts/owner-search-p2-04-read-model-20260717T135000Z.json",
-  "terminalState": "hold_at_local_commit_boundary",
-  "updatedAt": "2026-07-17T13:52:41Z"
+  "lastReceipt": "threshold/receipts/owner-search-p2-05-authority-activation-20260717T140500Z.json",
+  "terminalState": "active",
+  "updatedAt": "2026-07-17T14:05:00Z"
 }
