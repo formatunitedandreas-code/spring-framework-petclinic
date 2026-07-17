@@ -79,7 +79,8 @@ public class PetclinicInitializer extends AbstractDispatcherServletInitializer {
 
     @Override
     protected Filter[] getServletFilters() {
-        // Used to provide the ability to enter Chinese characters inside the Owner Form
+        // Used to provide the ability to enter Chinese characters
+        // inside the Owner Form
         return new Filter[]{new CharacterEncodingFilter("UTF-8", true)};
     }
 
