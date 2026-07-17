@@ -11,12 +11,12 @@ class JpaOwnerSearchQueryMeasurementTests extends AbstractOwnerSearchQueryMeasur
 
     @Override
     protected int expectedSingleOwnerQueryCount() {
-        return 3;
+        return 2;
     }
 
     @Override
     protected int expectedAllOwnersQueryCount() {
-        return 20;
+        return 7;
     }
 
 }

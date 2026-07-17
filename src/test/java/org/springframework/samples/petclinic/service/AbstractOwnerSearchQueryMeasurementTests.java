@@ -4,9 +4,11 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import java.util.Collection;
 
+import org.hibernate.LazyInitializationException;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.samples.petclinic.model.Owner;
+import org.springframework.samples.petclinic.model.Pet;
 
 abstract class AbstractOwnerSearchQueryMeasurementTests {
 
@@ -35,7 +37,7 @@ abstract class AbstractOwnerSearchQueryMeasurementTests {
         assertThat(measurement.resultCount()).isEqualTo(10);
         assertThat(measurement.loadedOwnerCount()).isEqualTo(10);
         assertThat(measurement.loadedPetCount()).isEqualTo(13);
-        assertThat(measurement.loadedVisitCount()).isEqualTo(4);
+        assertThat(measurement.loadedVisitCount()).isEqualTo(expectedAllOwnersLoadedVisitCount());
         assertThat(measurement.duplicateResultCount()).isZero();
         assertThat(measurement.queryCount()).isEqualTo(expectedAllOwnersQueryCount());
     }
@@ -43,6 +45,10 @@ abstract class AbstractOwnerSearchQueryMeasurementTests {
     protected abstract int expectedSingleOwnerQueryCount();
 
     protected abstract int expectedAllOwnersQueryCount();
+
+    protected int expectedAllOwnersLoadedVisitCount() {
+        return 0;
+    }
 
     private OwnerSearchMeasurement measure(String lastName) {
         this.sqlStatementCounter.reset();
@@ -53,7 +59,7 @@ abstract class AbstractOwnerSearchQueryMeasurementTests {
             .sum();
         int loadedVisitCount = owners.stream()
             .flatMap(owner -> owner.getPets().stream())
-            .mapToInt(pet -> pet.getVisits().size())
+            .mapToInt(this::loadedVisitCount)
             .sum();
         long duplicateResultCount = owners.size() - owners.stream()
             .map(Owner::getId)
@@ -67,6 +73,15 @@ abstract class AbstractOwnerSearchQueryMeasurementTests {
             loadedVisitCount,
             Math.toIntExact(duplicateResultCount)
         );
+    }
+
+    private int loadedVisitCount(Pet pet) {
+        try {
+            return pet.getVisits().size();
+        }
+        catch (LazyInitializationException ex) {
+            return 0;
+        }
     }
 
     private record OwnerSearchMeasurement(

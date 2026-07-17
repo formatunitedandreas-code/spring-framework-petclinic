@@ -1,34 +1,34 @@
 schemaVersion: threshold.petclinic.phase2.grant.v0.1
 status: active
-phaseId: P2-11
-leaseName: p2-11-owner-search-architecture-rules
+phaseId: P2-12
+leaseName: p2-12-owner-search-explicit-fetch-plans
 repository: C:\dev\spring-framework-petclinic
 repositorySlug: formatunitedandreas-code/spring-framework-petclinic
 lane: product_refactor
 feature: owner_search_vertical_refactoring
 
-activatedAt: 2026-07-17T20:05:00Z
+activatedAt: 2026-07-17T20:52:00Z
 activatedBy: codex
-authoritySource: user_one_shot_grant_2026-07-17-p2-11
+authoritySource: user_one_shot_grant_2026-07-17-p2-12
 
-branch: agent/owner-search-architecture-rules
+branch: agent/owner-search-explicit-fetch-plans
 baseRemote: origin
 baseRef: origin/main
-startHead: 4031228a8d86566097d0f933085e03c0d7d2a7a4
-originMainAtActivation: 4031228a8d86566097d0f933085e03c0d7d2a7a4
+startHead: 16ca87d0a69b079c20351a048d7b082ca9b057f2
+originMainAtActivation: 16ca87d0a69b079c20351a048d7b082ca9b057f2
 headPolicy: equalsOriginMainAtActivation
 
 authority:
-  replacesLease: p2-10-owner-search-compatibility-path
-  replacementReason: explicit_user_authority_for_phase_2_owner_search_architecture_rules
+  replacesLease: p2-11-owner-search-architecture-rules
+  replacementReason: explicit_user_authority_for_phase_2_owner_search_explicit_fetch_plans
   priorTerminalState: merged
-  priorStopReason: p2_10_merged_pr_114
+  priorStopReason: p2_11_merged_pr_115
   githubPrStateVerified: true
   mergedPullRequests:
-    - number: 114
+    - number: 115
       repositorySlug: formatunitedandreas-code/spring-framework-petclinic
-      mergeCommit: 4031228a8d86566097d0f933085e03c0d7d2a7a4
-      mergedAt: 2026-07-17T17:56:05Z
+      mergeCommit: 16ca87d0a69b079c20351a048d7b082ca9b057f2
+      mergedAt: verified_by_origin_main_preflight
 
 budget:
   maxCandidatesThisRun: 1
@@ -73,7 +73,12 @@ forbiddenActions:
 validation:
   javaHome: C:\Program Files\Java\jdk-17
   diffCheckCommand: git diff --check
-  dependencyScan: rg -i "archunit|architecture" pom.xml src/test/java threshold/docs
+  requiredCommands:
+    - .\mvnw.cmd -Dtest=*OwnerSearch* test
+    - .\mvnw.cmd -Dtest=OwnerControllerTests,PetControllerTests,VisitControllerTests test
+    - .\mvnw.cmd -Dspring.profiles.active=jdbc test
+    - .\mvnw.cmd -Dspring.profiles.active=jpa test
+    - .\mvnw.cmd -Dspring.profiles.active=spring-data-jpa test
 
 terminalBoundary:
   afterLocalCommit: hold_at_local_commit_boundary
