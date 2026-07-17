@@ -418,7 +418,7 @@ function Resolve-ExecutionPocket {
     $executionPocketPath = $PocketPath
     if (Test-Path $PocketPath) {
         $pocket = Get-Content $PocketPath -Raw | ConvertFrom-Json
-        if ($pocket.generatedFromHead -eq $head -and $pocket.candidates.Count -gt 0) {
+        if ($pocket.generatedFromHead -eq $head -and @($pocket.candidates).Count -gt 0) {
             return $executionPocketPath
         }
     }
