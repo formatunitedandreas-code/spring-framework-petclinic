@@ -8,18 +8,18 @@
   "repository": "C:\\dev\\spring-framework-petclinic",
   "branch": "agent/owner-search-controller-migration",
   "startHead": "755b4802bf657b2bb0d03c642260b09a7c47467c",
-  "currentHead": "755b4802bf657b2bb0d03c642260b09a7c47467c",
+  "currentHead": "4235f1194506634868fb55318a12092d5fd431b0",
   "currentSourceHead": "755b4802bf657b2bb0d03c642260b09a7c47467c",
   "originMainAtActivation": "755b4802bf657b2bb0d03c642260b09a7c47467c",
   "headPolicy": "descendantOfOriginMainAtActivation",
-  "candidatesProcessed": 0,
+  "candidatesProcessed": 1,
   "commitsCreated": 0,
   "remainingBudget": {
-    "candidates": 1,
+    "candidates": 0,
     "commits": 2,
     "repairAttempts": 1
   },
-  "lastReceipt": "threshold/receipts/owner-search-p2-09-authority-activation-20260717T185400Z.json",
-  "terminalState": "active",
-  "updatedAt": "2026-07-17T18:54:00Z"
+  "lastReceipt": "threshold/receipts/owner-search-p2-09-controller-migration-20260717T191700Z.json",
+  "terminalState": "validated_local_change_pending_commit",
+  "updatedAt": "2026-07-17T19:17:00Z"
 }

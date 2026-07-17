@@ -14,4 +14,6 @@
         <property name="proxyInterfaces" value="org.springframework.samples.petclinic.service.ClinicService"/>
     </bean>
 
+    <bean id="searchOwners" class="org.springframework.samples.petclinic.web.WebTestMocks" factory-method="searchOwners"/>
+
 </beans>

@@ -17,6 +17,8 @@
 
     <context:component-scan
         base-package="org.springframework.samples.petclinic.service"/>
+    <context:component-scan
+        base-package="org.springframework.samples.petclinic.owner.application"/>
 
     <!-- Configurer that replaces ${...} placeholders with values from a properties file -->
     <!-- (in this case, JDBC-related settings for the JPA EntityManager definition below) -->
