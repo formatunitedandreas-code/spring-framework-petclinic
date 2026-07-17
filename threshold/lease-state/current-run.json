@@ -1,20 +1,22 @@
 {
     "schemaVersion":  "threshold.petclinic.lease-state.v0.2",
-    "invocationId":  "owned-autonomous-refactor-branch-wave-v0_automation-20260717T051542Z",
+    "invocationId":  "owned-autonomous-refactor-branch-wave-v0_automation-20260717T052814Z",
     "leaseId":  "owned-autonomous-refactor-branch-wave-v0_automation",
     "mode":  "local_refactor",
-    "branch":  "threshold-governed-refactor-demo-145",
-    "startHead":  "86c07ed749515da4fe5b5590bac11522d35e23f4",
-    "currentHead":  "9ba25f4a12efcc5d5ce73bed06162a0698248810",
-    "currentSourceHead":  "9ba25f4a12efcc5d5ce73bed06162a0698248810",
-    "candidatesProcessed":  1,
-    "commitsCreated":  1,
+    "branch":  "threshold-governed-refactor-demo-148",
+    "startHead":  "38583bd670c75af3c22d1e3d5c195d2c70289529",
+    "currentHead":  "32444c56a3d713af706a95b91e66f4d96b4e313f",
+    "currentSourceHead":  "f32928389259405e9893a0912c16a85a3baa9853",
+    "candidatesProcessed":  5,
+    "commitsCreated":  5,
     "remainingBudget":  {
-                            "candidates":  4,
-                            "commits":  4,
+                            "candidates":  0,
+                            "commits":  0,
                             "repairAttempts":  1
                         },
-    "lastReceipt":  "threshold/receipts/src-main-java-org-springframework-samples-petclinic-repository-jpa-jpaownerrepositoryimpl-java-line-comment-wrap-cleanup-line-74-9ba25f4a12ef.json",
-    "terminalState":  "active",
-    "updatedAt":  "2026-07-17T05:18:03.1292531Z"
+    "lastReceipt":  "threshold/receipts/src-main-java-org-springframework-samples-petclinic-model-vets-java-comment-wrap-cleanup-line-25-f32928389259.json",
+    "terminalState":  "budget_exhausted_verified",
+    "updatedAt":  "2026-07-17T05:35:27.3022368Z",
+    "terminalReason":  "remaining candidate or commit budget is exhausted after discovery canary passed",
+    "discoveryCanaryLastPassedAt":  "2026-07-17T05:35:27.2931235Z"
 }
