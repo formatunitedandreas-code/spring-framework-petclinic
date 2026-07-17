@@ -3,6 +3,7 @@ param(
     [string] $BaseRemote = "origin",
     [string] $BaseBranch = "main",
     [string] $OwnedRepo = "formatunitedandreas-code/spring-framework-petclinic",
+    [string] $LeasePath = "threshold/leases/current.yaml",
     [string] $BacklogPath = "threshold/capability-backlog/approved-expansions.json",
     [int] $MaxCapabilityExpansions = 1,
     [switch] $SkipCapabilityExpansion,
@@ -11,6 +12,8 @@ param(
 
 Set-StrictMode -Version Latest
 $ErrorActionPreference = "Stop"
+
+. (Join-Path $PSScriptRoot "lib/lease-policy.ps1")
 
 function ConvertTo-RepoPath {
     param([string] $Path)
@@ -54,6 +57,13 @@ function Read-Backlog {
         throw "Capability backlog not found: $BacklogPath"
     }
     return Get-Content $BacklogPath -Raw | ConvertFrom-Json
+}
+
+function Read-LeaseLines {
+    if (-not (Test-Path $LeasePath)) {
+        throw "Lease file not found: $LeasePath"
+    }
+    return @(Get-Content $LeasePath)
 }
 
 function Get-NextApprovedExpansion {
@@ -176,6 +186,9 @@ function Invoke-CapabilityExpansion {
 function Invoke-OwnedPullRequestMerge {
     param([string] $Title, [string] $Body)
 
+    $leaseLines = Read-LeaseLines
+    Assert-ThresholdActionAllowed -LeaseLines $leaseLines -LeasePath $LeasePath -Action "pr"
+
     $branch = (& git branch --show-current).Trim()
     Invoke-Checked -FilePath "git" -ArgumentList @("push", "-u", $BaseRemote, $branch) -FailureMessage "Failed to push $branch." | ForEach-Object { Write-Host $_ }
 
@@ -219,6 +232,10 @@ function Invoke-OwnedPullRequestMerge {
     }
 
     Invoke-Checked -FilePath "gh" -ArgumentList @("pr", "ready", "$prNumber", "--repo", $OwnedRepo) -FailureMessage "Failed to mark capability expansion PR ready." | ForEach-Object { Write-Host $_ }
+
+    $leaseLines = Read-LeaseLines
+    Assert-ThresholdActionAllowed -LeaseLines $leaseLines -LeasePath $LeasePath -Action "merge"
+
     Invoke-Checked -FilePath "gh" -ArgumentList @(
         "pr",
         "merge",

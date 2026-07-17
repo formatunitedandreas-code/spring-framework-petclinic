@@ -351,6 +351,7 @@ try {
         schemaVersion = "threshold.petclinic.batch-receipt.v0.1"
         batchId = $batchId
         leaseId = [string]$state.leaseId
+        leaseDigest = (Get-FileSha256 -Path $LeasePath).ToLowerInvariant()
         branch = [string]$state.branch
         baseHead = $baseHead
         sourceCommit = $sourceCommit

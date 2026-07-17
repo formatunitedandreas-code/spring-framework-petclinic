@@ -10,6 +10,7 @@ Set-StrictMode -Version Latest
 $ErrorActionPreference = "Stop"
 
 . (Join-Path $PSScriptRoot "lib/runtime-paths.ps1")
+. (Join-Path $PSScriptRoot "lib/lease-policy.ps1")
 
 $runtimePaths = Get-ThresholdRuntimePaths
 if ([string]::IsNullOrWhiteSpace($LeasePath)) {
@@ -54,8 +55,7 @@ function Get-BudgetValue {
 
 function Test-GovernancePath {
     param([string] $Path)
-    $normalized = $Path -replace "\\", "/"
-    return $normalized -like "threshold/*" -or $normalized -eq ".github/workflows/threshold-governance.yml"
+    return Test-ThresholdGovernancePath -Path $Path
 }
 
 function Get-ReceiptForCommit {
@@ -83,6 +83,8 @@ $leaseStartHead = Get-LeaseScalar $leaseLines "startHead"
 
 $currentBranch = (& git branch --show-current).Trim()
 if ($currentBranch -ne $expectedBranch) { throw "Branch mismatch. expected=$expectedBranch actual=$currentBranch" }
+$currentHead = (& git rev-parse HEAD).Trim()
+Assert-ThresholdHeadPolicy -LeaseLines $leaseLines -LeasePath $LeasePath -CurrentHead $currentHead -CurrentBranch $currentBranch
 
 if (Test-Path $StatePath) {
     $state = Get-Content $StatePath -Raw | ConvertFrom-Json
@@ -165,17 +167,7 @@ $fileBudget = $maxFiles
 if ($governancePaths.Count -eq $effectiveChangedPaths.Count) { $fileBudget = $maxGovernanceFiles }
 if ($effectiveChangedPaths.Count -gt $fileBudget) { throw "Slice changes $($effectiveChangedPaths.Count) files, exceeding file budget=$fileBudget." }
 
-foreach ($path in $effectiveChangedPaths) {
-    $isAllowed = $false
-    foreach ($pattern in $allowedPaths) {
-        if (Test-PathAgainstPattern $path $pattern) { $isAllowed = $true; break }
-    }
-    if (-not $isAllowed) { throw "Changed path is outside lease allowlist: $path" }
-
-    foreach ($pattern in $forbiddenPaths) {
-        if (Test-PathAgainstPattern $path $pattern) { throw "Changed path is forbidden by lease: $path" }
-    }
-}
+Assert-ThresholdChangedPathsAllowed -LeaseLines $leaseLines -ChangedPaths $effectiveChangedPaths
 
 $changedLineCount = 0
 $numstat = & git diff --numstat -- @effectiveChangedPaths
@@ -187,7 +179,7 @@ foreach ($line in $numstat) {
     }
 }
 foreach ($path in $untrackedPaths) {
-    if (Test-Path $path -and ($runtimeGovernanceArtifacts -notcontains (($path -replace "\\", "/").Trim()))) {
+    if ((Test-Path $path) -and ($runtimeGovernanceArtifacts -notcontains (($path -replace "\\", "/").Trim()))) {
         $changedLineCount += (Get-Content $path).Count
     }
 }

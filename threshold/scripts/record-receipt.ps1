@@ -35,6 +35,14 @@ function Get-LeaseScalar {
     return ($match -replace "^\s*$([regex]::Escape($Name)):\s*", "").Trim()
 }
 
+function Get-FileSha256 {
+    param([string] $Path)
+    if (-not (Test-Path $Path)) {
+        throw "Cannot hash missing file: $Path"
+    }
+    return (Get-FileHash -Algorithm SHA256 -Path $Path).Hash.ToLowerInvariant()
+}
+
 function Get-CommitParent {
     param([string] $Commit)
     return (& git rev-parse "$Commit^").Trim()
@@ -62,6 +70,7 @@ $leaseLines = Get-Content $LeasePath
 $leaseName = Get-LeaseScalar $leaseLines "leaseName"
 $branch = Get-LeaseScalar $leaseLines "branch"
 $leaseStartHead = Get-LeaseScalar $leaseLines "startHead"
+$leaseDigest = Get-FileSha256 -Path $LeasePath
 
 if ([string]::IsNullOrWhiteSpace($CommitHash)) { $CommitHash = (& git rev-parse HEAD).Trim() }
 if ([string]::IsNullOrWhiteSpace($BaseHead)) { $BaseHead = Get-CommitParent $CommitHash }
@@ -119,6 +128,7 @@ $receipt = [ordered]@{
     schemaVersion = "threshold.petclinic.slice-receipt.v0.2"
     candidateId = $CandidateId
     leaseName = $leaseName
+    leaseDigest = $leaseDigest
     branch = $branch
     candidateClass = $CandidateClass
     leaseStartHead = $leaseStartHead
