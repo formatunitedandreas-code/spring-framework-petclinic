@@ -74,7 +74,8 @@ public class VisitController {
         return visit;
     }
 
-    // Spring MVC calls method loadPetWithVisit(...) before initNewVisitForm is called
+    // Spring MVC calls method loadPetWithVisit(...) before
+    // initNewVisitForm is called
     @GetMapping(value = VISIT_NEW_PATH)
     public String initNewVisitForm() {
         return visitFormView();
