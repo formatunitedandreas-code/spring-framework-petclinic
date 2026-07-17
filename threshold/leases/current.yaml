@@ -1,36 +1,40 @@
 schemaVersion: threshold.petclinic.phase2.grant.v0.1
 status: active
-phaseId: P2-03
-leaseName: p2-03-owner-search-query-measurement-baseline
+phaseId: P2-04
+leaseName: p2-04-owner-search-read-model
 repository: C:\dev\spring-framework-petclinic
 repositorySlug: spring-petclinic/spring-framework-petclinic
 lane: product_refactor
 feature: owner_search_vertical_refactoring
 
-activatedAt: 2026-07-17T13:24:00Z
+activatedAt: 2026-07-17T13:50:00Z
 activatedBy: codex
-authoritySource: user_one_shot_grant_2026-07-17-p2-03
+authoritySource: user_one_shot_grant_2026-07-17-p2-04
 
-branch: agent/owner-search-query-baseline
+branch: agent/owner-search-read-model
 baseRemote: origin
 baseRef: origin/main
-startHead: 7a4e871184071d9affda8224a5cc66a0f7665d30
-originMainAtActivation: 7a4e871184071d9affda8224a5cc66a0f7665d30
+startHead: 07071e96ce997ff8e57a43dd2b6506d6b860787d
+originMainAtActivation: 07071e96ce997ff8e57a43dd2b6506d6b860787d
 headPolicy: descendantOfOriginMainAtActivation
 
 authority:
   replacesLease: owned-autonomous-refactor-branch-wave-v0_automation
   replacedLeaseRepository: C:\dev\spring-framework-petclinic\fresh-cycle-run
   replacedLeaseBranch: threshold-governed-refactor-demo-5
-  replacementReason: explicit_user_authority_for_phase_2_owner_search_query_measurement_baseline
+  replacementReason: explicit_user_authority_for_phase_2_owner_search_read_model
   priorTerminalState: merged
-  priorStopReason: p2_02_merged_pr_106
+  priorStopReason: p2_03_merged_pr_107
   githubPrStateVerified: true
   mergedPullRequests:
     - number: 106
       repositorySlug: formatunitedandreas-code/spring-framework-petclinic
       mergeCommit: 7a4e871184071d9affda8224a5cc66a0f7665d30
       mergedAt: 2026-07-17T11:23:37Z
+    - number: 107
+      repositorySlug: formatunitedandreas-code/spring-framework-petclinic
+      mergeCommit: 07071e96ce997ff8e57a43dd2b6506d6b860787d
+      mergedAt: 2026-07-17T11:49:40Z
   legacyPullRequestsNotAuthority:
     - number: 104
       state: MERGED
