@@ -1,0 +1,20 @@
+{
+  "runId": "owner-search-p2-05-authority-activation-20260717T140500Z",
+  "repository": "spring-petclinic/spring-framework-petclinic",
+  "localPath": "C:\\dev\\spring-framework-petclinic",
+  "phaseId": "P2-05",
+  "lane": "product_refactor",
+  "feature": "owner_search_vertical_refactoring",
+  "decision": "active",
+  "authoritySource": "user_one_shot_grant_2026-07-17-p2-05",
+  "installedLease": "p2-05-owner-search-port-and-use-case",
+  "branch": "agent/owner-search-use-case",
+  "head": "1ff62729bbf806decb41fbdf7a269f2079982a0e",
+  "originMain": "1ff62729bbf806decb41fbdf7a269f2079982a0e",
+  "priorMergedPullRequest": {
+    "number": 108,
+    "mergeCommit": "1ff62729bbf806decb41fbdf7a269f2079982a0e",
+    "mergedAt": "2026-07-17T12:54:40Z"
+  },
+  "recommendedNextAction": "Introduce OwnerSearchQuery port and SearchOwners application use case."
+}
