@@ -56,7 +56,8 @@ public class VisitController {
      * Called before each and every @GetMapping or @PostMapping annotated method.
      * 2 goals:
      * - Make sure we always have fresh data
-     * - Since we do not use the session scope, make sure that Pet object always has an id
+     * - Since we do not use the session scope, make sure that Pet object
+     * always has an id
      * (Even though id is not part of the form fields)
      *
      * @param petId the pet identifier from the URI
@@ -73,13 +74,15 @@ public class VisitController {
         return visit;
     }
 
-    // Spring MVC calls method loadPetWithVisit(...) before initNewVisitForm is called
+    // Spring MVC calls method loadPetWithVisit(...) before
+    // initNewVisitForm is called
     @GetMapping(value = VISIT_NEW_PATH)
     public String initNewVisitForm() {
         return visitFormView();
     }
 
-    // Spring MVC calls method loadPetWithVisit(...) before processNewVisitForm is called
+    // Spring MVC calls method loadPetWithVisit(...) before
+    // processNewVisitForm is called
     @PostMapping(value = VISIT_NEW_PATH)
     public String processNewVisitForm(@Valid Visit visit, BindingResult result) {
         return handleVisitSubmission(visit, result);

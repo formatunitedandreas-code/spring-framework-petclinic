@@ -26,7 +26,8 @@ import jakarta.servlet.ServletContext;
 
 
 /**
- * In Servlet 3.0+ environments, this class replaces the traditional {@code web.xml}-based
+ * In Servlet 3.0+ environments, this class replaces the traditional
+ * {@code web.xml}-based
  * approach in order to
  * configure the
  * {@link ServletContext} programmatically.
@@ -78,7 +79,8 @@ public class PetclinicInitializer extends AbstractDispatcherServletInitializer {
 
     @Override
     protected Filter[] getServletFilters() {
-        // Used to provide the ability to enter Chinese characters inside the Owner Form
+        // Used to provide the ability to enter Chinese characters
+        // inside the Owner Form
         return new Filter[]{new CharacterEncodingFilter("UTF-8", true)};
     }
 
