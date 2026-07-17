@@ -1,31 +1,36 @@
 schemaVersion: threshold.petclinic.phase2.grant.v0.1
 status: active
-phaseId: P2-02
-leaseName: p2-02-owner-search-adapter-contract-baseline
+phaseId: P2-03
+leaseName: p2-03-owner-search-query-measurement-baseline
 repository: C:\dev\spring-framework-petclinic
 repositorySlug: spring-petclinic/spring-framework-petclinic
 lane: product_refactor
 feature: owner_search_vertical_refactoring
 
-activatedAt: 2026-07-17T12:57:16Z
+activatedAt: 2026-07-17T13:24:00Z
 activatedBy: codex
-authoritySource: user_one_shot_grant_2026-07-17-p2-02
+authoritySource: user_one_shot_grant_2026-07-17-p2-03
 
-branch: agent/owner-search-behavior-baseline
+branch: agent/owner-search-query-baseline
 baseRemote: origin
 baseRef: origin/main
-startHead: 015aae56134af87915b41cc68b5c2af803663b99
-originMainAtActivation: 04f7e344e51ed6c75e9e3062ebc8ee7fa9415b1c
+startHead: 7a4e871184071d9affda8224a5cc66a0f7665d30
+originMainAtActivation: 7a4e871184071d9affda8224a5cc66a0f7665d30
 headPolicy: descendantOfOriginMainAtActivation
 
 authority:
   replacesLease: owned-autonomous-refactor-branch-wave-v0_automation
   replacedLeaseRepository: C:\dev\spring-framework-petclinic\fresh-cycle-run
   replacedLeaseBranch: threshold-governed-refactor-demo-5
-  replacementReason: explicit_user_authority_for_phase_2_owner_search_adapter_contract_baseline
-  priorTerminalState: hold_at_local_commit_boundary
-  priorStopReason: p2_01_complete
+  replacementReason: explicit_user_authority_for_phase_2_owner_search_query_measurement_baseline
+  priorTerminalState: merged
+  priorStopReason: p2_02_merged_pr_106
   githubPrStateVerified: true
+  mergedPullRequests:
+    - number: 106
+      repositorySlug: formatunitedandreas-code/spring-framework-petclinic
+      mergeCommit: 7a4e871184071d9affda8224a5cc66a0f7665d30
+      mergedAt: 2026-07-17T11:23:37Z
   legacyPullRequestsNotAuthority:
     - number: 104
       state: MERGED
@@ -58,7 +63,7 @@ authority:
 budget:
   maxCandidatesThisRun: 1
   maxCommitsThisRun: 2
-  maxFilesPerCandidate: 6
+  maxFilesPerCandidate: 8
   maxGovernanceFilesPerCandidate: 8
   maxChangedLinesPerCandidate: 160
   maxGovernanceChangedLinesPerCandidate: 1200
@@ -88,7 +93,6 @@ conditionallyAllowedPaths:
 forbiddenActions:
   - push_to_upstream
   - force_push
-  - merge
   - release
   - deploy
   - public_readiness_claim

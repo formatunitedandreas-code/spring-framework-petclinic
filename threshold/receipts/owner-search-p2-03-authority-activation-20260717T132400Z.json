@@ -1,0 +1,26 @@
+{
+  "runId": "owner-search-p2-03-authority-activation-20260717T132400Z",
+  "repository": "spring-petclinic/spring-framework-petclinic",
+  "localPath": "C:\\dev\\spring-framework-petclinic",
+  "phaseId": "P2-03",
+  "lane": "product_refactor",
+  "feature": "owner_search_vertical_refactoring",
+  "decision": "active",
+  "authoritySource": "user_one_shot_grant_2026-07-17-p2-03",
+  "installedLease": "p2-03-owner-search-query-measurement-baseline",
+  "branch": "agent/owner-search-query-baseline",
+  "head": "7a4e871184071d9affda8224a5cc66a0f7665d30",
+  "originMain": "7a4e871184071d9affda8224a5cc66a0f7665d30",
+  "headOriginMainDistance": "0 0",
+  "priorMergedPullRequest": {
+    "number": 106,
+    "mergeCommit": "7a4e871184071d9affda8224a5cc66a0f7665d30",
+    "mergedAt": "2026-07-17T11:23:37Z"
+  },
+  "productChangesPerformed": false,
+  "testsExecuted": false,
+  "commitsCreated": false,
+  "pushPerformed": false,
+  "mergePerformed": false,
+  "recommendedNextAction": "Add P2-03 owner search query measurement baseline."
+}
