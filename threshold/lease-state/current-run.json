@@ -5,16 +5,16 @@
     "mode":  "local_refactor",
     "branch":  "threshold-governed-refactor-demo-150",
     "startHead":  "79a1eaab08a8574ed20bf6a18775f86d939cd3e0",
-    "currentHead":  "116bc39f5704034d4fff10c0a2c7ff5f8322fded",
-    "currentSourceHead":  "116bc39f5704034d4fff10c0a2c7ff5f8322fded",
-    "candidatesProcessed":  4,
-    "commitsCreated":  4,
+    "currentHead":  "074b3773bd820626b1a586f5bb073870a26dfe9d",
+    "currentSourceHead":  "074b3773bd820626b1a586f5bb073870a26dfe9d",
+    "candidatesProcessed":  5,
+    "commitsCreated":  5,
     "remainingBudget":  {
-                            "candidates":  1,
-                            "commits":  1,
+                            "candidates":  0,
+                            "commits":  0,
                             "repairAttempts":  1
                         },
-    "lastReceipt":  "threshold/receipts/src-main-java-org-springframework-samples-petclinic-web-pettypeformatter-java-comment-wrap-cleanup-line-32-116bc39f5704.json",
-    "terminalState":  "active",
-    "updatedAt":  "2026-07-17T05:49:32.9202254Z"
+    "lastReceipt":  "threshold/receipts/src-main-java-org-springframework-samples-petclinic-web-petvalidator-java-comment-wrap-cleanup-line-27-074b3773bd82.json",
+    "terminalState":  "budget_exhausted",
+    "updatedAt":  "2026-07-17T05:50:47.6194977Z"
 }
