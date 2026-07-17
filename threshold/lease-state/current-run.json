@@ -8,7 +8,7 @@
   "repository": "C:\\dev\\spring-framework-petclinic",
   "branch": "agent/owner-search-read-model",
   "startHead": "07071e96ce997ff8e57a43dd2b6506d6b860787d",
-  "currentHead": "07071e96ce997ff8e57a43dd2b6506d6b860787d",
+  "currentHead": "pending_local_commit",
   "currentSourceHead": "07071e96ce997ff8e57a43dd2b6506d6b860787d",
   "originMainAtActivation": "07071e96ce997ff8e57a43dd2b6506d6b860787d",
   "headPolicy": "descendantOfOriginMainAtActivation",
@@ -19,7 +19,7 @@
     "commits": 0,
     "repairAttempts": 1
   },
-  "lastReceipt": "threshold/receipts/owner-search-p2-04-authority-activation-20260717T135000Z.json",
-  "terminalState": "active",
-  "updatedAt": "2026-07-17T13:50:00Z"
+  "lastReceipt": "threshold/receipts/owner-search-p2-04-read-model-20260717T135000Z.json",
+  "terminalState": "hold_at_local_commit_boundary",
+  "updatedAt": "2026-07-17T13:52:41Z"
 }

@@ -1,0 +1,38 @@
+{
+  "runId": "owner-search-p2-04-read-model-20260717T135000Z",
+  "repository": "spring-petclinic/spring-framework-petclinic",
+  "localPath": "C:\\dev\\spring-framework-petclinic",
+  "phaseId": "P2-04",
+  "lane": "product_refactor",
+  "feature": "owner_search_vertical_refactoring",
+  "inputHead": "a658d7b",
+  "expectedEffect": "Introduce immutable lightweight Owner Search read model.",
+  "changedPaths": [
+    "src/main/java/org/springframework/samples/petclinic/owner/api/OwnerListItem.java",
+    "src/test/java/org/springframework/samples/petclinic/owner/api/OwnerListItemTests.java",
+    "threshold/docs/OWNER_SEARCH_READ_MODEL_V0_1.md",
+    "threshold/receipts/owner-search-p2-04-read-model-20260717T135000Z.json"
+  ],
+  "validationResults": {
+    "gitDiffCheck": "passed",
+    "ownerListItemTests": {
+      "testsRun": 4,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "result": "passed"
+    }
+  },
+  "outputHead": "pending_local_commit",
+  "outcome": "read_model_recorded",
+  "behaviorEquivalent": true,
+  "profileParityVerified": false,
+  "queryBudgetVerified": false,
+  "architectureRulesVerified": false,
+  "fullSuitePassed": false,
+  "publicationPerformed": false,
+  "mergePerformed": false,
+  "releasePerformed": false,
+  "deploymentPerformed": false,
+  "humanReviewRequired": true
+}
