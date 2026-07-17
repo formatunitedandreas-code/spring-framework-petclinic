@@ -1,0 +1,62 @@
+{
+  "runId": "owner-search-p2-01-start-stop-20260717T122227Z",
+  "repository": "formatunitedandreas-code/spring-framework-petclinic",
+  "localPath": "C:\\dev\\spring-framework-petclinic",
+  "phaseId": "P2-01",
+  "lane": "product_refactor",
+  "feature": "owner_search_vertical_refactoring",
+  "requestedGrant": "p2-01-owner-search-product-refactor",
+  "terminalState": "stop_no_action",
+  "terminalReason": "No active Phase 2 product-refactor grant exists for the current repository root and HEAD.",
+  "sourceBranch": "main",
+  "sourceHead": "04f7e344e51ed6c75e9e3062ebc8ee7fa9415b1c",
+  "originMain": "04f7e344e51ed6c75e9e3062ebc8ee7fa9415b1c",
+  "mainOriginMainDistance": "0 0",
+  "worktreeStateBeforeReceipt": "clean",
+  "activeAuthorityState": {
+    "leaseName": "owned-autonomous-refactor-branch-wave-v0_automation",
+    "repository": "C:\\dev\\spring-framework-petclinic\\fresh-cycle-run",
+    "branch": "threshold-governed-refactor-demo-5",
+    "leaseState": "active",
+    "scopeMatch": false
+  },
+  "changedPaths": [
+    "threshold/docs/PHASE_2_OWNER_SEARCH_P2_01_START_ATTEMPT_V0_1.md",
+    "threshold/receipts/owner-search-p2-01-start-stop-20260717T122227Z.json"
+  ],
+  "validationCommands": [
+    "git fetch --all --prune",
+    "git status --short --branch",
+    "git branch --show-current",
+    "git rev-parse HEAD",
+    "git rev-parse origin/main",
+    "git rev-list --left-right --count main...origin/main",
+    "gh pr view 104 --json number,state,isDraft,mergedAt,mergeCommit,headRefName,headRefOid,baseRefName,statusCheckRollup",
+    "gh pr view 105 --json number,state,isDraft,mergedAt,mergeCommit,headRefName,headRefOid,baseRefName,statusCheckRollup",
+    "gh pr list --state open --json number,title,isDraft,headRefName,headRefOid,baseRefName,mergeable,url"
+  ],
+  "testEvidence": {
+    "executed": false,
+    "reason": "authority activation failed before behavior baseline"
+  },
+  "queryEvidence": {
+    "executed": false,
+    "reason": "authority activation failed before query baseline"
+  },
+  "architectureEvidence": {
+    "executed": false,
+    "reason": "authority activation failed before architecture baseline"
+  },
+  "behaviorEquivalent": false,
+  "profileParityVerified": false,
+  "queryBudgetVerified": false,
+  "architectureRulesVerified": false,
+  "fullSuitePassed": false,
+  "publicationPerformed": false,
+  "mergePerformed": false,
+  "releasePerformed": false,
+  "deploymentPerformed": false,
+  "humanReviewRequired": true,
+  "recommendedDisposition": "human_one_shot_grant_required",
+  "recommendedNextAction": "Install an active Phase 2 product-refactor lease bound to main at 04f7e344e51ed6c75e9e3062ebc8ee7fa9415b1c."
+}
