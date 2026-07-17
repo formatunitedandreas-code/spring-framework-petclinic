@@ -1,30 +1,30 @@
 schemaVersion: threshold.petclinic.phase2.grant.v0.1
 status: active
-phaseId: P2-01
-leaseName: p2-01-owner-search-product-refactor
+phaseId: P2-02
+leaseName: p2-02-owner-search-adapter-contract-baseline
 repository: C:\dev\spring-framework-petclinic
 repositorySlug: spring-petclinic/spring-framework-petclinic
 lane: product_refactor
 feature: owner_search_vertical_refactoring
 
-activatedAt: 2026-07-17T10:25:09Z
+activatedAt: 2026-07-17T12:57:16Z
 activatedBy: codex
-authoritySource: user_one_shot_grant_2026-07-17
+authoritySource: user_one_shot_grant_2026-07-17-p2-02
 
-branch: main
+branch: agent/owner-search-behavior-baseline
 baseRemote: origin
 baseRef: origin/main
-startHead: 04f7e344e51ed6c75e9e3062ebc8ee7fa9415b1c
+startHead: 015aae56134af87915b41cc68b5c2af803663b99
 originMainAtActivation: 04f7e344e51ed6c75e9e3062ebc8ee7fa9415b1c
-headPolicy: equalsOriginMainAtActivation
+headPolicy: descendantOfOriginMainAtActivation
 
 authority:
   replacesLease: owned-autonomous-refactor-branch-wave-v0_automation
   replacedLeaseRepository: C:\dev\spring-framework-petclinic\fresh-cycle-run
   replacedLeaseBranch: threshold-governed-refactor-demo-5
-  replacementReason: explicit_user_authority_for_phase_2_owner_search_product_refactor
-  priorTerminalState: stop_no_action
-  priorStopReason: stop_missing_authority
+  replacementReason: explicit_user_authority_for_phase_2_owner_search_adapter_contract_baseline
+  priorTerminalState: hold_at_local_commit_boundary
+  priorStopReason: p2_01_complete
   githubPrStateVerified: true
   legacyPullRequestsNotAuthority:
     - number: 104
@@ -56,9 +56,9 @@ authority:
       mergeable: MERGEABLE
 
 budget:
-  maxCandidatesThisRun: 3
-  maxCommitsThisRun: 3
-  maxFilesPerCandidate: 4
+  maxCandidatesThisRun: 1
+  maxCommitsThisRun: 2
+  maxFilesPerCandidate: 6
   maxGovernanceFilesPerCandidate: 8
   maxChangedLinesPerCandidate: 160
   maxGovernanceChangedLinesPerCandidate: 1200
