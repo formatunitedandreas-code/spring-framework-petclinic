@@ -81,7 +81,8 @@ public class VisitController {
         return visitFormView();
     }
 
-    // Spring MVC calls method loadPetWithVisit(...) before processNewVisitForm is called
+    // Spring MVC calls method loadPetWithVisit(...) before
+    // processNewVisitForm is called
     @PostMapping(value = VISIT_NEW_PATH)
     public String processNewVisitForm(@Valid Visit visit, BindingResult result) {
         return handleVisitSubmission(visit, result);
