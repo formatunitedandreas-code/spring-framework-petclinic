@@ -1,20 +1,25 @@
 {
-    "schemaVersion":  "threshold.petclinic.lease-state.v0.2",
-    "invocationId":  "owned-autonomous-refactor-branch-wave-v0_automation-20260717T072152Z",
-    "leaseId":  "owned-autonomous-refactor-branch-wave-v0_automation",
-    "mode":  "local_refactor",
-    "branch":  "threshold-governed-refactor-demo-5",
-    "startHead":  "55bd0371f85ea0666ee84d86ab597bf6b079b210",
-    "currentHead":  "32236f5a008d412cd6d1685c2d518c6f8bffd542",
-    "currentSourceHead":  "32236f5a008d412cd6d1685c2d518c6f8bffd542",
-    "candidatesProcessed":  1,
-    "commitsCreated":  1,
-    "remainingBudget":  {
-                            "candidates":  4,
-                            "commits":  4,
-                            "repairAttempts":  1
-                        },
-    "lastReceipt":  "threshold/receipts/src-main-java-org-springframework-samples-petclinic-repository-jdbc-jdbcownerrepositoryimpl-java-comment-wrap-cleanup-line-115-32236f5a008d.json",
-    "terminalState":  "active",
-    "updatedAt":  "2026-07-17T07:54:21.7169133Z"
+  "schemaVersion": "threshold.petclinic.lease-state.v0.2",
+  "invocationId": "p2-02-owner-search-adapter-contract-baseline-20260717T125716Z",
+  "leaseId": "p2-02-owner-search-adapter-contract-baseline",
+  "phaseId": "P2-02",
+  "mode": "product_refactor",
+  "feature": "owner_search_vertical_refactoring",
+  "repository": "C:\\dev\\spring-framework-petclinic",
+  "branch": "agent/owner-search-behavior-baseline",
+  "startHead": "015aae56134af87915b41cc68b5c2af803663b99",
+  "currentHead": "015aae56134af87915b41cc68b5c2af803663b99",
+  "currentSourceHead": "04f7e344e51ed6c75e9e3062ebc8ee7fa9415b1c",
+  "originMainAtActivation": "04f7e344e51ed6c75e9e3062ebc8ee7fa9415b1c",
+  "headPolicy": "descendantOfOriginMainAtActivation",
+  "candidatesProcessed": 0,
+  "commitsCreated": 0,
+  "remainingBudget": {
+    "candidates": 1,
+    "commits": 2,
+    "repairAttempts": 1
+  },
+  "lastReceipt": "threshold/receipts/owner-search-p2-02-authority-activation-20260717T125716Z.json",
+  "terminalState": "active",
+  "updatedAt": "2026-07-17T12:57:16Z"
 }

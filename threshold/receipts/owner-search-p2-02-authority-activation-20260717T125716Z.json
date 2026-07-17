@@ -1,0 +1,28 @@
+{
+  "runId": "owner-search-p2-02-authority-activation-20260717T125716Z",
+  "repository": "spring-petclinic/spring-framework-petclinic",
+  "localPath": "C:\\dev\\spring-framework-petclinic",
+  "phaseId": "P2-02",
+  "lane": "product_refactor",
+  "feature": "owner_search_vertical_refactoring",
+  "decision": "active",
+  "authoritySource": "user_one_shot_grant_2026-07-17-p2-02",
+  "installedLease": "p2-02-owner-search-adapter-contract-baseline",
+  "branch": "agent/owner-search-behavior-baseline",
+  "head": "015aae56134af87915b41cc68b5c2af803663b99",
+  "originMain": "04f7e344e51ed6c75e9e3062ebc8ee7fa9415b1c",
+  "headOriginMainDistance": "2 0",
+  "installedPaths": [
+    "threshold/leases/current.yaml",
+    "threshold/lease-state/current-run.json",
+    "threshold/docs/PHASE_2_OWNER_SEARCH_P2_02_AUTHORITY_ACTIVE_V0_1.md",
+    "threshold/receipts/owner-search-p2-02-authority-activation-20260717T125716Z.json"
+  ],
+  "productChangesPerformed": false,
+  "testsExecuted": false,
+  "commitsCreated": false,
+  "pushPerformed": false,
+  "mergePerformed": false,
+  "terminalBoundary": "hold_at_local_commit_boundary",
+  "recommendedNextAction": "Add P2-02 owner search adapter contract baseline tests."
+}

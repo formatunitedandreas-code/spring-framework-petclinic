@@ -1,23 +1,66 @@
-leaseName: owned-autonomous-refactor-branch-wave-v0_automation
-repository: C:\dev\spring-framework-petclinic\fresh-cycle-run
-branch: threshold-governed-refactor-demo-5
+schemaVersion: threshold.petclinic.phase2.grant.v0.1
+status: active
+phaseId: P2-02
+leaseName: p2-02-owner-search-adapter-contract-baseline
+repository: C:\dev\spring-framework-petclinic
+repositorySlug: spring-petclinic/spring-framework-petclinic
+lane: product_refactor
+feature: owner_search_vertical_refactoring
+
+activatedAt: 2026-07-17T12:57:16Z
+activatedBy: codex
+authoritySource: user_one_shot_grant_2026-07-17-p2-02
+
+branch: agent/owner-search-behavior-baseline
 baseRemote: origin
 baseRef: origin/main
-startHead: 55bd0371f85ea0666ee84d86ab597bf6b079b210
-headPolicy: descendantOfStartHead
-scopeExpansionTier: 4
-longLineThreshold: 74
-commentWrapThreshold: 76
-springDataQueryThreshold: 44
-repositoryMethodLengthThreshold: 3
-utilityMethodLengthThreshold: 3
+startHead: 015aae56134af87915b41cc68b5c2af803663b99
+originMainAtActivation: 04f7e344e51ed6c75e9e3062ebc8ee7fa9415b1c
+headPolicy: descendantOfOriginMainAtActivation
+
+authority:
+  replacesLease: owned-autonomous-refactor-branch-wave-v0_automation
+  replacedLeaseRepository: C:\dev\spring-framework-petclinic\fresh-cycle-run
+  replacedLeaseBranch: threshold-governed-refactor-demo-5
+  replacementReason: explicit_user_authority_for_phase_2_owner_search_adapter_contract_baseline
+  priorTerminalState: hold_at_local_commit_boundary
+  priorStopReason: p2_01_complete
+  githubPrStateVerified: true
+  legacyPullRequestsNotAuthority:
+    - number: 104
+      state: MERGED
+      mergedAt: 2023-11-29T07:28:32Z
+      mergeCommit: bd32f43ba2f1f2202e98e7c4c3c549c5debbf288
+    - number: 105
+      state: MERGED
+      mergedAt: 2023-11-30T07:54:59Z
+      mergeCommit: 73d7a47ea3bd08e048e4715fe2372c83016140aa
+  openPullRequests:
+    - number: 280
+      isDraft: false
+      baseRefName: main
+      headRefName: threshold/dep-001-human-authorized-candidate
+      headRefOid: 2aa7c462235b06ca4cc00448c606f6b50de5b2a0
+      mergeable: MERGEABLE
+    - number: 281
+      isDraft: true
+      baseRefName: main
+      headRefName: threshold-governed-refactor-demo
+      headRefOid: a7f1dd04d1c534c6343a353d2d6bd405358baa4b
+      mergeable: MERGEABLE
+    - number: 282
+      isDraft: false
+      baseRefName: main
+      headRefName: threshold-governed-refactor-demo-3
+      headRefOid: d32a3e12647ae93b98e0a2abeb4b584cf772e541
+      mergeable: MERGEABLE
 
 budget:
-  maxCandidatesThisRun: 5
-  maxCommitsThisRun: 5
-  maxFilesPerCandidate: 1
+  maxCandidatesThisRun: 1
+  maxCommitsThisRun: 2
+  maxFilesPerCandidate: 6
   maxGovernanceFilesPerCandidate: 8
-  maxChangedLinesPerCandidate: 80
+  maxChangedLinesPerCandidate: 160
   maxGovernanceChangedLinesPerCandidate: 1200
   maxRepairAttemptsPerCandidate: 1
 
@@ -30,54 +73,17 @@ allowedRiskClasses:
   - R4_OWNED_REPO_DRAFT_PR_UPDATE
 
 allowedPaths:
-  - src/main/java/org/springframework/samples/petclinic/service/*.java
-  - src/main/java/org/springframework/samples/petclinic/service/**/*.java
-  - src/main/java/org/springframework/samples/petclinic/web/*.java
-  - src/main/java/org/springframework/samples/petclinic/web/**/*.java
-  - src/main/java/org/springframework/samples/petclinic/repository/*.java
-  - src/main/java/org/springframework/samples/petclinic/repository/**/*.java
-  - src/main/java/org/springframework/samples/petclinic/model/*.java
-  - src/main/java/org/springframework/samples/petclinic/model/**/*.java
-  - src/main/java/org/springframework/samples/petclinic/util/*.java
-  - src/main/java/org/springframework/samples/petclinic/util/**/*.java
-  - src/main/java/org/springframework/samples/petclinic/*.java
-  - threshold/leases/*.yaml
-  - threshold/receipts/*.json
-  - threshold/lease-state/*.json
-  - threshold/candidate-pocket/*.json
-  - threshold/discovery-canaries/**/*.java
-  - threshold/discovery-canaries/*.json
-  - threshold/gates/*.json
-  - threshold/lanes/*.yaml
-  - threshold/scripts/*.ps1
-  - .github/workflows/threshold-governance.yml
+  - src/main/java/org/springframework/samples/petclinic/**
+  - src/test/java/org/springframework/samples/petclinic/**
+  - src/main/resources/spring/**
+  - threshold/docs/**
+  - threshold/receipts/**
+  - threshold/lease-state/**
+  - threshold/leases/**
 
-forbiddenPaths:
-  - pom.xml
-  - src/main/resources/**
-  - src/test/**
-  - target/**
-  - .github/dependabot.yml
-
-allowedCandidateTypes:
-  - private_helper_extraction_for_readability
-  - redundant_local_variable_simplification
-  - duplicate_literal_local_constant_extraction
-  - controller_branch_readability_decomposition
-  - method_signature_wrap_cleanup
-  - repository_readability_cleanup
-  - spring_data_query_wrap_cleanup
-  - spring_data_query_concat_wrap_cleanup
-  - model_readability_cleanup
-  - split_string_constant_normalization
-  - string_constant_wrap_cleanup
-  - utility_readability_cleanup
-  - application_bootstrap_readability_cleanup
-  - leading_tab_indentation_cleanup
-  - comment_wrap_cleanup
-  - line_comment_wrap_cleanup
-  - method_spacing_normalization
-  - threshold_governance_artifact_update
+conditionallyAllowedPaths:
+  - path: pom.xml
+    condition: explicitly_admitted_test_dependency_only
 
 forbiddenActions:
   - push_to_upstream
@@ -85,8 +91,6 @@ forbiddenActions:
   - merge
   - release
   - deploy
-  - dependency_or_pom_changes
-  - src_test_changes
   - public_readiness_claim
   - public_correctness_claim
   - public_security_claim
@@ -94,6 +98,16 @@ forbiddenActions:
 
 validation:
   javaHome: C:\Program Files\Java\jdk-17
+  preflightCommands:
+    - git fetch --all --prune
+    - git status --short --branch
+    - git branch --show-current
+    - git rev-parse HEAD
+    - git rev-parse origin/main
+    - git rev-list --left-right --count main...origin/main
+    - gh pr view 104 --json number,state,isDraft,mergedAt,mergeCommit,headRefName,headRefOid,baseRefName,statusCheckRollup
+    - gh pr view 105 --json number,state,isDraft,mergedAt,mergeCommit,headRefName,headRefOid,baseRefName,statusCheckRollup
+    - gh pr list --state open --json number,title,isDraft,headRefName,headRefOid,baseRefName,mergeable,url
   diffCheckCommand: git diff --check
   mavenTestCommand: .\mvnw.cmd test
   fullMavenTestRequiredPerCandidate: true
