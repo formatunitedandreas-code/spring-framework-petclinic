@@ -1,16 +1,16 @@
 {
   "schemaVersion": "threshold.petclinic.lease-state.v0.2",
-  "invocationId": "p2-12-owner-search-explicit-fetch-plans-20260717T205200Z",
-  "leaseId": "p2-12-owner-search-explicit-fetch-plans",
-  "phaseId": "P2-12",
+  "invocationId": "p2-13-owner-search-full-validation-matrix-20260717T191500Z",
+  "leaseId": "p2-13-owner-search-full-validation-matrix",
+  "phaseId": "P2-13",
   "mode": "product_refactor",
   "feature": "owner_search_vertical_refactoring",
   "repository": "C:\\dev\\spring-framework-petclinic",
-  "branch": "agent/owner-search-explicit-fetch-plans",
-  "startHead": "16ca87d0a69b079c20351a048d7b082ca9b057f2",
-  "currentHead": "16ca87d0a69b079c20351a048d7b082ca9b057f2",
-  "currentSourceHead": "16ca87d0a69b079c20351a048d7b082ca9b057f2",
-  "originMainAtActivation": "16ca87d0a69b079c20351a048d7b082ca9b057f2",
+  "branch": "agent/owner-search-full-validation-matrix",
+  "startHead": "a6e03419f58d559a817ca39e7296eefebe006622",
+  "currentHead": "a6e03419f58d559a817ca39e7296eefebe006622",
+  "currentSourceHead": "a6e03419f58d559a817ca39e7296eefebe006622",
+  "originMainAtActivation": "a6e03419f58d559a817ca39e7296eefebe006622",
   "headPolicy": "equalsOriginMainAtActivation",
   "candidatesProcessed": 1,
   "commitsCreated": 0,
@@ -19,7 +19,7 @@
     "commits": 2,
     "repairAttempts": 1
   },
-  "lastReceipt": "threshold/receipts/owner-search-p2-12-explicit-fetch-plans-20260717T205200Z.json",
-  "terminalState": "local_validation_green_pending_commit",
-  "updatedAt": "2026-07-17T20:52:00Z"
+  "lastReceipt": "threshold/receipts/owner-search-p2-13-authority-activation-20260717T191500Z.json",
+  "terminalState": "authority_active_branch_started",
+  "updatedAt": "2026-07-17T19:15:00Z"
 }
