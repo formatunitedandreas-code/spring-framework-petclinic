@@ -53,7 +53,8 @@ public class VisitController {
     }
 
     /**
-     * Called before each and every @GetMapping or @PostMapping annotated method.
+     * Called before each and every @GetMapping or @PostMapping
+     * annotated method.
      * 2 goals:
      * - Make sure we always have fresh data
      * - Since we do not use the session scope, make sure that Pet object
