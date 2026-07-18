@@ -1,9 +1,9 @@
 leaseName: owned-autonomous-refactor-branch-wave-v0_automation
 repository: C:\dev\spring-framework-petclinic
-branch: threshold-governed-refactor-demo-156
+branch: codex/threshold-phase3-workflow-hardening
 baseRemote: origin
 baseRef: origin/main
-startHead: 4d4d04bae758b23889b7115db7756a073950287f
+startHead: 26792ad1664fef124f40704a9c7b49cd16e5fddb
 headPolicy: descendantOfStartHead
 scopeExpansionTier: 4
 longLineThreshold: 74
@@ -28,6 +28,7 @@ allowedRiskClasses:
   - R3_LOCAL_COMMIT
   - R4_OWNED_REPO_BRANCH_PUSH
   - R4_OWNED_REPO_DRAFT_PR_UPDATE
+  - R5_OWNED_REPO_MERGE_WITH_REQUIRED_GATES
 
 allowedPaths:
   - src/main/java/org/springframework/samples/petclinic/service/*.java
@@ -82,7 +83,6 @@ allowedCandidateTypes:
 forbiddenActions:
   - push_to_upstream
   - force_push
-  - merge
   - release
   - deploy
   - dependency_or_pom_changes
@@ -101,4 +101,4 @@ validation:
 terminalBoundary:
   afterLocalCommit: hold_at_local_commit_boundary
   draftPrAllowed: true
-  mergeAllowed: false
+  mergeAllowed: true

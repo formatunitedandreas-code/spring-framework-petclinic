@@ -35,14 +35,6 @@ function Get-LeaseScalar {
     return ($match -replace "^\s*$([regex]::Escape($Name)):\s*", "").Trim()
 }
 
-function Get-FileSha256 {
-    param([string] $Path)
-    if (-not (Test-Path $Path)) {
-        throw "Cannot hash missing file: $Path"
-    }
-    return (Get-FileHash -Algorithm SHA256 -Path $Path).Hash.ToLowerInvariant()
-}
-
 function Get-CommitParent {
     param([string] $Commit)
     return (& git rev-parse "$Commit^").Trim()
@@ -50,13 +42,19 @@ function Get-CommitParent {
 
 function Get-GitBlobSha256 {
     param([string] $Revision, [string] $Path)
+    $previousErrorActionPreference = $ErrorActionPreference
+    $ErrorActionPreference = "Continue"
     & git cat-file -e "$Revision`:$Path" 2>$null
-    if ($LASTEXITCODE -ne 0) { return $null }
-    $content = (& git show "$Revision`:$Path") -join "`n"
-    $bytes = [System.Text.Encoding]::UTF8.GetBytes($content)
-    $sha = [System.Security.Cryptography.SHA256]::Create()
-    try { return ($sha.ComputeHash($bytes) | ForEach-Object { $_.ToString("x2") }) -join "" }
-    finally { $sha.Dispose() }
+    $exists = $LASTEXITCODE -eq 0
+    $ErrorActionPreference = $previousErrorActionPreference
+    if (-not $exists) { return $null }
+    $spec = "$Revision`:$Path"
+    $quotedSpec = "'" + ($spec -replace "'", "'\''") + "'"
+    $digestOutput = @(bash -lc "git cat-file blob $quotedSpec | sha256sum")
+    if ($LASTEXITCODE -ne 0 -or $digestOutput.Count -eq 0) {
+        throw "Failed to hash git blob: $spec"
+    }
+    return ([string]$digestOutput[0]).Split(" ")[0].Trim().ToLowerInvariant()
 }
 
 function ConvertTo-RepoPath {
@@ -70,11 +68,14 @@ $leaseLines = Get-Content $LeasePath
 $leaseName = Get-LeaseScalar $leaseLines "leaseName"
 $branch = Get-LeaseScalar $leaseLines "branch"
 $leaseStartHead = Get-LeaseScalar $leaseLines "startHead"
-$leaseDigest = Get-FileSha256 -Path $LeasePath
 
 if ([string]::IsNullOrWhiteSpace($CommitHash)) { $CommitHash = (& git rev-parse HEAD).Trim() }
 if ([string]::IsNullOrWhiteSpace($BaseHead)) { $BaseHead = Get-CommitParent $CommitHash }
 if ([string]::IsNullOrWhiteSpace($DiffSummary)) { $DiffSummary = ((& git show --format=%s --no-patch $CommitHash) -join " ").Trim() }
+$leaseDigest = Get-GitBlobSha256 -Revision "HEAD" -Path (ConvertTo-RepoPath $LeasePath)
+if ([string]::IsNullOrWhiteSpace($leaseDigest)) {
+    throw "Cannot compute leaseDigest from committed git blob: $LeasePath"
+}
 
 $changedPaths = @(& git diff --name-only "$BaseHead..$CommitHash" | Where-Object { -not [string]::IsNullOrWhiteSpace($_) })
 if (-not $changedPaths) { throw "No changed files detected for commit range $BaseHead..$CommitHash" }

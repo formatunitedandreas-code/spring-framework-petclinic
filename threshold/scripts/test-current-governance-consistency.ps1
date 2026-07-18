@@ -105,6 +105,33 @@ function Compare-ClassSets {
     }
 }
 
+function Assert-NoClassContractViolations {
+    param(
+        [string[]] $GateClasses,
+        [string[]] $DiscoveryClasses,
+        [string[]] $RunnerClasses,
+        [string[]] $BatchClasses
+    )
+
+    $violations = New-Object System.Collections.Generic.List[string]
+    foreach ($item in @($DiscoveryClasses | Where-Object { $GateClasses -notcontains $_ })) {
+        $violations.Add("discovery_emits_ungated_class=$item")
+    }
+    foreach ($item in @($GateClasses | Where-Object { $RunnerClasses -notcontains $_ })) {
+        $violations.Add("gate_class_missing_runner_executor=$item")
+    }
+    foreach ($item in @($BatchClasses | Where-Object { $GateClasses -notcontains $_ })) {
+        $violations.Add("batch_class_missing_gate_entry=$item")
+    }
+
+    if ($violations.Count -gt 0) {
+        foreach ($violation in $violations) {
+            Write-Host "classContractViolation=$violation"
+        }
+        throw "Threshold auto-patchable class contract is inconsistent."
+    }
+}
+
 $branch = (& git branch --show-current).Trim()
 $head = (& git rev-parse HEAD).Trim()
 $originMain = (& git rev-parse origin/main).Trim()
@@ -138,7 +165,16 @@ Write-Host "pocket.branch=$($pocket.branch)"
 Write-Host "pocket.generatedFromHead=$($pocket.generatedFromHead)"
 Write-Host "pocket.candidateCount=$(@($pocket.candidates).Count)"
 
-if ($pocket.branch -ne $branch -or $pocket.generatedFromHead -ne $head) {
+$pocketRepresentsTerminalSourceHead = $false
+if ($state.terminalState -ne "active" -and
+    $pocket.PSObject.Properties["generatedFromHeadRole"] -and
+    [string]$pocket.generatedFromHeadRole -eq "sourceHead" -and
+    [string]$pocket.generatedFromHead -eq [string]$state.currentHead) {
+    $pocketRepresentsTerminalSourceHead = $true
+    Write-Host "pocketIdentity=terminal_source_head_evidence"
+}
+
+if (($pocket.branch -ne $branch -or $pocket.generatedFromHead -ne $head) -and -not $pocketRepresentsTerminalSourceHead) {
     Write-Host "finding=stale_candidate_pocket"
     Write-Host "findingDetail=pocket identity does not match current branch/head"
 }
@@ -186,20 +222,25 @@ $leaseLines = Get-Content $LeasePath
 $leaseCandidateTypes = @(Get-LeaseList -Lines $leaseLines -Name "allowedCandidateTypes")
 $gate = Read-Json -Path $GatePath
 $gateClasses = @($gate.approvedAutoPatchableCandidateClasses | ForEach-Object { [string]$_.candidateClass } | Sort-Object -Unique)
+$batchClasses = @($gate.batchReceiptMode.approvedCandidateClasses | ForEach-Object { [string]$_.candidateClass } | Sort-Object -Unique)
 $discoveryText = Get-Content "threshold/scripts/discover-candidates.ps1" -Raw
-$discoveryClasses = @(Get-UniqueMatches -Text $discoveryText -Pattern 'Add-Candidate\s+-CandidateClass\s+"(?<class>[a-z0-9_]+)"' -GroupName "class")
+$discoveryLiteralClasses = @(Get-UniqueMatches -Text $discoveryText -Pattern 'Add-Candidate\s+-CandidateClass\s+"(?<class>[a-z0-9_]+)"' -GroupName "class")
+$discoveryVariableClasses = @(Get-UniqueMatches -Text $discoveryText -Pattern '\$candidateClass\s*=\s*"(?<class>[a-z0-9_]+)"' -GroupName "class")
+$discoveryClasses = @($discoveryLiteralClasses + $discoveryVariableClasses | Sort-Object -Unique)
 $runnerText = Get-Content "threshold/scripts/run-next-slice.ps1" -Raw
 $runnerClasses = @(Get-UniqueMatches -Text $runnerText -Pattern '"(?<class>[a-z0-9_]+)"\s*\{' -GroupName "class")
-$runnerClasses = @($runnerClasses | Where-Object { $_ -like "*_*" } | Sort-Object -Unique)
+$runnerClasses = @($runnerClasses | Where-Object { $_ -like "*_*" -and $_ -ne "collapse_extra_blank_line" } | Sort-Object -Unique)
 
 Write-List -Name "leaseCandidateTypes" -Values $leaseCandidateTypes
 Write-List -Name "gateAutoPatchableClasses" -Values $gateClasses
+Write-List -Name "batchAutoPatchableClasses" -Values $batchClasses
 Write-List -Name "discoveryCandidateClasses" -Values $discoveryClasses
 Write-List -Name "runnerExecutorClasses" -Values $runnerClasses
 
 Compare-ClassSets -LeftName "lease" -Left $leaseCandidateTypes -RightName "gate" -Right $gateClasses
 Compare-ClassSets -LeftName "lease" -Left $leaseCandidateTypes -RightName "discovery" -Right $discoveryClasses
 Compare-ClassSets -LeftName "gate" -Left $gateClasses -RightName "runner" -Right $runnerClasses
+Assert-NoClassContractViolations -GateClasses $gateClasses -DiscoveryClasses $discoveryClasses -RunnerClasses $runnerClasses -BatchClasses $batchClasses
 
 $publicationLines = @(
     Select-String -Path "threshold/scripts/start-next-wave.ps1" -Pattern "git.*push|pr.*create|pr.*checks|pr.*merge|Assert-ReadyForMerge|mergeable|draft"

@@ -37,6 +37,28 @@ function Get-FileSha256 {
     return (Get-FileHash -Algorithm SHA256 -LiteralPath $Path).Hash
 }
 
+function Get-GitBlobSha256 {
+    param([string] $Revision, [string] $Path)
+
+    $repoPath = ConvertTo-RepoPath $Path
+    $previousErrorActionPreference = $ErrorActionPreference
+    $ErrorActionPreference = "Continue"
+    & git cat-file -e "$Revision`:$repoPath" 2>$null
+    $exists = $LASTEXITCODE -eq 0
+    $ErrorActionPreference = $previousErrorActionPreference
+    if (-not $exists) {
+        throw "Git blob not found for hashing: $Revision`:$repoPath"
+    }
+
+    $spec = "$Revision`:$repoPath"
+    $quotedSpec = "'" + ($spec -replace "'", "'\''") + "'"
+    $digestOutput = @(bash -lc "git cat-file blob $quotedSpec | sha256sum")
+    if ($LASTEXITCODE -ne 0 -or $digestOutput.Count -eq 0) {
+        throw "Failed to hash git blob: $spec"
+    }
+    return ([string]$digestOutput[0]).Split(" ")[0].Trim().ToLowerInvariant()
+}
+
 function Assert-CleanWorktree {
     $status = @(& git status --porcelain)
     if ($status) {
@@ -351,7 +373,7 @@ try {
         schemaVersion = "threshold.petclinic.batch-receipt.v0.1"
         batchId = $batchId
         leaseId = [string]$state.leaseId
-        leaseDigest = (Get-FileSha256 -Path $LeasePath).ToLowerInvariant()
+        leaseDigest = Get-GitBlobSha256 -Revision "HEAD" -Path $LeasePath
         branch = [string]$state.branch
         baseHead = $baseHead
         sourceCommit = $sourceCommit
@@ -394,7 +416,13 @@ try {
     $state.remainingBudget.commits = $remainingCommits
     $state.lastReceipt = ConvertTo-RepoPath $receiptPath
     if ($remainingCandidates -eq 0 -or $remainingCommits -eq 0) {
-        $state.terminalState = "budget_exhausted"
+        $state.terminalState = "budget_exhausted_verified"
+        if ($state.PSObject.Properties["terminalReason"]) {
+            $state.terminalReason = "remaining candidate or commit budget is exhausted after batch validation passed"
+        }
+        else {
+            $state | Add-Member -NotePropertyName "terminalReason" -NotePropertyValue "remaining candidate or commit budget is exhausted after batch validation passed"
+        }
     }
     $state.updatedAt = (Get-Date).ToUniversalTime().ToString("o")
     $state | ConvertTo-Json -Depth 10 | Set-Content $StatePath
