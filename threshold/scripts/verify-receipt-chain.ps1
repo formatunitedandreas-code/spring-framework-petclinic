@@ -29,6 +29,16 @@ function Get-FileSha256Lower {
     return ((Get-FileHash -Algorithm SHA256 -LiteralPath $Path).Hash).ToLowerInvariant()
 }
 
+function Get-ReceiptGitBlobDigestLower {
+    param([string] $Path)
+    $repoPath = ConvertTo-RepoRelativePath $Path
+    $blobDigest = (& git rev-parse "HEAD:$repoPath" 2>$null)
+    if ($LASTEXITCODE -eq 0 -and -not [string]::IsNullOrWhiteSpace([string]$blobDigest)) {
+        return ([string]$blobDigest).Trim().ToLowerInvariant()
+    }
+    return Get-FileSha256Lower -Path $Path
+}
+
 function Get-StringSha256Lower {
     param([string] $Text)
     $bytes = [System.Text.Encoding]::UTF8.GetBytes($Text)
@@ -55,12 +65,12 @@ $previous = "".PadLeft(64, "0")
 $entries = New-Object System.Collections.Generic.List[object]
 foreach ($receiptFile in $receiptFiles) {
     $path = [string](ConvertTo-RepoRelativePath $receiptFile.FullName)
-    $digest = [string](Get-FileSha256Lower -Path $receiptFile.FullName)
+    $digest = [string](Get-ReceiptGitBlobDigestLower -Path $receiptFile.FullName)
     $linkInput = [string]::Concat($previous, "|", $path, "|", $digest)
     $link = Get-StringSha256Lower -Text $linkInput
     $entries.Add([ordered]@{
         path = $path
-        sha256 = $digest
+        receiptGitBlobDigest = $digest
         previousLink = $previous
         chainLink = $link
     })
@@ -73,7 +83,7 @@ $chain = [ordered]@{
     schemaVersion = "threshold.petclinic.receipt-chain.v0.1"
     generatedAt = "deterministic-from-current-repo-state"
     gitHead = $head
-    algorithm = "sha256(previousLink|path|receiptSha256)"
+    algorithm = "sha256(previousLink|path|receiptGitBlobDigest)"
     receiptCount = $entryArray.Count
     root = $previous
     entries = $entryArray
