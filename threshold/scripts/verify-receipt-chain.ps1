@@ -7,6 +7,12 @@ param(
 
 Set-StrictMode -Version Latest
 $ErrorActionPreference = "Stop"
+$ReceiptTreeish = if (-not [string]::IsNullOrWhiteSpace($env:THRESHOLD_RECEIPT_TREEISH)) {
+    [string]$env:THRESHOLD_RECEIPT_TREEISH
+}
+else {
+    (& git rev-parse HEAD).Trim()
+}
 
 function ConvertTo-RepoPath {
     param([string] $Path)
@@ -32,7 +38,7 @@ function Get-FileSha256Lower {
 function Get-ReceiptGitBlobDigestLower {
     param([string] $Path)
     $repoPath = ConvertTo-RepoRelativePath $Path
-    $blobDigest = (& git rev-parse "HEAD:$repoPath" 2>$null)
+    $blobDigest = (& git rev-parse "$($script:ReceiptTreeish):$repoPath" 2>$null)
     if ($LASTEXITCODE -eq 0 -and -not [string]::IsNullOrWhiteSpace([string]$blobDigest)) {
         return ([string]$blobDigest).Trim().ToLowerInvariant()
     }
@@ -77,12 +83,11 @@ foreach ($receiptFile in $receiptFiles) {
     $previous = $link
 }
 
-$head = (& git rev-parse HEAD).Trim()
 $entryArray = @($entries.ToArray())
 $chain = [ordered]@{
     schemaVersion = "threshold.petclinic.receipt-chain.v0.1"
     generatedAt = "deterministic-from-current-repo-state"
-    gitHead = $head
+    gitHead = $ReceiptTreeish
     algorithm = "sha256(previousLink|path|receiptGitBlobDigest)"
     receiptCount = $entryArray.Count
     root = $previous

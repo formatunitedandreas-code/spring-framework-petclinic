@@ -268,6 +268,8 @@ jobs:
           Write-Host "Threshold governance passed"
 
       - name: Verify Threshold capability and fidelity knowledge graphs
+        env:
+          THRESHOLD_RECEIPT_TREEISH: ${{ github.event.pull_request.head.sha }}
         shell: pwsh
         run: |
           $ErrorActionPreference = "Stop"
