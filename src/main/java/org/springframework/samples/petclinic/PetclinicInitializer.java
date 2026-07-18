@@ -49,7 +49,8 @@ public class PetclinicInitializer extends AbstractDispatcherServletInitializer {
      * When using Spring Data JPA, use: spring-data-jpa
      * <p/>
      * <p>
-     * You also may use the -Dspring.profiles.active=jdbc VM options to change
+     * You also may use the -Dspring.profiles.active=jdbc VM
+     * options to change
      * default jpa Spring profile.
      */
     private static final String SPRING_PROFILE = "jpa";
