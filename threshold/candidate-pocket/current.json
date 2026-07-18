@@ -2,8 +2,8 @@
     "schemaVersion":  "threshold.petclinic.candidate-pocket.v0.2",
     "leaseName":  "owned-autonomous-refactor-branch-wave-v0_automation",
     "branch":  "threshold-governed-refactor-demo-156",
-    "generatedFromHead":  "31b646cbc91aa14c8adbe15d4694da46928227d4",
-    "generatedAt":  "2026-07-18T05:08:59.8846300Z",
+    "generatedFromHead":  "3f80e61b2e33d59562be62a28c0c811b1e1705c9",
+    "generatedAt":  "2026-07-18T05:09:11.9812963Z",
     "discovery":  {
                       "method":  "static-heuristic-scan",
                       "sourceRoot":  "src/main/java/org/springframework/samples/petclinic",
@@ -35,11 +35,11 @@
                                       "member lexical"
                                   ],
                       "thresholds":  {
-                                         "longLineThreshold":  80,
-                                         "commentWrapThreshold":  84,
-                                         "springDataQueryThreshold":  50,
-                                         "repositoryMethodLengthThreshold":  4,
-                                         "utilityMethodLengthThreshold":  4
+                                         "longLineThreshold":  74,
+                                         "commentWrapThreshold":  76,
+                                         "springDataQueryThreshold":  44,
+                                         "repositoryMethodLengthThreshold":  3,
+                                         "utilityMethodLengthThreshold":  3
                                      },
                       "allowedCandidateTypes":  [
                                                     "private_helper_extraction_for_readability",
@@ -63,10 +63,746 @@
                                                 ]
                   },
     "candidates":  [
-
+                       {
+                           "tieBreak":  {
+                                            "layerScore":  7,
+                                            "path":  "src/main/java/org/springframework/samples/petclinic/repository/jdbc/JdbcOwnerRepositoryImpl.java",
+                                            "member":  "line-172"
+                                        },
+                           "gate":  {
+                                        "required":  true,
+                                        "approved":  true,
+                                        "gatePath":  "threshold/gates/auto-patchable-candidate-classes.json"
+                                    },
+                           "score":  97,
+                           "autoPatchable":  true,
+                           "member":  "line-172",
+                           "reviewOnly":  false,
+                           "executionMode":  "auto_patchable",
+                           "file":  "src/main/java/org/springframework/samples/petclinic/repository/jdbc/JdbcOwnerRepositoryImpl.java",
+                           "candidateId":  "src-main-java-org-springframework-samples-petclinic-repository-jdbc-jdbcownerrepositoryimpl-java-comment-wrap-cleanup-line-172",
+                           "expectedDiffSummary":  "Wrap one long Javadoc comment line without changing source behavior.",
+                           "candidateClass":  "comment_wrap_cleanup",
+                           "commentWrapSplitPointFound":  true,
+                           "estimatedChangedLines":  2
+                       },
+                       {
+                           "tieBreak":  {
+                                            "layerScore":  7,
+                                            "path":  "src/main/java/org/springframework/samples/petclinic/repository/jdbc/JdbcOwnerRepositoryImpl.java",
+                                            "member":  "line-37"
+                                        },
+                           "gate":  {
+                                        "required":  true,
+                                        "approved":  true,
+                                        "gatePath":  "threshold/gates/auto-patchable-candidate-classes.json"
+                                    },
+                           "score":  97,
+                           "autoPatchable":  true,
+                           "member":  "line-37",
+                           "reviewOnly":  false,
+                           "executionMode":  "auto_patchable",
+                           "file":  "src/main/java/org/springframework/samples/petclinic/repository/jdbc/JdbcOwnerRepositoryImpl.java",
+                           "candidateId":  "src-main-java-org-springframework-samples-petclinic-repository-jdbc-jdbcownerrepositoryimpl-java-comment-wrap-cleanup-line-37",
+                           "expectedDiffSummary":  "Wrap one long Javadoc comment line without changing source behavior.",
+                           "candidateClass":  "comment_wrap_cleanup",
+                           "commentWrapSplitPointFound":  true,
+                           "estimatedChangedLines":  2
+                       },
+                       {
+                           "tieBreak":  {
+                                            "layerScore":  7,
+                                            "path":  "src/main/java/org/springframework/samples/petclinic/repository/jdbc/JdbcOwnerRepositoryImpl.java",
+                                            "member":  "line-95"
+                                        },
+                           "gate":  {
+                                        "required":  true,
+                                        "approved":  true,
+                                        "gatePath":  "threshold/gates/auto-patchable-candidate-classes.json"
+                                    },
+                           "score":  97,
+                           "autoPatchable":  true,
+                           "member":  "line-95",
+                           "reviewOnly":  false,
+                           "executionMode":  "auto_patchable",
+                           "file":  "src/main/java/org/springframework/samples/petclinic/repository/jdbc/JdbcOwnerRepositoryImpl.java",
+                           "candidateId":  "src-main-java-org-springframework-samples-petclinic-repository-jdbc-jdbcownerrepositoryimpl-java-comment-wrap-cleanup-line-95",
+                           "expectedDiffSummary":  "Wrap one long Javadoc comment line without changing source behavior.",
+                           "candidateClass":  "comment_wrap_cleanup",
+                           "commentWrapSplitPointFound":  true,
+                           "estimatedChangedLines":  2
+                       },
+                       {
+                           "tieBreak":  {
+                                            "layerScore":  7,
+                                            "path":  "src/main/java/org/springframework/samples/petclinic/repository/jdbc/JdbcPetRowMapper.java",
+                                            "member":  "line-25"
+                                        },
+                           "gate":  {
+                                        "required":  true,
+                                        "approved":  true,
+                                        "gatePath":  "threshold/gates/auto-patchable-candidate-classes.json"
+                                    },
+                           "score":  97,
+                           "autoPatchable":  true,
+                           "member":  "line-25",
+                           "reviewOnly":  false,
+                           "executionMode":  "auto_patchable",
+                           "file":  "src/main/java/org/springframework/samples/petclinic/repository/jdbc/JdbcPetRowMapper.java",
+                           "candidateId":  "src-main-java-org-springframework-samples-petclinic-repository-jdbc-jdbcpetrowmapper-java-comment-wrap-cleanup-line-25",
+                           "expectedDiffSummary":  "Wrap one long Javadoc comment line without changing source behavior.",
+                           "candidateClass":  "comment_wrap_cleanup",
+                           "commentWrapSplitPointFound":  true,
+                           "estimatedChangedLines":  2
+                       },
+                       {
+                           "tieBreak":  {
+                                            "layerScore":  7,
+                                            "path":  "src/main/java/org/springframework/samples/petclinic/repository/jdbc/JdbcVetRepositoryImpl.java",
+                                            "member":  "line-31"
+                                        },
+                           "gate":  {
+                                        "required":  true,
+                                        "approved":  true,
+                                        "gatePath":  "threshold/gates/auto-patchable-candidate-classes.json"
+                                    },
+                           "score":  97,
+                           "autoPatchable":  true,
+                           "member":  "line-31",
+                           "reviewOnly":  false,
+                           "executionMode":  "auto_patchable",
+                           "file":  "src/main/java/org/springframework/samples/petclinic/repository/jdbc/JdbcVetRepositoryImpl.java",
+                           "candidateId":  "src-main-java-org-springframework-samples-petclinic-repository-jdbc-jdbcvetrepositoryimpl-java-comment-wrap-cleanup-line-31",
+                           "expectedDiffSummary":  "Wrap one long Javadoc comment line without changing source behavior.",
+                           "candidateClass":  "comment_wrap_cleanup",
+                           "commentWrapSplitPointFound":  true,
+                           "estimatedChangedLines":  2
+                       },
+                       {
+                           "tieBreak":  {
+                                            "layerScore":  7,
+                                            "path":  "src/main/java/org/springframework/samples/petclinic/repository/jdbc/JdbcVisitRepositoryImpl.java",
+                                            "member":  "line-29"
+                                        },
+                           "gate":  {
+                                        "required":  true,
+                                        "approved":  true,
+                                        "gatePath":  "threshold/gates/auto-patchable-candidate-classes.json"
+                                    },
+                           "score":  97,
+                           "autoPatchable":  true,
+                           "member":  "line-29",
+                           "reviewOnly":  false,
+                           "executionMode":  "auto_patchable",
+                           "file":  "src/main/java/org/springframework/samples/petclinic/repository/jdbc/JdbcVisitRepositoryImpl.java",
+                           "candidateId":  "src-main-java-org-springframework-samples-petclinic-repository-jdbc-jdbcvisitrepositoryimpl-java-comment-wrap-cleanup-line-29",
+                           "expectedDiffSummary":  "Wrap one long Javadoc comment line without changing source behavior.",
+                           "candidateClass":  "comment_wrap_cleanup",
+                           "commentWrapSplitPointFound":  true,
+                           "estimatedChangedLines":  2
+                       },
+                       {
+                           "tieBreak":  {
+                                            "layerScore":  7,
+                                            "path":  "src/main/java/org/springframework/samples/petclinic/repository/jdbc/JdbcVisitRowMapper.java",
+                                            "member":  "line-27"
+                                        },
+                           "gate":  {
+                                        "required":  true,
+                                        "approved":  true,
+                                        "gatePath":  "threshold/gates/auto-patchable-candidate-classes.json"
+                                    },
+                           "score":  97,
+                           "autoPatchable":  true,
+                           "member":  "line-27",
+                           "reviewOnly":  false,
+                           "executionMode":  "auto_patchable",
+                           "file":  "src/main/java/org/springframework/samples/petclinic/repository/jdbc/JdbcVisitRowMapper.java",
+                           "candidateId":  "src-main-java-org-springframework-samples-petclinic-repository-jdbc-jdbcvisitrowmapper-java-comment-wrap-cleanup-line-27",
+                           "expectedDiffSummary":  "Wrap one long Javadoc comment line without changing source behavior.",
+                           "candidateClass":  "comment_wrap_cleanup",
+                           "commentWrapSplitPointFound":  true,
+                           "estimatedChangedLines":  2
+                       },
+                       {
+                           "tieBreak":  {
+                                            "layerScore":  7,
+                                            "path":  "src/main/java/org/springframework/samples/petclinic/repository/jdbc/OneToManyResultSetExtractor.java",
+                                            "member":  "line-30"
+                                        },
+                           "gate":  {
+                                        "required":  true,
+                                        "approved":  true,
+                                        "gatePath":  "threshold/gates/auto-patchable-candidate-classes.json"
+                                    },
+                           "score":  97,
+                           "autoPatchable":  true,
+                           "member":  "line-30",
+                           "reviewOnly":  false,
+                           "executionMode":  "auto_patchable",
+                           "file":  "src/main/java/org/springframework/samples/petclinic/repository/jdbc/OneToManyResultSetExtractor.java",
+                           "candidateId":  "src-main-java-org-springframework-samples-petclinic-repository-jdbc-onetomanyresultsetextractor-java-comment-wrap-cleanup-line-30",
+                           "expectedDiffSummary":  "Wrap one long Javadoc comment line without changing source behavior.",
+                           "candidateClass":  "comment_wrap_cleanup",
+                           "commentWrapSplitPointFound":  true,
+                           "estimatedChangedLines":  2
+                       },
+                       {
+                           "tieBreak":  {
+                                            "layerScore":  7,
+                                            "path":  "src/main/java/org/springframework/samples/petclinic/repository/jdbc/OneToManyResultSetExtractor.java",
+                                            "member":  "line-33"
+                                        },
+                           "gate":  {
+                                        "required":  true,
+                                        "approved":  true,
+                                        "gatePath":  "threshold/gates/auto-patchable-candidate-classes.json"
+                                    },
+                           "score":  97,
+                           "autoPatchable":  true,
+                           "member":  "line-33",
+                           "reviewOnly":  false,
+                           "executionMode":  "auto_patchable",
+                           "file":  "src/main/java/org/springframework/samples/petclinic/repository/jdbc/OneToManyResultSetExtractor.java",
+                           "candidateId":  "src-main-java-org-springframework-samples-petclinic-repository-jdbc-onetomanyresultsetextractor-java-comment-wrap-cleanup-line-33",
+                           "expectedDiffSummary":  "Wrap one long Javadoc comment line without changing source behavior.",
+                           "candidateClass":  "comment_wrap_cleanup",
+                           "commentWrapSplitPointFound":  true,
+                           "estimatedChangedLines":  2
+                       },
+                       {
+                           "tieBreak":  {
+                                            "layerScore":  7,
+                                            "path":  "src/main/java/org/springframework/samples/petclinic/repository/jdbc/OneToManyResultSetExtractor.java",
+                                            "member":  "line-42"
+                                        },
+                           "gate":  {
+                                        "required":  true,
+                                        "approved":  true,
+                                        "gatePath":  "threshold/gates/auto-patchable-candidate-classes.json"
+                                    },
+                           "score":  97,
+                           "autoPatchable":  true,
+                           "member":  "line-42",
+                           "reviewOnly":  false,
+                           "executionMode":  "auto_patchable",
+                           "file":  "src/main/java/org/springframework/samples/petclinic/repository/jdbc/OneToManyResultSetExtractor.java",
+                           "candidateId":  "src-main-java-org-springframework-samples-petclinic-repository-jdbc-onetomanyresultsetextractor-java-comment-wrap-cleanup-line-42",
+                           "expectedDiffSummary":  "Wrap one long Javadoc comment line without changing source behavior.",
+                           "candidateClass":  "comment_wrap_cleanup",
+                           "commentWrapSplitPointFound":  true,
+                           "estimatedChangedLines":  2
+                       },
+                       {
+                           "tieBreak":  {
+                                            "layerScore":  7,
+                                            "path":  "src/main/java/org/springframework/samples/petclinic/repository/jdbc/OneToManyResultSetExtractor.java",
+                                            "member":  "line-45"
+                                        },
+                           "gate":  {
+                                        "required":  true,
+                                        "approved":  true,
+                                        "gatePath":  "threshold/gates/auto-patchable-candidate-classes.json"
+                                    },
+                           "score":  97,
+                           "autoPatchable":  true,
+                           "member":  "line-45",
+                           "reviewOnly":  false,
+                           "executionMode":  "auto_patchable",
+                           "file":  "src/main/java/org/springframework/samples/petclinic/repository/jdbc/OneToManyResultSetExtractor.java",
+                           "candidateId":  "src-main-java-org-springframework-samples-petclinic-repository-jdbc-onetomanyresultsetextractor-java-comment-wrap-cleanup-line-45",
+                           "expectedDiffSummary":  "Wrap one long Javadoc comment line without changing source behavior.",
+                           "candidateClass":  "comment_wrap_cleanup",
+                           "commentWrapSplitPointFound":  true,
+                           "estimatedChangedLines":  2
+                       },
+                       {
+                           "tieBreak":  {
+                                            "layerScore":  7,
+                                            "path":  "src/main/java/org/springframework/samples/petclinic/repository/jdbc/OneToManyResultSetExtractor.java",
+                                            "member":  "line-50"
+                                        },
+                           "gate":  {
+                                        "required":  true,
+                                        "approved":  true,
+                                        "gatePath":  "threshold/gates/auto-patchable-candidate-classes.json"
+                                    },
+                           "score":  97,
+                           "autoPatchable":  true,
+                           "member":  "line-50",
+                           "reviewOnly":  false,
+                           "executionMode":  "auto_patchable",
+                           "file":  "src/main/java/org/springframework/samples/petclinic/repository/jdbc/OneToManyResultSetExtractor.java",
+                           "candidateId":  "src-main-java-org-springframework-samples-petclinic-repository-jdbc-onetomanyresultsetextractor-java-comment-wrap-cleanup-line-50",
+                           "expectedDiffSummary":  "Wrap one long Javadoc comment line without changing source behavior.",
+                           "candidateClass":  "comment_wrap_cleanup",
+                           "commentWrapSplitPointFound":  true,
+                           "estimatedChangedLines":  2
+                       },
+                       {
+                           "tieBreak":  {
+                                            "layerScore":  7,
+                                            "path":  "src/main/java/org/springframework/samples/petclinic/repository/jdbc/OneToManyResultSetExtractor.java",
+                                            "member":  "line-80"
+                                        },
+                           "gate":  {
+                                        "required":  true,
+                                        "approved":  true,
+                                        "gatePath":  "threshold/gates/auto-patchable-candidate-classes.json"
+                                    },
+                           "score":  97,
+                           "autoPatchable":  true,
+                           "member":  "line-80",
+                           "reviewOnly":  false,
+                           "executionMode":  "auto_patchable",
+                           "file":  "src/main/java/org/springframework/samples/petclinic/repository/jdbc/OneToManyResultSetExtractor.java",
+                           "candidateId":  "src-main-java-org-springframework-samples-petclinic-repository-jdbc-onetomanyresultsetextractor-java-comment-wrap-cleanup-line-80",
+                           "expectedDiffSummary":  "Wrap one long Javadoc comment line without changing source behavior.",
+                           "candidateClass":  "comment_wrap_cleanup",
+                           "commentWrapSplitPointFound":  true,
+                           "estimatedChangedLines":  2
+                       },
+                       {
+                           "tieBreak":  {
+                                            "layerScore":  7,
+                                            "path":  "src/main/java/org/springframework/samples/petclinic/repository/jdbc/OneToManyResultSetExtractor.java",
+                                            "member":  "line-94"
+                                        },
+                           "gate":  {
+                                        "required":  true,
+                                        "approved":  true,
+                                        "gatePath":  "threshold/gates/auto-patchable-candidate-classes.json"
+                                    },
+                           "score":  97,
+                           "autoPatchable":  true,
+                           "member":  "line-94",
+                           "reviewOnly":  false,
+                           "executionMode":  "auto_patchable",
+                           "file":  "src/main/java/org/springframework/samples/petclinic/repository/jdbc/OneToManyResultSetExtractor.java",
+                           "candidateId":  "src-main-java-org-springframework-samples-petclinic-repository-jdbc-onetomanyresultsetextractor-java-comment-wrap-cleanup-line-94",
+                           "expectedDiffSummary":  "Wrap one long Javadoc comment line without changing source behavior.",
+                           "candidateClass":  "comment_wrap_cleanup",
+                           "commentWrapSplitPointFound":  true,
+                           "estimatedChangedLines":  2
+                       },
+                       {
+                           "tieBreak":  {
+                                            "layerScore":  7,
+                                            "path":  "src/main/java/org/springframework/samples/petclinic/repository/jpa/JpaVisitRepositoryImpl.java",
+                                            "member":  "line-28"
+                                        },
+                           "gate":  {
+                                        "required":  true,
+                                        "approved":  true,
+                                        "gatePath":  "threshold/gates/auto-patchable-candidate-classes.json"
+                                    },
+                           "score":  97,
+                           "autoPatchable":  true,
+                           "member":  "line-28",
+                           "reviewOnly":  false,
+                           "executionMode":  "auto_patchable",
+                           "file":  "src/main/java/org/springframework/samples/petclinic/repository/jpa/JpaVisitRepositoryImpl.java",
+                           "candidateId":  "src-main-java-org-springframework-samples-petclinic-repository-jpa-jpavisitrepositoryimpl-java-comment-wrap-cleanup-line-28",
+                           "expectedDiffSummary":  "Wrap one long Javadoc comment line without changing source behavior.",
+                           "candidateClass":  "comment_wrap_cleanup",
+                           "commentWrapSplitPointFound":  true,
+                           "estimatedChangedLines":  2
+                       },
+                       {
+                           "tieBreak":  {
+                                            "layerScore":  7,
+                                            "path":  "src/main/java/org/springframework/samples/petclinic/repository/OwnerRepository.java",
+                                            "member":  "line-27"
+                                        },
+                           "gate":  {
+                                        "required":  true,
+                                        "approved":  true,
+                                        "gatePath":  "threshold/gates/auto-patchable-candidate-classes.json"
+                                    },
+                           "score":  97,
+                           "autoPatchable":  true,
+                           "member":  "line-27",
+                           "reviewOnly":  false,
+                           "executionMode":  "auto_patchable",
+                           "file":  "src/main/java/org/springframework/samples/petclinic/repository/OwnerRepository.java",
+                           "candidateId":  "src-main-java-org-springframework-samples-petclinic-repository-ownerrepository-java-comment-wrap-cleanup-line-27",
+                           "expectedDiffSummary":  "Wrap one long Javadoc comment line without changing source behavior.",
+                           "candidateClass":  "comment_wrap_cleanup",
+                           "commentWrapSplitPointFound":  true,
+                           "estimatedChangedLines":  2
+                       },
+                       {
+                           "tieBreak":  {
+                                            "layerScore":  7,
+                                            "path":  "src/main/java/org/springframework/samples/petclinic/repository/OwnerRepository.java",
+                                            "member":  "line-39"
+                                        },
+                           "gate":  {
+                                        "required":  true,
+                                        "approved":  true,
+                                        "gatePath":  "threshold/gates/auto-patchable-candidate-classes.json"
+                                    },
+                           "score":  97,
+                           "autoPatchable":  true,
+                           "member":  "line-39",
+                           "reviewOnly":  false,
+                           "executionMode":  "auto_patchable",
+                           "file":  "src/main/java/org/springframework/samples/petclinic/repository/OwnerRepository.java",
+                           "candidateId":  "src-main-java-org-springframework-samples-petclinic-repository-ownerrepository-java-comment-wrap-cleanup-line-39",
+                           "expectedDiffSummary":  "Wrap one long Javadoc comment line without changing source behavior.",
+                           "candidateClass":  "comment_wrap_cleanup",
+                           "commentWrapSplitPointFound":  true,
+                           "estimatedChangedLines":  2
+                       },
+                       {
+                           "tieBreak":  {
+                                            "layerScore":  7,
+                                            "path":  "src/main/java/org/springframework/samples/petclinic/repository/PetRepository.java",
+                                            "member":  "line-28"
+                                        },
+                           "gate":  {
+                                        "required":  true,
+                                        "approved":  true,
+                                        "gatePath":  "threshold/gates/auto-patchable-candidate-classes.json"
+                                    },
+                           "score":  97,
+                           "autoPatchable":  true,
+                           "member":  "line-28",
+                           "reviewOnly":  false,
+                           "executionMode":  "auto_patchable",
+                           "file":  "src/main/java/org/springframework/samples/petclinic/repository/PetRepository.java",
+                           "candidateId":  "src-main-java-org-springframework-samples-petclinic-repository-petrepository-java-comment-wrap-cleanup-line-28",
+                           "expectedDiffSummary":  "Wrap one long Javadoc comment line without changing source behavior.",
+                           "candidateClass":  "comment_wrap_cleanup",
+                           "commentWrapSplitPointFound":  true,
+                           "estimatedChangedLines":  2
+                       },
+                       {
+                           "tieBreak":  {
+                                            "layerScore":  7,
+                                            "path":  "src/main/java/org/springframework/samples/petclinic/repository/PetRepository.java",
+                                            "member":  "line-56"
+                                        },
+                           "gate":  {
+                                        "required":  true,
+                                        "approved":  true,
+                                        "gatePath":  "threshold/gates/auto-patchable-candidate-classes.json"
+                                    },
+                           "score":  97,
+                           "autoPatchable":  true,
+                           "member":  "line-56",
+                           "reviewOnly":  false,
+                           "executionMode":  "auto_patchable",
+                           "file":  "src/main/java/org/springframework/samples/petclinic/repository/PetRepository.java",
+                           "candidateId":  "src-main-java-org-springframework-samples-petclinic-repository-petrepository-java-comment-wrap-cleanup-line-56",
+                           "expectedDiffSummary":  "Wrap one long Javadoc comment line without changing source behavior.",
+                           "candidateClass":  "comment_wrap_cleanup",
+                           "commentWrapSplitPointFound":  true,
+                           "estimatedChangedLines":  2
+                       },
+                       {
+                           "tieBreak":  {
+                                            "layerScore":  7,
+                                            "path":  "src/main/java/org/springframework/samples/petclinic/repository/VetRepository.java",
+                                            "member":  "line-26"
+                                        },
+                           "gate":  {
+                                        "required":  true,
+                                        "approved":  true,
+                                        "gatePath":  "threshold/gates/auto-patchable-candidate-classes.json"
+                                    },
+                           "score":  97,
+                           "autoPatchable":  true,
+                           "member":  "line-26",
+                           "reviewOnly":  false,
+                           "executionMode":  "auto_patchable",
+                           "file":  "src/main/java/org/springframework/samples/petclinic/repository/VetRepository.java",
+                           "candidateId":  "src-main-java-org-springframework-samples-petclinic-repository-vetrepository-java-comment-wrap-cleanup-line-26",
+                           "expectedDiffSummary":  "Wrap one long Javadoc comment line without changing source behavior.",
+                           "candidateClass":  "comment_wrap_cleanup",
+                           "commentWrapSplitPointFound":  true,
+                           "estimatedChangedLines":  2
+                       },
+                       {
+                           "tieBreak":  {
+                                            "layerScore":  7,
+                                            "path":  "src/main/java/org/springframework/samples/petclinic/repository/VisitRepository.java",
+                                            "member":  "line-27"
+                                        },
+                           "gate":  {
+                                        "required":  true,
+                                        "approved":  true,
+                                        "gatePath":  "threshold/gates/auto-patchable-candidate-classes.json"
+                                    },
+                           "score":  97,
+                           "autoPatchable":  true,
+                           "member":  "line-27",
+                           "reviewOnly":  false,
+                           "executionMode":  "auto_patchable",
+                           "file":  "src/main/java/org/springframework/samples/petclinic/repository/VisitRepository.java",
+                           "candidateId":  "src-main-java-org-springframework-samples-petclinic-repository-visitrepository-java-comment-wrap-cleanup-line-27",
+                           "expectedDiffSummary":  "Wrap one long Javadoc comment line without changing source behavior.",
+                           "candidateClass":  "comment_wrap_cleanup",
+                           "commentWrapSplitPointFound":  true,
+                           "estimatedChangedLines":  2
+                       },
+                       {
+                           "tieBreak":  {
+                                            "layerScore":  7,
+                                            "path":  "src/main/java/org/springframework/samples/petclinic/repository/VisitRepository.java",
+                                            "member":  "line-39"
+                                        },
+                           "gate":  {
+                                        "required":  true,
+                                        "approved":  true,
+                                        "gatePath":  "threshold/gates/auto-patchable-candidate-classes.json"
+                                    },
+                           "score":  97,
+                           "autoPatchable":  true,
+                           "member":  "line-39",
+                           "reviewOnly":  false,
+                           "executionMode":  "auto_patchable",
+                           "file":  "src/main/java/org/springframework/samples/petclinic/repository/VisitRepository.java",
+                           "candidateId":  "src-main-java-org-springframework-samples-petclinic-repository-visitrepository-java-comment-wrap-cleanup-line-39",
+                           "expectedDiffSummary":  "Wrap one long Javadoc comment line without changing source behavior.",
+                           "candidateClass":  "comment_wrap_cleanup",
+                           "commentWrapSplitPointFound":  true,
+                           "estimatedChangedLines":  2
+                       },
+                       {
+                           "tieBreak":  {
+                                            "layerScore":  7,
+                                            "path":  "src/main/java/org/springframework/samples/petclinic/repository/jpa/JpaOwnerRepositoryImpl.java",
+                                            "member":  "line-70"
+                                        },
+                           "gate":  {
+                                        "required":  true,
+                                        "approved":  true,
+                                        "gatePath":  "threshold/gates/auto-patchable-candidate-classes.json"
+                                    },
+                           "score":  97,
+                           "autoPatchable":  true,
+                           "member":  "line-70",
+                           "reviewOnly":  false,
+                           "executionMode":  "auto_patchable",
+                           "file":  "src/main/java/org/springframework/samples/petclinic/repository/jpa/JpaOwnerRepositoryImpl.java",
+                           "candidateId":  "src-main-java-org-springframework-samples-petclinic-repository-jpa-jpaownerrepositoryimpl-java-line-comment-wrap-cleanup-line-70",
+                           "expectedDiffSummary":  "Wrap one long line comment without changing source behavior.",
+                           "candidateClass":  "line_comment_wrap_cleanup",
+                           "commentWrapSplitPointFound":  true,
+                           "estimatedChangedLines":  2
+                       },
+                       {
+                           "tieBreak":  {
+                                            "layerScore":  7,
+                                            "path":  "src/main/java/org/springframework/samples/petclinic/repository/jpa/JpaOwnerRepositoryImpl.java",
+                                            "member":  "line-82"
+                                        },
+                           "gate":  {
+                                        "required":  true,
+                                        "approved":  true,
+                                        "gatePath":  "threshold/gates/auto-patchable-candidate-classes.json"
+                                    },
+                           "score":  97,
+                           "autoPatchable":  true,
+                           "member":  "line-82",
+                           "reviewOnly":  false,
+                           "executionMode":  "auto_patchable",
+                           "file":  "src/main/java/org/springframework/samples/petclinic/repository/jpa/JpaOwnerRepositoryImpl.java",
+                           "candidateId":  "src-main-java-org-springframework-samples-petclinic-repository-jpa-jpaownerrepositoryimpl-java-line-comment-wrap-cleanup-line-82",
+                           "expectedDiffSummary":  "Wrap one long line comment without changing source behavior.",
+                           "candidateClass":  "line_comment_wrap_cleanup",
+                           "commentWrapSplitPointFound":  true,
+                           "estimatedChangedLines":  2
+                       },
+                       {
+                           "candidateClass":  "utility_readability_cleanup",
+                           "member":  "recordInvocation",
+                           "utilityPattern":  "synchronized_helper",
+                           "gate":  {
+                                        "required":  true,
+                                        "approved":  true,
+                                        "gatePath":  "threshold/gates/auto-patchable-candidate-classes.json"
+                                    },
+                           "estimatedChangedLines":  4,
+                           "reviewOnly":  true,
+                           "tieBreak":  {
+                                            "layerScore":  5,
+                                            "path":  "src/main/java/org/springframework/samples/petclinic/util/CallMonitoringAspect.java",
+                                            "member":  "recordInvocation"
+                                        },
+                           "score":  97,
+                           "helperName":  "recordInvocation",
+                           "expectedDiffSummary":  "Extract utility control-flow or instrumentation concern from \u0027recordInvocation\u0027 into private helper(s).",
+                           "file":  "src/main/java/org/springframework/samples/petclinic/util/CallMonitoringAspect.java",
+                           "autoPatchable":  false,
+                           "candidateId":  "src-main-java-org-springframework-samples-petclinic-util-callmonitoringaspect-java-utility-readability-cleanup-recordinvocation",
+                           "executionMode":  "review_only"
+                       },
+                       {
+                           "tieBreak":  {
+                                            "layerScore":  6,
+                                            "path":  "src/main/java/org/springframework/samples/petclinic/model/Owner.java",
+                                            "member":  "line-120"
+                                        },
+                           "gate":  {
+                                        "required":  true,
+                                        "approved":  true,
+                                        "gatePath":  "threshold/gates/auto-patchable-candidate-classes.json"
+                                    },
+                           "score":  96,
+                           "autoPatchable":  true,
+                           "member":  "line-120",
+                           "reviewOnly":  false,
+                           "executionMode":  "auto_patchable",
+                           "file":  "src/main/java/org/springframework/samples/petclinic/model/Owner.java",
+                           "candidateId":  "src-main-java-org-springframework-samples-petclinic-model-owner-java-comment-wrap-cleanup-line-120",
+                           "expectedDiffSummary":  "Wrap one long Javadoc comment line without changing source behavior.",
+                           "candidateClass":  "comment_wrap_cleanup",
+                           "commentWrapSplitPointFound":  true,
+                           "estimatedChangedLines":  2
+                       },
+                       {
+                           "tieBreak":  {
+                                            "layerScore":  6,
+                                            "path":  "src/main/java/org/springframework/samples/petclinic/model/Owner.java",
+                                            "member":  "line-130"
+                                        },
+                           "gate":  {
+                                        "required":  true,
+                                        "approved":  true,
+                                        "gatePath":  "threshold/gates/auto-patchable-candidate-classes.json"
+                                    },
+                           "score":  96,
+                           "autoPatchable":  true,
+                           "member":  "line-130",
+                           "reviewOnly":  false,
+                           "executionMode":  "auto_patchable",
+                           "file":  "src/main/java/org/springframework/samples/petclinic/model/Owner.java",
+                           "candidateId":  "src-main-java-org-springframework-samples-petclinic-model-owner-java-comment-wrap-cleanup-line-130",
+                           "expectedDiffSummary":  "Wrap one long Javadoc comment line without changing source behavior.",
+                           "candidateClass":  "comment_wrap_cleanup",
+                           "commentWrapSplitPointFound":  true,
+                           "estimatedChangedLines":  2
+                       },
+                       {
+                           "tieBreak":  {
+                                            "layerScore":  5,
+                                            "path":  "src/main/java/org/springframework/samples/petclinic/util/CallMonitoringAspect.java",
+                                            "member":  "line-32"
+                                        },
+                           "gate":  {
+                                        "required":  true,
+                                        "approved":  true,
+                                        "gatePath":  "threshold/gates/auto-patchable-candidate-classes.json"
+                                    },
+                           "score":  95,
+                           "autoPatchable":  true,
+                           "member":  "line-32",
+                           "reviewOnly":  false,
+                           "executionMode":  "auto_patchable",
+                           "file":  "src/main/java/org/springframework/samples/petclinic/util/CallMonitoringAspect.java",
+                           "candidateId":  "src-main-java-org-springframework-samples-petclinic-util-callmonitoringaspect-java-comment-wrap-cleanup-line-32",
+                           "expectedDiffSummary":  "Wrap one long Javadoc comment line without changing source behavior.",
+                           "candidateClass":  "comment_wrap_cleanup",
+                           "commentWrapSplitPointFound":  true,
+                           "estimatedChangedLines":  2
+                       },
+                       {
+                           "tieBreak":  {
+                                            "layerScore":  5,
+                                            "path":  "src/main/java/org/springframework/samples/petclinic/web/CrashController.java",
+                                            "member":  "line-26"
+                                        },
+                           "gate":  {
+                                        "required":  true,
+                                        "approved":  true,
+                                        "gatePath":  "threshold/gates/auto-patchable-candidate-classes.json"
+                                    },
+                           "score":  95,
+                           "autoPatchable":  true,
+                           "member":  "line-26",
+                           "reviewOnly":  false,
+                           "executionMode":  "auto_patchable",
+                           "file":  "src/main/java/org/springframework/samples/petclinic/web/CrashController.java",
+                           "candidateId":  "src-main-java-org-springframework-samples-petclinic-web-crashcontroller-java-comment-wrap-cleanup-line-26",
+                           "expectedDiffSummary":  "Wrap one long Javadoc comment line without changing source behavior.",
+                           "candidateClass":  "comment_wrap_cleanup",
+                           "commentWrapSplitPointFound":  true,
+                           "estimatedChangedLines":  2
+                       },
+                       {
+                           "tieBreak":  {
+                                            "layerScore":  5,
+                                            "path":  "src/main/java/org/springframework/samples/petclinic/web/PetTypeFormatter.java",
+                                            "member":  "line-29"
+                                        },
+                           "gate":  {
+                                        "required":  true,
+                                        "approved":  true,
+                                        "gatePath":  "threshold/gates/auto-patchable-candidate-classes.json"
+                                    },
+                           "score":  95,
+                           "autoPatchable":  true,
+                           "member":  "line-29",
+                           "reviewOnly":  false,
+                           "executionMode":  "auto_patchable",
+                           "file":  "src/main/java/org/springframework/samples/petclinic/web/PetTypeFormatter.java",
+                           "candidateId":  "src-main-java-org-springframework-samples-petclinic-web-pettypeformatter-java-comment-wrap-cleanup-line-29",
+                           "expectedDiffSummary":  "Wrap one long Javadoc comment line without changing source behavior.",
+                           "candidateClass":  "comment_wrap_cleanup",
+                           "commentWrapSplitPointFound":  true,
+                           "estimatedChangedLines":  2
+                       },
+                       {
+                           "tieBreak":  {
+                                            "layerScore":  5,
+                                            "path":  "src/main/java/org/springframework/samples/petclinic/web/VisitController.java",
+                                            "member":  "line-56"
+                                        },
+                           "gate":  {
+                                        "required":  true,
+                                        "approved":  true,
+                                        "gatePath":  "threshold/gates/auto-patchable-candidate-classes.json"
+                                    },
+                           "score":  95,
+                           "autoPatchable":  true,
+                           "member":  "line-56",
+                           "reviewOnly":  false,
+                           "executionMode":  "auto_patchable",
+                           "file":  "src/main/java/org/springframework/samples/petclinic/web/VisitController.java",
+                           "candidateId":  "src-main-java-org-springframework-samples-petclinic-web-visitcontroller-java-comment-wrap-cleanup-line-56",
+                           "expectedDiffSummary":  "Wrap one long Javadoc comment line without changing source behavior.",
+                           "candidateClass":  "comment_wrap_cleanup",
+                           "commentWrapSplitPointFound":  true,
+                           "estimatedChangedLines":  2
+                       },
+                       {
+                           "tieBreak":  {
+                                            "layerScore":  0,
+                                            "path":  "src/main/java/org/springframework/samples/petclinic/PetclinicInitializer.java",
+                                            "member":  "line-52"
+                                        },
+                           "gate":  {
+                                        "required":  true,
+                                        "approved":  true,
+                                        "gatePath":  "threshold/gates/auto-patchable-candidate-classes.json"
+                                    },
+                           "score":  90,
+                           "autoPatchable":  true,
+                           "member":  "line-52",
+                           "reviewOnly":  false,
+                           "executionMode":  "auto_patchable",
+                           "file":  "src/main/java/org/springframework/samples/petclinic/PetclinicInitializer.java",
+                           "candidateId":  "src-main-java-org-springframework-samples-petclinic-petclinicinitializer-java-comment-wrap-cleanup-line-52",
+                           "expectedDiffSummary":  "Wrap one long Javadoc comment line without changing source behavior.",
+                           "candidateClass":  "comment_wrap_cleanup",
+                           "commentWrapSplitPointFound":  true,
+                           "estimatedChangedLines":  2
+                       }
                    ],
-    "nextRecommendedCandidateId":  null,
-    "nextAutoPatchableCandidateId":  null,
+    "nextRecommendedCandidateId":  "src-main-java-org-springframework-samples-petclinic-repository-jdbc-jdbcownerrepositoryimpl-java-comment-wrap-cleanup-line-172",
+    "nextAutoPatchableCandidateId":  "src-main-java-org-springframework-samples-petclinic-repository-jdbc-jdbcownerrepositoryimpl-java-comment-wrap-cleanup-line-172",
     "nonClaims":  [
                       "candidate pocket is not an implementation claim",
                       "candidate pocket does not claim behavior preservation until slice validation passes",
