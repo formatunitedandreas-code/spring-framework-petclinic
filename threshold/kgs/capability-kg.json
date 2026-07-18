@@ -4,7 +4,7 @@
     "lease":  {
                   "path":  "threshold/leases/current.yaml",
                   "leaseName":  "owned-autonomous-refactor-branch-wave-v0_automation",
-                  "branch":  "threshold-governed-refactor-demo-175"
+                  "branch":  "threshold-governed-refactor-demo-176"
               },
     "nodes":  [
                   {
@@ -967,5 +967,5 @@
                       "to":  "fidelity:utility_readability_cleanup"
                   }
               ],
-    "semanticDigest":  "fb649034fe2744876ada6e30deeb2810c846afe689ee3a26fef0a88d6b925311"
+    "semanticDigest":  "a5701dfc656b4d4a7f9aa84e6f23828ffdf28157a2c9e366cd5d8055a9ca0d4d"
 }
