@@ -34,7 +34,8 @@ import java.util.Collection;
 import java.util.List;
 
 /**
- * A simple JDBC-based implementation of the {@link OwnerRepository} interface.
+ * A simple JDBC-based implementation of the
+ * {@link OwnerRepository} interface.
  *
  * @author Ken Krebs
  * @author Juergen Hoeller
