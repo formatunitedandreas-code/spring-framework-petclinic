@@ -26,7 +26,8 @@ import javax.sql.DataSource;
 import java.util.List;
 
 /**
- * A simple JDBC-based implementation of the {@link VisitRepository} interface.
+ * A simple JDBC-based implementation of the
+ * {@link VisitRepository} interface.
  *
  * @author Ken Krebs
  * @author Juergen Hoeller
