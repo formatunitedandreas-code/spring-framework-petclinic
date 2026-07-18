@@ -2,8 +2,8 @@
     "schemaVersion":  "threshold.petclinic.candidate-pocket.v0.2",
     "leaseName":  "owned-autonomous-refactor-branch-wave-v0_automation",
     "branch":  "threshold-governed-refactor-demo-166",
-    "generatedFromHead":  "7d01cf7bbe083892fa59b0e8ffc7a4cecf17d13d",
-    "generatedAt":  "2026-07-18T12:34:27.5541472Z",
+    "generatedFromHead":  "3afcc9ee16dc3e16c8941a31bc99ec3d457bf6f9",
+    "generatedAt":  "2026-07-18T12:35:46.2007388Z",
     "discovery":  {
                       "method":  "static-heuristic-scan",
                       "sourceRoot":  "src/main/java/org/springframework/samples/petclinic",
@@ -124,35 +124,10 @@
                            "autoPatchable":  false,
                            "candidateId":  "src-main-java-org-springframework-samples-petclinic-util-callmonitoringaspect-java-utility-readability-cleanup-recordinvocation",
                            "executionMode":  "review_only"
-                       },
-                       {
-                           "tieBreak":  {
-                                            "layerScore":  0,
-                                            "path":  "src/main/java/org/springframework/samples/petclinic/PetclinicInitializer.java",
-                                            "member":  "line-52"
-                                        },
-                           "gate":  {
-                                        "required":  true,
-                                        "approved":  true,
-                                        "gatePath":  "threshold/gates/auto-patchable-candidate-classes.json",
-                                        "trainerDecision":  "autoPatchable",
-                                        "trainerReportPath":  "threshold/trainer/training-report.json"
-                                    },
-                           "score":  90,
-                           "autoPatchable":  true,
-                           "member":  "line-52",
-                           "reviewOnly":  false,
-                           "executionMode":  "auto_patchable",
-                           "file":  "src/main/java/org/springframework/samples/petclinic/PetclinicInitializer.java",
-                           "candidateId":  "src-main-java-org-springframework-samples-petclinic-petclinicinitializer-java-comment-wrap-cleanup-line-52",
-                           "expectedDiffSummary":  "Wrap one long Javadoc comment line without changing source behavior.",
-                           "candidateClass":  "comment_wrap_cleanup",
-                           "commentWrapSplitPointFound":  true,
-                           "estimatedChangedLines":  2
                        }
                    ],
     "nextRecommendedCandidateId":  "src-main-java-org-springframework-samples-petclinic-util-callmonitoringaspect-java-utility-readability-cleanup-recordinvocation",
-    "nextAutoPatchableCandidateId":  "src-main-java-org-springframework-samples-petclinic-petclinicinitializer-java-comment-wrap-cleanup-line-52",
+    "nextAutoPatchableCandidateId":  null,
     "nonClaims":  [
                       "candidate pocket is not an implementation claim",
                       "candidate pocket does not claim behavior preservation until slice validation passes",
