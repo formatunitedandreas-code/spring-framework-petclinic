@@ -43,7 +43,8 @@ import jakarta.servlet.ServletContext;
 public class PetclinicInitializer extends AbstractDispatcherServletInitializer {
 
     /**
-     * Spring profile used to choose the persistence layer implementation.
+     * Spring profile used to choose the persistence
+     * layer implementation.
      * <p>
      * When using Spring jpa, use: jpa
      * When using Spring JDBC, use: jdbc
