@@ -2,8 +2,8 @@
     "schemaVersion":  "threshold.petclinic.candidate-pocket.v0.2",
     "leaseName":  "owned-autonomous-refactor-branch-wave-v0_automation",
     "branch":  "threshold-governed-refactor-demo-156",
-    "generatedFromHead":  "4d4d04bae758b23889b7115db7756a073950287f",
-    "generatedAt":  "2026-07-18T05:05:33.9209132Z",
+    "generatedFromHead":  "fde67cc26daa057a8ab5e42bb608bd20b805ee13",
+    "generatedAt":  "2026-07-18T05:06:31.9879286Z",
     "discovery":  {
                       "method":  "static-heuristic-scan",
                       "sourceRoot":  "src/main/java/org/springframework/samples/petclinic",
@@ -65,30 +65,6 @@
     "candidates":  [
                        {
                            "candidateClass":  "duplicate_literal_local_constant_extraction",
-                           "literal":  "\"owner_id\"",
-                           "member":  "owner-id",
-                           "gate":  {
-                                        "required":  true,
-                                        "approved":  true,
-                                        "gatePath":  "threshold/gates/auto-patchable-candidate-classes.json"
-                                    },
-                           "estimatedChangedLines":  4,
-                           "reviewOnly":  false,
-                           "tieBreak":  {
-                                            "layerScore":  0,
-                                            "path":  "src/main/java/org/springframework/samples/petclinic/owner/adapter/jdbc/JdbcOwnerSearchQuery.java",
-                                            "member":  "owner-id"
-                                        },
-                           "score":  90,
-                           "expectedDiffSummary":  "Extract repeated literal \"owner_id\" to a same-class private constant.",
-                           "file":  "src/main/java/org/springframework/samples/petclinic/owner/adapter/jdbc/JdbcOwnerSearchQuery.java",
-                           "autoPatchable":  true,
-                           "constantName":  "OWNER_ID",
-                           "candidateId":  "src-main-java-org-springframework-samples-petclinic-owner-adapter-jdbc-jdbcownersearchquery-java-duplicate-literal-local-constant-extraction-owner-id",
-                           "executionMode":  "auto_patchable"
-                       },
-                       {
-                           "candidateClass":  "duplicate_literal_local_constant_extraction",
                            "literal":  "\"lastName\"",
                            "member":  "lastName",
                            "gate":  {
@@ -136,8 +112,8 @@
                            "executionMode":  "auto_patchable"
                        }
                    ],
-    "nextRecommendedCandidateId":  "src-main-java-org-springframework-samples-petclinic-owner-adapter-jdbc-jdbcownersearchquery-java-duplicate-literal-local-constant-extraction-owner-id",
-    "nextAutoPatchableCandidateId":  "src-main-java-org-springframework-samples-petclinic-owner-adapter-jdbc-jdbcownersearchquery-java-duplicate-literal-local-constant-extraction-owner-id",
+    "nextRecommendedCandidateId":  "src-main-java-org-springframework-samples-petclinic-owner-adapter-jpa-jpaownersearchquery-java-duplicate-literal-local-constant-extraction-lastname",
+    "nextAutoPatchableCandidateId":  "src-main-java-org-springframework-samples-petclinic-owner-adapter-jpa-jpaownersearchquery-java-duplicate-literal-local-constant-extraction-lastname",
     "nonClaims":  [
                       "candidate pocket is not an implementation claim",
                       "candidate pocket does not claim behavior preservation until slice validation passes",
