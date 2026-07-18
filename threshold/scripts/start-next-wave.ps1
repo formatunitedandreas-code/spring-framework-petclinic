@@ -19,13 +19,16 @@ param(
         "LocalOnly",
         "PublishDraftPr",
         "VerifyPr",
+        "VerifyPrUntilExternalReview",
         "MergeIfAuthorized",
+        "FullLifecycleWithPolicyHold",
         "FullLifecycle"
     )]
     [string] $Phase = "FullLifecycle",
     [switch] $SkipPush,
     [switch] $SkipPullRequest,
-    [switch] $SkipMerge
+    [switch] $SkipMerge,
+    [switch] $PreferBatch
 )
 
 Set-StrictMode -Version Latest
@@ -195,6 +198,38 @@ function Sync-LeaseStateWrite {
     ) -FailureMessage "Lease-state sync write failed."
 }
 
+function Set-JsonProperty {
+    param(
+        [pscustomobject] $Object,
+        [string] $Name,
+        [object] $Value
+    )
+
+    if ($Object.PSObject.Properties[$Name]) {
+        $Object.$Name = $Value
+    }
+    else {
+        $Object | Add-Member -NotePropertyName $Name -NotePropertyValue $Value
+    }
+}
+
+function Mark-TerminalEvidenceSourceHead {
+    $sourceHead = (& git rev-parse HEAD).Trim()
+
+    $state = Read-JsonFile -Path $StatePath
+    Set-JsonProperty -Object $state -Name "currentHeadRole" -Value "sourceHead"
+    Set-JsonProperty -Object $state -Name "terminalEvidenceHead" -Value $sourceHead
+    Set-JsonProperty -Object $state -Name "terminalEvidencePolicy" -Value "terminal evidence is generated from the last governed source/evidence head before the terminal governance commit"
+    Set-JsonProperty -Object $state -Name "terminalEvidenceMarkedAt" -Value (Get-Date).ToUniversalTime().ToString("o")
+    $state | ConvertTo-Json -Depth 10 | Set-Content $StatePath
+
+    $pocket = Read-JsonFile -Path $PocketPath
+    Set-JsonProperty -Object $pocket -Name "generatedFromHeadRole" -Value "sourceHead"
+    Set-JsonProperty -Object $pocket -Name "terminalEvidenceHead" -Value $sourceHead
+    Set-JsonProperty -Object $pocket -Name "terminalEvidencePolicy" -Value "candidate pocket is generated from the last governed source/evidence head before the terminal governance commit"
+    $pocket | ConvertTo-Json -Depth 12 | Set-Content $PocketPath
+}
+
 function Try-ExpandScopeForCandidateShortage {
     param([string] $Reason)
 
@@ -220,6 +255,25 @@ function Try-ExpandScopeForCandidateShortage {
     return ($output -contains "scopeExpansionApplied=true")
 }
 
+function Invoke-BatchIfAvailable {
+    if (-not $PreferBatch.IsPresent) {
+        return $false
+    }
+
+    $output = Invoke-Checked -FilePath "powershell.exe" -ArgumentList @(
+        "-ExecutionPolicy",
+        "Bypass",
+        "-File",
+        ".\threshold\scripts\run-next-batch.ps1"
+    ) -FailureMessage "run-next-batch failed."
+
+    foreach ($line in $output) {
+        Write-Host $line
+    }
+
+    return @($output | Where-Object { [string]$_ -eq "Threshold batch completed" }).Count -gt 0
+}
+
 function Get-PullRequestMetadata {
     param([int] $Number)
 
@@ -231,6 +285,23 @@ function Get-PullRequestMetadata {
     ) -FailureMessage "Failed to query pull request #$Number."
 
     return ($json -join "`n" | ConvertFrom-Json)
+}
+
+function Get-PullRequestReviewDecision {
+    param([int] $Number)
+
+    $json = Invoke-Checked -FilePath "gh" -ArgumentList @(
+        "pr",
+        "view",
+        "$Number",
+        "--repo",
+        $OwnedRepo,
+        "--json",
+        "reviewDecision"
+    ) -FailureMessage "Failed to query pull request review decision for #$Number."
+
+    $metadata = ($json -join "`n" | ConvertFrom-Json)
+    return [string]$metadata.reviewDecision
 }
 
 function Assert-ReadyForMerge {
@@ -360,12 +431,15 @@ function Invoke-LocalWave {
     [void](Commit-PathsIfNeeded -Paths $governancePaths -Message "Start Threshold wave $waveNumber candidate pocket")
 
     while ($true) {
-        Invoke-Checked -FilePath "powershell.exe" -ArgumentList @(
-            "-ExecutionPolicy",
-            "Bypass",
-            "-File",
-            ".\threshold\scripts\run-next-slice.ps1"
-        ) -FailureMessage "run-next-slice failed."
+        $batchCompleted = Invoke-BatchIfAvailable
+        if (-not $batchCompleted) {
+            Invoke-Checked -FilePath "powershell.exe" -ArgumentList @(
+                "-ExecutionPolicy",
+                "Bypass",
+                "-File",
+                ".\threshold\scripts\run-next-slice.ps1"
+            ) -FailureMessage "run-next-slice failed."
+        }
 
         $state = Read-JsonFile -Path $StatePath
         if ($state.terminalState -eq "ready_no_candidates_verified") {
@@ -390,6 +464,7 @@ function Invoke-LocalWave {
     }
 
     Update-CandidatePocket
+    Mark-TerminalEvidenceSourceHead
     $state = Read-JsonFile -Path $StatePath
     [void](Commit-PathsIfNeeded -Paths $governancePaths -Message "Record Threshold wave $waveNumber terminal state")
 
@@ -538,13 +613,30 @@ if ($Phase -eq "PublishDraftPr") {
 }
 
 $pullRequestMetadata = @(Invoke-PullRequestVerification -PullRequest $pullRequest) | Select-Object -Last 1
+$reviewDecision = Get-PullRequestReviewDecision -Number $pullRequest.Number
 
-if ($SkipMerge.IsPresent -or $Phase -eq "VerifyPr") {
+if ($SkipMerge.IsPresent -or $Phase -eq "VerifyPr" -or $Phase -eq "VerifyPrUntilExternalReview") {
     Write-Host "start-next-wave completed without merge"
     Write-Host "phase=$Phase"
     Write-Host "branch=$($wave.Branch)"
     Write-Host "pullRequest=$($pullRequest.Url)"
     Write-Host "mergeableState=$($pullRequestMetadata.mergeable_state)"
+    Write-Host "reviewDecision=$reviewDecision"
+    if ($Phase -eq "VerifyPrUntilExternalReview" -and $reviewDecision -eq "REVIEW_REQUIRED") {
+        Write-Host "policyHold=external_review_required"
+    }
+    Write-Host "terminalState=$($wave.State.terminalState)"
+    exit 0
+}
+
+if ($Phase -eq "FullLifecycleWithPolicyHold") {
+    Write-Host "start-next-wave completed at policy hold"
+    Write-Host "phase=$Phase"
+    Write-Host "branch=$($wave.Branch)"
+    Write-Host "pullRequest=$($pullRequest.Url)"
+    Write-Host "mergeableState=$($pullRequestMetadata.mergeable_state)"
+    Write-Host "reviewDecision=$reviewDecision"
+    Write-Host "policyHold=merge_requires_explicit_authority_or_external_review"
     Write-Host "terminalState=$($wave.State.terminalState)"
     exit 0
 }
