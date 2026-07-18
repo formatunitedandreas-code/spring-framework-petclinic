@@ -115,7 +115,14 @@ function Get-FirstRepositoryQueryExpression {
 
 function Is-CandidateAllowed {
     param([string] $CandidateClass, [string[]] $AllowedTypes)
-    return ($AllowedTypes.Count -eq 0) -or ($AllowedTypes -contains $CandidateClass)
+    $hasAllowedTypes = $false
+    foreach ($allowedType in @($AllowedTypes)) {
+        $hasAllowedTypes = $true
+        if ($allowedType -eq $CandidateClass) {
+            return $true
+        }
+    }
+    return -not $hasAllowedTypes
 }
 
 function Get-AutoPatchableGate {
@@ -177,7 +184,10 @@ function Test-AutoPatchableCandidate {
         return $Candidate.ContainsKey("member") -and ([string]$Candidate.member).StartsWith("line-")
     }
     if ($CandidateClass -eq "method_signature_wrap_cleanup") {
-        return $Candidate.ContainsKey("member") -and ([string]$Candidate.member).StartsWith("line-")
+        return $Candidate.ContainsKey("member") -and
+            ([string]$Candidate.member).StartsWith("line-") -and
+            $Candidate.ContainsKey("parameterCount") -and
+            [int]$Candidate.parameterCount -ge 2
     }
     if ($CandidateClass -eq "repository_readability_cleanup") {
         if ($Candidate.ContainsKey("member") -and ([string]$Candidate.member).StartsWith("line-")) {
@@ -254,6 +264,24 @@ function Test-SimpleStringConstantWrapCandidateLine {
     $maxFirstSegmentLength = [Math]::Min(88, $value.Length - 1)
     $splitIndex = $value.LastIndexOf(" ", $maxFirstSegmentLength)
     return $splitIndex -ge 24 -and $splitIndex -lt ($value.Length - 1)
+}
+
+function Get-WrappableMethodSignatureParameterCount {
+    param([string] $Line)
+
+    $match = [regex]::Match($Line, "^\s*(public|private|protected)\s+.+\(\s*(?<params>.*)\)\s*\{\s*$")
+    if (-not $match.Success) {
+        return 0
+    }
+
+    $paramsRaw = $match.Groups["params"].Value.Trim()
+    if ([string]::IsNullOrWhiteSpace($paramsRaw)) {
+        return 0
+    }
+
+    return (@($paramsRaw -split "," | ForEach-Object { $_.Trim() } | Where-Object {
+        -not [string]::IsNullOrWhiteSpace($_)
+    })).Count
 }
 
 function Test-SplitStringConstantLine {
@@ -479,21 +507,26 @@ foreach ($file in $sourceFiles) {
         if (Test-SimpleStringConstantWrapCandidateLine $candidateLine) {
             $candidateClass = if ($path -like "*/repository/*") { "repository_readability_cleanup" } else { "string_constant_wrap_cleanup" }
         }
-        elseif ($candidateLine -match "^\s*(public|private|protected)\s+.+\)\s*\{\s*$") {
+        $parameterCount = Get-WrappableMethodSignatureParameterCount $candidateLine
+        if (-not $candidateClass -and $parameterCount -ge 2) {
             $candidateClass = "method_signature_wrap_cleanup"
         }
     }
     if ($longLines.Count -gt 0 -and $candidateClass) {
         $score = 30 + 30 + 20 + 10 + $layerScore
-        Add-Candidate -CandidateClass $candidateClass -AllowedTypes $allowedCandidateTypes -Bucket $candidates -Candidate ([ordered]@{
+        $candidate = [ordered]@{
             candidateId = New-CandidateId $path $candidateClass $member
             score = $score
             file = $path
             member = $member
-                    expectedDiffSummary = "Wrap a long constant or method signature readability line without changing behavior."
-                    estimatedChangedLines = [Math]::Min(8, $longLines.Count * 2)
-                    tieBreak = [ordered]@{ layerScore = $layerScore; path = $path; member = $member }
-                })
+            expectedDiffSummary = "Wrap a long constant or method signature readability line without changing behavior."
+            estimatedChangedLines = [Math]::Min(8, $longLines.Count * 2)
+            tieBreak = [ordered]@{ layerScore = $layerScore; path = $path; member = $member }
+        }
+        if ($candidateClass -eq "method_signature_wrap_cleanup") {
+            $candidate.parameterCount = $parameterCount
+        }
+        Add-Candidate -CandidateClass $candidateClass -AllowedTypes $allowedCandidateTypes -Bucket $candidates -Candidate $candidate
     }
 
     # Heuristic 3a: top-level bootstrap invocation readability cleanup.
