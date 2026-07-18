@@ -24,7 +24,8 @@ import java.sql.SQLException;
 import java.time.LocalDate;
 
 /**
- * {@link RowMapper} implementation mapping data from a {@link ResultSet} to the
+ * {@link RowMapper} implementation mapping data from a
+ * {@link ResultSet} to the
  * corresponding properties
  * of the {@link Visit} class.
  */
