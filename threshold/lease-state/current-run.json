@@ -17,5 +17,9 @@
     "lastReceipt":  "threshold/receipts/src-main-java-org-springframework-samples-petclinic-repository-ownerrepository-java-comment-wrap-cleanup-line-25-0e67168b5b49.json",
     "terminalState":  "budget_exhausted_verified",
     "updatedAt":  "2026-07-18T18:21:17.6112532Z",
-    "terminalReason":  "remaining candidate or commit budget is exhausted after slice validation passed"
+    "terminalReason":  "remaining candidate or commit budget is exhausted after slice validation passed",
+    "currentHeadRole":  "sourceHead",
+    "terminalEvidenceHead":  "97b9f8fd506a4da8e591a5e1e2237486660821c4",
+    "terminalEvidencePolicy":  "terminal evidence is generated from the last governed source/evidence head before the terminal governance commit",
+    "terminalEvidenceMarkedAt":  "2026-07-18T18:21:20.0160472Z"
 }
