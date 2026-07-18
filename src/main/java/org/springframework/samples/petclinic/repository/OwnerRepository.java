@@ -37,7 +37,8 @@ import org.springframework.samples.petclinic.model.Owner;
 public interface OwnerRepository {
 
     /**
-     * Retrieve <code>Owner</code>s from the data store by last name, returning all
+     * Retrieve <code>Owner</code>s from the data store by last
+     * name, returning all
      * owners whose last
      * name <i>starts</i>
      * with the given name.
