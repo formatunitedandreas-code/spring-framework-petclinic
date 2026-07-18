@@ -156,6 +156,7 @@ if (-not $DryRun) { $receipt | ConvertTo-Json -Depth 12 | Set-Content $outPath }
 if ($UpdateState -and -not $DryRun) {
     $stateDir = Split-Path $StatePath -Parent
     if (-not (Test-Path $stateDir)) { New-Item -ItemType Directory -Path $stateDir | Out-Null }
+    $terminalReason = $null
     if (Test-Path $StatePath) {
         $state = Get-Content $StatePath -Raw | ConvertFrom-Json
         $candidatesProcessed = [int]$state.candidatesProcessed + 1
@@ -172,7 +173,6 @@ if ($UpdateState -and -not $DryRun) {
         else {
             $stateBranch = $branch
         }
-        $terminalReason = $null
         if ($state.PSObject.Properties.Name -contains "terminalReason") {
             $terminalReason = [string]$state.terminalReason
         }
