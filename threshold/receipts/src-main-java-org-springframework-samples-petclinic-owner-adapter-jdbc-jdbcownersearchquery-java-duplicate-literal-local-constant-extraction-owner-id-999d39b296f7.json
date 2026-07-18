@@ -1,0 +1,51 @@
+{
+    "schemaVersion":  "threshold.petclinic.slice-receipt.v0.2",
+    "candidateId":  "src-main-java-org-springframework-samples-petclinic-owner-adapter-jdbc-jdbcownersearchquery-java-duplicate-literal-local-constant-extraction-owner-id",
+    "leaseName":  "owned-autonomous-refactor-branch-wave-v0_automation",
+    "leaseDigest":  "433c24a2393f3e5df67d07cf20131a1163820baacac796f14eedfabe8295360b",
+    "branch":  "threshold-governed-refactor-demo-156",
+    "candidateClass":  "duplicate_literal_local_constant_extraction",
+    "leaseStartHead":  "4d4d04bae758b23889b7115db7756a073950287f",
+    "baseHead":  "a75bdd75c383904acca4bf2e349c51af621ba2f5",
+    "commitHash":  "999d39b296f7df6bf8bac19ec1f8ab0e588bc917",
+    "receiptMaterialization":  "post-commit",
+    "perCommitValidationLogAvailable":  true,
+    "branchFinalValidationPassed":  false,
+    "changedFiles":  [
+                         {
+                             "path":  "src/main/java/org/springframework/samples/petclinic/owner/adapter/jdbc/JdbcOwnerSearchQuery.java",
+                             "beforeSha256":  "30e78ea81bd0d81e3afb131a12bfc748fedf5f3326cf0fabfa4a40861ad43871",
+                             "afterSha256":  "d9a6bcdcae048b8821b0df278811cc78e6fa6485d16e72dd89ea73f311f8cd42"
+                         }
+                     ],
+    "diffSummary":  "Refactor PetClinic Extract repeated literal owner_id to a same-class pr",
+    "diffStat":  {
+                     "filesChanged":  1,
+                     "insertions":  4,
+                     "deletions":  2
+                 },
+    "validation":  {
+                       "diffCheck":  "passed",
+                       "command":  ".\\mvnw.cmd test",
+                       "result":  "BUILD SUCCESS",
+                       "testsRun":  119,
+                       "failures":  0,
+                       "errors":  0,
+                       "skipped":  0
+                   },
+    "nonClaims":  [
+                      "no push in candidate slice",
+                      "no PR update in candidate slice",
+                      "no upstream interaction",
+                      "no pom.xml change",
+                      "no dependency change",
+                      "no src/test change",
+                      "no merge",
+                      "no release",
+                      "no deploy",
+                      "no public readiness claim",
+                      "no public correctness claim",
+                      "no public security claim",
+                      "no public compliance claim"
+                  ]
+}

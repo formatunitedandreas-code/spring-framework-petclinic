@@ -34,7 +34,8 @@ import java.util.Collection;
 import java.util.List;
 
 /**
- * A simple JDBC-based implementation of the {@link OwnerRepository} interface.
+ * A simple JDBC-based implementation of the
+ * {@link OwnerRepository} interface.
  *
  * @author Ken Krebs
  * @author Juergen Hoeller
@@ -169,7 +170,8 @@ public class JdbcOwnerRepositoryImpl implements OwnerRepository {
     }
 
     /**
-     * Loads the {@link Pet} and {@link Visit} data for the supplied {@link List} of
+     * Loads the {@link Pet} and {@link Visit} data for the
+     * supplied {@link List} of
      * {@link Owner Owners}.
      *
      * @param owners the list of owners for whom the pet and visit data
