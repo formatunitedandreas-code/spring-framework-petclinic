@@ -24,7 +24,8 @@ import java.sql.SQLException;
 
 /**
  * {@link ResultSetExtractor} implementation by using the
- * {@link OneToManyResultSetExtractor} of Spring Data Core JDBC Extensions.
+ * {@link OneToManyResultSetExtractor} of Spring Data Core
+ * JDBC Extensions.
  */
 public class JdbcPetVisitExtractor extends
     OneToManyResultSetExtractor<JdbcPet, Visit, Integer> {
