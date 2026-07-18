@@ -18,7 +18,6 @@
                       "forbiddenActions":  [
                                                "push_to_upstream",
                                                "force_push",
-                                               "merge",
                                                "release",
                                                "deploy",
                                                "dependency_or_pom_changes",
@@ -28,7 +27,7 @@
                                                "public_security_claim",
                                                "public_compliance_claim"
                                            ],
-                      "allowedPathCount":  21,
+                      "allowedPathCount":  22,
                       "trainerDecision":  "autoPatchable"
                   },
                   {
@@ -42,7 +41,6 @@
                       "forbiddenActions":  [
                                                "push_to_upstream",
                                                "force_push",
-                                               "merge",
                                                "release",
                                                "deploy",
                                                "dependency_or_pom_changes",
@@ -52,7 +50,7 @@
                                                "public_security_claim",
                                                "public_compliance_claim"
                                            ],
-                      "allowedPathCount":  21,
+                      "allowedPathCount":  22,
                       "trainerDecision":  "autoPatchable"
                   },
                   {
@@ -66,7 +64,6 @@
                       "forbiddenActions":  [
                                                "push_to_upstream",
                                                "force_push",
-                                               "merge",
                                                "release",
                                                "deploy",
                                                "dependency_or_pom_changes",
@@ -76,7 +73,7 @@
                                                "public_security_claim",
                                                "public_compliance_claim"
                                            ],
-                      "allowedPathCount":  21,
+                      "allowedPathCount":  22,
                       "trainerDecision":  "held"
                   },
                   {
@@ -90,7 +87,6 @@
                       "forbiddenActions":  [
                                                "push_to_upstream",
                                                "force_push",
-                                               "merge",
                                                "release",
                                                "deploy",
                                                "dependency_or_pom_changes",
@@ -100,7 +96,7 @@
                                                "public_security_claim",
                                                "public_compliance_claim"
                                            ],
-                      "allowedPathCount":  21,
+                      "allowedPathCount":  22,
                       "trainerDecision":  "autoPatchable"
                   },
                   {
@@ -114,7 +110,6 @@
                       "forbiddenActions":  [
                                                "push_to_upstream",
                                                "force_push",
-                                               "merge",
                                                "release",
                                                "deploy",
                                                "dependency_or_pom_changes",
@@ -124,7 +119,7 @@
                                                "public_security_claim",
                                                "public_compliance_claim"
                                            ],
-                      "allowedPathCount":  21,
+                      "allowedPathCount":  22,
                       "trainerDecision":  "autoPatchable"
                   },
                   {
@@ -138,7 +133,6 @@
                       "forbiddenActions":  [
                                                "push_to_upstream",
                                                "force_push",
-                                               "merge",
                                                "release",
                                                "deploy",
                                                "dependency_or_pom_changes",
@@ -148,7 +142,7 @@
                                                "public_security_claim",
                                                "public_compliance_claim"
                                            ],
-                      "allowedPathCount":  21,
+                      "allowedPathCount":  22,
                       "trainerDecision":  "autoPatchable"
                   },
                   {
@@ -162,7 +156,6 @@
                       "forbiddenActions":  [
                                                "push_to_upstream",
                                                "force_push",
-                                               "merge",
                                                "release",
                                                "deploy",
                                                "dependency_or_pom_changes",
@@ -172,7 +165,7 @@
                                                "public_security_claim",
                                                "public_compliance_claim"
                                            ],
-                      "allowedPathCount":  21,
+                      "allowedPathCount":  22,
                       "trainerDecision":  "autoPatchable"
                   },
                   {
@@ -186,7 +179,6 @@
                       "forbiddenActions":  [
                                                "push_to_upstream",
                                                "force_push",
-                                               "merge",
                                                "release",
                                                "deploy",
                                                "dependency_or_pom_changes",
@@ -196,7 +188,7 @@
                                                "public_security_claim",
                                                "public_compliance_claim"
                                            ],
-                      "allowedPathCount":  21,
+                      "allowedPathCount":  22,
                       "trainerDecision":  "autoPatchable"
                   },
                   {
@@ -210,7 +202,6 @@
                       "forbiddenActions":  [
                                                "push_to_upstream",
                                                "force_push",
-                                               "merge",
                                                "release",
                                                "deploy",
                                                "dependency_or_pom_changes",
@@ -220,7 +211,7 @@
                                                "public_security_claim",
                                                "public_compliance_claim"
                                            ],
-                      "allowedPathCount":  21,
+                      "allowedPathCount":  22,
                       "trainerDecision":  "autoPatchable"
                   },
                   {
@@ -234,7 +225,6 @@
                       "forbiddenActions":  [
                                                "push_to_upstream",
                                                "force_push",
-                                               "merge",
                                                "release",
                                                "deploy",
                                                "dependency_or_pom_changes",
@@ -244,7 +234,7 @@
                                                "public_security_claim",
                                                "public_compliance_claim"
                                            ],
-                      "allowedPathCount":  21,
+                      "allowedPathCount":  22,
                       "trainerDecision":  "reviewOnly"
                   },
                   {
@@ -258,7 +248,6 @@
                       "forbiddenActions":  [
                                                "push_to_upstream",
                                                "force_push",
-                                               "merge",
                                                "release",
                                                "deploy",
                                                "dependency_or_pom_changes",
@@ -268,7 +257,7 @@
                                                "public_security_claim",
                                                "public_compliance_claim"
                                            ],
-                      "allowedPathCount":  21,
+                      "allowedPathCount":  22,
                       "trainerDecision":  "reviewOnly"
                   },
                   {
@@ -282,7 +271,6 @@
                       "forbiddenActions":  [
                                                "push_to_upstream",
                                                "force_push",
-                                               "merge",
                                                "release",
                                                "deploy",
                                                "dependency_or_pom_changes",
@@ -292,7 +280,7 @@
                                                "public_security_claim",
                                                "public_compliance_claim"
                                            ],
-                      "allowedPathCount":  21,
+                      "allowedPathCount":  22,
                       "trainerDecision":  "reviewOnly"
                   },
                   {
@@ -306,7 +294,6 @@
                       "forbiddenActions":  [
                                                "push_to_upstream",
                                                "force_push",
-                                               "merge",
                                                "release",
                                                "deploy",
                                                "dependency_or_pom_changes",
@@ -316,7 +303,7 @@
                                                "public_security_claim",
                                                "public_compliance_claim"
                                            ],
-                      "allowedPathCount":  21,
+                      "allowedPathCount":  22,
                       "trainerDecision":  "reviewOnly"
                   },
                   {
@@ -330,7 +317,6 @@
                       "forbiddenActions":  [
                                                "push_to_upstream",
                                                "force_push",
-                                               "merge",
                                                "release",
                                                "deploy",
                                                "dependency_or_pom_changes",
@@ -340,7 +326,7 @@
                                                "public_security_claim",
                                                "public_compliance_claim"
                                            ],
-                      "allowedPathCount":  21,
+                      "allowedPathCount":  22,
                       "trainerDecision":  "reviewOnly"
                   },
                   {
@@ -354,7 +340,6 @@
                       "forbiddenActions":  [
                                                "push_to_upstream",
                                                "force_push",
-                                               "merge",
                                                "release",
                                                "deploy",
                                                "dependency_or_pom_changes",
@@ -364,7 +349,7 @@
                                                "public_security_claim",
                                                "public_compliance_claim"
                                            ],
-                      "allowedPathCount":  21,
+                      "allowedPathCount":  22,
                       "trainerDecision":  "reviewOnly"
                   },
                   {
@@ -378,7 +363,6 @@
                       "forbiddenActions":  [
                                                "push_to_upstream",
                                                "force_push",
-                                               "merge",
                                                "release",
                                                "deploy",
                                                "dependency_or_pom_changes",
@@ -388,7 +372,7 @@
                                                "public_security_claim",
                                                "public_compliance_claim"
                                            ],
-                      "allowedPathCount":  21,
+                      "allowedPathCount":  22,
                       "trainerDecision":  "reviewOnly"
                   },
                   {
@@ -402,7 +386,6 @@
                       "forbiddenActions":  [
                                                "push_to_upstream",
                                                "force_push",
-                                               "merge",
                                                "release",
                                                "deploy",
                                                "dependency_or_pom_changes",
@@ -412,7 +395,7 @@
                                                "public_security_claim",
                                                "public_compliance_claim"
                                            ],
-                      "allowedPathCount":  21,
+                      "allowedPathCount":  22,
                       "trainerDecision":  "reviewOnly"
                   },
                   {
@@ -426,7 +409,6 @@
                       "forbiddenActions":  [
                                                "push_to_upstream",
                                                "force_push",
-                                               "merge",
                                                "release",
                                                "deploy",
                                                "dependency_or_pom_changes",
@@ -436,7 +418,7 @@
                                                "public_security_claim",
                                                "public_compliance_claim"
                                            ],
-                      "allowedPathCount":  21,
+                      "allowedPathCount":  22,
                       "trainerDecision":  "reviewOnly"
                   },
                   {
@@ -450,7 +432,6 @@
                       "forbiddenActions":  [
                                                "push_to_upstream",
                                                "force_push",
-                                               "merge",
                                                "release",
                                                "deploy",
                                                "dependency_or_pom_changes",
@@ -460,7 +441,7 @@
                                                "public_security_claim",
                                                "public_compliance_claim"
                                            ],
-                      "allowedPathCount":  21,
+                      "allowedPathCount":  22,
                       "trainerDecision":  "reviewOnly"
                   },
                   {
@@ -474,7 +455,6 @@
                       "forbiddenActions":  [
                                                "push_to_upstream",
                                                "force_push",
-                                               "merge",
                                                "release",
                                                "deploy",
                                                "dependency_or_pom_changes",
@@ -484,7 +464,7 @@
                                                "public_security_claim",
                                                "public_compliance_claim"
                                            ],
-                      "allowedPathCount":  21,
+                      "allowedPathCount":  22,
                       "trainerDecision":  "reviewOnly"
                   },
                   {
@@ -498,7 +478,6 @@
                       "forbiddenActions":  [
                                                "push_to_upstream",
                                                "force_push",
-                                               "merge",
                                                "release",
                                                "deploy",
                                                "dependency_or_pom_changes",
@@ -508,7 +487,7 @@
                                                "public_security_claim",
                                                "public_compliance_claim"
                                            ],
-                      "allowedPathCount":  21,
+                      "allowedPathCount":  22,
                       "trainerDecision":  "reviewOnly"
                   },
                   {
@@ -522,7 +501,6 @@
                       "forbiddenActions":  [
                                                "push_to_upstream",
                                                "force_push",
-                                               "merge",
                                                "release",
                                                "deploy",
                                                "dependency_or_pom_changes",
@@ -532,7 +510,7 @@
                                                "public_security_claim",
                                                "public_compliance_claim"
                                            ],
-                      "allowedPathCount":  21,
+                      "allowedPathCount":  22,
                       "trainerDecision":  "reviewOnly"
                   },
                   {
@@ -546,7 +524,6 @@
                       "forbiddenActions":  [
                                                "push_to_upstream",
                                                "force_push",
-                                               "merge",
                                                "release",
                                                "deploy",
                                                "dependency_or_pom_changes",
@@ -556,7 +533,7 @@
                                                "public_security_claim",
                                                "public_compliance_claim"
                                            ],
-                      "allowedPathCount":  21,
+                      "allowedPathCount":  22,
                       "trainerDecision":  "held"
                   },
                   {
@@ -570,7 +547,6 @@
                       "forbiddenActions":  [
                                                "push_to_upstream",
                                                "force_push",
-                                               "merge",
                                                "release",
                                                "deploy",
                                                "dependency_or_pom_changes",
@@ -580,7 +556,7 @@
                                                "public_security_claim",
                                                "public_compliance_claim"
                                            ],
-                      "allowedPathCount":  21,
+                      "allowedPathCount":  22,
                       "trainerDecision":  "autoPatchable"
                   },
                   {
@@ -594,7 +570,6 @@
                       "forbiddenActions":  [
                                                "push_to_upstream",
                                                "force_push",
-                                               "merge",
                                                "release",
                                                "deploy",
                                                "dependency_or_pom_changes",
@@ -604,7 +579,7 @@
                                                "public_security_claim",
                                                "public_compliance_claim"
                                            ],
-                      "allowedPathCount":  21,
+                      "allowedPathCount":  22,
                       "trainerDecision":  "autoPatchable"
                   },
                   {
@@ -618,7 +593,6 @@
                       "forbiddenActions":  [
                                                "push_to_upstream",
                                                "force_push",
-                                               "merge",
                                                "release",
                                                "deploy",
                                                "dependency_or_pom_changes",
@@ -628,7 +602,7 @@
                                                "public_security_claim",
                                                "public_compliance_claim"
                                            ],
-                      "allowedPathCount":  21,
+                      "allowedPathCount":  22,
                       "trainerDecision":  "autoPatchable"
                   },
                   {
@@ -642,7 +616,6 @@
                       "forbiddenActions":  [
                                                "push_to_upstream",
                                                "force_push",
-                                               "merge",
                                                "release",
                                                "deploy",
                                                "dependency_or_pom_changes",
@@ -652,7 +625,7 @@
                                                "public_security_claim",
                                                "public_compliance_claim"
                                            ],
-                      "allowedPathCount":  21,
+                      "allowedPathCount":  22,
                       "trainerDecision":  "autoPatchable"
                   },
                   {
@@ -666,7 +639,6 @@
                       "forbiddenActions":  [
                                                "push_to_upstream",
                                                "force_push",
-                                               "merge",
                                                "release",
                                                "deploy",
                                                "dependency_or_pom_changes",
@@ -676,7 +648,7 @@
                                                "public_security_claim",
                                                "public_compliance_claim"
                                            ],
-                      "allowedPathCount":  21,
+                      "allowedPathCount":  22,
                       "trainerDecision":  "autoPatchable"
                   },
                   {
@@ -690,7 +662,6 @@
                       "forbiddenActions":  [
                                                "push_to_upstream",
                                                "force_push",
-                                               "merge",
                                                "release",
                                                "deploy",
                                                "dependency_or_pom_changes",
@@ -700,7 +671,7 @@
                                                "public_security_claim",
                                                "public_compliance_claim"
                                            ],
-                      "allowedPathCount":  21,
+                      "allowedPathCount":  22,
                       "trainerDecision":  "reviewOnly"
                   },
                   {
@@ -714,7 +685,6 @@
                       "forbiddenActions":  [
                                                "push_to_upstream",
                                                "force_push",
-                                               "merge",
                                                "release",
                                                "deploy",
                                                "dependency_or_pom_changes",
@@ -724,7 +694,7 @@
                                                "public_security_claim",
                                                "public_compliance_claim"
                                            ],
-                      "allowedPathCount":  21,
+                      "allowedPathCount":  22,
                       "trainerDecision":  "reviewOnly"
                   },
                   {
@@ -738,7 +708,6 @@
                       "forbiddenActions":  [
                                                "push_to_upstream",
                                                "force_push",
-                                               "merge",
                                                "release",
                                                "deploy",
                                                "dependency_or_pom_changes",
@@ -748,7 +717,7 @@
                                                "public_security_claim",
                                                "public_compliance_claim"
                                            ],
-                      "allowedPathCount":  21,
+                      "allowedPathCount":  22,
                       "trainerDecision":  "held"
                   },
                   {
@@ -762,7 +731,6 @@
                       "forbiddenActions":  [
                                                "push_to_upstream",
                                                "force_push",
-                                               "merge",
                                                "release",
                                                "deploy",
                                                "dependency_or_pom_changes",
@@ -772,7 +740,7 @@
                                                "public_security_claim",
                                                "public_compliance_claim"
                                            ],
-                      "allowedPathCount":  21,
+                      "allowedPathCount":  22,
                       "trainerDecision":  "reviewOnly"
                   },
                   {
@@ -786,7 +754,6 @@
                       "forbiddenActions":  [
                                                "push_to_upstream",
                                                "force_push",
-                                               "merge",
                                                "release",
                                                "deploy",
                                                "dependency_or_pom_changes",
@@ -796,7 +763,7 @@
                                                "public_security_claim",
                                                "public_compliance_claim"
                                            ],
-                      "allowedPathCount":  21,
+                      "allowedPathCount":  22,
                       "trainerDecision":  "autoPatchable"
                   }
               ],
@@ -967,5 +934,5 @@
                       "to":  "fidelity:utility_readability_cleanup"
                   }
               ],
-    "semanticDigest":  "43deb52dafb56baca65c5a637d930a79fe451d60df0d7445b8fe537d8c542b4a"
+    "semanticDigest":  "6971ba4dedb5331fb77f32f95848e020210e5795f00c4f4c546fa4e059d58c14"
 }
