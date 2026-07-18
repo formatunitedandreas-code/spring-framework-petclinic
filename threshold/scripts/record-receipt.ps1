@@ -172,8 +172,13 @@ if ($UpdateState -and -not $DryRun) {
         else {
             $stateBranch = $branch
         }
+        $terminalReason = $null
+        if ($state.PSObject.Properties.Name -contains "terminalReason") {
+            $terminalReason = [string]$state.terminalReason
+        }
         if ($remainingCandidates -eq 0 -or $remainingCommits -eq 0) {
-            $terminalState = "budget_exhausted"
+            $terminalState = "budget_exhausted_verified"
+            $terminalReason = "remaining candidate or commit budget is exhausted after slice validation passed"
         }
     }
     else {
@@ -202,6 +207,9 @@ if ($UpdateState -and -not $DryRun) {
         lastReceipt = ConvertTo-RepoPath $outPath
         terminalState = $terminalState
         updatedAt = (Get-Date).ToUniversalTime().ToString("o")
+    }
+    if (-not [string]::IsNullOrWhiteSpace($terminalReason)) {
+        $newState.terminalReason = $terminalReason
     }
     $newState | ConvertTo-Json -Depth 8 | Set-Content $StatePath
 }
