@@ -1,16 +1,16 @@
 leaseName: owned-autonomous-refactor-branch-wave-v0_automation
 repository: C:\dev\spring-framework-petclinic
-branch: threshold-governed-refactor-demo-166
+branch: threshold-governed-refactor-demo-168-linear
 baseRemote: origin
 baseRef: origin/main
-startHead: 479b970c5e5c2eb13871dc062706e7a6c2a184b0
+startHead: 25111033be0a51f0c1600bd8ea7fa90f5a0b2201
 headPolicy: descendantOfStartHead
-scopeExpansionTier: 4
-longLineThreshold: 74
-commentWrapThreshold: 76
-springDataQueryThreshold: 44
-repositoryMethodLengthThreshold: 3
-utilityMethodLengthThreshold: 3
+scopeExpansionTier: 5
+longLineThreshold: 68
+commentWrapThreshold: 72
+springDataQueryThreshold: 40
+repositoryMethodLengthThreshold: 2
+utilityMethodLengthThreshold: 2
 
 budget:
   maxCandidatesThisRun: 5
@@ -45,6 +45,8 @@ allowedPaths:
   - threshold/receipts/*.json
   - threshold/lease-state/*.json
   - threshold/candidate-pocket/*.json
+  - threshold/attestations/*.json
+  - threshold/kgs/*.json
   - threshold/discovery-canaries/**/*.java
   - threshold/discovery-canaries/*.json
   - threshold/gates/*.json
@@ -83,6 +85,7 @@ allowedCandidateTypes:
 forbiddenActions:
   - push_to_upstream
   - force_push
+  - merge
   - release
   - deploy
   - dependency_or_pom_changes
@@ -101,4 +104,4 @@ validation:
 terminalBoundary:
   afterLocalCommit: hold_at_local_commit_boundary
   draftPrAllowed: true
-  mergeAllowed: true
+  mergeAllowed: false
