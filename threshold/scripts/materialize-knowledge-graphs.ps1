@@ -86,12 +86,38 @@ function ConvertTo-NormalizedJson {
     return ($Value | ConvertTo-Json -Depth 16).Trim()
 }
 
+function Get-StringSha256Lower {
+    param([string] $Text)
+    $bytes = [System.Text.Encoding]::UTF8.GetBytes($Text)
+    $sha = [System.Security.Cryptography.SHA256]::Create()
+    try {
+        return ([System.BitConverter]::ToString($sha.ComputeHash($bytes)) -replace "-", "").ToLowerInvariant()
+    }
+    finally {
+        $sha.Dispose()
+    }
+}
+
+function New-SemanticDigest {
+    param([string[]] $Lines)
+    return Get-StringSha256Lower -Text ([string]::Join("`n", @($Lines | Sort-Object)))
+}
+
 function Assert-FileMatches {
     param([string] $Path, [object] $Expected)
     if (-not (Test-Path $Path)) { throw "kg_artifact_missing=$Path" }
-    $actual = ConvertTo-NormalizedJson (Get-Content $Path -Raw | ConvertFrom-Json)
+    $actualObject = Get-Content $Path -Raw | ConvertFrom-Json
+    $actualDigest = Get-JsonProperty $actualObject "semanticDigest" ""
+    $expectedDigest = Get-JsonProperty $Expected "semanticDigest" ""
+    if (-not [string]::IsNullOrWhiteSpace([string]$actualDigest) -and -not [string]::IsNullOrWhiteSpace([string]$expectedDigest)) {
+        if ([string]$actualDigest -ne [string]$expectedDigest) {
+            throw "kg_artifact_stale=$Path"
+        }
+        return
+    }
+    $actualJson = ConvertTo-NormalizedJson $actualObject
     $expectedJson = ConvertTo-NormalizedJson $Expected
-    if ($actual -ne $expectedJson) {
+    if ($actualJson -ne $expectedJson) {
         throw "kg_artifact_stale=$Path"
     }
 }
@@ -318,6 +344,52 @@ $generatedCanaryRules = [ordered]@{
         }
     })
 }
+
+$capabilityKg["semanticDigest"] = New-SemanticDigest @(
+    "schema=$($capabilityKg.schemaVersion)"
+    "lease=$($capabilityKg.lease.path)|$($capabilityKg.lease.leaseName)|$($capabilityKg.lease.branch)"
+    @($capabilityNodeArray | ForEach-Object {
+        "node=$($_.id)|$($_.candidateClass)|lease=$($_.allowedByLease)|gate=$($_.approvedByGate)|discover=$($_.discoveredByRunner)|exec=$($_.executableByRunner)|batch=$($_.batchExecutable)|paths=$($_.allowedPathCount)|decision=$($_.trainerDecision)"
+    })
+    @($capabilityKg.edges | ForEach-Object {
+        "edge=$($_.from)|$($_.relation)|$($_.to)"
+    })
+)
+
+$fidelityKg["semanticDigest"] = New-SemanticDigest @(
+    "schema=$($fidelityKg.schemaVersion)"
+    @($fidelityNodeArray | ForEach-Object {
+        "node=$($_.id)|$($_.candidateClass)|$($_.level)|receipts=$($_.receiptCount)|pass=$($_.validationPassCount)|fail=$($_.validationFailCount)|semanticPass=$($_.semanticPassCount)|semanticUnknown=$($_.semanticUnknownCount)|review=$($_.reviewFindingCount)|rate=$($_.validationPassRate)"
+    })
+    @($receiptEvidenceArray | ForEach-Object {
+        $evidenceId = Get-JsonProperty $_ "id" ""
+        $evidenceClass = Get-JsonProperty $_ "candidateClass" ""
+        $evidenceSource = Get-JsonProperty $_ "sourceCommit" ""
+        $evidenceLease = Get-JsonProperty $_ "leaseDigest" ""
+        $evidenceValidation = Get-JsonProperty $_ "validationResult" ""
+        $evidenceSemantic = Get-JsonProperty $_ "semanticResult" ""
+        "evidence=$evidenceId|$evidenceClass|source=$evidenceSource|lease=$evidenceLease|validation=$evidenceValidation|semantic=$evidenceSemantic"
+    })
+    @($findingNodes | ForEach-Object {
+        "finding=$($_.id)|$($_.candidateClass)|$($_.severity)|rule=$($_.ruleSuggestion)|canary=$($_.canarySuggestion)"
+    })
+)
+
+$trainingReport["semanticDigest"] = New-SemanticDigest @(
+    "schema=$($trainingReport.schemaVersion)"
+    "policy=missingKgMeansStop:$($trainingReport.policy.missingKgMeansStop)|reviewFindingMeansNoAutoPatch:$($trainingReport.policy.reviewFindingMeansNoAutoPatch)|fidelityDrivesExecutionMode:$($trainingReport.policy.fidelityDrivesExecutionMode)|immutableReceiptChainRequired:$($trainingReport.policy.immutableReceiptChainRequired)|semanticValidationRequired:$($trainingReport.policy.semanticValidationRequired)"
+    @($trainingDecisionArray | ForEach-Object {
+        "decision=$($_.candidateClass)|$($_.fidelityLevel)|$($_.decision)|$($_.reason)"
+    })
+)
+
+$generatedCanaryRules["semanticDigest"] = New-SemanticDigest @(
+    "schema=$($generatedCanaryRules.schemaVersion)"
+    "source=$($generatedCanaryRules.source)"
+    @($generatedCanaryRules.rules | ForEach-Object {
+        "rule=$($_.id)|$($_.candidateClass)|$($_.severity)|$($_.ruleSuggestion)|$($_.canarySuggestion)|$($_.status)"
+    })
+)
 
 if ($CheckOnly.IsPresent) {
     Assert-FileMatches -Path $CapabilityKgPath -Expected $capabilityKg
