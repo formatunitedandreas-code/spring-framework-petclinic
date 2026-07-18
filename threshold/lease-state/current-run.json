@@ -5,7 +5,7 @@
     "mode":  "local_refactor",
     "branch":  "threshold-governed-refactor-demo-156",
     "startHead":  "4d4d04bae758b23889b7115db7756a073950287f",
-    "currentHead":  "5799627304d862f895159a0428de2e52a1caf502",
+    "currentHead":  "93642a0281856c7297b3aa92ce52c6ca6a58fba0",
     "currentSourceHead":  "5faf28a69c71645fa5e7dc332c59a5fc641b8241",
     "candidatesProcessed":  3,
     "commitsCreated":  3,
@@ -16,10 +16,10 @@
                         },
     "lastReceipt":  "threshold/receipts/src-main-java-org-springframework-samples-petclinic-owner-adapter-jpa-jpaownersearchquery-java-duplicate-literal-local-constant-extraction-ownerid-5faf28a69c71.json",
     "terminalState":  "active",
-    "updatedAt":  "2026-07-18T05:08:33.3765359Z",
+    "updatedAt":  "2026-07-18T05:08:45.4538970Z",
     "terminalReason":  "no applicable autoPatchable candidates after discovery canary passed",
-    "discoveryCanaryLastPassedAt":  "2026-07-18T05:08:30.9783916Z",
-    "scopeExpansionTier":  1,
+    "discoveryCanaryLastPassedAt":  "2026-07-18T05:08:42.8318975Z",
+    "scopeExpansionTier":  2,
     "scopeExpansionReason":  "mid_wave_candidate_shortage",
-    "scopeExpansionAppliedAt":  "2026-07-18T05:08:33.3683017Z"
+    "scopeExpansionAppliedAt":  "2026-07-18T05:08:45.4478877Z"
 }
