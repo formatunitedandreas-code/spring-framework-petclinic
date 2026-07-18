@@ -9,7 +9,8 @@
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
+ * express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
@@ -23,7 +24,8 @@ import org.springframework.samples.petclinic.repository.VisitRepository;
 import org.springframework.stereotype.Repository;
 
 /**
- * JPA implementation of the ClinicService interface using EntityManager.
+ * JPA implementation of the ClinicService interface
+ * using EntityManager.
  * <p/>
  * <p>The mappings are defined in "orm.xml" located in the
  * META-INF directory.
