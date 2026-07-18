@@ -9,7 +9,8 @@
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
+ * express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
@@ -57,12 +58,14 @@ public class JpaOwnerRepositoryImpl implements OwnerRepository {
      * Important: in the current version of this method, we load Owners
      * with all their Pets
      * and Visits while
-     * we do not need Visits at all, and we only need one property from the
+     * we do not need Visits at all, and we only need one
+     * property from the
      * Pet objects (the
      * 'name' property).
      * There are some ways to improve it such as:
      * - creating a Lightweight class
-     * - Turning on lazy-loading and using the open session in view pattern
+     * - Turning on lazy-loading and using the open
+     * session in view pattern
      */
     public Collection<Owner> findByLastName(String lastName) {
         // using 'join fetch' because a single query should load

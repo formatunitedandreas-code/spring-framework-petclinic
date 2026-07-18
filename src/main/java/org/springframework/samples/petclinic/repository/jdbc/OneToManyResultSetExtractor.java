@@ -82,7 +82,8 @@ public abstract class OneToManyResultSetExtractor<R, C, K> implements ResultSetE
 	 * Creates a new {@link OneToManyResultSetExtractor} from the given
 	 * {@link RowMapper}s.
 	 *
-	 * @param rootMapper {@link RowMapper} to map the root entity, must not be
+	 * @param rootMapper {@link RowMapper} to map the root
+	 * entity, must not be
 	 * {@literal null}.
 	 * @param childMapper {@link RowMapper} to map the root
 	 * entities, must not be
