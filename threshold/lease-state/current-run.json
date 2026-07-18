@@ -5,16 +5,16 @@
     "mode":  "local_refactor",
     "branch":  "threshold-governed-refactor-demo-163",
     "startHead":  "62cb88df2501458fb7891ac412ce7d58603e229c",
-    "currentHead":  "59c12791e71dcd6b43ccbe1f3bda2d0ba2987ae4",
-    "currentSourceHead":  "59c12791e71dcd6b43ccbe1f3bda2d0ba2987ae4",
-    "candidatesProcessed":  3,
-    "commitsCreated":  3,
+    "currentHead":  "296d70f6e3e582952447134003a5f2c23e20457b",
+    "currentSourceHead":  "296d70f6e3e582952447134003a5f2c23e20457b",
+    "candidatesProcessed":  4,
+    "commitsCreated":  4,
     "remainingBudget":  {
-                            "candidates":  2,
-                            "commits":  2,
+                            "candidates":  1,
+                            "commits":  1,
                             "repairAttempts":  1
                         },
-    "lastReceipt":  "threshold/receipts/src-main-java-org-springframework-samples-petclinic-repository-jpa-jpavisitrepositoryimpl-java-comment-wrap-cleanup-line-28-59c12791e71d.json",
+    "lastReceipt":  "threshold/receipts/src-main-java-org-springframework-samples-petclinic-repository-ownerrepository-java-comment-wrap-cleanup-line-27-296d70f6e3e5.json",
     "terminalState":  "active",
-    "updatedAt":  "2026-07-18T07:58:58.5100263Z"
+    "updatedAt":  "2026-07-18T08:00:02.7594760Z"
 }
