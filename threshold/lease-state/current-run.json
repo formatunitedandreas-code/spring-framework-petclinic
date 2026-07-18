@@ -1,12 +1,12 @@
 {
     "schemaVersion":  "threshold.petclinic.lease-state.v0.2",
-    "invocationId":  "owned-autonomous-refactor-branch-wave-v0_automation-20260718T195553Z",
+    "invocationId":  "owned-autonomous-refactor-branch-wave-v0_automation-20260718T202132Z",
     "leaseId":  "owned-autonomous-refactor-branch-wave-v0_automation",
     "mode":  "local_refactor",
-    "branch":  "threshold-governed-refactor-demo-175",
-    "startHead":  "9cbacc1398ff80381c0f84999554fbc15dfd4ca4",
-    "currentHead":  "a105eefbddd2d5fb484a50516157ea16b5de7d3a",
-    "currentSourceHead":  "a105eefbddd2d5fb484a50516157ea16b5de7d3a",
+    "branch":  "threshold-governed-refactor-demo-176",
+    "startHead":  "cf12a52a96e3ce5d8060c767251e1665ea92b8cf",
+    "currentHead":  "43c101d7c4d181c8c558803e6cb46a0b0deb82d9",
+    "currentSourceHead":  "43c101d7c4d181c8c558803e6cb46a0b0deb82d9",
     "candidatesProcessed":  5,
     "commitsCreated":  5,
     "remainingBudget":  {
@@ -14,12 +14,12 @@
                             "commits":  0,
                             "repairAttempts":  1
                         },
-    "lastReceipt":  "threshold/receipts/src-main-java-org-springframework-samples-petclinic-model-pet-java-comment-wrap-cleanup-line-12-a105eefbddd2.json",
+    "lastReceipt":  "threshold/receipts/src-main-java-org-springframework-samples-petclinic-model-visit-java-comment-wrap-cleanup-line-12-43c101d7c4d1.json",
     "terminalState":  "budget_exhausted_verified",
-    "updatedAt":  "2026-07-18T20:02:15.3697108Z",
+    "updatedAt":  "2026-07-18T20:27:55.5058442Z",
     "terminalReason":  "remaining candidate or commit budget is exhausted after slice validation passed",
     "currentHeadRole":  "sourceHead",
-    "terminalEvidenceHead":  "85a0575cfe78e6c17453a670e65f4fce78e5c712",
+    "terminalEvidenceHead":  "29243d9d84505dd5838c7048c77f614353c39c65",
     "terminalEvidencePolicy":  "terminal evidence is generated from the last governed source/evidence head before the terminal governance commit",
-    "terminalEvidenceMarkedAt":  "2026-07-18T20:02:21.5372818Z"
+    "terminalEvidenceMarkedAt":  "2026-07-18T20:27:58.5061952Z"
 }
