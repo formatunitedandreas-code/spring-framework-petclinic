@@ -93,7 +93,8 @@ public class JdbcOwnerRepositoryImpl implements OwnerRepository {
 
 
     /**
-     * Loads {@link Owner Owners} from the data store by last name, returning all
+     * Loads {@link Owner Owners} from the data store by last
+     * name, returning all
      * owners whose last
      * name <i>starts</i>
      * with
