@@ -1,9 +1,9 @@
 {
     "schemaVersion":  "threshold.petclinic.candidate-pocket.v0.2",
     "leaseName":  "owned-autonomous-refactor-branch-wave-v0_automation",
-    "branch":  "threshold-governed-refactor-demo-168-linear",
-    "generatedFromHead":  "ed3dc39cedbd8edc282f434ebaad120e1ffb17ec",
-    "generatedAt":  "2026-07-18T13:50:42.0703957Z",
+    "branch":  "threshold-governed-refactor-demo-169",
+    "generatedFromHead":  "4f9096044ed7dd81b02f3090782b91eaf4654b99",
+    "generatedAt":  "2026-07-18T16:55:04.5836861Z",
     "discovery":  {
                       "method":  "static-heuristic-scan",
                       "sourceRoot":  "src/main/java/org/springframework/samples/petclinic",
@@ -1584,8 +1584,5 @@
                       "no public correctness claim",
                       "no public security claim",
                       "no public compliance claim"
-                  ],
-    "generatedFromHeadRole":  "sourceHead",
-    "terminalEvidenceHead":  "ed3dc39cedbd8edc282f434ebaad120e1ffb17ec",
-    "terminalEvidencePolicy":  "candidate pocket is generated from the last governed source/evidence head before the terminal governance commit"
+                  ]
 }
