@@ -98,7 +98,7 @@ if ($CheckOnly.IsPresent) {
     if (-not (Test-Path $ChainPath)) { throw "receipt_chain_missing=$ChainPath" }
     $existing = Get-Content $ChainPath -Raw | ConvertFrom-Json
     if ([string]$existing.root -ne [string]$chain.root -or [int]$existing.receiptCount -ne [int]$chain.receiptCount) {
-        throw "receipt_chain_stale=$ChainPath"
+        throw "receipt_chain_stale=$ChainPath actualRoot=$($existing.root) expectedRoot=$($chain.root) actualCount=$($existing.receiptCount) expectedCount=$($chain.receiptCount)"
     }
 }
 else {
