@@ -12,7 +12,7 @@
                       "semanticPassCount":  0,
                       "semanticUnknownCount":  1,
                       "reviewFindingCount":  0,
-                      "validationPassRate":  1
+                      "validationPassRate":  "1"
                   },
                   {
                       "id":  "fidelity:comment_wrap_cleanup",
@@ -24,7 +24,7 @@
                       "semanticPassCount":  0,
                       "semanticUnknownCount":  112,
                       "reviewFindingCount":  0,
-                      "validationPassRate":  1
+                      "validationPassRate":  "1"
                   },
                   {
                       "id":  "fidelity:controller_branch_readability_decomposition",
@@ -36,7 +36,7 @@
                       "semanticPassCount":  0,
                       "semanticUnknownCount":  0,
                       "reviewFindingCount":  0,
-                      "validationPassRate":  0
+                      "validationPassRate":  "0"
                   },
                   {
                       "id":  "fidelity:duplicate_literal_local_constant_extraction",
@@ -48,7 +48,7 @@
                       "semanticPassCount":  0,
                       "semanticUnknownCount":  11,
                       "reviewFindingCount":  0,
-                      "validationPassRate":  1
+                      "validationPassRate":  "1"
                   },
                   {
                       "id":  "fidelity:leading_tab_indentation_cleanup",
@@ -60,7 +60,7 @@
                       "semanticPassCount":  0,
                       "semanticUnknownCount":  14,
                       "reviewFindingCount":  0,
-                      "validationPassRate":  1
+                      "validationPassRate":  "1"
                   },
                   {
                       "id":  "fidelity:line_comment_wrap_cleanup",
@@ -72,7 +72,7 @@
                       "semanticPassCount":  0,
                       "semanticUnknownCount":  11,
                       "reviewFindingCount":  0,
-                      "validationPassRate":  1
+                      "validationPassRate":  "1"
                   },
                   {
                       "id":  "fidelity:method_signature_wrap_cleanup",
@@ -84,7 +84,7 @@
                       "semanticPassCount":  0,
                       "semanticUnknownCount":  4,
                       "reviewFindingCount":  0,
-                      "validationPassRate":  1
+                      "validationPassRate":  "1"
                   },
                   {
                       "id":  "fidelity:method_spacing_normalization",
@@ -96,7 +96,7 @@
                       "semanticPassCount":  0,
                       "semanticUnknownCount":  6,
                       "reviewFindingCount":  0,
-                      "validationPassRate":  1
+                      "validationPassRate":  "1"
                   },
                   {
                       "id":  "fidelity:model_readability_cleanup",
@@ -108,7 +108,7 @@
                       "semanticPassCount":  0,
                       "semanticUnknownCount":  4,
                       "reviewFindingCount":  0,
-                      "validationPassRate":  1
+                      "validationPassRate":  "1"
                   },
                   {
                       "id":  "fidelity:owner_search_adapter_contract_baseline",
@@ -120,7 +120,7 @@
                       "semanticPassCount":  0,
                       "semanticUnknownCount":  1,
                       "reviewFindingCount":  0,
-                      "validationPassRate":  0
+                      "validationPassRate":  "0"
                   },
                   {
                       "id":  "fidelity:owner_search_architecture_rules",
@@ -132,7 +132,7 @@
                       "semanticPassCount":  0,
                       "semanticUnknownCount":  1,
                       "reviewFindingCount":  0,
-                      "validationPassRate":  0
+                      "validationPassRate":  "0"
                   },
                   {
                       "id":  "fidelity:owner_search_before_after_readout",
@@ -144,7 +144,7 @@
                       "semanticPassCount":  0,
                       "semanticUnknownCount":  1,
                       "reviewFindingCount":  0,
-                      "validationPassRate":  0
+                      "validationPassRate":  "0"
                   },
                   {
                       "id":  "fidelity:owner_search_behavior_baseline",
@@ -156,7 +156,7 @@
                       "semanticPassCount":  0,
                       "semanticUnknownCount":  1,
                       "reviewFindingCount":  0,
-                      "validationPassRate":  0
+                      "validationPassRate":  "0"
                   },
                   {
                       "id":  "fidelity:owner_search_compatibility_path",
@@ -168,7 +168,7 @@
                       "semanticPassCount":  0,
                       "semanticUnknownCount":  2,
                       "reviewFindingCount":  0,
-                      "validationPassRate":  0
+                      "validationPassRate":  "0"
                   },
                   {
                       "id":  "fidelity:owner_search_controller_migration",
@@ -180,7 +180,7 @@
                       "semanticPassCount":  0,
                       "semanticUnknownCount":  1,
                       "reviewFindingCount":  0,
-                      "validationPassRate":  0
+                      "validationPassRate":  "0"
                   },
                   {
                       "id":  "fidelity:owner_search_explicit_fetch_plans",
@@ -192,7 +192,7 @@
                       "semanticPassCount":  0,
                       "semanticUnknownCount":  1,
                       "reviewFindingCount":  0,
-                      "validationPassRate":  0
+                      "validationPassRate":  "0"
                   },
                   {
                       "id":  "fidelity:owner_search_full_validation_matrix",
@@ -204,7 +204,7 @@
                       "semanticPassCount":  0,
                       "semanticUnknownCount":  2,
                       "reviewFindingCount":  0,
-                      "validationPassRate":  0
+                      "validationPassRate":  "0"
                   },
                   {
                       "id":  "fidelity:owner_search_jdbc_adapter",
@@ -216,7 +216,7 @@
                       "semanticPassCount":  0,
                       "semanticUnknownCount":  1,
                       "reviewFindingCount":  0,
-                      "validationPassRate":  0
+                      "validationPassRate":  "0"
                   },
                   {
                       "id":  "fidelity:owner_search_jpa_adapter",
@@ -228,7 +228,7 @@
                       "semanticPassCount":  0,
                       "semanticUnknownCount":  1,
                       "reviewFindingCount":  0,
-                      "validationPassRate":  0
+                      "validationPassRate":  "0"
                   },
                   {
                       "id":  "fidelity:owner_search_query_measurement_baseline",
@@ -240,7 +240,7 @@
                       "semanticPassCount":  0,
                       "semanticUnknownCount":  1,
                       "reviewFindingCount":  0,
-                      "validationPassRate":  0
+                      "validationPassRate":  "0"
                   },
                   {
                       "id":  "fidelity:owner_search_spring_data_jpa_adapter",
@@ -252,7 +252,7 @@
                       "semanticPassCount":  0,
                       "semanticUnknownCount":  1,
                       "reviewFindingCount":  0,
-                      "validationPassRate":  0
+                      "validationPassRate":  "0"
                   },
                   {
                       "id":  "fidelity:private_helper_extraction_for_readability",
@@ -264,7 +264,7 @@
                       "semanticPassCount":  0,
                       "semanticUnknownCount":  1,
                       "reviewFindingCount":  0,
-                      "validationPassRate":  1
+                      "validationPassRate":  "1"
                   },
                   {
                       "id":  "fidelity:redundant private helper inline cleanup",
@@ -276,7 +276,7 @@
                       "semanticPassCount":  0,
                       "semanticUnknownCount":  1,
                       "reviewFindingCount":  0,
-                      "validationPassRate":  1
+                      "validationPassRate":  "1"
                   },
                   {
                       "id":  "fidelity:redundant_local_variable_simplification",
@@ -288,7 +288,7 @@
                       "semanticPassCount":  0,
                       "semanticUnknownCount":  1,
                       "reviewFindingCount":  0,
-                      "validationPassRate":  1
+                      "validationPassRate":  "1"
                   },
                   {
                       "id":  "fidelity:repository_readability_cleanup",
@@ -300,7 +300,7 @@
                       "semanticPassCount":  0,
                       "semanticUnknownCount":  53,
                       "reviewFindingCount":  0,
-                      "validationPassRate":  1
+                      "validationPassRate":  "1"
                   },
                   {
                       "id":  "fidelity:split_string_constant_normalization",
@@ -312,7 +312,7 @@
                       "semanticPassCount":  0,
                       "semanticUnknownCount":  3,
                       "reviewFindingCount":  0,
-                      "validationPassRate":  1
+                      "validationPassRate":  "1"
                   },
                   {
                       "id":  "fidelity:spring_data_query_concat_wrap_cleanup",
@@ -324,7 +324,7 @@
                       "semanticPassCount":  0,
                       "semanticUnknownCount":  3,
                       "reviewFindingCount":  0,
-                      "validationPassRate":  1
+                      "validationPassRate":  "1"
                   },
                   {
                       "id":  "fidelity:spring_data_query_wrap_cleanup",
@@ -336,7 +336,7 @@
                       "semanticPassCount":  0,
                       "semanticUnknownCount":  3,
                       "reviewFindingCount":  0,
-                      "validationPassRate":  1
+                      "validationPassRate":  "1"
                   },
                   {
                       "id":  "fidelity:string_constant_wrap_cleanup",
@@ -348,7 +348,7 @@
                       "semanticPassCount":  0,
                       "semanticUnknownCount":  0,
                       "reviewFindingCount":  0,
-                      "validationPassRate":  0
+                      "validationPassRate":  "0"
                   },
                   {
                       "id":  "fidelity:threshold_enforcement",
@@ -360,7 +360,7 @@
                       "semanticPassCount":  0,
                       "semanticUnknownCount":  4,
                       "reviewFindingCount":  0,
-                      "validationPassRate":  0.75
+                      "validationPassRate":  "0.75"
                   },
                   {
                       "id":  "fidelity:threshold_governance_artifact_update",
@@ -372,7 +372,7 @@
                       "semanticPassCount":  0,
                       "semanticUnknownCount":  6,
                       "reviewFindingCount":  0,
-                      "validationPassRate":  1
+                      "validationPassRate":  "1"
                   },
                   {
                       "id":  "fidelity:unknown",
@@ -384,7 +384,7 @@
                       "semanticPassCount":  0,
                       "semanticUnknownCount":  15,
                       "reviewFindingCount":  0,
-                      "validationPassRate":  0
+                      "validationPassRate":  "0"
                   },
                   {
                       "id":  "fidelity:utility_readability_cleanup",
@@ -396,7 +396,7 @@
                       "semanticPassCount":  0,
                       "semanticUnknownCount":  7,
                       "reviewFindingCount":  0,
-                      "validationPassRate":  1
+                      "validationPassRate":  "1"
                   }
               ],
     "evidence":  [

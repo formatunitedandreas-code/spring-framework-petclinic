@@ -212,6 +212,7 @@ foreach ($className in $allClasses) {
     $isExecutable = $runnerClasses -contains $className
     $isBatch = $batchClasses -contains $className
     $passRate = if ([int]$stats.receiptCount -gt 0) { [math]::Round([double]$stats.validationPassCount / [double]$stats.receiptCount, 4) } else { 0.0 }
+    $passRateText = [string]::Format([System.Globalization.CultureInfo]::InvariantCulture, "{0:0.####}", $passRate)
 
     $level = "F0_UNOBSERVED"
     if ($stats.reviewFindingCount -gt 0 -or $stats.validationFailCount -gt 0) { $level = "F1_REVIEW_REQUIRED" }
@@ -249,7 +250,7 @@ foreach ($className in $allClasses) {
         semanticPassCount = [int]$stats.semanticPassCount
         semanticUnknownCount = [int]$stats.semanticUnknownCount
         reviewFindingCount = [int]$stats.reviewFindingCount
-        validationPassRate = $passRate
+        validationPassRate = $passRateText
     })
     $trainingDecisions.Add([ordered]@{
         candidateClass = $className
