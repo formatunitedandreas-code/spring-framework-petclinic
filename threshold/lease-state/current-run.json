@@ -5,19 +5,16 @@
     "mode":  "local_refactor",
     "branch":  "threshold-governed-refactor-demo-162",
     "startHead":  "394d70d17366878928b6aba37270b4a8037b4644",
-    "currentHead":  "394d70d17366878928b6aba37270b4a8037b4644",
-    "currentSourceHead":  "394d70d17366878928b6aba37270b4a8037b4644",
-    "candidatesProcessed":  0,
-    "commitsCreated":  0,
+    "currentHead":  "ecfe622e291693020dcce144c628422e454ba2a6",
+    "currentSourceHead":  "ecfe622e291693020dcce144c628422e454ba2a6",
+    "candidatesProcessed":  1,
+    "commitsCreated":  1,
     "remainingBudget":  {
-                            "candidates":  5,
-                            "commits":  5,
+                            "candidates":  4,
+                            "commits":  4,
                             "repairAttempts":  1
                         },
-    "lastReceipt":  null,
+    "lastReceipt":  "threshold/receipts/src-main-java-org-springframework-samples-petclinic-repository-jdbc-onetomanyresultsetextractor-java-comment-wrap-cleanup-line-30-ecfe622e2916.json",
     "terminalState":  "active",
-    "updatedAt":  "2026-07-18T07:29:03.7320757Z",
-    "scopeExpansionTier":  4,
-    "scopeExpansionReason":  "fresh_wave_candidate_shortage",
-    "scopeExpansionAppliedAt":  "2026-07-18T07:29:03.7255307Z"
+    "updatedAt":  "2026-07-18T07:30:12.5372806Z"
 }

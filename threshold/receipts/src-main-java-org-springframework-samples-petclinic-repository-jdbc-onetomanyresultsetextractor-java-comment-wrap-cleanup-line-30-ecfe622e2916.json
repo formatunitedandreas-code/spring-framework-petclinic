@@ -1,0 +1,51 @@
+{
+    "schemaVersion":  "threshold.petclinic.slice-receipt.v0.2",
+    "candidateId":  "src-main-java-org-springframework-samples-petclinic-repository-jdbc-onetomanyresultsetextractor-java-comment-wrap-cleanup-line-30",
+    "leaseName":  "owned-autonomous-refactor-branch-wave-v0_automation",
+    "leaseDigest":  "42a2b9d1ec0df0ae1236990a215fd30734208dbf4c0540cf36e9d2604f762a86",
+    "branch":  "threshold-governed-refactor-demo-162",
+    "candidateClass":  "comment_wrap_cleanup",
+    "leaseStartHead":  "394d70d17366878928b6aba37270b4a8037b4644",
+    "baseHead":  "06705f2bcfb6f60899ee77f2dbd28dbb29dce1bc",
+    "commitHash":  "ecfe622e291693020dcce144c628422e454ba2a6",
+    "receiptMaterialization":  "post-commit",
+    "perCommitValidationLogAvailable":  true,
+    "branchFinalValidationPassed":  false,
+    "changedFiles":  [
+                         {
+                             "path":  "src/main/java/org/springframework/samples/petclinic/repository/jdbc/OneToManyResultSetExtractor.java",
+                             "beforeSha256":  "060414a9b299c14f251d60d2f1860fcd5784743e7cae7c8f3631a49dd1c6e374",
+                             "afterSha256":  "991b9a31f34ad5a278753bf1c4a6ccf0deb5d564da6230afe8dcb14e1b60f6a1"
+                         }
+                     ],
+    "diffSummary":  "Refactor PetClinic Wrap one long Javadoc comment line without changing so",
+    "diffStat":  {
+                     "filesChanged":  1,
+                     "insertions":  2,
+                     "deletions":  1
+                 },
+    "validation":  {
+                       "diffCheck":  "passed",
+                       "command":  ".\\mvnw.cmd test",
+                       "result":  "BUILD SUCCESS",
+                       "testsRun":  119,
+                       "failures":  0,
+                       "errors":  0,
+                       "skipped":  0
+                   },
+    "nonClaims":  [
+                      "no push in candidate slice",
+                      "no PR update in candidate slice",
+                      "no upstream interaction",
+                      "no pom.xml change",
+                      "no dependency change",
+                      "no src/test change",
+                      "no merge",
+                      "no release",
+                      "no deploy",
+                      "no public readiness claim",
+                      "no public correctness claim",
+                      "no public security claim",
+                      "no public compliance claim"
+                  ]
+}
