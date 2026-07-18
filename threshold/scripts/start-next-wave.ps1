@@ -173,7 +173,7 @@ function Restore-PreWaveBranch {
 
     Invoke-Checked -FilePath "git" -ArgumentList @("switch", $PreviousBranch) -FailureMessage "Failed to restore previous branch '$PreviousBranch'."
 
-    & git branch -d $WaveBranch
+    & git branch -D $WaveBranch
     if ($LASTEXITCODE -ne 0) {
         throw "Failed to delete transient wave branch '$WaveBranch'."
     }
