@@ -9,7 +9,8 @@
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
+ * express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
@@ -36,7 +37,8 @@ import org.springframework.util.Assert;
  * child rows returned
  * per parent root.
  * <p>
- * It's assumed that the root type R table has a primary key (id) of type K
+ * It's assumed that the root type R table has a primary
+ * key (id) of type K
  * and that the child
  * type C table has a
  * foreign key of type K referencing the root table's primary key.
@@ -95,7 +97,8 @@ public abstract class OneToManyResultSetExtractor<R, C, K> implements ResultSetE
 	 * {@link RowMapper}s and
 	 * {@link ExpectedResults}.
 	 *
-	 * @param rootMapper {@link RowMapper} to map the root entity, must not be
+	 * @param rootMapper {@link RowMapper} to map the root
+	 * entity, must not be
 	 * {@literal null}.
 	 * @param childMapper {@link RowMapper} to map the root
 	 * entities, must not be
