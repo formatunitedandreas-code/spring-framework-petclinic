@@ -111,6 +111,8 @@ function Assert-FileMatches {
     $expectedDigest = Get-JsonProperty $Expected "semanticDigest" ""
     if (-not [string]::IsNullOrWhiteSpace([string]$actualDigest) -and -not [string]::IsNullOrWhiteSpace([string]$expectedDigest)) {
         if ([string]$actualDigest -ne [string]$expectedDigest) {
+            Write-Host "kg_artifact_actualDigest=$actualDigest"
+            Write-Host "kg_artifact_expectedDigest=$expectedDigest"
             throw "kg_artifact_stale=$Path"
         }
         return
