@@ -1,12 +1,12 @@
 {
     "schemaVersion":  "threshold.petclinic.lease-state.v0.2",
-    "invocationId":  "owned-autonomous-refactor-branch-wave-v0_automation-20260718T072852Z",
+    "invocationId":  "owned-autonomous-refactor-branch-wave-v0_automation-20260718T075513Z",
     "leaseId":  "owned-autonomous-refactor-branch-wave-v0_automation",
     "mode":  "local_refactor",
-    "branch":  "threshold-governed-refactor-demo-162",
-    "startHead":  "394d70d17366878928b6aba37270b4a8037b4644",
-    "currentHead":  "21a8c9b0d4bf687186066bb75d5d9d6b5559f352",
-    "currentSourceHead":  "21a8c9b0d4bf687186066bb75d5d9d6b5559f352",
+    "branch":  "threshold-governed-refactor-demo-163",
+    "startHead":  "62cb88df2501458fb7891ac412ce7d58603e229c",
+    "currentHead":  "d5f3ddaeb36f33ddf821edca139d22ea0d532752",
+    "currentSourceHead":  "d5f3ddaeb36f33ddf821edca139d22ea0d532752",
     "candidatesProcessed":  5,
     "commitsCreated":  5,
     "remainingBudget":  {
@@ -14,12 +14,12 @@
                             "commits":  0,
                             "repairAttempts":  1
                         },
-    "lastReceipt":  "threshold/receipts/src-main-java-org-springframework-samples-petclinic-repository-jdbc-onetomanyresultsetextractor-java-comment-wrap-cleanup-line-54-21a8c9b0d4bf.json",
+    "lastReceipt":  "threshold/receipts/src-main-java-org-springframework-samples-petclinic-repository-ownerrepository-java-comment-wrap-cleanup-line-40-d5f3ddaeb36f.json",
     "terminalState":  "budget_exhausted_verified",
-    "updatedAt":  "2026-07-18T07:34:57.5236219Z",
+    "updatedAt":  "2026-07-18T08:01:14.0952228Z",
     "terminalReason":  "remaining candidate or commit budget is exhausted after slice validation passed",
     "currentHeadRole":  "sourceHead",
-    "terminalEvidenceHead":  "feea1c332fbea3a2eb3cdb7d0408821c1d964898",
+    "terminalEvidenceHead":  "278d6cbd0c18237f2272f0a57a01ec4e375e7717",
     "terminalEvidencePolicy":  "terminal evidence is generated from the last governed source/evidence head before the terminal governance commit",
-    "terminalEvidenceMarkedAt":  "2026-07-18T07:35:00.9249913Z"
+    "terminalEvidenceMarkedAt":  "2026-07-18T08:01:17.3310124Z"
 }

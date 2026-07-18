@@ -25,7 +25,8 @@ import org.springframework.stereotype.Repository;
 /**
  * JPA implementation of the ClinicService interface using EntityManager.
  * <p/>
- * <p>The mappings are defined in "orm.xml" located in the META-INF directory.
+ * <p>The mappings are defined in "orm.xml" located in the
+ * META-INF directory.
  *
  * @author Mike Keith
  * @author Rod Johnson
