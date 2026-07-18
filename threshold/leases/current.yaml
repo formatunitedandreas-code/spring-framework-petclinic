@@ -1,9 +1,9 @@
 leaseName: owned-autonomous-refactor-branch-wave-v0_automation
 repository: C:\dev\spring-framework-petclinic
-branch: codex/phase3-lifecycle-terminal-fix
+branch: threshold-governed-refactor-demo-162
 baseRemote: origin
 baseRef: origin/main
-startHead: 572bfca09f908de6f604baf3c193a52b7e3ed519
+startHead: 394d70d17366878928b6aba37270b4a8037b4644
 headPolicy: descendantOfStartHead
 scopeExpansionTier: 4
 longLineThreshold: 74
@@ -82,6 +82,7 @@ allowedCandidateTypes:
 forbiddenActions:
   - push_to_upstream
   - force_push
+  - merge
   - release
   - deploy
   - dependency_or_pom_changes
@@ -100,4 +101,4 @@ validation:
 terminalBoundary:
   afterLocalCommit: hold_at_local_commit_boundary
   draftPrAllowed: true
-  mergeAllowed: true
+  mergeAllowed: false
