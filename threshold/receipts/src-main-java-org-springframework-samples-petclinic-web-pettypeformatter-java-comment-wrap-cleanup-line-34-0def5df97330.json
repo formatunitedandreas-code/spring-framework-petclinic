@@ -1,0 +1,51 @@
+{
+    "schemaVersion":  "threshold.petclinic.slice-receipt.v0.2",
+    "candidateId":  "src-main-java-org-springframework-samples-petclinic-web-pettypeformatter-java-comment-wrap-cleanup-line-34",
+    "leaseName":  "owned-autonomous-refactor-branch-wave-v0_automation",
+    "leaseDigest":  "29b6315b08a6c8afdd56f979006d1c012383efaeada9da3f23d9b263ecd3242b",
+    "branch":  "threshold-governed-refactor-demo-179",
+    "candidateClass":  "comment_wrap_cleanup",
+    "leaseStartHead":  "47b13502f4bef6bf86b6e31b773ab1b513eed4c8",
+    "baseHead":  "f1d008e35f1f699909828196ff9909b9eb6f10e4",
+    "commitHash":  "0def5df973301c7849ef004152b4d8082dc8609f",
+    "receiptMaterialization":  "post-commit",
+    "perCommitValidationLogAvailable":  true,
+    "branchFinalValidationPassed":  false,
+    "changedFiles":  [
+                         {
+                             "path":  "src/main/java/org/springframework/samples/petclinic/web/PetTypeFormatter.java",
+                             "beforeSha256":  "f090b6280e85e37b6d98c9ae56bd19f455d7b33dbec796d65fca25b9cea67b15",
+                             "afterSha256":  "b4b52c1904683595e02e81243f5a18135611f2ff2f7d2243a693e1b1f1958d28"
+                         }
+                     ],
+    "diffSummary":  "Refactor PetClinic Wrap one long Javadoc comment line without changing so",
+    "diffStat":  {
+                     "filesChanged":  1,
+                     "insertions":  2,
+                     "deletions":  1
+                 },
+    "validation":  {
+                       "diffCheck":  "passed",
+                       "command":  ".\\mvnw.cmd test",
+                       "result":  "BUILD SUCCESS",
+                       "testsRun":  119,
+                       "failures":  0,
+                       "errors":  0,
+                       "skipped":  0
+                   },
+    "nonClaims":  [
+                      "no push in candidate slice",
+                      "no PR update in candidate slice",
+                      "no upstream interaction",
+                      "no pom.xml change",
+                      "no dependency change",
+                      "no src/test change",
+                      "no merge",
+                      "no release",
+                      "no deploy",
+                      "no public readiness claim",
+                      "no public correctness claim",
+                      "no public security claim",
+                      "no public compliance claim"
+                  ]
+}
