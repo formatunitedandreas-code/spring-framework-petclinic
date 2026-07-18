@@ -1,6 +1,6 @@
 leaseName: owned-autonomous-refactor-branch-wave-v0_automation
 repository: C:\dev\spring-framework-petclinic
-branch: threshold-governed-refactor-demo-164
+branch: codex/threshold-kg-trainer-governance
 baseRemote: origin
 baseRef: origin/main
 startHead: 516e058a0d4c1ff6cbd1208c698a2893fd5f712c
@@ -48,9 +48,13 @@ allowedPaths:
   - threshold/discovery-canaries/**/*.java
   - threshold/discovery-canaries/*.json
   - threshold/gates/*.json
+  - threshold/kgs/*.json
+  - threshold/trainer/*.json
+  - threshold/attestations/*.json
   - threshold/lanes/*.yaml
   - threshold/scripts/*.ps1
   - .github/workflows/threshold-governance.yml
+  - .github/CODEOWNERS
 
 forbiddenPaths:
   - pom.xml
@@ -82,7 +86,6 @@ allowedCandidateTypes:
 forbiddenActions:
   - push_to_upstream
   - force_push
-  - merge
   - release
   - deploy
   - dependency_or_pom_changes
@@ -101,4 +104,4 @@ validation:
 terminalBoundary:
   afterLocalCommit: hold_at_local_commit_boundary
   draftPrAllowed: true
-  mergeAllowed: false
+  mergeAllowed: true

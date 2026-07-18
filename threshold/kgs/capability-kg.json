@@ -1,0 +1,938 @@
+{
+    "schemaVersion":  "threshold.petclinic.capability-kg.v0.1",
+    "generatedAt":  "deterministic-from-current-repo-state",
+    "lease":  {
+                  "path":  "threshold/leases/current.yaml",
+                  "leaseName":  "owned-autonomous-refactor-branch-wave-v0_automation",
+                  "branch":  "codex/threshold-kg-trainer-governance"
+              },
+    "nodes":  [
+                  {
+                      "id":  "capability:application_bootstrap_readability_cleanup",
+                      "candidateClass":  "application_bootstrap_readability_cleanup",
+                      "allowedByLease":  true,
+                      "approvedByGate":  true,
+                      "discoveredByRunner":  true,
+                      "executableByRunner":  true,
+                      "batchExecutable":  false,
+                      "forbiddenActions":  [
+                                               "push_to_upstream",
+                                               "force_push",
+                                               "release",
+                                               "deploy",
+                                               "dependency_or_pom_changes",
+                                               "src_test_changes",
+                                               "public_readiness_claim",
+                                               "public_correctness_claim",
+                                               "public_security_claim",
+                                               "public_compliance_claim"
+                                           ],
+                      "allowedPathCount":  25,
+                      "trainerDecision":  "autoPatchable"
+                  },
+                  {
+                      "id":  "capability:comment_wrap_cleanup",
+                      "candidateClass":  "comment_wrap_cleanup",
+                      "allowedByLease":  true,
+                      "approvedByGate":  true,
+                      "discoveredByRunner":  true,
+                      "executableByRunner":  true,
+                      "batchExecutable":  true,
+                      "forbiddenActions":  [
+                                               "push_to_upstream",
+                                               "force_push",
+                                               "release",
+                                               "deploy",
+                                               "dependency_or_pom_changes",
+                                               "src_test_changes",
+                                               "public_readiness_claim",
+                                               "public_correctness_claim",
+                                               "public_security_claim",
+                                               "public_compliance_claim"
+                                           ],
+                      "allowedPathCount":  25,
+                      "trainerDecision":  "autoPatchable"
+                  },
+                  {
+                      "id":  "capability:controller_branch_readability_decomposition",
+                      "candidateClass":  "controller_branch_readability_decomposition",
+                      "allowedByLease":  true,
+                      "approvedByGate":  false,
+                      "discoveredByRunner":  false,
+                      "executableByRunner":  false,
+                      "batchExecutable":  false,
+                      "forbiddenActions":  [
+                                               "push_to_upstream",
+                                               "force_push",
+                                               "release",
+                                               "deploy",
+                                               "dependency_or_pom_changes",
+                                               "src_test_changes",
+                                               "public_readiness_claim",
+                                               "public_correctness_claim",
+                                               "public_security_claim",
+                                               "public_compliance_claim"
+                                           ],
+                      "allowedPathCount":  25,
+                      "trainerDecision":  "held"
+                  },
+                  {
+                      "id":  "capability:duplicate_literal_local_constant_extraction",
+                      "candidateClass":  "duplicate_literal_local_constant_extraction",
+                      "allowedByLease":  true,
+                      "approvedByGate":  true,
+                      "discoveredByRunner":  true,
+                      "executableByRunner":  true,
+                      "batchExecutable":  false,
+                      "forbiddenActions":  [
+                                               "push_to_upstream",
+                                               "force_push",
+                                               "release",
+                                               "deploy",
+                                               "dependency_or_pom_changes",
+                                               "src_test_changes",
+                                               "public_readiness_claim",
+                                               "public_correctness_claim",
+                                               "public_security_claim",
+                                               "public_compliance_claim"
+                                           ],
+                      "allowedPathCount":  25,
+                      "trainerDecision":  "autoPatchable"
+                  },
+                  {
+                      "id":  "capability:leading_tab_indentation_cleanup",
+                      "candidateClass":  "leading_tab_indentation_cleanup",
+                      "allowedByLease":  true,
+                      "approvedByGate":  true,
+                      "discoveredByRunner":  true,
+                      "executableByRunner":  true,
+                      "batchExecutable":  false,
+                      "forbiddenActions":  [
+                                               "push_to_upstream",
+                                               "force_push",
+                                               "release",
+                                               "deploy",
+                                               "dependency_or_pom_changes",
+                                               "src_test_changes",
+                                               "public_readiness_claim",
+                                               "public_correctness_claim",
+                                               "public_security_claim",
+                                               "public_compliance_claim"
+                                           ],
+                      "allowedPathCount":  25,
+                      "trainerDecision":  "autoPatchable"
+                  },
+                  {
+                      "id":  "capability:line_comment_wrap_cleanup",
+                      "candidateClass":  "line_comment_wrap_cleanup",
+                      "allowedByLease":  true,
+                      "approvedByGate":  true,
+                      "discoveredByRunner":  true,
+                      "executableByRunner":  true,
+                      "batchExecutable":  false,
+                      "forbiddenActions":  [
+                                               "push_to_upstream",
+                                               "force_push",
+                                               "release",
+                                               "deploy",
+                                               "dependency_or_pom_changes",
+                                               "src_test_changes",
+                                               "public_readiness_claim",
+                                               "public_correctness_claim",
+                                               "public_security_claim",
+                                               "public_compliance_claim"
+                                           ],
+                      "allowedPathCount":  25,
+                      "trainerDecision":  "autoPatchable"
+                  },
+                  {
+                      "id":  "capability:method_signature_wrap_cleanup",
+                      "candidateClass":  "method_signature_wrap_cleanup",
+                      "allowedByLease":  true,
+                      "approvedByGate":  true,
+                      "discoveredByRunner":  true,
+                      "executableByRunner":  true,
+                      "batchExecutable":  false,
+                      "forbiddenActions":  [
+                                               "push_to_upstream",
+                                               "force_push",
+                                               "release",
+                                               "deploy",
+                                               "dependency_or_pom_changes",
+                                               "src_test_changes",
+                                               "public_readiness_claim",
+                                               "public_correctness_claim",
+                                               "public_security_claim",
+                                               "public_compliance_claim"
+                                           ],
+                      "allowedPathCount":  25,
+                      "trainerDecision":  "autoPatchable"
+                  },
+                  {
+                      "id":  "capability:method_spacing_normalization",
+                      "candidateClass":  "method_spacing_normalization",
+                      "allowedByLease":  true,
+                      "approvedByGate":  true,
+                      "discoveredByRunner":  true,
+                      "executableByRunner":  true,
+                      "batchExecutable":  false,
+                      "forbiddenActions":  [
+                                               "push_to_upstream",
+                                               "force_push",
+                                               "release",
+                                               "deploy",
+                                               "dependency_or_pom_changes",
+                                               "src_test_changes",
+                                               "public_readiness_claim",
+                                               "public_correctness_claim",
+                                               "public_security_claim",
+                                               "public_compliance_claim"
+                                           ],
+                      "allowedPathCount":  25,
+                      "trainerDecision":  "autoPatchable"
+                  },
+                  {
+                      "id":  "capability:model_readability_cleanup",
+                      "candidateClass":  "model_readability_cleanup",
+                      "allowedByLease":  true,
+                      "approvedByGate":  true,
+                      "discoveredByRunner":  true,
+                      "executableByRunner":  true,
+                      "batchExecutable":  false,
+                      "forbiddenActions":  [
+                                               "push_to_upstream",
+                                               "force_push",
+                                               "release",
+                                               "deploy",
+                                               "dependency_or_pom_changes",
+                                               "src_test_changes",
+                                               "public_readiness_claim",
+                                               "public_correctness_claim",
+                                               "public_security_claim",
+                                               "public_compliance_claim"
+                                           ],
+                      "allowedPathCount":  25,
+                      "trainerDecision":  "autoPatchable"
+                  },
+                  {
+                      "id":  "capability:owner_search_adapter_contract_baseline",
+                      "candidateClass":  "owner_search_adapter_contract_baseline",
+                      "allowedByLease":  false,
+                      "approvedByGate":  false,
+                      "discoveredByRunner":  false,
+                      "executableByRunner":  false,
+                      "batchExecutable":  false,
+                      "forbiddenActions":  [
+                                               "push_to_upstream",
+                                               "force_push",
+                                               "release",
+                                               "deploy",
+                                               "dependency_or_pom_changes",
+                                               "src_test_changes",
+                                               "public_readiness_claim",
+                                               "public_correctness_claim",
+                                               "public_security_claim",
+                                               "public_compliance_claim"
+                                           ],
+                      "allowedPathCount":  25,
+                      "trainerDecision":  "reviewOnly"
+                  },
+                  {
+                      "id":  "capability:owner_search_architecture_rules",
+                      "candidateClass":  "owner_search_architecture_rules",
+                      "allowedByLease":  false,
+                      "approvedByGate":  false,
+                      "discoveredByRunner":  false,
+                      "executableByRunner":  false,
+                      "batchExecutable":  false,
+                      "forbiddenActions":  [
+                                               "push_to_upstream",
+                                               "force_push",
+                                               "release",
+                                               "deploy",
+                                               "dependency_or_pom_changes",
+                                               "src_test_changes",
+                                               "public_readiness_claim",
+                                               "public_correctness_claim",
+                                               "public_security_claim",
+                                               "public_compliance_claim"
+                                           ],
+                      "allowedPathCount":  25,
+                      "trainerDecision":  "reviewOnly"
+                  },
+                  {
+                      "id":  "capability:owner_search_before_after_readout",
+                      "candidateClass":  "owner_search_before_after_readout",
+                      "allowedByLease":  false,
+                      "approvedByGate":  false,
+                      "discoveredByRunner":  false,
+                      "executableByRunner":  false,
+                      "batchExecutable":  false,
+                      "forbiddenActions":  [
+                                               "push_to_upstream",
+                                               "force_push",
+                                               "release",
+                                               "deploy",
+                                               "dependency_or_pom_changes",
+                                               "src_test_changes",
+                                               "public_readiness_claim",
+                                               "public_correctness_claim",
+                                               "public_security_claim",
+                                               "public_compliance_claim"
+                                           ],
+                      "allowedPathCount":  25,
+                      "trainerDecision":  "reviewOnly"
+                  },
+                  {
+                      "id":  "capability:owner_search_behavior_baseline",
+                      "candidateClass":  "owner_search_behavior_baseline",
+                      "allowedByLease":  false,
+                      "approvedByGate":  false,
+                      "discoveredByRunner":  false,
+                      "executableByRunner":  false,
+                      "batchExecutable":  false,
+                      "forbiddenActions":  [
+                                               "push_to_upstream",
+                                               "force_push",
+                                               "release",
+                                               "deploy",
+                                               "dependency_or_pom_changes",
+                                               "src_test_changes",
+                                               "public_readiness_claim",
+                                               "public_correctness_claim",
+                                               "public_security_claim",
+                                               "public_compliance_claim"
+                                           ],
+                      "allowedPathCount":  25,
+                      "trainerDecision":  "reviewOnly"
+                  },
+                  {
+                      "id":  "capability:owner_search_compatibility_path",
+                      "candidateClass":  "owner_search_compatibility_path",
+                      "allowedByLease":  false,
+                      "approvedByGate":  false,
+                      "discoveredByRunner":  false,
+                      "executableByRunner":  false,
+                      "batchExecutable":  false,
+                      "forbiddenActions":  [
+                                               "push_to_upstream",
+                                               "force_push",
+                                               "release",
+                                               "deploy",
+                                               "dependency_or_pom_changes",
+                                               "src_test_changes",
+                                               "public_readiness_claim",
+                                               "public_correctness_claim",
+                                               "public_security_claim",
+                                               "public_compliance_claim"
+                                           ],
+                      "allowedPathCount":  25,
+                      "trainerDecision":  "reviewOnly"
+                  },
+                  {
+                      "id":  "capability:owner_search_controller_migration",
+                      "candidateClass":  "owner_search_controller_migration",
+                      "allowedByLease":  false,
+                      "approvedByGate":  false,
+                      "discoveredByRunner":  false,
+                      "executableByRunner":  false,
+                      "batchExecutable":  false,
+                      "forbiddenActions":  [
+                                               "push_to_upstream",
+                                               "force_push",
+                                               "release",
+                                               "deploy",
+                                               "dependency_or_pom_changes",
+                                               "src_test_changes",
+                                               "public_readiness_claim",
+                                               "public_correctness_claim",
+                                               "public_security_claim",
+                                               "public_compliance_claim"
+                                           ],
+                      "allowedPathCount":  25,
+                      "trainerDecision":  "reviewOnly"
+                  },
+                  {
+                      "id":  "capability:owner_search_explicit_fetch_plans",
+                      "candidateClass":  "owner_search_explicit_fetch_plans",
+                      "allowedByLease":  false,
+                      "approvedByGate":  false,
+                      "discoveredByRunner":  false,
+                      "executableByRunner":  false,
+                      "batchExecutable":  false,
+                      "forbiddenActions":  [
+                                               "push_to_upstream",
+                                               "force_push",
+                                               "release",
+                                               "deploy",
+                                               "dependency_or_pom_changes",
+                                               "src_test_changes",
+                                               "public_readiness_claim",
+                                               "public_correctness_claim",
+                                               "public_security_claim",
+                                               "public_compliance_claim"
+                                           ],
+                      "allowedPathCount":  25,
+                      "trainerDecision":  "reviewOnly"
+                  },
+                  {
+                      "id":  "capability:owner_search_full_validation_matrix",
+                      "candidateClass":  "owner_search_full_validation_matrix",
+                      "allowedByLease":  false,
+                      "approvedByGate":  false,
+                      "discoveredByRunner":  false,
+                      "executableByRunner":  false,
+                      "batchExecutable":  false,
+                      "forbiddenActions":  [
+                                               "push_to_upstream",
+                                               "force_push",
+                                               "release",
+                                               "deploy",
+                                               "dependency_or_pom_changes",
+                                               "src_test_changes",
+                                               "public_readiness_claim",
+                                               "public_correctness_claim",
+                                               "public_security_claim",
+                                               "public_compliance_claim"
+                                           ],
+                      "allowedPathCount":  25,
+                      "trainerDecision":  "reviewOnly"
+                  },
+                  {
+                      "id":  "capability:owner_search_jdbc_adapter",
+                      "candidateClass":  "owner_search_jdbc_adapter",
+                      "allowedByLease":  false,
+                      "approvedByGate":  false,
+                      "discoveredByRunner":  false,
+                      "executableByRunner":  false,
+                      "batchExecutable":  false,
+                      "forbiddenActions":  [
+                                               "push_to_upstream",
+                                               "force_push",
+                                               "release",
+                                               "deploy",
+                                               "dependency_or_pom_changes",
+                                               "src_test_changes",
+                                               "public_readiness_claim",
+                                               "public_correctness_claim",
+                                               "public_security_claim",
+                                               "public_compliance_claim"
+                                           ],
+                      "allowedPathCount":  25,
+                      "trainerDecision":  "reviewOnly"
+                  },
+                  {
+                      "id":  "capability:owner_search_jpa_adapter",
+                      "candidateClass":  "owner_search_jpa_adapter",
+                      "allowedByLease":  false,
+                      "approvedByGate":  false,
+                      "discoveredByRunner":  false,
+                      "executableByRunner":  false,
+                      "batchExecutable":  false,
+                      "forbiddenActions":  [
+                                               "push_to_upstream",
+                                               "force_push",
+                                               "release",
+                                               "deploy",
+                                               "dependency_or_pom_changes",
+                                               "src_test_changes",
+                                               "public_readiness_claim",
+                                               "public_correctness_claim",
+                                               "public_security_claim",
+                                               "public_compliance_claim"
+                                           ],
+                      "allowedPathCount":  25,
+                      "trainerDecision":  "reviewOnly"
+                  },
+                  {
+                      "id":  "capability:owner_search_query_measurement_baseline",
+                      "candidateClass":  "owner_search_query_measurement_baseline",
+                      "allowedByLease":  false,
+                      "approvedByGate":  false,
+                      "discoveredByRunner":  false,
+                      "executableByRunner":  false,
+                      "batchExecutable":  false,
+                      "forbiddenActions":  [
+                                               "push_to_upstream",
+                                               "force_push",
+                                               "release",
+                                               "deploy",
+                                               "dependency_or_pom_changes",
+                                               "src_test_changes",
+                                               "public_readiness_claim",
+                                               "public_correctness_claim",
+                                               "public_security_claim",
+                                               "public_compliance_claim"
+                                           ],
+                      "allowedPathCount":  25,
+                      "trainerDecision":  "reviewOnly"
+                  },
+                  {
+                      "id":  "capability:owner_search_spring_data_jpa_adapter",
+                      "candidateClass":  "owner_search_spring_data_jpa_adapter",
+                      "allowedByLease":  false,
+                      "approvedByGate":  false,
+                      "discoveredByRunner":  false,
+                      "executableByRunner":  false,
+                      "batchExecutable":  false,
+                      "forbiddenActions":  [
+                                               "push_to_upstream",
+                                               "force_push",
+                                               "release",
+                                               "deploy",
+                                               "dependency_or_pom_changes",
+                                               "src_test_changes",
+                                               "public_readiness_claim",
+                                               "public_correctness_claim",
+                                               "public_security_claim",
+                                               "public_compliance_claim"
+                                           ],
+                      "allowedPathCount":  25,
+                      "trainerDecision":  "reviewOnly"
+                  },
+                  {
+                      "id":  "capability:private_helper_extraction_for_readability",
+                      "candidateClass":  "private_helper_extraction_for_readability",
+                      "allowedByLease":  true,
+                      "approvedByGate":  true,
+                      "discoveredByRunner":  false,
+                      "executableByRunner":  true,
+                      "batchExecutable":  false,
+                      "forbiddenActions":  [
+                                               "push_to_upstream",
+                                               "force_push",
+                                               "release",
+                                               "deploy",
+                                               "dependency_or_pom_changes",
+                                               "src_test_changes",
+                                               "public_readiness_claim",
+                                               "public_correctness_claim",
+                                               "public_security_claim",
+                                               "public_compliance_claim"
+                                           ],
+                      "allowedPathCount":  25,
+                      "trainerDecision":  "reviewOnly"
+                  },
+                  {
+                      "id":  "capability:redundant private helper inline cleanup",
+                      "candidateClass":  "redundant private helper inline cleanup",
+                      "allowedByLease":  false,
+                      "approvedByGate":  false,
+                      "discoveredByRunner":  false,
+                      "executableByRunner":  false,
+                      "batchExecutable":  false,
+                      "forbiddenActions":  [
+                                               "push_to_upstream",
+                                               "force_push",
+                                               "release",
+                                               "deploy",
+                                               "dependency_or_pom_changes",
+                                               "src_test_changes",
+                                               "public_readiness_claim",
+                                               "public_correctness_claim",
+                                               "public_security_claim",
+                                               "public_compliance_claim"
+                                           ],
+                      "allowedPathCount":  25,
+                      "trainerDecision":  "held"
+                  },
+                  {
+                      "id":  "capability:redundant_local_variable_simplification",
+                      "candidateClass":  "redundant_local_variable_simplification",
+                      "allowedByLease":  true,
+                      "approvedByGate":  true,
+                      "discoveredByRunner":  true,
+                      "executableByRunner":  true,
+                      "batchExecutable":  false,
+                      "forbiddenActions":  [
+                                               "push_to_upstream",
+                                               "force_push",
+                                               "release",
+                                               "deploy",
+                                               "dependency_or_pom_changes",
+                                               "src_test_changes",
+                                               "public_readiness_claim",
+                                               "public_correctness_claim",
+                                               "public_security_claim",
+                                               "public_compliance_claim"
+                                           ],
+                      "allowedPathCount":  25,
+                      "trainerDecision":  "autoPatchable"
+                  },
+                  {
+                      "id":  "capability:repository_readability_cleanup",
+                      "candidateClass":  "repository_readability_cleanup",
+                      "allowedByLease":  true,
+                      "approvedByGate":  true,
+                      "discoveredByRunner":  true,
+                      "executableByRunner":  true,
+                      "batchExecutable":  true,
+                      "forbiddenActions":  [
+                                               "push_to_upstream",
+                                               "force_push",
+                                               "release",
+                                               "deploy",
+                                               "dependency_or_pom_changes",
+                                               "src_test_changes",
+                                               "public_readiness_claim",
+                                               "public_correctness_claim",
+                                               "public_security_claim",
+                                               "public_compliance_claim"
+                                           ],
+                      "allowedPathCount":  25,
+                      "trainerDecision":  "autoPatchable"
+                  },
+                  {
+                      "id":  "capability:split_string_constant_normalization",
+                      "candidateClass":  "split_string_constant_normalization",
+                      "allowedByLease":  true,
+                      "approvedByGate":  true,
+                      "discoveredByRunner":  true,
+                      "executableByRunner":  true,
+                      "batchExecutable":  false,
+                      "forbiddenActions":  [
+                                               "push_to_upstream",
+                                               "force_push",
+                                               "release",
+                                               "deploy",
+                                               "dependency_or_pom_changes",
+                                               "src_test_changes",
+                                               "public_readiness_claim",
+                                               "public_correctness_claim",
+                                               "public_security_claim",
+                                               "public_compliance_claim"
+                                           ],
+                      "allowedPathCount":  25,
+                      "trainerDecision":  "autoPatchable"
+                  },
+                  {
+                      "id":  "capability:spring_data_query_concat_wrap_cleanup",
+                      "candidateClass":  "spring_data_query_concat_wrap_cleanup",
+                      "allowedByLease":  true,
+                      "approvedByGate":  true,
+                      "discoveredByRunner":  true,
+                      "executableByRunner":  true,
+                      "batchExecutable":  false,
+                      "forbiddenActions":  [
+                                               "push_to_upstream",
+                                               "force_push",
+                                               "release",
+                                               "deploy",
+                                               "dependency_or_pom_changes",
+                                               "src_test_changes",
+                                               "public_readiness_claim",
+                                               "public_correctness_claim",
+                                               "public_security_claim",
+                                               "public_compliance_claim"
+                                           ],
+                      "allowedPathCount":  25,
+                      "trainerDecision":  "autoPatchable"
+                  },
+                  {
+                      "id":  "capability:spring_data_query_wrap_cleanup",
+                      "candidateClass":  "spring_data_query_wrap_cleanup",
+                      "allowedByLease":  true,
+                      "approvedByGate":  true,
+                      "discoveredByRunner":  true,
+                      "executableByRunner":  true,
+                      "batchExecutable":  true,
+                      "forbiddenActions":  [
+                                               "push_to_upstream",
+                                               "force_push",
+                                               "release",
+                                               "deploy",
+                                               "dependency_or_pom_changes",
+                                               "src_test_changes",
+                                               "public_readiness_claim",
+                                               "public_correctness_claim",
+                                               "public_security_claim",
+                                               "public_compliance_claim"
+                                           ],
+                      "allowedPathCount":  25,
+                      "trainerDecision":  "autoPatchable"
+                  },
+                  {
+                      "id":  "capability:string_constant_wrap_cleanup",
+                      "candidateClass":  "string_constant_wrap_cleanup",
+                      "allowedByLease":  true,
+                      "approvedByGate":  true,
+                      "discoveredByRunner":  false,
+                      "executableByRunner":  true,
+                      "batchExecutable":  false,
+                      "forbiddenActions":  [
+                                               "push_to_upstream",
+                                               "force_push",
+                                               "release",
+                                               "deploy",
+                                               "dependency_or_pom_changes",
+                                               "src_test_changes",
+                                               "public_readiness_claim",
+                                               "public_correctness_claim",
+                                               "public_security_claim",
+                                               "public_compliance_claim"
+                                           ],
+                      "allowedPathCount":  25,
+                      "trainerDecision":  "reviewOnly"
+                  },
+                  {
+                      "id":  "capability:threshold_enforcement",
+                      "candidateClass":  "threshold_enforcement",
+                      "allowedByLease":  false,
+                      "approvedByGate":  false,
+                      "discoveredByRunner":  false,
+                      "executableByRunner":  false,
+                      "batchExecutable":  false,
+                      "forbiddenActions":  [
+                                               "push_to_upstream",
+                                               "force_push",
+                                               "release",
+                                               "deploy",
+                                               "dependency_or_pom_changes",
+                                               "src_test_changes",
+                                               "public_readiness_claim",
+                                               "public_correctness_claim",
+                                               "public_security_claim",
+                                               "public_compliance_claim"
+                                           ],
+                      "allowedPathCount":  25,
+                      "trainerDecision":  "reviewOnly"
+                  },
+                  {
+                      "id":  "capability:threshold_governance_artifact_update",
+                      "candidateClass":  "threshold_governance_artifact_update",
+                      "allowedByLease":  true,
+                      "approvedByGate":  false,
+                      "discoveredByRunner":  false,
+                      "executableByRunner":  false,
+                      "batchExecutable":  false,
+                      "forbiddenActions":  [
+                                               "push_to_upstream",
+                                               "force_push",
+                                               "release",
+                                               "deploy",
+                                               "dependency_or_pom_changes",
+                                               "src_test_changes",
+                                               "public_readiness_claim",
+                                               "public_correctness_claim",
+                                               "public_security_claim",
+                                               "public_compliance_claim"
+                                           ],
+                      "allowedPathCount":  25,
+                      "trainerDecision":  "held"
+                  },
+                  {
+                      "id":  "capability:unknown",
+                      "candidateClass":  "unknown",
+                      "allowedByLease":  false,
+                      "approvedByGate":  false,
+                      "discoveredByRunner":  false,
+                      "executableByRunner":  false,
+                      "batchExecutable":  false,
+                      "forbiddenActions":  [
+                                               "push_to_upstream",
+                                               "force_push",
+                                               "release",
+                                               "deploy",
+                                               "dependency_or_pom_changes",
+                                               "src_test_changes",
+                                               "public_readiness_claim",
+                                               "public_correctness_claim",
+                                               "public_security_claim",
+                                               "public_compliance_claim"
+                                           ],
+                      "allowedPathCount":  25,
+                      "trainerDecision":  "reviewOnly"
+                  },
+                  {
+                      "id":  "capability:utility_readability_cleanup",
+                      "candidateClass":  "utility_readability_cleanup",
+                      "allowedByLease":  true,
+                      "approvedByGate":  true,
+                      "discoveredByRunner":  true,
+                      "executableByRunner":  true,
+                      "batchExecutable":  false,
+                      "forbiddenActions":  [
+                                               "push_to_upstream",
+                                               "force_push",
+                                               "release",
+                                               "deploy",
+                                               "dependency_or_pom_changes",
+                                               "src_test_changes",
+                                               "public_readiness_claim",
+                                               "public_correctness_claim",
+                                               "public_security_claim",
+                                               "public_compliance_claim"
+                                           ],
+                      "allowedPathCount":  25,
+                      "trainerDecision":  "autoPatchable"
+                  }
+              ],
+    "edges":  [
+                  {
+                      "from":  "capability:application_bootstrap_readability_cleanup",
+                      "relation":  "has_fidelity",
+                      "to":  "fidelity:application_bootstrap_readability_cleanup"
+                  },
+                  {
+                      "from":  "capability:comment_wrap_cleanup",
+                      "relation":  "has_fidelity",
+                      "to":  "fidelity:comment_wrap_cleanup"
+                  },
+                  {
+                      "from":  "capability:controller_branch_readability_decomposition",
+                      "relation":  "has_fidelity",
+                      "to":  "fidelity:controller_branch_readability_decomposition"
+                  },
+                  {
+                      "from":  "capability:duplicate_literal_local_constant_extraction",
+                      "relation":  "has_fidelity",
+                      "to":  "fidelity:duplicate_literal_local_constant_extraction"
+                  },
+                  {
+                      "from":  "capability:leading_tab_indentation_cleanup",
+                      "relation":  "has_fidelity",
+                      "to":  "fidelity:leading_tab_indentation_cleanup"
+                  },
+                  {
+                      "from":  "capability:line_comment_wrap_cleanup",
+                      "relation":  "has_fidelity",
+                      "to":  "fidelity:line_comment_wrap_cleanup"
+                  },
+                  {
+                      "from":  "capability:method_signature_wrap_cleanup",
+                      "relation":  "has_fidelity",
+                      "to":  "fidelity:method_signature_wrap_cleanup"
+                  },
+                  {
+                      "from":  "capability:method_spacing_normalization",
+                      "relation":  "has_fidelity",
+                      "to":  "fidelity:method_spacing_normalization"
+                  },
+                  {
+                      "from":  "capability:model_readability_cleanup",
+                      "relation":  "has_fidelity",
+                      "to":  "fidelity:model_readability_cleanup"
+                  },
+                  {
+                      "from":  "capability:owner_search_adapter_contract_baseline",
+                      "relation":  "has_fidelity",
+                      "to":  "fidelity:owner_search_adapter_contract_baseline"
+                  },
+                  {
+                      "from":  "capability:owner_search_architecture_rules",
+                      "relation":  "has_fidelity",
+                      "to":  "fidelity:owner_search_architecture_rules"
+                  },
+                  {
+                      "from":  "capability:owner_search_before_after_readout",
+                      "relation":  "has_fidelity",
+                      "to":  "fidelity:owner_search_before_after_readout"
+                  },
+                  {
+                      "from":  "capability:owner_search_behavior_baseline",
+                      "relation":  "has_fidelity",
+                      "to":  "fidelity:owner_search_behavior_baseline"
+                  },
+                  {
+                      "from":  "capability:owner_search_compatibility_path",
+                      "relation":  "has_fidelity",
+                      "to":  "fidelity:owner_search_compatibility_path"
+                  },
+                  {
+                      "from":  "capability:owner_search_controller_migration",
+                      "relation":  "has_fidelity",
+                      "to":  "fidelity:owner_search_controller_migration"
+                  },
+                  {
+                      "from":  "capability:owner_search_explicit_fetch_plans",
+                      "relation":  "has_fidelity",
+                      "to":  "fidelity:owner_search_explicit_fetch_plans"
+                  },
+                  {
+                      "from":  "capability:owner_search_full_validation_matrix",
+                      "relation":  "has_fidelity",
+                      "to":  "fidelity:owner_search_full_validation_matrix"
+                  },
+                  {
+                      "from":  "capability:owner_search_jdbc_adapter",
+                      "relation":  "has_fidelity",
+                      "to":  "fidelity:owner_search_jdbc_adapter"
+                  },
+                  {
+                      "from":  "capability:owner_search_jpa_adapter",
+                      "relation":  "has_fidelity",
+                      "to":  "fidelity:owner_search_jpa_adapter"
+                  },
+                  {
+                      "from":  "capability:owner_search_query_measurement_baseline",
+                      "relation":  "has_fidelity",
+                      "to":  "fidelity:owner_search_query_measurement_baseline"
+                  },
+                  {
+                      "from":  "capability:owner_search_spring_data_jpa_adapter",
+                      "relation":  "has_fidelity",
+                      "to":  "fidelity:owner_search_spring_data_jpa_adapter"
+                  },
+                  {
+                      "from":  "capability:private_helper_extraction_for_readability",
+                      "relation":  "has_fidelity",
+                      "to":  "fidelity:private_helper_extraction_for_readability"
+                  },
+                  {
+                      "from":  "capability:redundant private helper inline cleanup",
+                      "relation":  "has_fidelity",
+                      "to":  "fidelity:redundant private helper inline cleanup"
+                  },
+                  {
+                      "from":  "capability:redundant_local_variable_simplification",
+                      "relation":  "has_fidelity",
+                      "to":  "fidelity:redundant_local_variable_simplification"
+                  },
+                  {
+                      "from":  "capability:repository_readability_cleanup",
+                      "relation":  "has_fidelity",
+                      "to":  "fidelity:repository_readability_cleanup"
+                  },
+                  {
+                      "from":  "capability:split_string_constant_normalization",
+                      "relation":  "has_fidelity",
+                      "to":  "fidelity:split_string_constant_normalization"
+                  },
+                  {
+                      "from":  "capability:spring_data_query_concat_wrap_cleanup",
+                      "relation":  "has_fidelity",
+                      "to":  "fidelity:spring_data_query_concat_wrap_cleanup"
+                  },
+                  {
+                      "from":  "capability:spring_data_query_wrap_cleanup",
+                      "relation":  "has_fidelity",
+                      "to":  "fidelity:spring_data_query_wrap_cleanup"
+                  },
+                  {
+                      "from":  "capability:string_constant_wrap_cleanup",
+                      "relation":  "has_fidelity",
+                      "to":  "fidelity:string_constant_wrap_cleanup"
+                  },
+                  {
+                      "from":  "capability:threshold_enforcement",
+                      "relation":  "has_fidelity",
+                      "to":  "fidelity:threshold_enforcement"
+                  },
+                  {
+                      "from":  "capability:threshold_governance_artifact_update",
+                      "relation":  "has_fidelity",
+                      "to":  "fidelity:threshold_governance_artifact_update"
+                  },
+                  {
+                      "from":  "capability:unknown",
+                      "relation":  "has_fidelity",
+                      "to":  "fidelity:unknown"
+                  },
+                  {
+                      "from":  "capability:utility_readability_cleanup",
+                      "relation":  "has_fidelity",
+                      "to":  "fidelity:utility_readability_cleanup"
+                  }
+              ],
+    "semanticDigest":  "f0cd1cac49047352f63b180bdf5ff41038d1e9511ec7369ba65d265b0910eccd"
+}

@@ -3,6 +3,7 @@ param(
     [string] $LeasePath = "threshold/leases/current.yaml",
     [string] $PocketPath = "threshold/candidate-pocket/current.json",
     [string] $GatePath = "threshold/gates/auto-patchable-candidate-classes.json",
+    [string] $TrainerReportPath = "threshold/trainer/training-report.json",
     [string] $SourceRoot = "src/main/java/org/springframework/samples/petclinic",
     [int] $Limit = 25
 )
@@ -147,6 +148,31 @@ function Test-CandidateClassGate {
     return $script:ApprovedAutoPatchableCandidateClasses.ContainsKey($CandidateClass)
 }
 
+function Get-TrainerDecisions {
+    param([string] $Path)
+
+    $decisions = @{}
+    if (-not (Test-Path $Path)) {
+        return $decisions
+    }
+
+    $report = Get-Content $Path -Raw | ConvertFrom-Json
+    foreach ($entry in @($report.decisions)) {
+        if ($entry.candidateClass -and $entry.decision) {
+            $decisions[[string]$entry.candidateClass] = $entry
+        }
+    }
+    return $decisions
+}
+
+function Get-TrainerDecision {
+    param([string] $CandidateClass)
+    if ($script:TrainerDecisions.ContainsKey($CandidateClass)) {
+        return [string]$script:TrainerDecisions[$CandidateClass].decision
+    }
+    return "reviewOnly"
+}
+
 function Add-Candidate {
     param(
         [hashtable] $Candidate,
@@ -160,11 +186,18 @@ function Add-Candidate {
     $Candidate.candidateClass = $CandidateClass
     $Candidate.autoPatchable = Test-AutoPatchableCandidate $Candidate $CandidateClass
     $Candidate.reviewOnly = -not $Candidate.autoPatchable
-    $Candidate.executionMode = if ($Candidate.autoPatchable) { "auto_patchable" } else { "review_only" }
+    $trainerDecision = Get-TrainerDecision -CandidateClass $CandidateClass
+    if ($trainerDecision -ne "autoPatchable") {
+        $Candidate.autoPatchable = $false
+        $Candidate.reviewOnly = $trainerDecision -ne "held"
+    }
+    $Candidate.executionMode = if ($Candidate.autoPatchable) { "auto_patchable" } elseif ($trainerDecision -eq "held") { "held" } else { "review_only" }
     $Candidate.gate = [ordered]@{
         required = $true
         approved = Test-CandidateClassGate $CandidateClass
         gatePath = ConvertTo-RepoPath $GatePath
+        trainerDecision = $trainerDecision
+        trainerReportPath = ConvertTo-RepoPath $TrainerReportPath
     }
     $Bucket.Add([pscustomobject]$Candidate)
 }
@@ -407,6 +440,7 @@ $springDataQueryThreshold = Get-LeaseIntScalarOrDefault -Lines $leaseLines -Name
 $repositoryMethodLengthThreshold = Get-LeaseIntScalarOrDefault -Lines $leaseLines -Name "repositoryMethodLengthThreshold" -DefaultValue 8
 $utilityMethodLengthThreshold = Get-LeaseIntScalarOrDefault -Lines $leaseLines -Name "utilityMethodLengthThreshold" -DefaultValue 8
 $script:ApprovedAutoPatchableCandidateClasses = Get-AutoPatchableGate -Path $GatePath
+$script:TrainerDecisions = Get-TrainerDecisions -Path $TrainerReportPath
 
 $sourceFiles = @(
     Get-ChildItem $SourceRoot -Recurse -Filter "*.java" |
@@ -899,7 +933,9 @@ $pocket = [ordered]@{
         method = "static-heuristic-scan"
         sourceRoot = ConvertTo-RepoPath $SourceRoot
         gatePath = ConvertTo-RepoPath $GatePath
+        trainerReportPath = ConvertTo-RepoPath $TrainerReportPath
         approvedAutoPatchableCandidateClasses = @($script:ApprovedAutoPatchableCandidateClasses.Keys | Sort-Object)
+        trainerDecisionClasses = @($script:TrainerDecisions.Keys | Sort-Object)
         scannedFiles = $sourceFiles.Count
         ranking = @(
             "score descending",

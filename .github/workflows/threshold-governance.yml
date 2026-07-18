@@ -59,6 +59,7 @@ jobs:
               $normalized -like "threshold/scripts/*" -or
               $normalized -like "threshold/gates/*" -or
               $normalized -like "threshold/authority/*" -or
+              $normalized -like "threshold/trainer/*" -or
               $normalized -eq ".github/workflows/threshold-governance.yml" -or
               $normalized -eq ".github/CODEOWNERS"
             )
@@ -71,6 +72,8 @@ jobs:
               $normalized -like "threshold/lease-state/*" -or
               $normalized -like "threshold/leases/*" -or
               $normalized -like "threshold/receipts/*" -or
+              $normalized -like "threshold/attestations/*" -or
+              $normalized -like "threshold/kgs/*" -or
               $normalized -like "threshold/candidate-pocket/*" -or
               $normalized -like "threshold/docs/*"
             )
@@ -263,3 +266,11 @@ jobs:
           Write-Host "sourceCommitReceiptCoverage=complete"
           Write-Host "thresholdGovernanceLabelRequired=false"
           Write-Host "Threshold governance passed"
+
+      - name: Verify Threshold capability and fidelity knowledge graphs
+        env:
+          THRESHOLD_RECEIPT_TREEISH: ${{ github.event.pull_request.head.sha }}
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = "Stop"
+          pwsh -File threshold/scripts/test-kg-governance.ps1

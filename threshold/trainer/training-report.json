@@ -1,0 +1,212 @@
+{
+    "schemaVersion":  "threshold.petclinic.capability-trainer-report.v0.1",
+    "generatedAt":  "deterministic-from-current-repo-state",
+    "policy":  {
+                   "missingKgMeansStop":  true,
+                   "reviewFindingMeansNoAutoPatch":  true,
+                   "fidelityDrivesExecutionMode":  true,
+                   "immutableReceiptChainRequired":  true,
+                   "semanticValidationRequired":  true
+               },
+    "decisions":  [
+                      {
+                          "candidateClass":  "application_bootstrap_readability_cleanup",
+                          "fidelityLevel":  "F3_VALIDATED_RECEIPT",
+                          "decision":  "autoPatchable",
+                          "reason":  "decision derived from lease, gate, discovery, executor, receipt history, semantic evidence, and review findings"
+                      },
+                      {
+                          "candidateClass":  "comment_wrap_cleanup",
+                          "fidelityLevel":  "F4_CI_RECEIPT_STABLE",
+                          "decision":  "autoPatchable",
+                          "reason":  "decision derived from lease, gate, discovery, executor, receipt history, semantic evidence, and review findings"
+                      },
+                      {
+                          "candidateClass":  "controller_branch_readability_decomposition",
+                          "fidelityLevel":  "F0_UNOBSERVED",
+                          "decision":  "held",
+                          "reason":  "decision derived from lease, gate, discovery, executor, receipt history, semantic evidence, and review findings"
+                      },
+                      {
+                          "candidateClass":  "duplicate_literal_local_constant_extraction",
+                          "fidelityLevel":  "F4_CI_RECEIPT_STABLE",
+                          "decision":  "autoPatchable",
+                          "reason":  "decision derived from lease, gate, discovery, executor, receipt history, semantic evidence, and review findings"
+                      },
+                      {
+                          "candidateClass":  "leading_tab_indentation_cleanup",
+                          "fidelityLevel":  "F4_CI_RECEIPT_STABLE",
+                          "decision":  "autoPatchable",
+                          "reason":  "decision derived from lease, gate, discovery, executor, receipt history, semantic evidence, and review findings"
+                      },
+                      {
+                          "candidateClass":  "line_comment_wrap_cleanup",
+                          "fidelityLevel":  "F4_CI_RECEIPT_STABLE",
+                          "decision":  "autoPatchable",
+                          "reason":  "decision derived from lease, gate, discovery, executor, receipt history, semantic evidence, and review findings"
+                      },
+                      {
+                          "candidateClass":  "method_signature_wrap_cleanup",
+                          "fidelityLevel":  "F4_CI_RECEIPT_STABLE",
+                          "decision":  "autoPatchable",
+                          "reason":  "decision derived from lease, gate, discovery, executor, receipt history, semantic evidence, and review findings"
+                      },
+                      {
+                          "candidateClass":  "method_spacing_normalization",
+                          "fidelityLevel":  "F4_CI_RECEIPT_STABLE",
+                          "decision":  "autoPatchable",
+                          "reason":  "decision derived from lease, gate, discovery, executor, receipt history, semantic evidence, and review findings"
+                      },
+                      {
+                          "candidateClass":  "model_readability_cleanup",
+                          "fidelityLevel":  "F4_CI_RECEIPT_STABLE",
+                          "decision":  "autoPatchable",
+                          "reason":  "decision derived from lease, gate, discovery, executor, receipt history, semantic evidence, and review findings"
+                      },
+                      {
+                          "candidateClass":  "owner_search_adapter_contract_baseline",
+                          "fidelityLevel":  "F1_REVIEW_REQUIRED",
+                          "decision":  "reviewOnly",
+                          "reason":  "decision derived from lease, gate, discovery, executor, receipt history, semantic evidence, and review findings"
+                      },
+                      {
+                          "candidateClass":  "owner_search_architecture_rules",
+                          "fidelityLevel":  "F1_REVIEW_REQUIRED",
+                          "decision":  "reviewOnly",
+                          "reason":  "decision derived from lease, gate, discovery, executor, receipt history, semantic evidence, and review findings"
+                      },
+                      {
+                          "candidateClass":  "owner_search_before_after_readout",
+                          "fidelityLevel":  "F1_REVIEW_REQUIRED",
+                          "decision":  "reviewOnly",
+                          "reason":  "decision derived from lease, gate, discovery, executor, receipt history, semantic evidence, and review findings"
+                      },
+                      {
+                          "candidateClass":  "owner_search_behavior_baseline",
+                          "fidelityLevel":  "F1_REVIEW_REQUIRED",
+                          "decision":  "reviewOnly",
+                          "reason":  "decision derived from lease, gate, discovery, executor, receipt history, semantic evidence, and review findings"
+                      },
+                      {
+                          "candidateClass":  "owner_search_compatibility_path",
+                          "fidelityLevel":  "F1_REVIEW_REQUIRED",
+                          "decision":  "reviewOnly",
+                          "reason":  "decision derived from lease, gate, discovery, executor, receipt history, semantic evidence, and review findings"
+                      },
+                      {
+                          "candidateClass":  "owner_search_controller_migration",
+                          "fidelityLevel":  "F1_REVIEW_REQUIRED",
+                          "decision":  "reviewOnly",
+                          "reason":  "decision derived from lease, gate, discovery, executor, receipt history, semantic evidence, and review findings"
+                      },
+                      {
+                          "candidateClass":  "owner_search_explicit_fetch_plans",
+                          "fidelityLevel":  "F1_REVIEW_REQUIRED",
+                          "decision":  "reviewOnly",
+                          "reason":  "decision derived from lease, gate, discovery, executor, receipt history, semantic evidence, and review findings"
+                      },
+                      {
+                          "candidateClass":  "owner_search_full_validation_matrix",
+                          "fidelityLevel":  "F1_REVIEW_REQUIRED",
+                          "decision":  "reviewOnly",
+                          "reason":  "decision derived from lease, gate, discovery, executor, receipt history, semantic evidence, and review findings"
+                      },
+                      {
+                          "candidateClass":  "owner_search_jdbc_adapter",
+                          "fidelityLevel":  "F1_REVIEW_REQUIRED",
+                          "decision":  "reviewOnly",
+                          "reason":  "decision derived from lease, gate, discovery, executor, receipt history, semantic evidence, and review findings"
+                      },
+                      {
+                          "candidateClass":  "owner_search_jpa_adapter",
+                          "fidelityLevel":  "F1_REVIEW_REQUIRED",
+                          "decision":  "reviewOnly",
+                          "reason":  "decision derived from lease, gate, discovery, executor, receipt history, semantic evidence, and review findings"
+                      },
+                      {
+                          "candidateClass":  "owner_search_query_measurement_baseline",
+                          "fidelityLevel":  "F1_REVIEW_REQUIRED",
+                          "decision":  "reviewOnly",
+                          "reason":  "decision derived from lease, gate, discovery, executor, receipt history, semantic evidence, and review findings"
+                      },
+                      {
+                          "candidateClass":  "owner_search_spring_data_jpa_adapter",
+                          "fidelityLevel":  "F1_REVIEW_REQUIRED",
+                          "decision":  "reviewOnly",
+                          "reason":  "decision derived from lease, gate, discovery, executor, receipt history, semantic evidence, and review findings"
+                      },
+                      {
+                          "candidateClass":  "private_helper_extraction_for_readability",
+                          "fidelityLevel":  "F3_VALIDATED_RECEIPT",
+                          "decision":  "reviewOnly",
+                          "reason":  "decision derived from lease, gate, discovery, executor, receipt history, semantic evidence, and review findings"
+                      },
+                      {
+                          "candidateClass":  "redundant private helper inline cleanup",
+                          "fidelityLevel":  "F0_UNOBSERVED",
+                          "decision":  "held",
+                          "reason":  "decision derived from lease, gate, discovery, executor, receipt history, semantic evidence, and review findings"
+                      },
+                      {
+                          "candidateClass":  "redundant_local_variable_simplification",
+                          "fidelityLevel":  "F3_VALIDATED_RECEIPT",
+                          "decision":  "autoPatchable",
+                          "reason":  "decision derived from lease, gate, discovery, executor, receipt history, semantic evidence, and review findings"
+                      },
+                      {
+                          "candidateClass":  "repository_readability_cleanup",
+                          "fidelityLevel":  "F4_CI_RECEIPT_STABLE",
+                          "decision":  "autoPatchable",
+                          "reason":  "decision derived from lease, gate, discovery, executor, receipt history, semantic evidence, and review findings"
+                      },
+                      {
+                          "candidateClass":  "split_string_constant_normalization",
+                          "fidelityLevel":  "F4_CI_RECEIPT_STABLE",
+                          "decision":  "autoPatchable",
+                          "reason":  "decision derived from lease, gate, discovery, executor, receipt history, semantic evidence, and review findings"
+                      },
+                      {
+                          "candidateClass":  "spring_data_query_concat_wrap_cleanup",
+                          "fidelityLevel":  "F4_CI_RECEIPT_STABLE",
+                          "decision":  "autoPatchable",
+                          "reason":  "decision derived from lease, gate, discovery, executor, receipt history, semantic evidence, and review findings"
+                      },
+                      {
+                          "candidateClass":  "spring_data_query_wrap_cleanup",
+                          "fidelityLevel":  "F4_CI_RECEIPT_STABLE",
+                          "decision":  "autoPatchable",
+                          "reason":  "decision derived from lease, gate, discovery, executor, receipt history, semantic evidence, and review findings"
+                      },
+                      {
+                          "candidateClass":  "string_constant_wrap_cleanup",
+                          "fidelityLevel":  "F2_GATED_EXECUTOR",
+                          "decision":  "reviewOnly",
+                          "reason":  "decision derived from lease, gate, discovery, executor, receipt history, semantic evidence, and review findings"
+                      },
+                      {
+                          "candidateClass":  "threshold_enforcement",
+                          "fidelityLevel":  "F1_REVIEW_REQUIRED",
+                          "decision":  "reviewOnly",
+                          "reason":  "decision derived from lease, gate, discovery, executor, receipt history, semantic evidence, and review findings"
+                      },
+                      {
+                          "candidateClass":  "threshold_governance_artifact_update",
+                          "fidelityLevel":  "F0_UNOBSERVED",
+                          "decision":  "held",
+                          "reason":  "decision derived from lease, gate, discovery, executor, receipt history, semantic evidence, and review findings"
+                      },
+                      {
+                          "candidateClass":  "unknown",
+                          "fidelityLevel":  "F1_REVIEW_REQUIRED",
+                          "decision":  "reviewOnly",
+                          "reason":  "decision derived from lease, gate, discovery, executor, receipt history, semantic evidence, and review findings"
+                      },
+                      {
+                          "candidateClass":  "utility_readability_cleanup",
+                          "fidelityLevel":  "F4_CI_RECEIPT_STABLE",
+                          "decision":  "autoPatchable",
+                          "reason":  "decision derived from lease, gate, discovery, executor, receipt history, semantic evidence, and review findings"
+                      }
+                  ],
+    "semanticDigest":  "29b48d06f8d93e463ff3de11d0a9c3dc52e0a5d60731a21e5caaf87e9782ae8c"
+}

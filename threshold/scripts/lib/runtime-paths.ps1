@@ -13,6 +13,11 @@ function Get-ThresholdRuntimePaths {
         CandidatePocketPath = "threshold/candidate-pocket/current.json"
         AutoPatchableGatePath = "threshold/gates/auto-patchable-candidate-classes.json"
         ReceiptDirectory = "threshold/receipts"
+        CapabilityKgPath = "threshold/kgs/capability-kg.json"
+        FidelityKgPath = "threshold/kgs/fidelity-kg.json"
+        TrainerReportPath = "threshold/trainer/training-report.json"
+        ReviewFindingsPath = "threshold/trainer/review-findings.json"
+        ReceiptChainPath = "threshold/attestations/receipt-chain.json"
     }
 }
 
@@ -25,7 +30,12 @@ function Resolve-ThresholdRuntimePath {
             "LeaseState",
             "CandidatePocket",
             "AutoPatchableGate",
-            "ReceiptDirectory"
+            "ReceiptDirectory",
+            "CapabilityKg",
+            "FidelityKg",
+            "TrainerReport",
+            "ReviewFindings",
+            "ReceiptChain"
         )]
         [string] $Name
     )
@@ -37,5 +47,10 @@ function Resolve-ThresholdRuntimePath {
         "CandidatePocket" { return $paths.CandidatePocketPath }
         "AutoPatchableGate" { return $paths.AutoPatchableGatePath }
         "ReceiptDirectory" { return $paths.ReceiptDirectory }
+        "CapabilityKg" { return $paths.CapabilityKgPath }
+        "FidelityKg" { return $paths.FidelityKgPath }
+        "TrainerReport" { return $paths.TrainerReportPath }
+        "ReviewFindings" { return $paths.ReviewFindingsPath }
+        "ReceiptChain" { return $paths.ReceiptChainPath }
     }
 }
