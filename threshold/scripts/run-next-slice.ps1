@@ -227,7 +227,7 @@ function Apply-ReadableMethodSignatureWrap {
     }
 
     $paramsRaw = $signatureMatch.Groups["params"].Value.Trim()
-    $parameters = $paramsRaw -split "," | ForEach-Object { $_.Trim() } | Where-Object { -not [string]::IsNullOrWhiteSpace($_) }
+    $parameters = @($paramsRaw -split "," | ForEach-Object { $_.Trim() } | Where-Object { -not [string]::IsNullOrWhiteSpace($_) })
     if ($parameters.Count -lt 2) {
         throw "Candidate line '$lineNumber' has no multi-parameter signature to wrap in $path."
     }
@@ -418,7 +418,7 @@ function Resolve-ExecutionPocket {
     $executionPocketPath = $PocketPath
     if (Test-Path $PocketPath) {
         $pocket = Get-Content $PocketPath -Raw | ConvertFrom-Json
-        if ($pocket.generatedFromHead -eq $head -and $pocket.candidates.Count -gt 0) {
+        if ($pocket.generatedFromHead -eq $head -and @($pocket.candidates).Count -gt 0) {
             return $executionPocketPath
         }
     }
@@ -1489,7 +1489,7 @@ function Apply-ApplicationBootstrapReadabilityCleanup {
 
     $indent = $match.Groups["indent"].Value
     $invocation = $match.Groups["invocation"].Value
-    $args = [regex]::Matches($match.Groups["args"].Value, '"(?:[^"\\]|\\.)*"') | ForEach-Object { $_.Value }
+    $args = @([regex]::Matches($match.Groups["args"].Value, '"(?:[^"\\]|\\.)*"') | ForEach-Object { $_.Value })
     if ($args.Count -lt 2) {
         throw "Bootstrap invocation on line '$lineNumber' does not have enough arguments to wrap in $path."
     }
