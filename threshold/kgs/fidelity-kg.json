@@ -18,11 +18,11 @@
                       "id":  "fidelity:comment_wrap_cleanup",
                       "candidateClass":  "comment_wrap_cleanup",
                       "level":  "F4_CI_RECEIPT_STABLE",
-                      "receiptCount":  129,
-                      "validationPassCount":  129,
+                      "receiptCount":  134,
+                      "validationPassCount":  134,
                       "validationFailCount":  0,
                       "semanticPassCount":  0,
-                      "semanticUnknownCount":  129,
+                      "semanticUnknownCount":  134,
                       "reviewFindingCount":  0,
                       "validationPassRate":  "1"
                   },
@@ -1706,6 +1706,16 @@
                                           ]
                      },
                      {
+                         "id":  "threshold/receipts/src-main-java-org-springframework-samples-petclinic-repository-jdbc-jdbcvisitrepositoryimpl-java-comment-wrap-cleanup-line-12-5b70ce9cdffb.json",
+                         "candidateClass":  "comment_wrap_cleanup",
+                         "sourceCommit":  "5b70ce9cdffbd0115d4d03b46633b0b4265496e2",
+                         "leaseDigest":  "143c3b0216ba9dcc5c7c7d0848492197dff4606cbc1f055c81d36dc69e8d35da",
+                         "validationResult":  "BUILD SUCCESS",
+                         "changedFiles":  [
+                                              "src/main/java/org/springframework/samples/petclinic/repository/jdbc/JdbcVisitRepositoryImpl.java"
+                                          ]
+                     },
+                     {
                          "id":  "threshold/receipts/src-main-java-org-springframework-samples-petclinic-repository-jdbc-jdbcvisitrepositoryimpl-java-comment-wrap-cleanup-line-29-9cfe931a8ccd.json",
                          "candidateClass":  "comment_wrap_cleanup",
                          "sourceCommit":  "9cfe931a8ccd3007c097ed06f5ce595999503bae",
@@ -1828,6 +1838,16 @@
                                           ]
                      },
                      {
+                         "id":  "threshold/receipts/src-main-java-org-springframework-samples-petclinic-repository-jdbc-jdbcvisitrowmapper-java-comment-wrap-cleanup-line-12-078a9afd7146.json",
+                         "candidateClass":  "comment_wrap_cleanup",
+                         "sourceCommit":  "078a9afd7146c36dd1d28bec8514fc6c7f641f14",
+                         "leaseDigest":  "143c3b0216ba9dcc5c7c7d0848492197dff4606cbc1f055c81d36dc69e8d35da",
+                         "validationResult":  "BUILD SUCCESS",
+                         "changedFiles":  [
+                                              "src/main/java/org/springframework/samples/petclinic/repository/jdbc/JdbcVisitRowMapper.java"
+                                          ]
+                     },
+                     {
                          "id":  "threshold/receipts/src-main-java-org-springframework-samples-petclinic-repository-jdbc-jdbcvisitrowmapper-java-comment-wrap-cleanup-line-27-b885d1284b66.json",
                          "candidateClass":  "comment_wrap_cleanup",
                          "sourceCommit":  "b885d1284b665b529bec56bd9ca5ad058ae53e6c",
@@ -1852,6 +1872,26 @@
                          "candidateClass":  "comment_wrap_cleanup",
                          "sourceCommit":  "aad1d316ae3b05c572b7f10d44833da59522a664",
                          "leaseDigest":  "dc966ba21fb20defcfef9a12fda0673d24103bdb43f780520a21007f85699306",
+                         "validationResult":  "BUILD SUCCESS",
+                         "changedFiles":  [
+                                              "src/main/java/org/springframework/samples/petclinic/repository/jdbc/OneToManyResultSetExtractor.java"
+                                          ]
+                     },
+                     {
+                         "id":  "threshold/receipts/src-main-java-org-springframework-samples-petclinic-repository-jdbc-onetomanyresultsetextractor-java-comment-wrap-cleanup-line-100-b7450100ff6f.json",
+                         "candidateClass":  "comment_wrap_cleanup",
+                         "sourceCommit":  "b7450100ff6f2aeb1ff63f8b3651231a5326dbb8",
+                         "leaseDigest":  "143c3b0216ba9dcc5c7c7d0848492197dff4606cbc1f055c81d36dc69e8d35da",
+                         "validationResult":  "BUILD SUCCESS",
+                         "changedFiles":  [
+                                              "src/main/java/org/springframework/samples/petclinic/repository/jdbc/OneToManyResultSetExtractor.java"
+                                          ]
+                     },
+                     {
+                         "id":  "threshold/receipts/src-main-java-org-springframework-samples-petclinic-repository-jdbc-onetomanyresultsetextractor-java-comment-wrap-cleanup-line-12-f65043d5d2ac.json",
+                         "candidateClass":  "comment_wrap_cleanup",
+                         "sourceCommit":  "f65043d5d2acb1e1a74c0ffbd4df8fc9c4b3b4a6",
+                         "leaseDigest":  "143c3b0216ba9dcc5c7c7d0848492197dff4606cbc1f055c81d36dc69e8d35da",
                          "validationResult":  "BUILD SUCCESS",
                          "changedFiles":  [
                                               "src/main/java/org/springframework/samples/petclinic/repository/jdbc/OneToManyResultSetExtractor.java"
@@ -1963,6 +2003,16 @@
                          "candidateClass":  "comment_wrap_cleanup",
                          "sourceCommit":  "7a2f1ca",
                          "leaseDigest":  null,
+                         "validationResult":  "BUILD SUCCESS",
+                         "changedFiles":  [
+                                              "src/main/java/org/springframework/samples/petclinic/repository/jdbc/OneToManyResultSetExtractor.java"
+                                          ]
+                     },
+                     {
+                         "id":  "threshold/receipts/src-main-java-org-springframework-samples-petclinic-repository-jdbc-onetomanyresultsetextractor-java-comment-wrap-cleanup-line-40-00fa9da7fcd7.json",
+                         "candidateClass":  "comment_wrap_cleanup",
+                         "sourceCommit":  "00fa9da7fcd7c151a37f904b885bce2f01c80b63",
+                         "leaseDigest":  "143c3b0216ba9dcc5c7c7d0848492197dff4606cbc1f055c81d36dc69e8d35da",
                          "validationResult":  "BUILD SUCCESS",
                          "changedFiles":  [
                                               "src/main/java/org/springframework/samples/petclinic/repository/jdbc/OneToManyResultSetExtractor.java"
@@ -3369,5 +3419,5 @@
                            "F3_VALIDATED_RECEIPT",
                            "F4_CI_RECEIPT_STABLE"
                        ],
-    "semanticDigest":  "4ff525a938d968de1b0204cde38b6bfc6431f4c144726ffdbb9e7de8c42d0839"
+    "semanticDigest":  "3fa504978c553aeb3d545bf3f40dad1f4b15d5c5b4769b3431314ef265ce55c5"
 }
