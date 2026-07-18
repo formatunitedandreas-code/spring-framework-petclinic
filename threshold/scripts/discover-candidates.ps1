@@ -820,8 +820,8 @@ foreach ($file in $sourceFiles) {
             if ($methodLineCount -gt $utilityMethodLengthThreshold -and (($hasTryFinally -and $hasStopWatch) -or $hasSynchronized -or $hasStopWatch)) {
                 $utilityPattern = if ($hasStopWatch) { "stopwatch_start_helper" } else { "synchronized_helper" }
                 $helperName = if ($hasStopWatch) { "startInvocationStopWatch" } else { "recordInvocation" }
-                if ($content -match "private\s+StopWatch\s+$([regex]::Escape($helperName))\s*\(" -or
-                    $content -match "private\s+[\w<>]+\s+$([regex]::Escape($helperName))\s*\(") {
+                if ($content -match "private\s+(?:synchronized\s+)?StopWatch\s+$([regex]::Escape($helperName))\s*\(" -or
+                    $content -match "private\s+(?:synchronized\s+)?[\w<>]+\s+$([regex]::Escape($helperName))\s*\(") {
                     continue
                 }
                 Add-Candidate -CandidateClass "utility_readability_cleanup" -AllowedTypes $allowedCandidateTypes -Bucket $candidates -Candidate ([ordered]@{

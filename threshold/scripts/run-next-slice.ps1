@@ -615,8 +615,8 @@ function Get-NextCandidate {
                     $applicable = $false
                     break
                 }
-                if ($content -match "private\s+StopWatch\s+$([regex]::Escape([string]$candidate.helperName))\s*\(" -or
-                    $content -match "private\s+[\w<>]+\s+$([regex]::Escape([string]$candidate.helperName))\s*\(") {
+                if ($content -match "private\s+(?:synchronized\s+)?StopWatch\s+$([regex]::Escape([string]$candidate.helperName))\s*\(" -or
+                    $content -match "private\s+(?:synchronized\s+)?[\w<>]+\s+$([regex]::Escape([string]$candidate.helperName))\s*\(") {
                     Write-Host "candidateSkippedReason=helper_already_exists:$($candidate.candidateId)"
                     $applicable = $false
                     break
