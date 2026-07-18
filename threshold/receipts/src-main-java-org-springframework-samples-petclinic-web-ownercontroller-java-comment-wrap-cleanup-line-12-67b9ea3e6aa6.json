@@ -1,0 +1,51 @@
+{
+    "schemaVersion":  "threshold.petclinic.slice-receipt.v0.2",
+    "candidateId":  "src-main-java-org-springframework-samples-petclinic-web-ownercontroller-java-comment-wrap-cleanup-line-12",
+    "leaseName":  "owned-autonomous-refactor-branch-wave-v0_automation",
+    "leaseDigest":  "0f18c6443f6c9621112444f579b3569040ef35421d5849fccf3ee37d03a66ca9",
+    "branch":  "threshold-governed-refactor-demo-178",
+    "candidateClass":  "comment_wrap_cleanup",
+    "leaseStartHead":  "41a831cf3cc9638e9f1f4ef072c20e7aa710e9bc",
+    "baseHead":  "db7ff528f05e2a76c2f6cc3ad2d3d75d1164acd7",
+    "commitHash":  "67b9ea3e6aa6face3b01f5a762119ea1b76b50a9",
+    "receiptMaterialization":  "post-commit",
+    "perCommitValidationLogAvailable":  true,
+    "branchFinalValidationPassed":  false,
+    "changedFiles":  [
+                         {
+                             "path":  "src/main/java/org/springframework/samples/petclinic/web/OwnerController.java",
+                             "beforeSha256":  "040ac9d99f533e8bf3b05dde8b04f694bf1d77ccad2e1a78dfcdc53f4ce2f9b8",
+                             "afterSha256":  "019c30ecdfaf8d5c9449c73736c719675dce231042ccb6904782f0e8220bfb76"
+                         }
+                     ],
+    "diffSummary":  "Refactor PetClinic Wrap one long Javadoc comment line without changing so",
+    "diffStat":  {
+                     "filesChanged":  1,
+                     "insertions":  2,
+                     "deletions":  1
+                 },
+    "validation":  {
+                       "diffCheck":  "passed",
+                       "command":  ".\\mvnw.cmd test",
+                       "result":  "BUILD SUCCESS",
+                       "testsRun":  119,
+                       "failures":  0,
+                       "errors":  0,
+                       "skipped":  0
+                   },
+    "nonClaims":  [
+                      "no push in candidate slice",
+                      "no PR update in candidate slice",
+                      "no upstream interaction",
+                      "no pom.xml change",
+                      "no dependency change",
+                      "no src/test change",
+                      "no merge",
+                      "no release",
+                      "no deploy",
+                      "no public readiness claim",
+                      "no public correctness claim",
+                      "no public security claim",
+                      "no public compliance claim"
+                  ]
+}
