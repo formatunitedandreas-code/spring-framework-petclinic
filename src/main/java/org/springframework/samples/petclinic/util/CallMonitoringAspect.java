@@ -25,7 +25,8 @@ import org.springframework.jmx.export.annotation.ManagedResource;
 import org.springframework.util.StopWatch;
 
 /**
- * Simple aspect that monitors call count and call invocation time. It uses
+ * Simple aspect that monitors call count and call
+ * invocation time. It uses
  * JMX annotations and
  * therefore can be
  * monitored using any JMX console such as the jConsole
