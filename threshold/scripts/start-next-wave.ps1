@@ -161,6 +161,24 @@ function Restore-GovernancePaths {
     }
 }
 
+function Restore-PreWaveBranch {
+    param(
+        [string] $PreviousBranch,
+        [string] $WaveBranch
+    )
+
+    if ([string]::IsNullOrWhiteSpace($PreviousBranch) -or $PreviousBranch -eq $WaveBranch) {
+        return
+    }
+
+    Invoke-Checked -FilePath "git" -ArgumentList @("switch", $PreviousBranch) -FailureMessage "Failed to restore previous branch '$PreviousBranch'."
+
+    & git branch -D $WaveBranch
+    if ($LASTEXITCODE -ne 0) {
+        throw "Failed to delete transient wave branch '$WaveBranch'."
+    }
+}
+
 function Update-CandidatePocket {
     Invoke-Checked -FilePath "powershell.exe" -ArgumentList @(
         "-ExecutionPolicy",
@@ -385,6 +403,7 @@ function Invoke-LocalWave {
     Assert-CleanWorktree
     Invoke-Checked -FilePath "git" -ArgumentList @("fetch", $BaseRemote) -FailureMessage "Failed to fetch $BaseRemote."
 
+    $startingBranch = (& git branch --show-current).Trim()
     $branch = Get-NextWaveBranchName
     Invoke-Checked -FilePath "git" -ArgumentList @("switch", "-c", $branch, "$BaseRemote/$BaseBranch") -FailureMessage "Failed to switch to new branch '$branch'."
 
@@ -419,8 +438,10 @@ function Invoke-LocalWave {
     }
     if ($initialAutoPatchableCount -lt $MinAutoPatchableCandidates) {
         Restore-GovernancePaths
+        Restore-PreWaveBranch -PreviousBranch $startingBranch -WaveBranch $branch
         Write-Host "ready_no_candidates_on_fresh_wave"
         Write-Host "branch=$branch"
+        Write-Host "currentBranch=$((& git branch --show-current).Trim())"
         Write-Host "head=$((& git rev-parse HEAD).Trim())"
         Write-Host "autoPatchableCandidateCount=$initialAutoPatchableCount"
         Write-Host "minAutoPatchableCandidates=$MinAutoPatchableCandidates"
