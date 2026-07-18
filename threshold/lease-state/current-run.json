@@ -1,12 +1,12 @@
 {
     "schemaVersion":  "threshold.petclinic.lease-state.v0.2",
-    "invocationId":  "owned-autonomous-refactor-branch-wave-v0_automation-20260718T063428Z",
+    "invocationId":  "owned-autonomous-refactor-branch-wave-v0_automation-20260718T072852Z",
     "leaseId":  "owned-autonomous-refactor-branch-wave-v0_automation",
     "mode":  "local_refactor",
-    "branch":  "threshold-governed-refactor-demo-160",
-    "startHead":  "447c6e7d93f15f4bd9f3c7ac1f03aca650d40f0c",
-    "currentHead":  "b885d1284b665b529bec56bd9ca5ad058ae53e6c",
-    "currentSourceHead":  "b885d1284b665b529bec56bd9ca5ad058ae53e6c",
+    "branch":  "threshold-governed-refactor-demo-162",
+    "startHead":  "394d70d17366878928b6aba37270b4a8037b4644",
+    "currentHead":  "21a8c9b0d4bf687186066bb75d5d9d6b5559f352",
+    "currentSourceHead":  "21a8c9b0d4bf687186066bb75d5d9d6b5559f352",
     "candidatesProcessed":  5,
     "commitsCreated":  5,
     "remainingBudget":  {
@@ -14,12 +14,12 @@
                             "commits":  0,
                             "repairAttempts":  1
                         },
-    "lastReceipt":  "threshold/receipts/src-main-java-org-springframework-samples-petclinic-repository-jdbc-jdbcvisitrowmapper-java-comment-wrap-cleanup-line-27-b885d1284b66.json",
+    "lastReceipt":  "threshold/receipts/src-main-java-org-springframework-samples-petclinic-repository-jdbc-onetomanyresultsetextractor-java-comment-wrap-cleanup-line-54-21a8c9b0d4bf.json",
     "terminalState":  "budget_exhausted_verified",
-    "updatedAt":  "2026-07-18T06:41:36.5118467Z",
-    "terminalReason":  "remaining candidate or commit budget is exhausted after wave executor returned successfully",
+    "updatedAt":  "2026-07-18T07:34:57.5236219Z",
+    "terminalReason":  "remaining candidate or commit budget is exhausted after slice validation passed",
     "currentHeadRole":  "sourceHead",
-    "terminalEvidenceHead":  "d6bad5e25c486e68c1b4134bd87ae21c26e0c050",
+    "terminalEvidenceHead":  "feea1c332fbea3a2eb3cdb7d0408821c1d964898",
     "terminalEvidencePolicy":  "terminal evidence is generated from the last governed source/evidence head before the terminal governance commit",
-    "terminalEvidenceMarkedAt":  "2026-07-18T06:41:39.4312707Z"
+    "terminalEvidenceMarkedAt":  "2026-07-18T07:35:00.9249913Z"
 }
