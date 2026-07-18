@@ -5,16 +5,17 @@
     "mode":  "local_refactor",
     "branch":  "threshold-governed-refactor-demo-164",
     "startHead":  "516e058a0d4c1ff6cbd1208c698a2893fd5f712c",
-    "currentHead":  "2ba7e23ac55193134c75f21b7f70f954777bc6bd",
-    "currentSourceHead":  "2ba7e23ac55193134c75f21b7f70f954777bc6bd",
-    "candidatesProcessed":  4,
-    "commitsCreated":  4,
+    "currentHead":  "4050b8e5165be82fe4eeee31535b2e72b9d7ee2e",
+    "currentSourceHead":  "4050b8e5165be82fe4eeee31535b2e72b9d7ee2e",
+    "candidatesProcessed":  5,
+    "commitsCreated":  5,
     "remainingBudget":  {
-                            "candidates":  1,
-                            "commits":  1,
+                            "candidates":  0,
+                            "commits":  0,
                             "repairAttempts":  1
                         },
-    "lastReceipt":  "threshold/receipts/src-main-java-org-springframework-samples-petclinic-repository-visitrepository-java-comment-wrap-cleanup-line-27-2ba7e23ac551.json",
-    "terminalState":  "active",
-    "updatedAt":  "2026-07-18T08:27:54.4835355Z"
+    "lastReceipt":  "threshold/receipts/src-main-java-org-springframework-samples-petclinic-repository-visitrepository-java-comment-wrap-cleanup-line-40-4050b8e5165b.json",
+    "terminalState":  "budget_exhausted_verified",
+    "updatedAt":  "2026-07-18T08:28:57.4006590Z",
+    "terminalReason":  "remaining candidate or commit budget is exhausted after slice validation passed"
 }
