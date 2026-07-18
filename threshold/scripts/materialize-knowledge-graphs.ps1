@@ -89,7 +89,7 @@ function ConvertTo-NormalizedJson {
 function Assert-FileMatches {
     param([string] $Path, [object] $Expected)
     if (-not (Test-Path $Path)) { throw "kg_artifact_missing=$Path" }
-    $actual = (Get-Content $Path -Raw).Trim()
+    $actual = ConvertTo-NormalizedJson (Get-Content $Path -Raw | ConvertFrom-Json)
     $expectedJson = ConvertTo-NormalizedJson $Expected
     if ($actual -ne $expectedJson) {
         throw "kg_artifact_stale=$Path"
