@@ -1,0 +1,9 @@
+{
+  "schemaVersion": "threshold.petclinic.review-findings.v0.1",
+  "purpose": "Input facts for trainer-derived capability demotion and generated canary rules.",
+  "findings": [],
+  "nonClaims": [
+    "absence of findings here is not absence of all review risk",
+    "findings are training inputs, not direct source mutation authority"
+  ]
+}

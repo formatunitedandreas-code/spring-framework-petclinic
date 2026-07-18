@@ -1,0 +1,328 @@
+[CmdletBinding()]
+param(
+    [string] $LeasePath = "threshold/leases/current.yaml",
+    [string] $GatePath = "threshold/gates/auto-patchable-candidate-classes.json",
+    [string] $ReceiptRoot = "threshold/receipts",
+    [string] $ReviewFindingsPath = "threshold/trainer/review-findings.json",
+    [string] $CapabilityKgPath = "threshold/kgs/capability-kg.json",
+    [string] $FidelityKgPath = "threshold/kgs/fidelity-kg.json",
+    [string] $TrainingReportPath = "threshold/trainer/training-report.json",
+    [string] $CanaryRulesPath = "threshold/trainer/generated-canary-rules.json",
+    [switch] $CheckOnly
+)
+
+Set-StrictMode -Version Latest
+$ErrorActionPreference = "Stop"
+
+function ConvertTo-RepoPath {
+    param([string] $Path)
+    return ($Path -replace "\\", "/").Trim()
+}
+
+function Read-JsonOrNull {
+    param([string] $Path)
+    if (-not (Test-Path $Path)) { return $null }
+    return Get-Content $Path -Raw | ConvertFrom-Json
+}
+
+function Get-JsonProperty {
+    param([object] $Object, [string] $Name, [object] $DefaultValue = $null)
+    if ($null -eq $Object) { return $DefaultValue }
+    if ($Object.PSObject.Properties.Name -contains $Name) {
+        return $Object.$Name
+    }
+    return $DefaultValue
+}
+
+function Get-LeaseList {
+    param([string[]] $Lines, [string] $Name)
+    $items = New-Object System.Collections.Generic.List[string]
+    $inside = $false
+    foreach ($line in $Lines) {
+        if ($line -match "^\s*$([regex]::Escape($Name)):\s*$") { $inside = $true; continue }
+        if ($inside -and $line -match "^\S") { break }
+        if ($inside -and $line -match "^\s*-\s*(.+?)\s*$") { $items.Add(($Matches[1]).Trim()) }
+    }
+    return @($items.ToArray())
+}
+
+function Get-LeaseScalarOrDefault {
+    param([string[]] $Lines, [string] $Name, [string] $DefaultValue = "")
+    $match = $Lines | Where-Object { $_ -match "^\s*$([regex]::Escape($Name)):\s*(.+?)\s*$" } | Select-Object -First 1
+    if (-not $match) { return $DefaultValue }
+    return ($match -replace "^\s*$([regex]::Escape($Name)):\s*", "").Trim()
+}
+
+function Get-UniqueMatches {
+    param([string] $Text, [string] $Pattern, [string] $GroupName)
+    return @(
+        [regex]::Matches($Text, $Pattern) |
+            ForEach-Object { [string]$_.Groups[$GroupName].Value } |
+            Where-Object { -not [string]::IsNullOrWhiteSpace($_) } |
+            Sort-Object -Unique
+    )
+}
+
+function Write-JsonFile {
+    param([string] $Path, [object] $Value)
+    $dir = Split-Path $Path -Parent
+    if ($dir -and -not (Test-Path $dir)) { New-Item -ItemType Directory -Path $dir | Out-Null }
+    $Value | ConvertTo-Json -Depth 16 | Set-Content $Path
+}
+
+function ConvertTo-NormalizedJson {
+    param([object] $Value)
+    return ($Value | ConvertTo-Json -Depth 16).Trim()
+}
+
+function Assert-FileMatches {
+    param([string] $Path, [object] $Expected)
+    if (-not (Test-Path $Path)) { throw "kg_artifact_missing=$Path" }
+    $actual = (Get-Content $Path -Raw).Trim()
+    $expectedJson = ConvertTo-NormalizedJson $Expected
+    if ($actual -ne $expectedJson) {
+        throw "kg_artifact_stale=$Path"
+    }
+}
+
+if (-not (Test-Path $LeasePath)) { throw "Missing lease: $LeasePath" }
+if (-not (Test-Path $GatePath)) { throw "Missing gate: $GatePath" }
+
+$leaseLines = Get-Content $LeasePath
+$leaseAllowedClasses = @(Get-LeaseList -Lines $leaseLines -Name "allowedCandidateTypes")
+$leaseAllowedPaths = @(Get-LeaseList -Lines $leaseLines -Name "allowedPaths")
+$leaseForbiddenActions = @(Get-LeaseList -Lines $leaseLines -Name "forbiddenActions")
+$leaseBranch = Get-LeaseScalarOrDefault -Lines $leaseLines -Name "branch"
+$leaseName = Get-LeaseScalarOrDefault -Lines $leaseLines -Name "leaseName"
+
+$gate = Get-Content $GatePath -Raw | ConvertFrom-Json
+$gateClasses = @(Get-JsonProperty $gate "approvedAutoPatchableCandidateClasses" @() | ForEach-Object {
+    $value = Get-JsonProperty $_ "candidateClass" ""
+    if (-not [string]::IsNullOrWhiteSpace([string]$value)) { [string]$value }
+} | Sort-Object -Unique)
+$batchMode = Get-JsonProperty $gate "batchReceiptMode" $null
+$batchClasses = @(Get-JsonProperty $batchMode "approvedCandidateClasses" @() | ForEach-Object {
+    $value = Get-JsonProperty $_ "candidateClass" ""
+    if (-not [string]::IsNullOrWhiteSpace([string]$value)) { [string]$value }
+} | Sort-Object -Unique)
+
+$discoveryText = Get-Content "threshold/scripts/discover-candidates.ps1" -Raw
+$discoveryClasses = @(
+    @(Get-UniqueMatches -Text $discoveryText -Pattern 'Add-Candidate\s+-CandidateClass\s+"(?<class>[a-z0-9_]+)"' -GroupName "class") +
+    @(Get-UniqueMatches -Text $discoveryText -Pattern '\$candidateClass\s*=\s*"(?<class>[a-z0-9_]+)"' -GroupName "class") |
+        Sort-Object -Unique
+)
+$runnerText = Get-Content "threshold/scripts/run-next-slice.ps1" -Raw
+$runnerClasses = @(
+    Get-UniqueMatches -Text $runnerText -Pattern '"(?<class>[a-z0-9_]+)"\s*\{' -GroupName "class" |
+        Where-Object { $_ -like "*_*" -and $_ -ne "collapse_extra_blank_line" } |
+        Sort-Object -Unique
+)
+
+$receiptFiles = @(Get-ChildItem $ReceiptRoot -Filter *.json -File -ErrorAction SilentlyContinue | Sort-Object FullName)
+$receiptEvidence = New-Object System.Collections.Generic.List[object]
+$classStats = @{}
+foreach ($receiptFile in $receiptFiles) {
+    try {
+        $receipt = Get-Content $receiptFile.FullName -Raw | ConvertFrom-Json
+    }
+    catch {
+        continue
+    }
+    $candidateClassValue = Get-JsonProperty $receipt "candidateClass" ""
+    $batchClassValue = Get-JsonProperty $receipt "batchClass" ""
+    $candidateClass = if (-not [string]::IsNullOrWhiteSpace([string]$candidateClassValue)) { [string]$candidateClassValue } elseif (-not [string]::IsNullOrWhiteSpace([string]$batchClassValue)) { [string]$batchClassValue } else { "unknown" }
+    if (-not $classStats.ContainsKey($candidateClass)) {
+        $classStats[$candidateClass] = [ordered]@{
+            receiptCount = 0
+            validationPassCount = 0
+            validationFailCount = 0
+            semanticPassCount = 0
+            semanticUnknownCount = 0
+            reviewFindingCount = 0
+        }
+    }
+    $stats = $classStats[$candidateClass]
+    $stats.receiptCount += 1
+    $validation = Get-JsonProperty $receipt "validation" $null
+    $validationResultValue = Get-JsonProperty $validation "result" ""
+    $validationResult = if (-not [string]::IsNullOrWhiteSpace([string]$validationResultValue)) { [string]$validationResultValue } else { "UNKNOWN" }
+    if ($validationResult -match "SUCCESS|passed|SKIPPED_BY_LEASE_INVOCATION") { $stats.validationPassCount += 1 } else { $stats.validationFailCount += 1 }
+    $semanticValidation = Get-JsonProperty $receipt "semanticValidation" $null
+    $semanticResult = Get-JsonProperty $semanticValidation "result" ""
+    if ($semanticResult -eq "passed") { $stats.semanticPassCount += 1 } else { $stats.semanticUnknownCount += 1 }
+
+    $receiptEvidence.Add([ordered]@{
+        id = ConvertTo-RepoPath $receiptFile.FullName
+        candidateClass = $candidateClass
+        sourceCommit = if (-not [string]::IsNullOrWhiteSpace([string](Get-JsonProperty $receipt "commitHash" ""))) { [string](Get-JsonProperty $receipt "commitHash" "") } elseif (-not [string]::IsNullOrWhiteSpace([string](Get-JsonProperty $receipt "sourceCommit" ""))) { [string](Get-JsonProperty $receipt "sourceCommit" "") } else { $null }
+        leaseDigest = if (-not [string]::IsNullOrWhiteSpace([string](Get-JsonProperty $receipt "leaseDigest" ""))) { [string](Get-JsonProperty $receipt "leaseDigest" "") } else { $null }
+        validationResult = $validationResult
+        changedFiles = @(Get-JsonProperty $receipt "changedFiles" @() | ForEach-Object {
+            $pathValue = Get-JsonProperty $_ "path" ""
+            if ($_ -is [string]) { [string]$_ } elseif (-not [string]::IsNullOrWhiteSpace([string]$pathValue)) { [string]$pathValue }
+        } | Where-Object { -not [string]::IsNullOrWhiteSpace($_) })
+    })
+}
+
+$reviewFindings = Read-JsonOrNull -Path $ReviewFindingsPath
+$findingNodes = @()
+if ($reviewFindings -and (Get-JsonProperty $reviewFindings "findings" $null)) {
+    foreach ($finding in @(Get-JsonProperty $reviewFindings "findings" @())) {
+        $findingClass = Get-JsonProperty $finding "candidateClass" ""
+        $className = if (-not [string]::IsNullOrWhiteSpace([string]$findingClass)) { [string]$findingClass } else { "unknown" }
+        if (-not $classStats.ContainsKey($className)) {
+            $classStats[$className] = [ordered]@{
+                receiptCount = 0; validationPassCount = 0; validationFailCount = 0; semanticPassCount = 0; semanticUnknownCount = 0; reviewFindingCount = 0
+            }
+        }
+        $classStats[$className].reviewFindingCount += 1
+        $findingNodes += [ordered]@{
+            id = [string](Get-JsonProperty $finding "id" "")
+            candidateClass = $className
+            severity = if (-not [string]::IsNullOrWhiteSpace([string](Get-JsonProperty $finding "severity" ""))) { [string](Get-JsonProperty $finding "severity" "") } else { "P2" }
+            ruleSuggestion = [string](Get-JsonProperty $finding "ruleSuggestion" "")
+            canarySuggestion = [string](Get-JsonProperty $finding "canarySuggestion" "")
+        }
+    }
+}
+
+$capabilityNodes = New-Object System.Collections.Generic.List[object]
+$fidelityNodes = New-Object System.Collections.Generic.List[object]
+$trainingDecisions = New-Object System.Collections.Generic.List[object]
+$allClasses = @($leaseAllowedClasses + $gateClasses + $discoveryClasses + $runnerClasses + $batchClasses + @($classStats.Keys) | Sort-Object -Unique)
+foreach ($className in $allClasses) {
+    $stats = if ($classStats.ContainsKey($className)) { $classStats[$className] } else {
+        [ordered]@{ receiptCount = 0; validationPassCount = 0; validationFailCount = 0; semanticPassCount = 0; semanticUnknownCount = 0; reviewFindingCount = 0 }
+    }
+    $isInLease = $leaseAllowedClasses -contains $className
+    $isInGate = $gateClasses -contains $className
+    $isDiscovered = $discoveryClasses -contains $className
+    $isExecutable = $runnerClasses -contains $className
+    $isBatch = $batchClasses -contains $className
+    $passRate = if ([int]$stats.receiptCount -gt 0) { [math]::Round([double]$stats.validationPassCount / [double]$stats.receiptCount, 4) } else { 0.0 }
+
+    $level = "F0_UNOBSERVED"
+    if ($stats.reviewFindingCount -gt 0 -or $stats.validationFailCount -gt 0) { $level = "F1_REVIEW_REQUIRED" }
+    elseif ($stats.receiptCount -ge 3 -and $passRate -ge 0.95 -and $isInGate -and $isExecutable -and $isDiscovered) { $level = "F4_CI_RECEIPT_STABLE" }
+    elseif ($stats.receiptCount -ge 1 -and $isInGate -and $isExecutable) { $level = "F3_VALIDATED_RECEIPT" }
+    elseif ($isInGate -and $isExecutable) { $level = "F2_GATED_EXECUTOR" }
+
+    $decision = "held"
+    if ($level -in @("F3_VALIDATED_RECEIPT", "F4_CI_RECEIPT_STABLE") -and $isInLease -and $isInGate -and $isExecutable -and $isDiscovered -and $stats.reviewFindingCount -eq 0) {
+        $decision = "autoPatchable"
+    }
+    elseif ($level -ne "F0_UNOBSERVED" -or $isInGate -or $isDiscovered) {
+        $decision = "reviewOnly"
+    }
+
+    $capabilityNodes.Add([ordered]@{
+        id = "capability:$className"
+        candidateClass = $className
+        allowedByLease = $isInLease
+        approvedByGate = $isInGate
+        discoveredByRunner = $isDiscovered
+        executableByRunner = $isExecutable
+        batchExecutable = $isBatch
+        forbiddenActions = $leaseForbiddenActions
+        allowedPathCount = $leaseAllowedPaths.Count
+        trainerDecision = $decision
+    })
+    $fidelityNodes.Add([ordered]@{
+        id = "fidelity:$className"
+        candidateClass = $className
+        level = $level
+        receiptCount = [int]$stats.receiptCount
+        validationPassCount = [int]$stats.validationPassCount
+        validationFailCount = [int]$stats.validationFailCount
+        semanticPassCount = [int]$stats.semanticPassCount
+        semanticUnknownCount = [int]$stats.semanticUnknownCount
+        reviewFindingCount = [int]$stats.reviewFindingCount
+        validationPassRate = $passRate
+    })
+    $trainingDecisions.Add([ordered]@{
+        candidateClass = $className
+        fidelityLevel = $level
+        decision = $decision
+        reason = "decision derived from lease, gate, discovery, executor, receipt history, semantic evidence, and review findings"
+    })
+}
+
+$generatedAt = "deterministic-from-current-repo-state"
+$leasePathNormalized = ConvertTo-RepoPath $LeasePath
+$capabilityNodeArray = @($capabilityNodes.ToArray())
+$fidelityNodeArray = @($fidelityNodes.ToArray())
+$trainingDecisionArray = @($trainingDecisions.ToArray())
+$receiptEvidenceArray = @($receiptEvidence.ToArray())
+$capabilityKg = [ordered]@{
+    schemaVersion = "threshold.petclinic.capability-kg.v0.1"
+    generatedAt = $generatedAt
+    lease = [ordered]@{ path = $leasePathNormalized; leaseName = $leaseName; branch = $leaseBranch }
+    nodes = $capabilityNodeArray
+    edges = @(
+        @($capabilityNodeArray | ForEach-Object {
+            [ordered]@{ from = $_.id; relation = "has_fidelity"; to = "fidelity:$($_.candidateClass)" }
+        })
+    )
+}
+$fidelityKg = [ordered]@{
+    schemaVersion = "threshold.petclinic.fidelity-kg.v0.1"
+    generatedAt = $generatedAt
+    nodes = $fidelityNodeArray
+    evidence = $receiptEvidenceArray
+    reviewFindings = @($findingNodes)
+    fidelityLevels = @(
+        "F0_UNOBSERVED",
+        "F1_REVIEW_REQUIRED",
+        "F2_GATED_EXECUTOR",
+        "F3_VALIDATED_RECEIPT",
+        "F4_CI_RECEIPT_STABLE"
+    )
+}
+$trainingReport = [ordered]@{
+    schemaVersion = "threshold.petclinic.capability-trainer-report.v0.1"
+    generatedAt = $generatedAt
+    policy = [ordered]@{
+        missingKgMeansStop = $true
+        reviewFindingMeansNoAutoPatch = $true
+        fidelityDrivesExecutionMode = $true
+        immutableReceiptChainRequired = $true
+        semanticValidationRequired = $true
+    }
+    decisions = $trainingDecisionArray
+}
+$generatedCanaryRules = [ordered]@{
+    schemaVersion = "threshold.petclinic.generated-canary-rules.v0.1"
+    generatedAt = $generatedAt
+    source = ConvertTo-RepoPath $ReviewFindingsPath
+    rules = @($findingNodes | Where-Object { -not [string]::IsNullOrWhiteSpace($_.canarySuggestion) } | ForEach-Object {
+        [ordered]@{
+            id = "review-finding-canary-$($_.id)"
+            candidateClass = $_.candidateClass
+            severity = $_.severity
+            ruleSuggestion = $_.ruleSuggestion
+            canarySuggestion = $_.canarySuggestion
+            status = "generated_review_required"
+        }
+    })
+}
+
+if ($CheckOnly.IsPresent) {
+    Assert-FileMatches -Path $CapabilityKgPath -Expected $capabilityKg
+    Assert-FileMatches -Path $FidelityKgPath -Expected $fidelityKg
+    Assert-FileMatches -Path $TrainingReportPath -Expected $trainingReport
+    Assert-FileMatches -Path $CanaryRulesPath -Expected $generatedCanaryRules
+}
+else {
+    Write-JsonFile -Path $CapabilityKgPath -Value $capabilityKg
+    Write-JsonFile -Path $FidelityKgPath -Value $fidelityKg
+    Write-JsonFile -Path $TrainingReportPath -Value $trainingReport
+    Write-JsonFile -Path $CanaryRulesPath -Value $generatedCanaryRules
+}
+
+Write-Host "capabilityKg=$CapabilityKgPath"
+Write-Host "fidelityKg=$FidelityKgPath"
+Write-Host "trainingReport=$TrainingReportPath"
+Write-Host "canaryRules=$CanaryRulesPath"
+Write-Host "capabilityCount=$($capabilityNodes.Count)"
+Write-Host "receiptEvidenceCount=$($receiptEvidence.Count)"
