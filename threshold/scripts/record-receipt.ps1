@@ -156,6 +156,7 @@ if (-not $DryRun) { $receipt | ConvertTo-Json -Depth 12 | Set-Content $outPath }
 if ($UpdateState -and -not $DryRun) {
     $stateDir = Split-Path $StatePath -Parent
     if (-not (Test-Path $stateDir)) { New-Item -ItemType Directory -Path $stateDir | Out-Null }
+    $terminalReason = $null
     if (Test-Path $StatePath) {
         $state = Get-Content $StatePath -Raw | ConvertFrom-Json
         $candidatesProcessed = [int]$state.candidatesProcessed + 1
@@ -172,8 +173,12 @@ if ($UpdateState -and -not $DryRun) {
         else {
             $stateBranch = $branch
         }
+        if ($state.PSObject.Properties.Name -contains "terminalReason") {
+            $terminalReason = [string]$state.terminalReason
+        }
         if ($remainingCandidates -eq 0 -or $remainingCommits -eq 0) {
-            $terminalState = "budget_exhausted"
+            $terminalState = "budget_exhausted_verified"
+            $terminalReason = "remaining candidate or commit budget is exhausted after slice validation passed"
         }
     }
     else {
@@ -202,6 +207,9 @@ if ($UpdateState -and -not $DryRun) {
         lastReceipt = ConvertTo-RepoPath $outPath
         terminalState = $terminalState
         updatedAt = (Get-Date).ToUniversalTime().ToString("o")
+    }
+    if (-not [string]::IsNullOrWhiteSpace($terminalReason)) {
+        $newState.terminalReason = $terminalReason
     }
     $newState | ConvertTo-Json -Depth 8 | Set-Content $StatePath
 }
