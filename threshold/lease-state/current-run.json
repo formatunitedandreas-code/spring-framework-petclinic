@@ -5,21 +5,16 @@
     "mode":  "local_refactor",
     "branch":  "threshold-governed-refactor-demo-156",
     "startHead":  "4d4d04bae758b23889b7115db7756a073950287f",
-    "currentHead":  "3f80e61b2e33d59562be62a28c0c811b1e1705c9",
-    "currentSourceHead":  "5faf28a69c71645fa5e7dc332c59a5fc641b8241",
-    "candidatesProcessed":  3,
-    "commitsCreated":  3,
+    "currentHead":  "d37d4cdd405c9b7ac4771c06f9117c84dff70777",
+    "currentSourceHead":  "d37d4cdd405c9b7ac4771c06f9117c84dff70777",
+    "candidatesProcessed":  4,
+    "commitsCreated":  4,
     "remainingBudget":  {
-                            "candidates":  2,
-                            "commits":  2,
+                            "candidates":  1,
+                            "commits":  1,
                             "repairAttempts":  1
                         },
-    "lastReceipt":  "threshold/receipts/src-main-java-org-springframework-samples-petclinic-owner-adapter-jpa-jpaownersearchquery-java-duplicate-literal-local-constant-extraction-ownerid-5faf28a69c71.json",
+    "lastReceipt":  "threshold/receipts/src-main-java-org-springframework-samples-petclinic-repository-jdbc-jdbcownerrepositoryimpl-java-comment-wrap-cleanup-line-172-d37d4cdd405c.json",
     "terminalState":  "active",
-    "updatedAt":  "2026-07-18T05:09:09.5713481Z",
-    "terminalReason":  "no applicable autoPatchable candidates after discovery canary passed",
-    "discoveryCanaryLastPassedAt":  "2026-07-18T05:09:07.2303511Z",
-    "scopeExpansionTier":  4,
-    "scopeExpansionReason":  "mid_wave_candidate_shortage",
-    "scopeExpansionAppliedAt":  "2026-07-18T05:09:09.5612318Z"
+    "updatedAt":  "2026-07-18T05:10:06.2549886Z"
 }
