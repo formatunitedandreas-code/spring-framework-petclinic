@@ -39,6 +39,9 @@ function Read-JsonOrNull {
 function Get-JsonProperty {
     param([object] $Object, [string] $Name, [object] $DefaultValue = $null)
     if ($null -eq $Object) { return $DefaultValue }
+    if ($Object -is [System.Collections.IDictionary] -and $Object.Contains($Name)) {
+        return $Object[$Name]
+    }
     if ($Object.PSObject.Properties.Name -contains $Name) {
         return $Object.$Name
     }
