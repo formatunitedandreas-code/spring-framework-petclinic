@@ -15,6 +15,11 @@
                             "repairAttempts":  1
                         },
     "lastReceipt":  "threshold/receipts/src-main-java-org-springframework-samples-petclinic-repository-jdbc-jdbcvisitrowmapper-java-comment-wrap-cleanup-line-27-b885d1284b66.json",
-    "terminalState":  "budget_exhausted",
-    "updatedAt":  "2026-07-18T06:41:35.6635227Z"
+    "terminalState":  "budget_exhausted_verified",
+    "updatedAt":  "2026-07-18T06:41:36.5118467Z",
+    "terminalReason":  "remaining candidate or commit budget is exhausted after wave executor returned successfully",
+    "currentHeadRole":  "sourceHead",
+    "terminalEvidenceHead":  "d6bad5e25c486e68c1b4134bd87ae21c26e0c050",
+    "terminalEvidencePolicy":  "terminal evidence is generated from the last governed source/evidence head before the terminal governance commit",
+    "terminalEvidenceMarkedAt":  "2026-07-18T06:41:39.4312707Z"
 }
