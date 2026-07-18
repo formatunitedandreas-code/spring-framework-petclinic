@@ -18,11 +18,11 @@
                       "id":  "fidelity:comment_wrap_cleanup",
                       "candidateClass":  "comment_wrap_cleanup",
                       "level":  "F4_CI_RECEIPT_STABLE",
-                      "receiptCount":  169,
-                      "validationPassCount":  169,
+                      "receiptCount":  174,
+                      "validationPassCount":  174,
                       "validationFailCount":  0,
                       "semanticPassCount":  0,
-                      "semanticUnknownCount":  169,
+                      "semanticUnknownCount":  174,
                       "reviewFindingCount":  0,
                       "validationPassRate":  "1"
                   },
@@ -3440,6 +3440,16 @@
                                           ]
                      },
                      {
+                         "id":  "threshold/receipts/src-main-java-org-springframework-samples-petclinic-web-crashcontroller-java-comment-wrap-cleanup-line-12-7124510cc549.json",
+                         "candidateClass":  "comment_wrap_cleanup",
+                         "sourceCommit":  "7124510cc549c363990b95c527182aae986c2ed4",
+                         "leaseDigest":  "0f18c6443f6c9621112444f579b3569040ef35421d5849fccf3ee37d03a66ca9",
+                         "validationResult":  "BUILD SUCCESS",
+                         "changedFiles":  [
+                                              "src/main/java/org/springframework/samples/petclinic/web/CrashController.java"
+                                          ]
+                     },
+                     {
                          "id":  "threshold/receipts/src-main-java-org-springframework-samples-petclinic-web-crashcontroller-java-comment-wrap-cleanup-line-26-9aaa5e7f4a23.json",
                          "candidateClass":  "comment_wrap_cleanup",
                          "sourceCommit":  "9aaa5e7f4a23d31d7e4ed20b1b5b30f1a10bfc69",
@@ -3447,6 +3457,16 @@
                          "validationResult":  "BUILD SUCCESS",
                          "changedFiles":  [
                                               "src/main/java/org/springframework/samples/petclinic/web/CrashController.java"
+                                          ]
+                     },
+                     {
+                         "id":  "threshold/receipts/src-main-java-org-springframework-samples-petclinic-web-ownercontroller-java-comment-wrap-cleanup-line-12-67b9ea3e6aa6.json",
+                         "candidateClass":  "comment_wrap_cleanup",
+                         "sourceCommit":  "67b9ea3e6aa6face3b01f5a762119ea1b76b50a9",
+                         "leaseDigest":  "0f18c6443f6c9621112444f579b3569040ef35421d5849fccf3ee37d03a66ca9",
+                         "validationResult":  "BUILD SUCCESS",
+                         "changedFiles":  [
+                                              "src/main/java/org/springframework/samples/petclinic/web/OwnerController.java"
                                           ]
                      },
                      {
@@ -3470,6 +3490,26 @@
                                           ]
                      },
                      {
+                         "id":  "threshold/receipts/src-main-java-org-springframework-samples-petclinic-web-package-info-java-comment-wrap-cleanup-line-2-ebbd4cef1320.json",
+                         "candidateClass":  "comment_wrap_cleanup",
+                         "sourceCommit":  "ebbd4cef1320353be8afaf92d971710bf5b1570d",
+                         "leaseDigest":  "0f18c6443f6c9621112444f579b3569040ef35421d5849fccf3ee37d03a66ca9",
+                         "validationResult":  "BUILD SUCCESS",
+                         "changedFiles":  [
+                                              "src/main/java/org/springframework/samples/petclinic/web/package-info.java"
+                                          ]
+                     },
+                     {
+                         "id":  "threshold/receipts/src-main-java-org-springframework-samples-petclinic-web-petcontroller-java-comment-wrap-cleanup-line-12-b6c0a53792f6.json",
+                         "candidateClass":  "comment_wrap_cleanup",
+                         "sourceCommit":  "b6c0a53792f600237ce456e890c007f0f4f2cf3f",
+                         "leaseDigest":  "0f18c6443f6c9621112444f579b3569040ef35421d5849fccf3ee37d03a66ca9",
+                         "validationResult":  "BUILD SUCCESS",
+                         "changedFiles":  [
+                                              "src/main/java/org/springframework/samples/petclinic/web/PetController.java"
+                                          ]
+                     },
+                     {
                          "id":  "threshold/receipts/src-main-java-org-springframework-samples-petclinic-web-petcontroller-java-method-signature-wrap-cleanup-line-91-f164a2ebbec6.json",
                          "candidateClass":  "method_signature_wrap_cleanup",
                          "sourceCommit":  "f164a2ebbec6fa2749432a4c17154ee384dcbac1",
@@ -3477,6 +3517,16 @@
                          "validationResult":  "BUILD SUCCESS",
                          "changedFiles":  [
                                               "src/main/java/org/springframework/samples/petclinic/web/PetController.java"
+                                          ]
+                     },
+                     {
+                         "id":  "threshold/receipts/src-main-java-org-springframework-samples-petclinic-web-pettypeformatter-java-comment-wrap-cleanup-line-12-82fae73ab68b.json",
+                         "candidateClass":  "comment_wrap_cleanup",
+                         "sourceCommit":  "82fae73ab68b83d89d2e87ff8a65c0036704ba0d",
+                         "leaseDigest":  "0f18c6443f6c9621112444f579b3569040ef35421d5849fccf3ee37d03a66ca9",
+                         "validationResult":  "BUILD SUCCESS",
+                         "changedFiles":  [
+                                              "src/main/java/org/springframework/samples/petclinic/web/PetTypeFormatter.java"
                                           ]
                      },
                      {
@@ -3769,5 +3819,5 @@
                            "F3_VALIDATED_RECEIPT",
                            "F4_CI_RECEIPT_STABLE"
                        ],
-    "semanticDigest":  "abc527aa28bdc0d56b0766eab32bd3344abd4e02823f0b16c246511c51ae134b"
+    "semanticDigest":  "bdb3ea9c5c2522434ccf10ea8586a8bad5d058eb4ab7f5247172d9a6ba67d2fa"
 }
