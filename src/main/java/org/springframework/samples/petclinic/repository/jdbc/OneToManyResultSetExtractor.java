@@ -45,7 +45,8 @@ import org.springframework.util.Assert;
  * one-to-many Addresses".
  * When joining the
  * Customer table with
- * the Address table to build a Customer object, multiple rows would be returned for
+ * the Address table to build a Customer object, multiple rows
+ * would be returned for
  * a Customer if it
  * has more than one
  * Address. This extractor is useful in that case.
