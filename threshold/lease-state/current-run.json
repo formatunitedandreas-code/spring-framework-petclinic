@@ -5,19 +5,16 @@
     "mode":  "local_refactor",
     "branch":  "threshold-governed-refactor-demo-174",
     "startHead":  "3496b54ff9e7ca9572cfc20cfc24ef053b52ee80",
-    "currentHead":  "3496b54ff9e7ca9572cfc20cfc24ef053b52ee80",
-    "currentSourceHead":  "3496b54ff9e7ca9572cfc20cfc24ef053b52ee80",
-    "candidatesProcessed":  0,
-    "commitsCreated":  0,
+    "currentHead":  "f0cb95258c3f9570de35161a675b86d4fb5c6164",
+    "currentSourceHead":  "f0cb95258c3f9570de35161a675b86d4fb5c6164",
+    "candidatesProcessed":  1,
+    "commitsCreated":  1,
     "remainingBudget":  {
-                            "candidates":  5,
-                            "commits":  5,
+                            "candidates":  4,
+                            "commits":  4,
                             "repairAttempts":  1
                         },
-    "lastReceipt":  null,
+    "lastReceipt":  "threshold/receipts/src-main-java-org-springframework-samples-petclinic-repository-springdatajpa-springdatavisitrepository-java-comment-wrap-cleanup-line-12-f0cb95258c3f.json",
     "terminalState":  "active",
-    "updatedAt":  "2026-07-18T19:31:55.9931602Z",
-    "scopeExpansionTier":  5,
-    "scopeExpansionReason":  "fresh_wave_candidate_shortage",
-    "scopeExpansionAppliedAt":  "2026-07-18T19:31:55.9875939Z"
+    "updatedAt":  "2026-07-18T19:33:15.5827810Z"
 }
