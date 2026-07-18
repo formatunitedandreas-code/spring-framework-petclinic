@@ -13,6 +13,17 @@ function ConvertTo-RepoPath {
     return ($Path -replace "\\", "/").Trim()
 }
 
+function ConvertTo-RepoRelativePath {
+    param([string] $Path)
+    $repoRoot = (& git rev-parse --show-toplevel).Trim()
+    $resolved = [System.IO.Path]::GetFullPath($Path)
+    $root = [System.IO.Path]::GetFullPath($repoRoot)
+    if ($resolved.StartsWith($root, [System.StringComparison]::OrdinalIgnoreCase)) {
+        return ConvertTo-RepoPath $resolved.Substring($root.Length).TrimStart([System.IO.Path]::DirectorySeparatorChar, [System.IO.Path]::AltDirectorySeparatorChar)
+    }
+    return ConvertTo-RepoPath $Path
+}
+
 function Get-FileSha256Lower {
     param([string] $Path)
     return ((Get-FileHash -Algorithm SHA256 -LiteralPath $Path).Hash).ToLowerInvariant()
@@ -43,7 +54,7 @@ if ($receiptFiles.Count -eq 0) { throw "receipt_chain_no_receipts" }
 $previous = "".PadLeft(64, "0")
 $entries = New-Object System.Collections.Generic.List[object]
 foreach ($receiptFile in $receiptFiles) {
-    $path = [string](ConvertTo-RepoPath $receiptFile.FullName)
+    $path = [string](ConvertTo-RepoRelativePath $receiptFile.FullName)
     $digest = [string](Get-FileSha256Lower -Path $receiptFile.FullName)
     $linkInput = [string]::Concat($previous, "|", $path, "|", $digest)
     $link = Get-StringSha256Lower -Text $linkInput

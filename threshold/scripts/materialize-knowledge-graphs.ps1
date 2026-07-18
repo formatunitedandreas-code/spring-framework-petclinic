@@ -19,6 +19,17 @@ function ConvertTo-RepoPath {
     return ($Path -replace "\\", "/").Trim()
 }
 
+function ConvertTo-RepoRelativePath {
+    param([string] $Path)
+    $repoRoot = (& git rev-parse --show-toplevel).Trim()
+    $resolved = [System.IO.Path]::GetFullPath($Path)
+    $root = [System.IO.Path]::GetFullPath($repoRoot)
+    if ($resolved.StartsWith($root, [System.StringComparison]::OrdinalIgnoreCase)) {
+        return ConvertTo-RepoPath $resolved.Substring($root.Length).TrimStart([System.IO.Path]::DirectorySeparatorChar, [System.IO.Path]::AltDirectorySeparatorChar)
+    }
+    return ConvertTo-RepoPath $Path
+}
+
 function Read-JsonOrNull {
     param([string] $Path)
     if (-not (Test-Path $Path)) { return $null }
@@ -153,7 +164,7 @@ foreach ($receiptFile in $receiptFiles) {
     if ($semanticResult -eq "passed") { $stats.semanticPassCount += 1 } else { $stats.semanticUnknownCount += 1 }
 
     $receiptEvidence.Add([ordered]@{
-        id = ConvertTo-RepoPath $receiptFile.FullName
+        id = ConvertTo-RepoRelativePath $receiptFile.FullName
         candidateClass = $candidateClass
         sourceCommit = if (-not [string]::IsNullOrWhiteSpace([string](Get-JsonProperty $receipt "commitHash" ""))) { [string](Get-JsonProperty $receipt "commitHash" "") } elseif (-not [string]::IsNullOrWhiteSpace([string](Get-JsonProperty $receipt "sourceCommit" ""))) { [string](Get-JsonProperty $receipt "sourceCommit" "") } else { $null }
         leaseDigest = if (-not [string]::IsNullOrWhiteSpace([string](Get-JsonProperty $receipt "leaseDigest" ""))) { [string](Get-JsonProperty $receipt "leaseDigest" "") } else { $null }
