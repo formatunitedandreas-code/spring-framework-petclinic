@@ -25,7 +25,8 @@ import org.springframework.samples.petclinic.model.PetType;
  * Repository class for <code>Pet</code> domain objects All method names
  * are compliant with
  * Spring Data naming
- * conventions so this interface can easily be extended for Spring Data See here:
+ * conventions so this interface can easily be extended for
+ * Spring Data See here:
  * http://static.springsource.org/spring-data/jpa/docs/current/reference/html/
  * jpa.repositories.html#jpa.query-methods.query-creation
  *
