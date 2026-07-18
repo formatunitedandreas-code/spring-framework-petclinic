@@ -67,7 +67,10 @@ public class PetValidator implements Validator {
         }
     }
 
-    private void rejectRequiredField(Errors errors, String fieldName) {
+    private void rejectRequiredField(
+        Errors errors,
+        String fieldName
+    ) {
         errors.rejectValue(fieldName, REQUIRED, REQUIRED);
     }
 
