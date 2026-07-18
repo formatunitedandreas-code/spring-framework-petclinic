@@ -74,6 +74,18 @@
         "repositoryMethodLengthThreshold": 3,
         "utilityMethodLengthThreshold": 3
       }
+    },
+    {
+      "tier": 5,
+      "name": "comment_and_method_wrap_recovery_push",
+      "description": "Recovery tier that reopens proven comment and method wrapping candidates after the portfolio readability push is exhausted.",
+      "thresholds": {
+        "longLineThreshold": 68,
+        "commentWrapThreshold": 72,
+        "springDataQueryThreshold": 40,
+        "repositoryMethodLengthThreshold": 2,
+        "utilityMethodLengthThreshold": 2
+      }
     }
   ]
   },
