@@ -31,7 +31,8 @@ import org.springframework.util.Assert;
  * that map multiple
  * rows to a single
  * root object. This is
- * useful when joining a one-to-many relationship where there can be multiple
+ * useful when joining a one-to-many relationship where
+ * there can be multiple
  * child rows returned
  * per parent root.
  * <p>
