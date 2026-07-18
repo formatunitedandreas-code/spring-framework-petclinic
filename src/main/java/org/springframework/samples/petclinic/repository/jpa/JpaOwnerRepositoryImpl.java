@@ -64,7 +64,8 @@ public class JpaOwnerRepositoryImpl implements OwnerRepository {
      * 'name' property).
      * There are some ways to improve it such as:
      * - creating a Lightweight class
-     * - Turning on lazy-loading and using the open session in view pattern
+     * - Turning on lazy-loading and using the open
+     * session in view pattern
      */
     public Collection<Owner> findByLastName(String lastName) {
         // using 'join fetch' because a single query should load
