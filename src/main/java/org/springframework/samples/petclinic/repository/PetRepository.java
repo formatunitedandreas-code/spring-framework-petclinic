@@ -54,7 +54,8 @@ public interface PetRepository {
     Pet findById(int id);
 
     /**
-     * Save a <code>Pet</code> to the data store, either inserting or updating it.
+     * Save a <code>Pet</code> to the data store, either
+     * inserting or updating it.
      *
      * @param pet the <code>Pet</code> to save
      * @see BaseEntity#isNew
