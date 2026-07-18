@@ -18,11 +18,11 @@
                       "id":  "fidelity:comment_wrap_cleanup",
                       "candidateClass":  "comment_wrap_cleanup",
                       "level":  "F4_CI_RECEIPT_STABLE",
-                      "receiptCount":  107,
-                      "validationPassCount":  107,
+                      "receiptCount":  112,
+                      "validationPassCount":  112,
                       "validationFailCount":  0,
                       "semanticPassCount":  0,
-                      "semanticUnknownCount":  107,
+                      "semanticUnknownCount":  112,
                       "reviewFindingCount":  0,
                       "validationPassRate":  1
                   },
@@ -2559,6 +2559,26 @@
                                           ]
                      },
                      {
+                         "id":  "threshold/receipts/src-main-java-org-springframework-samples-petclinic-repository-petrepository-java-comment-wrap-cleanup-line-28-60904fd21577.json",
+                         "candidateClass":  "comment_wrap_cleanup",
+                         "sourceCommit":  "60904fd215773a64e28a722fe80e178943ead456",
+                         "leaseDigest":  "5ecad30d636d7d23de537092b615e2609d3cd2d29e6630077eb2a4711ebe221f",
+                         "validationResult":  "BUILD SUCCESS",
+                         "changedFiles":  [
+                                              "src/main/java/org/springframework/samples/petclinic/repository/PetRepository.java"
+                                          ]
+                     },
+                     {
+                         "id":  "threshold/receipts/src-main-java-org-springframework-samples-petclinic-repository-petrepository-java-comment-wrap-cleanup-line-57-9dd201ccbdc1.json",
+                         "candidateClass":  "comment_wrap_cleanup",
+                         "sourceCommit":  "9dd201ccbdc13c691da9960e70a6be1bf62faecb",
+                         "leaseDigest":  "5ecad30d636d7d23de537092b615e2609d3cd2d29e6630077eb2a4711ebe221f",
+                         "validationResult":  "BUILD SUCCESS",
+                         "changedFiles":  [
+                                              "src/main/java/org/springframework/samples/petclinic/repository/PetRepository.java"
+                                          ]
+                     },
+                     {
                          "id":  "threshold/receipts/src-main-java-org-springframework-samples-petclinic-repository-springdatajpa-springdataownerrepository-java-spring-data-query-concat-wrap-cleanup-line-35-15098dcec1d2.json",
                          "candidateClass":  "spring_data_query_concat_wrap_cleanup",
                          "sourceCommit":  "15098dcec1d2a27b2a831f539f391d6fe3ce1ddf",
@@ -2650,6 +2670,16 @@
                                           ]
                      },
                      {
+                         "id":  "threshold/receipts/src-main-java-org-springframework-samples-petclinic-repository-vetrepository-java-comment-wrap-cleanup-line-26-94fc3aabb8fe.json",
+                         "candidateClass":  "comment_wrap_cleanup",
+                         "sourceCommit":  "94fc3aabb8fe7e896a3c44f67dffa1cf00100c51",
+                         "leaseDigest":  "5ecad30d636d7d23de537092b615e2609d3cd2d29e6630077eb2a4711ebe221f",
+                         "validationResult":  "BUILD SUCCESS",
+                         "changedFiles":  [
+                                              "src/main/java/org/springframework/samples/petclinic/repository/VetRepository.java"
+                                          ]
+                     },
+                     {
                          "id":  "threshold/receipts/src-main-java-org-springframework-samples-petclinic-repository-visitrepository-java-comment-wrap-cleanup-line-24-0b9bad990d25.json",
                          "candidateClass":  "comment_wrap_cleanup",
                          "sourceCommit":  "0b9bad990d25375e47d22e8b9da9d2748f783e8c",
@@ -2684,6 +2714,26 @@
                          "candidateClass":  "comment_wrap_cleanup",
                          "sourceCommit":  "691f5e10f0d0a58894cc8182884f2fe5d1c556d0",
                          "leaseDigest":  null,
+                         "validationResult":  "BUILD SUCCESS",
+                         "changedFiles":  [
+                                              "src/main/java/org/springframework/samples/petclinic/repository/VisitRepository.java"
+                                          ]
+                     },
+                     {
+                         "id":  "threshold/receipts/src-main-java-org-springframework-samples-petclinic-repository-visitrepository-java-comment-wrap-cleanup-line-27-2ba7e23ac551.json",
+                         "candidateClass":  "comment_wrap_cleanup",
+                         "sourceCommit":  "2ba7e23ac55193134c75f21b7f70f954777bc6bd",
+                         "leaseDigest":  "5ecad30d636d7d23de537092b615e2609d3cd2d29e6630077eb2a4711ebe221f",
+                         "validationResult":  "BUILD SUCCESS",
+                         "changedFiles":  [
+                                              "src/main/java/org/springframework/samples/petclinic/repository/VisitRepository.java"
+                                          ]
+                     },
+                     {
+                         "id":  "threshold/receipts/src-main-java-org-springframework-samples-petclinic-repository-visitrepository-java-comment-wrap-cleanup-line-40-4050b8e5165b.json",
+                         "candidateClass":  "comment_wrap_cleanup",
+                         "sourceCommit":  "4050b8e5165be82fe4eeee31535b2e72b9d7ee2e",
+                         "leaseDigest":  "5ecad30d636d7d23de537092b615e2609d3cd2d29e6630077eb2a4711ebe221f",
                          "validationResult":  "BUILD SUCCESS",
                          "changedFiles":  [
                                               "src/main/java/org/springframework/samples/petclinic/repository/VisitRepository.java"
