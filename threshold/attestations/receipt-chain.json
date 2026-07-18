@@ -1,10 +1,10 @@
 {
     "schemaVersion":  "threshold.petclinic.receipt-chain.v0.1",
     "generatedAt":  "deterministic-from-current-repo-state",
-    "gitHead":  "33a24b5522a0c6d2a007b6290df974e820e2b19a",
+    "gitHead":  "5e26fbf3a0f15932962f884a4240d0b922f2a304",
     "algorithm":  "sha256(previousLink|path|receiptGitBlobDigest)",
-    "receiptCount":  308,
-    "root":  "058a971f58a06d3bcf954a60bc0926bfb0ef0e53f11b5e53073dbda8ad9ae6ef",
+    "receiptCount":  313,
+    "root":  "41006b47133c317a5e4bf31e863a9cdcbeb46a101db99d14efdaa0bf75d4161f",
     "entries":  [
                     {
                         "path":  "threshold/receipts/no-candidate-wave-threshold-governed-refactor-demo-109-20260716T191437Z.json",
@@ -1441,418 +1441,448 @@
                         "chainLink":  "90449a53a5b6c0a41c12cbe6e924d1502085ca0f4b54c18e5f08692175a00d0c"
                     },
                     {
+                        "path":  "threshold/receipts/src-main-java-org-springframework-samples-petclinic-repository-petrepository-java-comment-wrap-cleanup-line-12-bf2d68f1c3be.json",
+                        "receiptGitBlobDigest":  "b59d8a62e0f470cfecd96d13104d93c9aa1dd47b",
+                        "previousLink":  "90449a53a5b6c0a41c12cbe6e924d1502085ca0f4b54c18e5f08692175a00d0c",
+                        "chainLink":  "c557a66b8613425d280e275ffdd84e2cea31bfbdd5b6f67633395da48d2f254b"
+                    },
+                    {
                         "path":  "threshold/receipts/src-main-java-org-springframework-samples-petclinic-repository-petrepository-java-comment-wrap-cleanup-line-25-14671e9849ef.json",
                         "receiptGitBlobDigest":  "4789bb2a183bb489b8e0df0e5030a934b979d0c7",
-                        "previousLink":  "90449a53a5b6c0a41c12cbe6e924d1502085ca0f4b54c18e5f08692175a00d0c",
-                        "chainLink":  "c35ba762e71915cef03bd13a46ae25dd8b214eadb172620122e2c0cba3db7747"
+                        "previousLink":  "c557a66b8613425d280e275ffdd84e2cea31bfbdd5b6f67633395da48d2f254b",
+                        "chainLink":  "06318400868c21dddc8150c426d22b3d7beb43ec263166cdac2811c385c928cb"
                     },
                     {
                         "path":  "threshold/receipts/src-main-java-org-springframework-samples-petclinic-repository-petrepository-java-comment-wrap-cleanup-line-25-53087219e006.json",
                         "receiptGitBlobDigest":  "a8ced760ff3fb173c240c9f5cc9a969a4bda645a",
-                        "previousLink":  "c35ba762e71915cef03bd13a46ae25dd8b214eadb172620122e2c0cba3db7747",
-                        "chainLink":  "32165c1bd67fc3ecd175fdf1af526176aa8b19286774b32208dee97c2ea5e5f6"
+                        "previousLink":  "06318400868c21dddc8150c426d22b3d7beb43ec263166cdac2811c385c928cb",
+                        "chainLink":  "9321ab05c0dd43d7a15f39a024dc1b4df20f396399da778f57aaa94d60d92324"
                     },
                     {
                         "path":  "threshold/receipts/src-main-java-org-springframework-samples-petclinic-repository-petrepository-java-comment-wrap-cleanup-line-25-f13a351f0c37.json",
                         "receiptGitBlobDigest":  "6fe8297a7955a657e39b1fc51c855c001b84ef1a",
-                        "previousLink":  "32165c1bd67fc3ecd175fdf1af526176aa8b19286774b32208dee97c2ea5e5f6",
-                        "chainLink":  "9a870aee4e0d1656d9261c4238ed45269d452e05c5cc4590c75cf4bfb5a06923"
+                        "previousLink":  "9321ab05c0dd43d7a15f39a024dc1b4df20f396399da778f57aaa94d60d92324",
+                        "chainLink":  "caaa563b535c48a8c904a4c454e3de57869f76f372ec06a6202f0bd9b09ef7d5"
                     },
                     {
                         "path":  "threshold/receipts/src-main-java-org-springframework-samples-petclinic-repository-petrepository-java-comment-wrap-cleanup-line-28-60904fd21577.json",
                         "receiptGitBlobDigest":  "5a8c655e9b1dd03b6d6049d89304e1d122fd3f0d",
-                        "previousLink":  "9a870aee4e0d1656d9261c4238ed45269d452e05c5cc4590c75cf4bfb5a06923",
-                        "chainLink":  "103c7c3ad4a1a8dabae51534eb02cc96aff00cf8e1c6de32950ea4840714e921"
+                        "previousLink":  "caaa563b535c48a8c904a4c454e3de57869f76f372ec06a6202f0bd9b09ef7d5",
+                        "chainLink":  "c83f48f96ab1d4d830a47fba600d8d54bfb0518d113794b1364000954dc61a11"
                     },
                     {
                         "path":  "threshold/receipts/src-main-java-org-springframework-samples-petclinic-repository-petrepository-java-comment-wrap-cleanup-line-57-9dd201ccbdc1.json",
                         "receiptGitBlobDigest":  "9a57a5f0aaf2bc0a572df825dcb54a735f5bd111",
-                        "previousLink":  "103c7c3ad4a1a8dabae51534eb02cc96aff00cf8e1c6de32950ea4840714e921",
-                        "chainLink":  "2ad0c7c463e85a1d39fabb0da8b62d28076006ac24b47d0b32f8c9042b0172fe"
+                        "previousLink":  "c83f48f96ab1d4d830a47fba600d8d54bfb0518d113794b1364000954dc61a11",
+                        "chainLink":  "115f450a53b72223ba49501a90f2be9b33e0c6ecd0f133cfd4ba594e8a68c4b8"
+                    },
+                    {
+                        "path":  "threshold/receipts/src-main-java-org-springframework-samples-petclinic-repository-springdatajpa-springdataownerrepository-java-comment-wrap-cleanup-line-12-0aca00d82d72.json",
+                        "receiptGitBlobDigest":  "aec54fc9a02ca756ed67716e267c43d4b9736e95",
+                        "previousLink":  "115f450a53b72223ba49501a90f2be9b33e0c6ecd0f133cfd4ba594e8a68c4b8",
+                        "chainLink":  "276db13284321b0ef72e4a8d80ff1e90a2052e06fc7c309335dc7005ee2a5b6c"
+                    },
+                    {
+                        "path":  "threshold/receipts/src-main-java-org-springframework-samples-petclinic-repository-springdatajpa-springdataownerrepository-java-comment-wrap-cleanup-line-28-d0104ae84c97.json",
+                        "receiptGitBlobDigest":  "94215e1d2e32692811aead57f69a9e0e55a0f032",
+                        "previousLink":  "276db13284321b0ef72e4a8d80ff1e90a2052e06fc7c309335dc7005ee2a5b6c",
+                        "chainLink":  "1fc714e3f70290d8bf61250953aa6f638e9c75b285d0909020a34294a50e7921"
                     },
                     {
                         "path":  "threshold/receipts/src-main-java-org-springframework-samples-petclinic-repository-springdatajpa-springdataownerrepository-java-spring-data-query-concat-wrap-cleanup-line-35-15098dcec1d2.json",
                         "receiptGitBlobDigest":  "a2de82af6f830a71c11afd5518450d22b116032f",
-                        "previousLink":  "2ad0c7c463e85a1d39fabb0da8b62d28076006ac24b47d0b32f8c9042b0172fe",
-                        "chainLink":  "71e1ed99b71b005b1ac901bebd376ebee81f16923d6d74ed8c28de4a8837a5f4"
+                        "previousLink":  "1fc714e3f70290d8bf61250953aa6f638e9c75b285d0909020a34294a50e7921",
+                        "chainLink":  "f8ece4bc4deed2c25a1ba72e656f2ba415128c69402363fd71d5b459834269e5"
                     },
                     {
                         "path":  "threshold/receipts/src-main-java-org-springframework-samples-petclinic-repository-springdatajpa-springdataownerrepository-java-spring-data-query-concat-wrap-cleanup-line-41-ffe90d7884da.json",
                         "receiptGitBlobDigest":  "28b61ac8e47e317782e022891cfdee668937a245",
-                        "previousLink":  "71e1ed99b71b005b1ac901bebd376ebee81f16923d6d74ed8c28de4a8837a5f4",
-                        "chainLink":  "1c9089b6e797c694a32ffdeaf9a37318581ceaa643c73ed5e4593c8da84ea22b"
+                        "previousLink":  "f8ece4bc4deed2c25a1ba72e656f2ba415128c69402363fd71d5b459834269e5",
+                        "chainLink":  "266562d24fe1ca5d9643774d42bb24919576c4798ebbdc860c95022d9c0569b8"
                     },
                     {
                         "path":  "threshold/receipts/src-main-java-org-springframework-samples-petclinic-repository-springdatajpa-springdataownerrepository-java-spring-data-query-wrap-cleanup-line-35-5a926effbf1b.json",
                         "receiptGitBlobDigest":  "53d4794e546fcf07a15d368881ed96032d3fca34",
-                        "previousLink":  "1c9089b6e797c694a32ffdeaf9a37318581ceaa643c73ed5e4593c8da84ea22b",
-                        "chainLink":  "38d69555768f8b3a3eaac19255f7984e521b3945232ebe25dca7a67b0a3c502c"
+                        "previousLink":  "266562d24fe1ca5d9643774d42bb24919576c4798ebbdc860c95022d9c0569b8",
+                        "chainLink":  "dfc7e4cbd2584359d60497dd9e2f2d20665aee2dc9c57d8a4311708998ee4800"
                     },
                     {
                         "path":  "threshold/receipts/src-main-java-org-springframework-samples-petclinic-repository-springdatajpa-springdataownerrepository-java-spring-data-query-wrap-cleanup-line-40-9b3fdbd9fd4d.json",
                         "receiptGitBlobDigest":  "a460ac04691c37c93c4f521ff43a08d95bd210d5",
-                        "previousLink":  "38d69555768f8b3a3eaac19255f7984e521b3945232ebe25dca7a67b0a3c502c",
-                        "chainLink":  "cb3349c0074eb489c7631784421b417d56c819a51efe6e6bcf922bfc050dee99"
+                        "previousLink":  "dfc7e4cbd2584359d60497dd9e2f2d20665aee2dc9c57d8a4311708998ee4800",
+                        "chainLink":  "3789b4b41827a62b22c3c99f60607ee1379bdeb28c82896f5ceee270837c2a3e"
+                    },
+                    {
+                        "path":  "threshold/receipts/src-main-java-org-springframework-samples-petclinic-repository-springdatajpa-springdatapetrepository-java-comment-wrap-cleanup-line-12-79e3f0a60fef.json",
+                        "receiptGitBlobDigest":  "161495354d5a59032770622f7d7efe16c0d61156",
+                        "previousLink":  "3789b4b41827a62b22c3c99f60607ee1379bdeb28c82896f5ceee270837c2a3e",
+                        "chainLink":  "43e8e960cca609fbd4fb9ee73269e18eccf682f28eb0a036246fcd54322437ed"
                     },
                     {
                         "path":  "threshold/receipts/src-main-java-org-springframework-samples-petclinic-repository-springdatajpa-springdatapetrepository-java-spring-data-query-concat-wrap-cleanup-line-35-3b4c6498ed38.json",
                         "receiptGitBlobDigest":  "849127706c8951f0cb8b126c6321cc29a3237637",
-                        "previousLink":  "cb3349c0074eb489c7631784421b417d56c819a51efe6e6bcf922bfc050dee99",
-                        "chainLink":  "e422473ebda3958c0cbe7f3f560a64a8a703ed0f6466e1b3e07695ba4c99ef57"
+                        "previousLink":  "43e8e960cca609fbd4fb9ee73269e18eccf682f28eb0a036246fcd54322437ed",
+                        "chainLink":  "c5a5d01ad78c06072ac99ea56b35249b6c47159613c02fe0b13062fbb0807de6"
                     },
                     {
                         "path":  "threshold/receipts/src-main-java-org-springframework-samples-petclinic-repository-springdatajpa-springdatapetrepository-java-spring-data-query-wrap-cleanup-line-35-2f8528515043.json",
                         "receiptGitBlobDigest":  "826f718d3cf0bfcd3afe9052f3344d99d7074ba7",
-                        "previousLink":  "e422473ebda3958c0cbe7f3f560a64a8a703ed0f6466e1b3e07695ba4c99ef57",
-                        "chainLink":  "f3fb8b3db3e55d92b327cac2d61cdcebf84afe32290361fd3a69008ecdc39f41"
+                        "previousLink":  "c5a5d01ad78c06072ac99ea56b35249b6c47159613c02fe0b13062fbb0807de6",
+                        "chainLink":  "93b5ec0e57369878affa27a97630108b44768fce74aca7baf4133400ca597f73"
+                    },
+                    {
+                        "path":  "threshold/receipts/src-main-java-org-springframework-samples-petclinic-repository-springdatajpa-springdatavetrepository-java-comment-wrap-cleanup-line-12-b08707d0d111.json",
+                        "receiptGitBlobDigest":  "b3280600b7eb3fa8a7b31a21a3891f69f8e4baac",
+                        "previousLink":  "93b5ec0e57369878affa27a97630108b44768fce74aca7baf4133400ca597f73",
+                        "chainLink":  "c7c63d06586587ef03109cfffcaefbf502c83243fb9f523e5f0282661279634c"
                     },
                     {
                         "path":  "threshold/receipts/src-main-java-org-springframework-samples-petclinic-repository-vetrepository-java-comment-wrap-cleanup-line-23-b4553ecb3074.json",
                         "receiptGitBlobDigest":  "d2a8e373dd4e8d416a05ebe607faa4dfde4da123",
-                        "previousLink":  "f3fb8b3db3e55d92b327cac2d61cdcebf84afe32290361fd3a69008ecdc39f41",
-                        "chainLink":  "5ed257dcfcbd7e585ce09bda4ddfadb7baca7c3a690cddf9309cb02448b7c185"
+                        "previousLink":  "c7c63d06586587ef03109cfffcaefbf502c83243fb9f523e5f0282661279634c",
+                        "chainLink":  "a7b465e02b86d70f551caaae4f053b83bcc4047dc7d0d690760c0a999d04b330"
                     },
                     {
                         "path":  "threshold/receipts/src-main-java-org-springframework-samples-petclinic-repository-vetrepository-java-comment-wrap-cleanup-line-23-b76f1d646e39.json",
                         "receiptGitBlobDigest":  "9890581d75f9f42254d2e962e86b044cfcb2b3e7",
-                        "previousLink":  "5ed257dcfcbd7e585ce09bda4ddfadb7baca7c3a690cddf9309cb02448b7c185",
-                        "chainLink":  "98ca6e4a6e0cf252a6f37d1bd8cf15fdbbf8ef2c76b125ad4d64aeee47560cbd"
+                        "previousLink":  "a7b465e02b86d70f551caaae4f053b83bcc4047dc7d0d690760c0a999d04b330",
+                        "chainLink":  "f5f81ba263e7f1dd56c91614f8fa4ee04362daf2dd09038b25c6bfce871158cf"
                     },
                     {
                         "path":  "threshold/receipts/src-main-java-org-springframework-samples-petclinic-repository-vetrepository-java-comment-wrap-cleanup-line-23-e45ce58648c2.json",
                         "receiptGitBlobDigest":  "6af1240997d3973a8d0c7c6ecdf0562ba2f72671",
-                        "previousLink":  "98ca6e4a6e0cf252a6f37d1bd8cf15fdbbf8ef2c76b125ad4d64aeee47560cbd",
-                        "chainLink":  "49ba1714331a847e51a8edcc9f443b2790e871c537aa2c7581c8d04e519cf42d"
+                        "previousLink":  "f5f81ba263e7f1dd56c91614f8fa4ee04362daf2dd09038b25c6bfce871158cf",
+                        "chainLink":  "c0a0b854de625c8a88892e374ab0043296f8635dd579bcf569f4b892c6edb9be"
                     },
                     {
                         "path":  "threshold/receipts/src-main-java-org-springframework-samples-petclinic-repository-vetrepository-java-comment-wrap-cleanup-line-26-94fc3aabb8fe.json",
                         "receiptGitBlobDigest":  "0776f5931c5df71817c2cfe9459f28c4382ca993",
-                        "previousLink":  "49ba1714331a847e51a8edcc9f443b2790e871c537aa2c7581c8d04e519cf42d",
-                        "chainLink":  "3f110c4e26c439e1ab2f7e84f37393dfc1ff0affeeff39e159a0923e88e1f8ba"
+                        "previousLink":  "c0a0b854de625c8a88892e374ab0043296f8635dd579bcf569f4b892c6edb9be",
+                        "chainLink":  "c0848d318fa91d5a9388250d451d93b6e462b5ad976648189115c8058c2192ea"
                     },
                     {
                         "path":  "threshold/receipts/src-main-java-org-springframework-samples-petclinic-repository-visitrepository-java-comment-wrap-cleanup-line-24-0b9bad990d25.json",
                         "receiptGitBlobDigest":  "f7505d1168731efbe2e4f1f1d08e9b009e963112",
-                        "previousLink":  "3f110c4e26c439e1ab2f7e84f37393dfc1ff0affeeff39e159a0923e88e1f8ba",
-                        "chainLink":  "dd230ddbd847732f24bdb75d3f2c6a12c52cf9ca4e2f6cd62204fba179cda98b"
+                        "previousLink":  "c0848d318fa91d5a9388250d451d93b6e462b5ad976648189115c8058c2192ea",
+                        "chainLink":  "8afd3722f52f80c3a11963ce5a1cc3b432032d7e5a199cb2a222ebb8ddcc5def"
                     },
                     {
                         "path":  "threshold/receipts/src-main-java-org-springframework-samples-petclinic-repository-visitrepository-java-comment-wrap-cleanup-line-24-255567a4223b.json",
                         "receiptGitBlobDigest":  "cc0b4cccc73dcb26f4efbe630b9135643fa2eebc",
-                        "previousLink":  "dd230ddbd847732f24bdb75d3f2c6a12c52cf9ca4e2f6cd62204fba179cda98b",
-                        "chainLink":  "f9d2ffd8bf15e4c3a2f92e285c5ae83b6bffa01d5858c0d29a51ce3490b569c5"
+                        "previousLink":  "8afd3722f52f80c3a11963ce5a1cc3b432032d7e5a199cb2a222ebb8ddcc5def",
+                        "chainLink":  "52196a8339757561b1c405bbc99e8b855dccf01f9b10a42eb12edec6cbc7158b"
                     },
                     {
                         "path":  "threshold/receipts/src-main-java-org-springframework-samples-petclinic-repository-visitrepository-java-comment-wrap-cleanup-line-24-7a6e594d4b71.json",
                         "receiptGitBlobDigest":  "928545c5b3a95f0089450087eedfc51d966d1199",
-                        "previousLink":  "f9d2ffd8bf15e4c3a2f92e285c5ae83b6bffa01d5858c0d29a51ce3490b569c5",
-                        "chainLink":  "a160e35e03164b844a24855c3baa665f1d97ed69b6ffaa10aa9aa8add1010f14"
+                        "previousLink":  "52196a8339757561b1c405bbc99e8b855dccf01f9b10a42eb12edec6cbc7158b",
+                        "chainLink":  "982124f2582bfa47ed6c8cb32446deddf85abfd8c11a6f2d165a58d34c999d39"
                     },
                     {
                         "path":  "threshold/receipts/src-main-java-org-springframework-samples-petclinic-repository-visitrepository-java-comment-wrap-cleanup-line-26-691f5e10f0d0.json",
                         "receiptGitBlobDigest":  "8b30b454c943aa41f36fa14b9ab8675632ab6c77",
-                        "previousLink":  "a160e35e03164b844a24855c3baa665f1d97ed69b6ffaa10aa9aa8add1010f14",
-                        "chainLink":  "a109a712328bd67d2c91b6252cec8ed99648d826a89805fe63c0fefdc6e85833"
+                        "previousLink":  "982124f2582bfa47ed6c8cb32446deddf85abfd8c11a6f2d165a58d34c999d39",
+                        "chainLink":  "9d5e235585ee289c825d87615052d5d7d353da84eac115189dcc990589db17de"
                     },
                     {
                         "path":  "threshold/receipts/src-main-java-org-springframework-samples-petclinic-repository-visitrepository-java-comment-wrap-cleanup-line-27-2ba7e23ac551.json",
                         "receiptGitBlobDigest":  "6e9e94d705a3344b625fef5df4d88b37e48b26d8",
-                        "previousLink":  "a109a712328bd67d2c91b6252cec8ed99648d826a89805fe63c0fefdc6e85833",
-                        "chainLink":  "e6f30aa1f8ebc2b0dfa668c3378d99d64eb0b22d8ca59bf6a202adfa5fe1de2f"
+                        "previousLink":  "9d5e235585ee289c825d87615052d5d7d353da84eac115189dcc990589db17de",
+                        "chainLink":  "1497b438ad8e24520604060079d35151469544d9ddc4c680971894be407c4217"
                     },
                     {
                         "path":  "threshold/receipts/src-main-java-org-springframework-samples-petclinic-repository-visitrepository-java-comment-wrap-cleanup-line-40-4050b8e5165b.json",
                         "receiptGitBlobDigest":  "5475a2e34a0e5052968ee756adcb6a7c06f060f9",
-                        "previousLink":  "e6f30aa1f8ebc2b0dfa668c3378d99d64eb0b22d8ca59bf6a202adfa5fe1de2f",
-                        "chainLink":  "ac3ebe868177778a48241259824db8b4671077237c644112032c7fcb24f38d1f"
+                        "previousLink":  "1497b438ad8e24520604060079d35151469544d9ddc4c680971894be407c4217",
+                        "chainLink":  "087702c404d6c19983bd302c4a97b3c9498aaf2fb76f67d4cdf4fa998a5838f3"
                     },
                     {
                         "path":  "threshold/receipts/src-main-java-org-springframework-samples-petclinic-service-clinicservice-java-comment-wrap-cleanup-line-12-fbf47c0cfddb.json",
                         "receiptGitBlobDigest":  "3ddbdec6b27d56472d4428dc25c00c580539ef03",
-                        "previousLink":  "ac3ebe868177778a48241259824db8b4671077237c644112032c7fcb24f38d1f",
-                        "chainLink":  "351cd7770486a0ecf7ee5e5c1242b2b85669661da924ac0149561fb3aad9c828"
+                        "previousLink":  "087702c404d6c19983bd302c4a97b3c9498aaf2fb76f67d4cdf4fa998a5838f3",
+                        "chainLink":  "11eeb5df112d3bfa4dda14cf39afaf66bf92db747037b29ec0f64a60a5bae4ef"
                     },
                     {
                         "path":  "threshold/receipts/src-main-java-org-springframework-samples-petclinic-service-clinicservice-java-comment-wrap-cleanup-line-29-469c26d995a3.json",
                         "receiptGitBlobDigest":  "b4fc6b53427342be08d081fb3bda419617ab74c8",
-                        "previousLink":  "351cd7770486a0ecf7ee5e5c1242b2b85669661da924ac0149561fb3aad9c828",
-                        "chainLink":  "5ad37ef4676373aee26f0980df324a9dc20d9d881e090314f836be31fe7d7e10"
+                        "previousLink":  "11eeb5df112d3bfa4dda14cf39afaf66bf92db747037b29ec0f64a60a5bae4ef",
+                        "chainLink":  "5e8b711b1152827359ad48e918c530ff4d42fab7cc7f1d88ab2a85da2966d315"
                     },
                     {
                         "path":  "threshold/receipts/src-main-java-org-springframework-samples-petclinic-service-clinicserviceimpl-java-comment-wrap-cleanup-line-12-4470c5b17de3.json",
                         "receiptGitBlobDigest":  "cfb51f5617b971e6013f70d6a15ad9e4b88ec42e",
-                        "previousLink":  "5ad37ef4676373aee26f0980df324a9dc20d9d881e090314f836be31fe7d7e10",
-                        "chainLink":  "961993b31c9d86133884bdb613537e64fb046ad9fb10daf3c2b97417316359bc"
+                        "previousLink":  "5e8b711b1152827359ad48e918c530ff4d42fab7cc7f1d88ab2a85da2966d315",
+                        "chainLink":  "d662ead713dcbaceb061e06cec96b41e564198cbc83cd51628bf5025d9924ad4"
                     },
                     {
                         "path":  "threshold/receipts/src-main-java-org-springframework-samples-petclinic-service-clinicserviceimpl-java-method-spacing-normalization-collapse-line-87-77d656184059.json",
                         "receiptGitBlobDigest":  "b7e01fd4b2f64e1d610538f89f0aa0c6593185ec",
-                        "previousLink":  "961993b31c9d86133884bdb613537e64fb046ad9fb10daf3c2b97417316359bc",
-                        "chainLink":  "f23a45a9484373c5da840e4d70415b344286fbaf6eb44ebe73fe2c5b7187c072"
+                        "previousLink":  "d662ead713dcbaceb061e06cec96b41e564198cbc83cd51628bf5025d9924ad4",
+                        "chainLink":  "a0e4afe8de5ea341e2831abb86ba5c037a711375c18ad83e97aa1f4725517559"
                     },
                     {
                         "path":  "threshold/receipts/src-main-java-org-springframework-samples-petclinic-util-callmonitoringaspect-java-comment-wrap-cleanup-line-27-c32e911d245b.json",
                         "receiptGitBlobDigest":  "13d8f4ffeb5bcd1ab7456424266098d31c24af6f",
-                        "previousLink":  "f23a45a9484373c5da840e4d70415b344286fbaf6eb44ebe73fe2c5b7187c072",
-                        "chainLink":  "b3a69b2e8985b141282d58df2445881d8c8b8f1accec518f4caff621badebd0a"
+                        "previousLink":  "a0e4afe8de5ea341e2831abb86ba5c037a711375c18ad83e97aa1f4725517559",
+                        "chainLink":  "375ac06d9cea63d61841a8657029b145e29f7dfbe364bc70e9b08bb3dcd9f604"
                     },
                     {
                         "path":  "threshold/receipts/src-main-java-org-springframework-samples-petclinic-util-callmonitoringaspect-java-comment-wrap-cleanup-line-27-eb270449496c.json",
                         "receiptGitBlobDigest":  "3c568d3c176bf4788d736db1a061614257ec8171",
-                        "previousLink":  "b3a69b2e8985b141282d58df2445881d8c8b8f1accec518f4caff621badebd0a",
-                        "chainLink":  "7ef2d8ea2c5d61ebb5d912a413d89bee8fa16398385fca05b01b12c5473dfec6"
+                        "previousLink":  "375ac06d9cea63d61841a8657029b145e29f7dfbe364bc70e9b08bb3dcd9f604",
+                        "chainLink":  "71c4a4da437d4ccb223c85c372af870c8422cb703992c599cffa34c6b9a901a1"
                     },
                     {
                         "path":  "threshold/receipts/src-main-java-org-springframework-samples-petclinic-util-callmonitoringaspect-java-comment-wrap-cleanup-line-31-884409449851.json",
                         "receiptGitBlobDigest":  "aec9f9a448025e8b64e0b9aa554d0d777a2b5590",
-                        "previousLink":  "7ef2d8ea2c5d61ebb5d912a413d89bee8fa16398385fca05b01b12c5473dfec6",
-                        "chainLink":  "ad8d2fb3c10d7959222b287da0841d77ba938883f3c2f163ab8008fdbe8e44de"
+                        "previousLink":  "71c4a4da437d4ccb223c85c372af870c8422cb703992c599cffa34c6b9a901a1",
+                        "chainLink":  "d9e59a1e15d0df51922c3d0869ab16520f1548d459bb39e0a1dedc9bd9e14daf"
                     },
                     {
                         "path":  "threshold/receipts/src-main-java-org-springframework-samples-petclinic-util-callmonitoringaspect-java-comment-wrap-cleanup-line-31-ea5de598d299.json",
                         "receiptGitBlobDigest":  "1782570befdf0b79bfc8c04aa2959f312b21b3aa",
-                        "previousLink":  "ad8d2fb3c10d7959222b287da0841d77ba938883f3c2f163ab8008fdbe8e44de",
-                        "chainLink":  "9eb9d62833e48426ab6c854af22c5b118b79505b98570c8c6728b891edf7b509"
+                        "previousLink":  "d9e59a1e15d0df51922c3d0869ab16520f1548d459bb39e0a1dedc9bd9e14daf",
+                        "chainLink":  "6cf604e82170b484b727a6bd21421c9a6fc0f54007cdefd668c4832017b2a919"
                     },
                     {
                         "path":  "threshold/receipts/src-main-java-org-springframework-samples-petclinic-util-callmonitoringaspect-java-comment-wrap-cleanup-line-32-05764780f1e0.json",
                         "receiptGitBlobDigest":  "f475881e87994cf6189833a4fcccdc829610e6de",
-                        "previousLink":  "9eb9d62833e48426ab6c854af22c5b118b79505b98570c8c6728b891edf7b509",
-                        "chainLink":  "d6a2df05834af0486e6f047dba705fe010ac11324512baefcac349fcf1ad3b44"
+                        "previousLink":  "6cf604e82170b484b727a6bd21421c9a6fc0f54007cdefd668c4832017b2a919",
+                        "chainLink":  "aaa693308c6714877e50353bd31e5917797adfb01a57c269481f0b986c6c8027"
                     },
                     {
                         "path":  "threshold/receipts/src-main-java-org-springframework-samples-petclinic-util-callmonitoringaspect-java-method-spacing-normalization-collapse-line-76-34657b528239.json",
                         "receiptGitBlobDigest":  "34f8ae6d45cd28652f9b59a73ddf17e865498199",
-                        "previousLink":  "d6a2df05834af0486e6f047dba705fe010ac11324512baefcac349fcf1ad3b44",
-                        "chainLink":  "f22663dfaff9d59bb11930273bf98f4e59bd34ac31adb63dad604c6b0ab060ce"
+                        "previousLink":  "aaa693308c6714877e50353bd31e5917797adfb01a57c269481f0b986c6c8027",
+                        "chainLink":  "802a17f3e3b5e31081bdd7a41d55bdbfda70774725bf7280a2e76cb3d03666c2"
                     },
                     {
                         "path":  "threshold/receipts/src-main-java-org-springframework-samples-petclinic-util-callmonitoringaspect-java-method-spacing-normalization-startinvocationstopwatch-recordinvocation-line-95-c5ec4a01d017.json",
                         "receiptGitBlobDigest":  "f775b8172fa99e7fcc60a441e0e49a3cb1a20fb3",
-                        "previousLink":  "f22663dfaff9d59bb11930273bf98f4e59bd34ac31adb63dad604c6b0ab060ce",
-                        "chainLink":  "a3e5c7797da1315a7b1c8d6a1072f78bfad9143bff963cb302b32d35e1713126"
+                        "previousLink":  "802a17f3e3b5e31081bdd7a41d55bdbfda70774725bf7280a2e76cb3d03666c2",
+                        "chainLink":  "1e3ea88a39249e3b2eb712e2c12e20cc8733f4f7d80847d11050175a4babdb24"
                     },
                     {
                         "path":  "threshold/receipts/src-main-java-org-springframework-samples-petclinic-util-callmonitoringaspect-java-utility-helper-extraction-record-invocation-c540500e3d55.json",
                         "receiptGitBlobDigest":  "2be9af1c4f705f6cc7d65da6fac7cc235ea5c261",
-                        "previousLink":  "a3e5c7797da1315a7b1c8d6a1072f78bfad9143bff963cb302b32d35e1713126",
-                        "chainLink":  "53e5260b0c07b5d850856564c4be3c75bec9554d200d59b8046001d4449aa2f2"
+                        "previousLink":  "1e3ea88a39249e3b2eb712e2c12e20cc8733f4f7d80847d11050175a4babdb24",
+                        "chainLink":  "cc671ad13ea21f2f4b1677e8a604297d9bb56429d2e75e3489d5b993e8b27811"
                     },
                     {
                         "path":  "threshold/receipts/src-main-java-org-springframework-samples-petclinic-util-callmonitoringaspect-java-utility-readability-cleanup-invoke-76b9f20b1ab3.json",
                         "receiptGitBlobDigest":  "c55b51eba098fdbffcd93908ad5ad841f5410b1c",
-                        "previousLink":  "53e5260b0c07b5d850856564c4be3c75bec9554d200d59b8046001d4449aa2f2",
-                        "chainLink":  "c006023b28c9bc37fe26365392e6b6f32c7a40c9e004b0d832ff9298a4fc9108"
+                        "previousLink":  "cc671ad13ea21f2f4b1677e8a604297d9bb56429d2e75e3489d5b993e8b27811",
+                        "chainLink":  "cfc7c78cad98649d3cbb81d10c6121359d66c019927959fb2312c644fc8750eb"
                     },
                     {
                         "path":  "threshold/receipts/src-main-java-org-springframework-samples-petclinic-util-entityutils-java-comment-wrap-cleanup-line-25-2e41b6cc637b.json",
                         "receiptGitBlobDigest":  "95a866ccd1c653ec8f38ea3734a639f12c0e01d7",
-                        "previousLink":  "c006023b28c9bc37fe26365392e6b6f32c7a40c9e004b0d832ff9298a4fc9108",
-                        "chainLink":  "6336f68aa17015c4435784c336f65cd6c8afb3a2a096ff476371ed45a4e0696d"
+                        "previousLink":  "cfc7c78cad98649d3cbb81d10c6121359d66c019927959fb2312c644fc8750eb",
+                        "chainLink":  "597b54c465a7c9e3624497b23eb1cdd91efa95cfc6260a69549099c957aa8616"
                     },
                     {
                         "path":  "threshold/receipts/src-main-java-org-springframework-samples-petclinic-util-entityutils-java-comment-wrap-cleanup-line-25-ca5029f95060.json",
                         "receiptGitBlobDigest":  "f09a24634f262647341a4f2ee2988c77b4dff6c5",
-                        "previousLink":  "6336f68aa17015c4435784c336f65cd6c8afb3a2a096ff476371ed45a4e0696d",
-                        "chainLink":  "468d5bc71f1b3015a4ea12e9b4b32fe586570c1ad2d4cb06cf697143d05aeee6"
+                        "previousLink":  "597b54c465a7c9e3624497b23eb1cdd91efa95cfc6260a69549099c957aa8616",
+                        "chainLink":  "127cb14e4ccb3dae3887db5b02884466b1ec8fb4554ecd6836c1601b90081907"
                     },
                     {
                         "path":  "threshold/receipts/src-main-java-org-springframework-samples-petclinic-util-entityutils-java-comment-wrap-cleanup-line-42-480dc2e98b9c.json",
                         "receiptGitBlobDigest":  "4e51d567a215c55825ce329f5bf987613dc9e0dd",
-                        "previousLink":  "468d5bc71f1b3015a4ea12e9b4b32fe586570c1ad2d4cb06cf697143d05aeee6",
-                        "chainLink":  "fa0ee7029eaeb2673154f3cfde449f8770f463168ecb53d77215fba97ab6cf4d"
+                        "previousLink":  "127cb14e4ccb3dae3887db5b02884466b1ec8fb4554ecd6836c1601b90081907",
+                        "chainLink":  "6cdd37dc990b04f58219a4e7d0e224c90bcbcb5615e8a5e3ba5abc5522bee956"
                     },
                     {
                         "path":  "threshold/receipts/src-main-java-org-springframework-samples-petclinic-util-entityutils-java-method-signature-wrap-cleanup-line-49-026ca242c373.json",
                         "receiptGitBlobDigest":  "284bb9d9b20a8fae1deb9bb4772c260c12dc6fa1",
-                        "previousLink":  "fa0ee7029eaeb2673154f3cfde449f8770f463168ecb53d77215fba97ab6cf4d",
-                        "chainLink":  "29a20fc85d4e66637eca843df4e4802dad3037f5de9f154b2b60283f94e7834c"
+                        "previousLink":  "6cdd37dc990b04f58219a4e7d0e224c90bcbcb5615e8a5e3ba5abc5522bee956",
+                        "chainLink":  "3f6d1baae679103cc54d1813d46a1357c5d2f5387e67bc6ce656cbeddbf9355a"
                     },
                     {
                         "path":  "threshold/receipts/src-main-java-org-springframework-samples-petclinic-util-entityutils-java-method-signature-wrap-cleanup-line-62-81fbbdc6b5b2.json",
                         "receiptGitBlobDigest":  "b5c7a81257e88327b1d5aa081f7badbf26e7c3d0",
-                        "previousLink":  "29a20fc85d4e66637eca843df4e4802dad3037f5de9f154b2b60283f94e7834c",
-                        "chainLink":  "5867c4e3538835693c5229db850c3a7fe1cba2538f5dd77e91b4bf507107fcdf"
+                        "previousLink":  "3f6d1baae679103cc54d1813d46a1357c5d2f5387e67bc6ce656cbeddbf9355a",
+                        "chainLink":  "87c75d956c6ee213bba6cbb6f3dbaddc268119f3c47764ff088d9a71dd13c819"
                     },
                     {
                         "path":  "threshold/receipts/src-main-java-org-springframework-samples-petclinic-web-crashcontroller-java-comment-wrap-cleanup-line-26-9aaa5e7f4a23.json",
                         "receiptGitBlobDigest":  "3c9cef2d3bbdf8073cae13cc880f6c31961094e5",
-                        "previousLink":  "5867c4e3538835693c5229db850c3a7fe1cba2538f5dd77e91b4bf507107fcdf",
-                        "chainLink":  "5798abf94646bd65335e019d142ec0d11e8767c25a67feaca96bd7b450dc93b3"
+                        "previousLink":  "87c75d956c6ee213bba6cbb6f3dbaddc268119f3c47764ff088d9a71dd13c819",
+                        "chainLink":  "029d5a42a9fe58ea619a6ca303d192fe880cf618196cb020a09b76488ab8258e"
                     },
                     {
                         "path":  "threshold/receipts/src-main-java-org-springframework-samples-petclinic-web-ownercontroller-java-duplicate-literal-local-constant-extraction-ownerid-27c619cb389f.json",
                         "receiptGitBlobDigest":  "5aa5d2cf982a7ead9accf35f74fb0be471b902a3",
-                        "previousLink":  "5798abf94646bd65335e019d142ec0d11e8767c25a67feaca96bd7b450dc93b3",
-                        "chainLink":  "a24623c03817e5a02eb0d502dd44ee44f71d988496b9e568746067e5c6582ee2"
+                        "previousLink":  "029d5a42a9fe58ea619a6ca303d192fe880cf618196cb020a09b76488ab8258e",
+                        "chainLink":  "7dae3076e2e5c3c7c87bb6cb1a1ff3ea93e004612b266701658cdef558a11b09"
                     },
                     {
                         "path":  "threshold/receipts/src-main-java-org-springframework-samples-petclinic-web-ownercontroller-java-private-helper-extraction-for-readability-line-140-53a1fa157dd4.json",
                         "receiptGitBlobDigest":  "858588cb6c44b0f2c7ddbedb0d3eb21aff464344",
-                        "previousLink":  "a24623c03817e5a02eb0d502dd44ee44f71d988496b9e568746067e5c6582ee2",
-                        "chainLink":  "ba2ca812dd6369849ec4bb5963d7306f4b6f1a0f6143d798f54f78c05b6553b9"
+                        "previousLink":  "7dae3076e2e5c3c7c87bb6cb1a1ff3ea93e004612b266701658cdef558a11b09",
+                        "chainLink":  "3201fe7db27e00168aa9a270ad89c6581797699839d6c73ff6f00eb57f757b53"
                     },
                     {
                         "path":  "threshold/receipts/src-main-java-org-springframework-samples-petclinic-web-petcontroller-java-method-signature-wrap-cleanup-line-91-f164a2ebbec6.json",
                         "receiptGitBlobDigest":  "31c051cd9c80431b5cba7f11d1318d8b16efb0b2",
-                        "previousLink":  "ba2ca812dd6369849ec4bb5963d7306f4b6f1a0f6143d798f54f78c05b6553b9",
-                        "chainLink":  "88adf45a64d90aff68756bff6fedd939275361a178dab7cc21c038f28d41a9f9"
+                        "previousLink":  "3201fe7db27e00168aa9a270ad89c6581797699839d6c73ff6f00eb57f757b53",
+                        "chainLink":  "0ea93f57271c5457781043d86cc6c53afd43783c71f95b85c701b0a1e6e169f8"
                     },
                     {
                         "path":  "threshold/receipts/src-main-java-org-springframework-samples-petclinic-web-pettypeformatter-java-comment-wrap-cleanup-line-29-4aa99d83b5b2.json",
                         "receiptGitBlobDigest":  "98b7320af693af7494090ae4dde731df59b02a93",
-                        "previousLink":  "88adf45a64d90aff68756bff6fedd939275361a178dab7cc21c038f28d41a9f9",
-                        "chainLink":  "395d0a21c768fc39428e83479ad670193d7c13e7d0267a4407dc05303b253835"
+                        "previousLink":  "0ea93f57271c5457781043d86cc6c53afd43783c71f95b85c701b0a1e6e169f8",
+                        "chainLink":  "ece5fe770773ce9d5459c47e40431864936b968cdbbd52679ec93f7232a029d4"
                     },
                     {
                         "path":  "threshold/receipts/src-main-java-org-springframework-samples-petclinic-web-pettypeformatter-java-comment-wrap-cleanup-line-29-aff778e754e4.json",
                         "receiptGitBlobDigest":  "36e40d1a3236b0f50f23cf9e37417b721a7c861b",
-                        "previousLink":  "395d0a21c768fc39428e83479ad670193d7c13e7d0267a4407dc05303b253835",
-                        "chainLink":  "0a4aa290696d88ac4d21185d250d9bb343f130695801a49f9694d253172dd146"
+                        "previousLink":  "ece5fe770773ce9d5459c47e40431864936b968cdbbd52679ec93f7232a029d4",
+                        "chainLink":  "9ff14b81e14e139a420a981791e806b92c0b9b3bd5c7c134b4fcd24a18f21e6b"
                     },
                     {
                         "path":  "threshold/receipts/src-main-java-org-springframework-samples-petclinic-web-pettypeformatter-java-comment-wrap-cleanup-line-29-d0d099883ad1.json",
                         "receiptGitBlobDigest":  "535e485d8889dd88fcf20f64171891063a984c8f",
-                        "previousLink":  "0a4aa290696d88ac4d21185d250d9bb343f130695801a49f9694d253172dd146",
-                        "chainLink":  "d21262a861c1f7f7dc00ac885730a181ea5229eca2e4ee42d9015080a561babf"
+                        "previousLink":  "9ff14b81e14e139a420a981791e806b92c0b9b3bd5c7c134b4fcd24a18f21e6b",
+                        "chainLink":  "eeef3572dc3a8f0d163a7c0576dca0ed409699e3b59db98b27772bf7c8809ec1"
                     },
                     {
                         "path":  "threshold/receipts/src-main-java-org-springframework-samples-petclinic-web-pettypeformatter-java-comment-wrap-cleanup-line-31-6d2c8972b8f3.json",
                         "receiptGitBlobDigest":  "cd41ea6111befbdd1b6d4eb44f7af1b91ca1a73f",
-                        "previousLink":  "d21262a861c1f7f7dc00ac885730a181ea5229eca2e4ee42d9015080a561babf",
-                        "chainLink":  "9dd67d95acd8b8dd0b7b0b3cdb25b26019f51315af9edcbec7abf7e47b05c876"
+                        "previousLink":  "eeef3572dc3a8f0d163a7c0576dca0ed409699e3b59db98b27772bf7c8809ec1",
+                        "chainLink":  "b9a599e8d24f45289a1463a479bab5bee962477b85789ccb220c975fc8b722b2"
                     },
                     {
                         "path":  "threshold/receipts/src-main-java-org-springframework-samples-petclinic-web-pettypeformatter-java-comment-wrap-cleanup-line-32-116bc39f5704.json",
                         "receiptGitBlobDigest":  "bb8b7408e66414aef92a594820be6e4da901791a",
-                        "previousLink":  "9dd67d95acd8b8dd0b7b0b3cdb25b26019f51315af9edcbec7abf7e47b05c876",
-                        "chainLink":  "7618062c9930eaf59cc774194e2215c305c30c484670bac7ef7a6cca2e13bb1c"
+                        "previousLink":  "b9a599e8d24f45289a1463a479bab5bee962477b85789ccb220c975fc8b722b2",
+                        "chainLink":  "0c5c0b85c9a8336ce278479c23985e52c5afb493308715878da9c13678946d23"
                     },
                     {
                         "path":  "threshold/receipts/src-main-java-org-springframework-samples-petclinic-web-pettypeformatter-java-comment-wrap-cleanup-line-33-e603a55df1c7.json",
                         "receiptGitBlobDigest":  "70262baaa8e3ff64d1f2a80c03e54a01afaaf3b4",
-                        "previousLink":  "7618062c9930eaf59cc774194e2215c305c30c484670bac7ef7a6cca2e13bb1c",
-                        "chainLink":  "bcb5b37c5a9d10f674c22c3f19782e535467bf6d50108a0eec8500ab391b2c79"
+                        "previousLink":  "0c5c0b85c9a8336ce278479c23985e52c5afb493308715878da9c13678946d23",
+                        "chainLink":  "13f2450b6d5445dc7be2b49ff489596ac5402df928d87fb04b5aec70217153c4"
                     },
                     {
                         "path":  "threshold/receipts/src-main-java-org-springframework-samples-petclinic-web-pettypeformatter-java-comment-wrap-cleanup-line-39-e3d66cd91386.json",
                         "receiptGitBlobDigest":  "8f38b2c9df04c3487bdcc0fd132341a36828a0d9",
-                        "previousLink":  "bcb5b37c5a9d10f674c22c3f19782e535467bf6d50108a0eec8500ab391b2c79",
-                        "chainLink":  "2151e395cf7fd5bacc0703e0fbe0e68809cc3460fcc8a6fb74861c2449d51b58"
+                        "previousLink":  "13f2450b6d5445dc7be2b49ff489596ac5402df928d87fb04b5aec70217153c4",
+                        "chainLink":  "70a5b288a819aabc46ce22f81e4c8ff16d072188702e834d1e91f9a43f04ab71"
                     },
                     {
                         "path":  "threshold/receipts/src-main-java-org-springframework-samples-petclinic-web-petvalidator-java-comment-wrap-cleanup-line-27-074b3773bd82.json",
                         "receiptGitBlobDigest":  "6d31aa1a3735ed14ef4aacff40a2911b6512b83e",
-                        "previousLink":  "2151e395cf7fd5bacc0703e0fbe0e68809cc3460fcc8a6fb74861c2449d51b58",
-                        "chainLink":  "85bd4a6ef20690c304208c3a6805314027aaf7c01e67451958c7fe1c5df8af11"
+                        "previousLink":  "70a5b288a819aabc46ce22f81e4c8ff16d072188702e834d1e91f9a43f04ab71",
+                        "chainLink":  "b3113639484c4a6ca4b48f894b1ec003bb41189d07da2fd5c458fcd951186cdd"
                     },
                     {
                         "path":  "threshold/receipts/src-main-java-org-springframework-samples-petclinic-web-petvalidator-java-comment-wrap-cleanup-line-27-ab3f0df8a2e2.json",
                         "receiptGitBlobDigest":  "05c65c640166f029730b59a805b72e1eeb54dd9e",
-                        "previousLink":  "85bd4a6ef20690c304208c3a6805314027aaf7c01e67451958c7fe1c5df8af11",
-                        "chainLink":  "3ee29be62a78f885aff7b3439ae9b33c25f59564ae74c47150a7252d85bb5aca"
+                        "previousLink":  "b3113639484c4a6ca4b48f894b1ec003bb41189d07da2fd5c458fcd951186cdd",
+                        "chainLink":  "7c40390a3d0eedd4a067025fb5f7b5ed955554b642f897d860eeef6eb1eb6a62"
                     },
                     {
                         "path":  "threshold/receipts/src-main-java-org-springframework-samples-petclinic-web-vetcontroller-java-line-comment-wrap-cleanup-line-48-5f2652925055.json",
                         "receiptGitBlobDigest":  "ff6c8239cb50e0b04661b645d43d71a6d30ed665",
-                        "previousLink":  "3ee29be62a78f885aff7b3439ae9b33c25f59564ae74c47150a7252d85bb5aca",
-                        "chainLink":  "65911c372313bc8189664ab56737ec698ace1cc2d4b0a5588624585fe9e62556"
+                        "previousLink":  "7c40390a3d0eedd4a067025fb5f7b5ed955554b642f897d860eeef6eb1eb6a62",
+                        "chainLink":  "47e84c309c28b3ee1a857e9b2b74659b90410ab24dc6de97446df4a8fc4a1de8"
                     },
                     {
                         "path":  "threshold/receipts/src-main-java-org-springframework-samples-petclinic-web-vetcontroller-java-line-comment-wrap-cleanup-line-72-934747ceb963.json",
                         "receiptGitBlobDigest":  "982b2d4efb36a1a0a78b871b2ebe333ece2565f7",
-                        "previousLink":  "65911c372313bc8189664ab56737ec698ace1cc2d4b0a5588624585fe9e62556",
-                        "chainLink":  "037e258edb26986f6c20efdaac5a1ca07829af6f40193ea31c347e65b56be1b5"
+                        "previousLink":  "47e84c309c28b3ee1a857e9b2b74659b90410ab24dc6de97446df4a8fc4a1de8",
+                        "chainLink":  "1ff51cd44281d6b7f3236a0955b6abcc74c23c5470f0a049c040066945080424"
                     },
                     {
                         "path":  "threshold/receipts/src-main-java-org-springframework-samples-petclinic-web-visitcontroller-java-comment-wrap-cleanup-line-56-6505726fbec4.json",
                         "receiptGitBlobDigest":  "5aaf8b5f677acf27c09387d6fba9fce98139f34c",
-                        "previousLink":  "037e258edb26986f6c20efdaac5a1ca07829af6f40193ea31c347e65b56be1b5",
-                        "chainLink":  "e1ee49675a7bc328415264e48743ce65639b0a9315af447f313e4e32195dbb70"
+                        "previousLink":  "1ff51cd44281d6b7f3236a0955b6abcc74c23c5470f0a049c040066945080424",
+                        "chainLink":  "e81e411f755eb4a34eccc5aba3e577904a7d2c277b589c979886cbf97ae9bb54"
                     },
                     {
                         "path":  "threshold/receipts/src-main-java-org-springframework-samples-petclinic-web-visitcontroller-java-comment-wrap-cleanup-line-59-ba7fdf6278d5.json",
                         "receiptGitBlobDigest":  "de7c7b0a667ca01034a89edac4a58aa0925ffe81",
-                        "previousLink":  "e1ee49675a7bc328415264e48743ce65639b0a9315af447f313e4e32195dbb70",
-                        "chainLink":  "aebe855cbcbc0c5eb5091796b3853e08973b8156c1ae2f473adebf63e55fb428"
+                        "previousLink":  "e81e411f755eb4a34eccc5aba3e577904a7d2c277b589c979886cbf97ae9bb54",
+                        "chainLink":  "ac3aad0a51e17e148c5ffa2e69daae533e0b2e6a68e15cc442271cc56a0d661e"
                     },
                     {
                         "path":  "threshold/receipts/src-main-java-org-springframework-samples-petclinic-web-visitcontroller-java-line-comment-wrap-cleanup-line-77-324e3cb5f884.json",
                         "receiptGitBlobDigest":  "06dd3a7bea33673b96c14db5b2eb2363aa095301",
-                        "previousLink":  "aebe855cbcbc0c5eb5091796b3853e08973b8156c1ae2f473adebf63e55fb428",
-                        "chainLink":  "1ca4fd2ff75152e0f7728903b5c9e89150e72260ec06eaa3307b62613861ff98"
+                        "previousLink":  "ac3aad0a51e17e148c5ffa2e69daae533e0b2e6a68e15cc442271cc56a0d661e",
+                        "chainLink":  "a30c245e216ba8d306ef61df8c2e23b3b67d334f27db13b336d492e5c032f27b"
                     },
                     {
                         "path":  "threshold/receipts/src-main-java-org-springframework-samples-petclinic-web-visitcontroller-java-line-comment-wrap-cleanup-line-84-3aaf174e5e33.json",
                         "receiptGitBlobDigest":  "5cf919897a563115602a12aa52772ceecc489d43",
-                        "previousLink":  "1ca4fd2ff75152e0f7728903b5c9e89150e72260ec06eaa3307b62613861ff98",
-                        "chainLink":  "5eb65902684a6d950112499b87d5ea87a59d8ad6f9ae9e4a53a4107363a1848b"
+                        "previousLink":  "a30c245e216ba8d306ef61df8c2e23b3b67d334f27db13b336d492e5c032f27b",
+                        "chainLink":  "7f7186c8ce73d7384f25213edc28e658ef680bb0bb61d1c692fa88d05ec667dd"
                     },
                     {
                         "path":  "threshold/receipts/threshold-add-split-string-constant-normalization-2ba184ba0824.json",
                         "receiptGitBlobDigest":  "13ef720ebc1dc0377149aa95031a136d714a602c",
-                        "previousLink":  "5eb65902684a6d950112499b87d5ea87a59d8ad6f9ae9e4a53a4107363a1848b",
-                        "chainLink":  "05dace6b259db41877cc16049aef2b092293c62f262c726a0b57e76f82bbb793"
+                        "previousLink":  "7f7186c8ce73d7384f25213edc28e658ef680bb0bb61d1c692fa88d05ec667dd",
+                        "chainLink":  "493a36422f08ac79018e9cb67d86a03a5817adc2380be7922f5c0632c795f9c9"
                     },
                     {
                         "path":  "threshold/receipts/threshold-batch-08a3fef16303-20260714T210900Z.json",
                         "receiptGitBlobDigest":  "e34e4fbd4bcff7041c9a0ab3cb627102015896c7",
-                        "previousLink":  "05dace6b259db41877cc16049aef2b092293c62f262c726a0b57e76f82bbb793",
-                        "chainLink":  "40f68cb3020321bd3076260ddcc8df06935deb98c73f7c3c515a8af4022b1808"
+                        "previousLink":  "493a36422f08ac79018e9cb67d86a03a5817adc2380be7922f5c0632c795f9c9",
+                        "chainLink":  "7d73b59512ab9328f496d0b92c6b180c7cca8e9a2c9d14e3890209fb09de40d1"
                     },
                     {
                         "path":  "threshold/receipts/threshold-batch-9a0ae5e5f52c-20260714T214938Z.json",
                         "receiptGitBlobDigest":  "a04f953fd34ef227274edc1e050725897590b920",
-                        "previousLink":  "40f68cb3020321bd3076260ddcc8df06935deb98c73f7c3c515a8af4022b1808",
-                        "chainLink":  "ff7b26c941e79a0e1032fe5abcbcb249e13099dac4ea0e227dba65718345fe2d"
+                        "previousLink":  "7d73b59512ab9328f496d0b92c6b180c7cca8e9a2c9d14e3890209fb09de40d1",
+                        "chainLink":  "f675376e80f64df75ee850f54a60e1f771a9311ed9b7a24c94df3f4eeeda9fd7"
                     },
                     {
                         "path":  "threshold/receipts/threshold-batch-c5df16221d22-20260714T220010Z.json",
                         "receiptGitBlobDigest":  "4114f995cb1cd978796a4ed2849961c1a0618daf",
-                        "previousLink":  "ff7b26c941e79a0e1032fe5abcbcb249e13099dac4ea0e227dba65718345fe2d",
-                        "chainLink":  "ac60e3f6cd73007b595142e0b4e316ac76d9a9f9a17bb3d0f2e7a0e10b9dbc46"
+                        "previousLink":  "f675376e80f64df75ee850f54a60e1f771a9311ed9b7a24c94df3f4eeeda9fd7",
+                        "chainLink":  "39aa28538ff10ac50d0ef0baa4132fc55a45ed52fbde8c7f276f9220212f01a2"
                     },
                     {
                         "path":  "threshold/receipts/threshold-batch-c9adf28daa22-20260714T220500Z.json",
                         "receiptGitBlobDigest":  "407f8e30960112b6ea67aafe535e5d817b8a31eb",
-                        "previousLink":  "ac60e3f6cd73007b595142e0b4e316ac76d9a9f9a17bb3d0f2e7a0e10b9dbc46",
-                        "chainLink":  "7a21aa3317d44fa660725962eede0d59e991ca46027ab63f7b1329cae4dd6ca3"
+                        "previousLink":  "39aa28538ff10ac50d0ef0baa4132fc55a45ed52fbde8c7f276f9220212f01a2",
+                        "chainLink":  "98b42056f2bf1ba3967d33bf3b010965c74f33501b548aa0818466c0e2034524"
                     },
                     {
                         "path":  "threshold/receipts/threshold-discovery-skip-existing-utility-helper-52a88e0d651f.json",
                         "receiptGitBlobDigest":  "05662ff681560b0c46d1f2a56f85870b4f68ad81",
-                        "previousLink":  "7a21aa3317d44fa660725962eede0d59e991ca46027ab63f7b1329cae4dd6ca3",
-                        "chainLink":  "350b43aa3093b3e10195a67d8b4581ff2943316283aa0f7d4993bf1de9b1e116"
+                        "previousLink":  "98b42056f2bf1ba3967d33bf3b010965c74f33501b548aa0818466c0e2034524",
+                        "chainLink":  "38f94b241d2918b3808f9f3eba7db57e0dc1ae45d206693c86f3188390e66f12"
                     },
                     {
                         "path":  "threshold/receipts/threshold-expanded-scope-method-spacing-normalization-86cdd43f38d7.json",
                         "receiptGitBlobDigest":  "44f5a1b7cd44f3018006cbaa26d4a16bf21f3966",
-                        "previousLink":  "350b43aa3093b3e10195a67d8b4581ff2943316283aa0f7d4993bf1de9b1e116",
-                        "chainLink":  "0f9a8bb7823495dabc365082eb512079f3a0863c84ddd9f5ec6e99d47c7da571"
+                        "previousLink":  "38f94b241d2918b3808f9f3eba7db57e0dc1ae45d206693c86f3188390e66f12",
+                        "chainLink":  "b6e0214547a09eebbcf478943b17d37b60ffb4c23e9c6309f78ceb5b65452f1c"
                     },
                     {
                         "path":  "threshold/receipts/threshold-expanded-scope-signature-and-constant-wraps-a53fc3f420da.json",
                         "receiptGitBlobDigest":  "76dada2656df2bc6eb663b390d7a55f64f7987cc",
-                        "previousLink":  "0f9a8bb7823495dabc365082eb512079f3a0863c84ddd9f5ec6e99d47c7da571",
-                        "chainLink":  "de878196ee40576d84d01307971b3c4b43a1e5f31f4385a76381ea976e4ed5ad"
+                        "previousLink":  "b6e0214547a09eebbcf478943b17d37b60ffb4c23e9c6309f78ceb5b65452f1c",
+                        "chainLink":  "47bc2da8c334f617d16128d5ccc7d30dce587f389d8f7094c63aed07b6f04cf9"
                     },
                     {
                         "path":  "threshold/receipts/threshold-fix-wrap-executor-materialization-7a13dc842fa3.json",
                         "receiptGitBlobDigest":  "938eab851a9947de51dec9df72370bf42ed51fda",
-                        "previousLink":  "de878196ee40576d84d01307971b3c4b43a1e5f31f4385a76381ea976e4ed5ad",
-                        "chainLink":  "bf3d93a91b3690e62216d5e2c332f2ef7ac32118c632f30e81972e9718f7c4a1"
+                        "previousLink":  "47bc2da8c334f617d16128d5ccc7d30dce587f389d8f7094c63aed07b6f04cf9",
+                        "chainLink":  "74163e345f328ed41baa9606d7e7f68a93ca63c24fe282b24be698be225a81f8"
                     },
                     {
                         "path":  "threshold/receipts/threshold-governance-recording-v1.json",
                         "receiptGitBlobDigest":  "4fc2120603d2d57e69161486066f520920ed840b",
-                        "previousLink":  "bf3d93a91b3690e62216d5e2c332f2ef7ac32118c632f30e81972e9718f7c4a1",
-                        "chainLink":  "aed2c71161ff667ead3fe23d28f262725425b48c086119a1e0b7e05c1c17f59a"
+                        "previousLink":  "74163e345f328ed41baa9606d7e7f68a93ca63c24fe282b24be698be225a81f8",
+                        "chainLink":  "18f14dabd2ff5f9b3f38aa76a1a4b09ba9df89d706206528f22a2dfd622c3137"
                     },
                     {
                         "path":  "threshold/receipts/threshold-runner-simple-string-constant-gate-hardening-66a80197520a.json",
                         "receiptGitBlobDigest":  "666baf4ba31919a8e14d8dceb2474cc526b247f2",
-                        "previousLink":  "aed2c71161ff667ead3fe23d28f262725425b48c086119a1e0b7e05c1c17f59a",
-                        "chainLink":  "058a971f58a06d3bcf954a60bc0926bfb0ef0e53f11b5e53073dbda8ad9ae6ef"
+                        "previousLink":  "18f14dabd2ff5f9b3f38aa76a1a4b09ba9df89d706206528f22a2dfd622c3137",
+                        "chainLink":  "41006b47133c317a5e4bf31e863a9cdcbeb46a101db99d14efdaa0bf75d4161f"
                     }
                 ],
     "nonClaims":  [
