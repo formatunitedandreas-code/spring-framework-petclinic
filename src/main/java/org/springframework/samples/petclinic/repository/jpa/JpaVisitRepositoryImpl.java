@@ -24,7 +24,8 @@ import org.springframework.samples.petclinic.repository.VisitRepository;
 import org.springframework.stereotype.Repository;
 
 /**
- * JPA implementation of the ClinicService interface using EntityManager.
+ * JPA implementation of the ClinicService interface
+ * using EntityManager.
  * <p/>
  * <p>The mappings are defined in "orm.xml" located in the
  * META-INF directory.
