@@ -37,7 +37,8 @@ import org.springframework.samples.petclinic.model.Visit;
 public interface VisitRepository {
 
     /**
-     * Save a <code>Visit</code> to the data store, either inserting or updating it.
+     * Save a <code>Visit</code> to the data store, either
+     * inserting or updating it.
      *
      * @param visit the <code>Visit</code> to save
      * @see BaseEntity#isNew
