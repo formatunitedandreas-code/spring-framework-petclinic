@@ -2,8 +2,8 @@
     "schemaVersion":  "threshold.petclinic.candidate-pocket.v0.2",
     "leaseName":  "owned-autonomous-refactor-branch-wave-v0_automation",
     "branch":  "threshold-governed-refactor-demo-180",
-    "generatedFromHead":  "361ed6ab7b5dece2c92151263c2f2b1d6c60b7d3",
-    "generatedAt":  "2026-07-18T22:04:27.4901289Z",
+    "generatedFromHead":  "b45e01066f0c92dda864be9c96552136bb00f702",
+    "generatedAt":  "2026-07-18T22:05:29.6226763Z",
     "discovery":  {
                       "method":  "static-heuristic-scan",
                       "sourceRoot":  "src/main/java/org/springframework/samples/petclinic",
@@ -103,7 +103,7 @@
                            "tieBreak":  {
                                             "layerScore":  5,
                                             "path":  "src/main/java/org/springframework/samples/petclinic/web/PetValidator.java",
-                                            "member":  "line-57"
+                                            "member":  "line-70"
                                         },
                            "parameterCount":  2,
                            "gate":  {
@@ -115,14 +115,14 @@
                                     },
                            "score":  95,
                            "autoPatchable":  true,
-                           "member":  "line-57",
+                           "member":  "line-70",
                            "reviewOnly":  false,
                            "executionMode":  "auto_patchable",
                            "file":  "src/main/java/org/springframework/samples/petclinic/web/PetValidator.java",
-                           "candidateId":  "src-main-java-org-springframework-samples-petclinic-web-petvalidator-java-method-signature-wrap-cleanup-line-57",
+                           "candidateId":  "src-main-java-org-springframework-samples-petclinic-web-petvalidator-java-method-signature-wrap-cleanup-line-70",
                            "expectedDiffSummary":  "Wrap a long constant or method signature readability line without changing behavior.",
                            "candidateClass":  "method_signature_wrap_cleanup",
-                           "estimatedChangedLines":  4
+                           "estimatedChangedLines":  2
                        },
                        {
                            "tieBreak":  {
@@ -175,8 +175,8 @@
                            "estimatedChangedLines":  2
                        }
                    ],
-    "nextRecommendedCandidateId":  "src-main-java-org-springframework-samples-petclinic-web-petvalidator-java-method-signature-wrap-cleanup-line-57",
-    "nextAutoPatchableCandidateId":  "src-main-java-org-springframework-samples-petclinic-web-petvalidator-java-method-signature-wrap-cleanup-line-57",
+    "nextRecommendedCandidateId":  "src-main-java-org-springframework-samples-petclinic-web-petvalidator-java-method-signature-wrap-cleanup-line-70",
+    "nextAutoPatchableCandidateId":  "src-main-java-org-springframework-samples-petclinic-web-petvalidator-java-method-signature-wrap-cleanup-line-70",
     "nonClaims":  [
                       "candidate pocket is not an implementation claim",
                       "candidate pocket does not claim behavior preservation until slice validation passes",
