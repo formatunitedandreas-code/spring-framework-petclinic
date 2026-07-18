@@ -1,13 +1,14 @@
 {
     "schemaVersion":  "threshold.petclinic.candidate-pocket.v0.2",
     "leaseName":  "owned-autonomous-refactor-branch-wave-v0_automation",
-    "branch":  "threshold-governed-refactor-demo-164",
-    "generatedFromHead":  "1c1c5e7fbe11b9d878ba42700dfd0fb69417c335",
-    "generatedAt":  "2026-07-18T08:29:00.2692572Z",
+    "branch":  "threshold-governed-refactor-demo-165",
+    "generatedFromHead":  "26f228ecfefac1171d2257ed7d04fcbb32385dca",
+    "generatedAt":  "2026-07-18T10:26:57.2796650Z",
     "discovery":  {
                       "method":  "static-heuristic-scan",
                       "sourceRoot":  "src/main/java/org/springframework/samples/petclinic",
                       "gatePath":  "threshold/gates/auto-patchable-candidate-classes.json",
+                      "trainerReportPath":  "threshold/trainer/training-report.json",
                       "approvedAutoPatchableCandidateClasses":  [
                                                                     "application_bootstrap_readability_cleanup",
                                                                     "comment_wrap_cleanup",
@@ -26,6 +27,41 @@
                                                                     "string_constant_wrap_cleanup",
                                                                     "utility_readability_cleanup"
                                                                 ],
+                      "trainerDecisionClasses":  [
+                                                     "application_bootstrap_readability_cleanup",
+                                                     "comment_wrap_cleanup",
+                                                     "controller_branch_readability_decomposition",
+                                                     "duplicate_literal_local_constant_extraction",
+                                                     "leading_tab_indentation_cleanup",
+                                                     "line_comment_wrap_cleanup",
+                                                     "method_signature_wrap_cleanup",
+                                                     "method_spacing_normalization",
+                                                     "model_readability_cleanup",
+                                                     "owner_search_adapter_contract_baseline",
+                                                     "owner_search_architecture_rules",
+                                                     "owner_search_before_after_readout",
+                                                     "owner_search_behavior_baseline",
+                                                     "owner_search_compatibility_path",
+                                                     "owner_search_controller_migration",
+                                                     "owner_search_explicit_fetch_plans",
+                                                     "owner_search_full_validation_matrix",
+                                                     "owner_search_jdbc_adapter",
+                                                     "owner_search_jpa_adapter",
+                                                     "owner_search_query_measurement_baseline",
+                                                     "owner_search_spring_data_jpa_adapter",
+                                                     "private_helper_extraction_for_readability",
+                                                     "redundant private helper inline cleanup",
+                                                     "redundant_local_variable_simplification",
+                                                     "repository_readability_cleanup",
+                                                     "split_string_constant_normalization",
+                                                     "spring_data_query_concat_wrap_cleanup",
+                                                     "spring_data_query_wrap_cleanup",
+                                                     "string_constant_wrap_cleanup",
+                                                     "threshold_enforcement",
+                                                     "threshold_governance_artifact_update",
+                                                     "unknown",
+                                                     "utility_readability_cleanup"
+                                                 ],
                       "scannedFiles":  54,
                       "ranking":  [
                                       "score descending",
@@ -72,7 +108,9 @@
                            "gate":  {
                                         "required":  true,
                                         "approved":  true,
-                                        "gatePath":  "threshold/gates/auto-patchable-candidate-classes.json"
+                                        "gatePath":  "threshold/gates/auto-patchable-candidate-classes.json",
+                                        "trainerDecision":  "autoPatchable",
+                                        "trainerReportPath":  "threshold/trainer/training-report.json"
                                     },
                            "score":  97,
                            "autoPatchable":  true,
@@ -95,7 +133,9 @@
                            "gate":  {
                                         "required":  true,
                                         "approved":  true,
-                                        "gatePath":  "threshold/gates/auto-patchable-candidate-classes.json"
+                                        "gatePath":  "threshold/gates/auto-patchable-candidate-classes.json",
+                                        "trainerDecision":  "autoPatchable",
+                                        "trainerReportPath":  "threshold/trainer/training-report.json"
                                     },
                            "score":  97,
                            "autoPatchable":  true,
@@ -116,7 +156,9 @@
                            "gate":  {
                                         "required":  true,
                                         "approved":  true,
-                                        "gatePath":  "threshold/gates/auto-patchable-candidate-classes.json"
+                                        "gatePath":  "threshold/gates/auto-patchable-candidate-classes.json",
+                                        "trainerDecision":  "autoPatchable",
+                                        "trainerReportPath":  "threshold/trainer/training-report.json"
                                     },
                            "estimatedChangedLines":  4,
                            "reviewOnly":  true,
@@ -142,7 +184,9 @@
                            "gate":  {
                                         "required":  true,
                                         "approved":  true,
-                                        "gatePath":  "threshold/gates/auto-patchable-candidate-classes.json"
+                                        "gatePath":  "threshold/gates/auto-patchable-candidate-classes.json",
+                                        "trainerDecision":  "autoPatchable",
+                                        "trainerReportPath":  "threshold/trainer/training-report.json"
                                     },
                            "score":  96,
                            "autoPatchable":  true,
@@ -165,7 +209,9 @@
                            "gate":  {
                                         "required":  true,
                                         "approved":  true,
-                                        "gatePath":  "threshold/gates/auto-patchable-candidate-classes.json"
+                                        "gatePath":  "threshold/gates/auto-patchable-candidate-classes.json",
+                                        "trainerDecision":  "autoPatchable",
+                                        "trainerReportPath":  "threshold/trainer/training-report.json"
                                     },
                            "score":  96,
                            "autoPatchable":  true,
@@ -188,7 +234,9 @@
                            "gate":  {
                                         "required":  true,
                                         "approved":  true,
-                                        "gatePath":  "threshold/gates/auto-patchable-candidate-classes.json"
+                                        "gatePath":  "threshold/gates/auto-patchable-candidate-classes.json",
+                                        "trainerDecision":  "autoPatchable",
+                                        "trainerReportPath":  "threshold/trainer/training-report.json"
                                     },
                            "score":  95,
                            "autoPatchable":  true,
@@ -211,7 +259,9 @@
                            "gate":  {
                                         "required":  true,
                                         "approved":  true,
-                                        "gatePath":  "threshold/gates/auto-patchable-candidate-classes.json"
+                                        "gatePath":  "threshold/gates/auto-patchable-candidate-classes.json",
+                                        "trainerDecision":  "autoPatchable",
+                                        "trainerReportPath":  "threshold/trainer/training-report.json"
                                     },
                            "score":  95,
                            "autoPatchable":  true,
@@ -234,7 +284,9 @@
                            "gate":  {
                                         "required":  true,
                                         "approved":  true,
-                                        "gatePath":  "threshold/gates/auto-patchable-candidate-classes.json"
+                                        "gatePath":  "threshold/gates/auto-patchable-candidate-classes.json",
+                                        "trainerDecision":  "autoPatchable",
+                                        "trainerReportPath":  "threshold/trainer/training-report.json"
                                     },
                            "score":  95,
                            "autoPatchable":  true,
@@ -257,7 +309,9 @@
                            "gate":  {
                                         "required":  true,
                                         "approved":  true,
-                                        "gatePath":  "threshold/gates/auto-patchable-candidate-classes.json"
+                                        "gatePath":  "threshold/gates/auto-patchable-candidate-classes.json",
+                                        "trainerDecision":  "autoPatchable",
+                                        "trainerReportPath":  "threshold/trainer/training-report.json"
                                     },
                            "score":  95,
                            "autoPatchable":  true,
@@ -280,7 +334,9 @@
                            "gate":  {
                                         "required":  true,
                                         "approved":  true,
-                                        "gatePath":  "threshold/gates/auto-patchable-candidate-classes.json"
+                                        "gatePath":  "threshold/gates/auto-patchable-candidate-classes.json",
+                                        "trainerDecision":  "autoPatchable",
+                                        "trainerReportPath":  "threshold/trainer/training-report.json"
                                     },
                            "score":  90,
                            "autoPatchable":  true,
@@ -304,8 +360,5 @@
                       "no public correctness claim",
                       "no public security claim",
                       "no public compliance claim"
-                  ],
-    "generatedFromHeadRole":  "sourceHead",
-    "terminalEvidenceHead":  "1c1c5e7fbe11b9d878ba42700dfd0fb69417c335",
-    "terminalEvidencePolicy":  "candidate pocket is generated from the last governed source/evidence head before the terminal governance commit"
+                  ]
 }
