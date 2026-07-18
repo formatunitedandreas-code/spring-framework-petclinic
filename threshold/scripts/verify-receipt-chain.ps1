@@ -45,6 +45,25 @@ function Get-ReceiptGitBlobDigestLower {
     return Get-FileSha256Lower -Path $Path
 }
 
+function Get-ReceiptFilesSortedByRepoPath {
+    param([string] $Root)
+    $items = @(
+        Get-ChildItem $Root -Filter *.json -File -ErrorAction SilentlyContinue |
+            ForEach-Object {
+                [pscustomobject]@{
+                    File = $_
+                    RepoPath = ConvertTo-RepoRelativePath $_.FullName
+                }
+            }
+    )
+    $sortedPaths = [string[]]@($items | ForEach-Object { $_.RepoPath })
+    [array]::Sort($sortedPaths, [System.StringComparer]::Ordinal)
+    return @($sortedPaths | ForEach-Object {
+        $path = $_
+        ($items | Where-Object { $_.RepoPath -eq $path } | Select-Object -First 1).File
+    })
+}
+
 function Get-StringSha256Lower {
     param([string] $Text)
     $bytes = [System.Text.Encoding]::UTF8.GetBytes($Text)
@@ -64,7 +83,7 @@ function Write-JsonFile {
     $Value | ConvertTo-Json -Depth 16 | Set-Content $Path
 }
 
-$receiptFiles = @(Get-ChildItem $ReceiptRoot -Filter *.json -File -ErrorAction SilentlyContinue | Sort-Object { ConvertTo-RepoRelativePath $_.FullName })
+$receiptFiles = @(Get-ReceiptFilesSortedByRepoPath -Root $ReceiptRoot)
 if ($receiptFiles.Count -eq 0) { throw "receipt_chain_no_receipts" }
 
 $previous = "".PadLeft(64, "0")
