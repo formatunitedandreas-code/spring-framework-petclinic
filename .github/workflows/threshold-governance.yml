@@ -271,4 +271,4 @@ jobs:
         shell: pwsh
         run: |
           $ErrorActionPreference = "Stop"
-          powershell -ExecutionPolicy Bypass -File threshold/scripts/test-kg-governance.ps1
+          pwsh -File threshold/scripts/test-kg-governance.ps1
