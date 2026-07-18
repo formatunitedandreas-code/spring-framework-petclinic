@@ -130,7 +130,7 @@ $runnerClasses = @(
         Sort-Object -Unique
 )
 
-$receiptFiles = @(Get-ChildItem $ReceiptRoot -Filter *.json -File -ErrorAction SilentlyContinue | Sort-Object FullName)
+$receiptFiles = @(Get-ChildItem $ReceiptRoot -Filter *.json -File -ErrorAction SilentlyContinue | Sort-Object { ConvertTo-RepoRelativePath $_.FullName })
 $receiptEvidence = New-Object System.Collections.Generic.List[object]
 $classStats = @{}
 foreach ($receiptFile in $receiptFiles) {

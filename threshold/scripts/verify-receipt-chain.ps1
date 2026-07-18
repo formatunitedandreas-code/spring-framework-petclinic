@@ -48,7 +48,7 @@ function Write-JsonFile {
     $Value | ConvertTo-Json -Depth 16 | Set-Content $Path
 }
 
-$receiptFiles = @(Get-ChildItem $ReceiptRoot -Filter *.json -File -ErrorAction SilentlyContinue | Sort-Object FullName)
+$receiptFiles = @(Get-ChildItem $ReceiptRoot -Filter *.json -File -ErrorAction SilentlyContinue | Sort-Object { ConvertTo-RepoRelativePath $_.FullName })
 if ($receiptFiles.Count -eq 0) { throw "receipt_chain_no_receipts" }
 
 $previous = "".PadLeft(64, "0")
