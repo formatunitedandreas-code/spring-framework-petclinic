@@ -22,7 +22,8 @@ import org.springframework.samples.petclinic.model.BaseEntity;
 import org.springframework.samples.petclinic.model.Visit;
 
 /**
- * Repository class for <code>Visit</code> domain objects All method names
+ * Repository class for <code>Visit</code> domain objects
+ * All method names
  * are compliant with
  * Spring Data naming
  * conventions so this interface can easily be extended for
