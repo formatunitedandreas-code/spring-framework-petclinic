@@ -128,6 +128,7 @@ function Test-ThresholdGovernancePath {
         $normalized -like "threshold/receipts/*" -or
         $normalized -like "threshold/docs/*" -or
         $normalized -like "threshold/gates/*" -or
+        $normalized -like "threshold/capability-backlog/*" -or
         $normalized -like "threshold/authority/*" -or
         $normalized -eq ".github/workflows/threshold-governance.yml" -or
         $normalized -eq ".github/CODEOWNERS"

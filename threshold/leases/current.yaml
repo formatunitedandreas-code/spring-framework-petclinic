@@ -48,6 +48,7 @@ allowedPaths:
   - threshold/discovery-canaries/**/*.java
   - threshold/discovery-canaries/*.json
   - threshold/gates/*.json
+  - threshold/capability-backlog/*.json
   - threshold/lanes/*.yaml
   - threshold/scripts/*.ps1
   - .github/workflows/threshold-governance.yml
