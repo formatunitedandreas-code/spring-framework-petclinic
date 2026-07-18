@@ -103,7 +103,9 @@ function Get-StringSha256Lower {
 
 function New-SemanticDigest {
     param([string[]] $Lines)
-    return Get-StringSha256Lower -Text ([string]::Join("`n", @($Lines | Sort-Object)))
+    $sorted = [string[]]@($Lines)
+    [array]::Sort($sorted, [System.StringComparer]::Ordinal)
+    return Get-StringSha256Lower -Text ([string]::Join("`n", $sorted))
 }
 
 function Assert-FileMatches {
