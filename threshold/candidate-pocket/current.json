@@ -1,15 +1,16 @@
 {
     "schemaVersion":  "threshold.petclinic.candidate-pocket.v0.2",
     "leaseName":  "owned-autonomous-refactor-branch-wave-v0_automation",
-    "branch":  "threshold-governed-refactor-demo-180",
-    "generatedFromHead":  "1ba5da05f836154cc0dc681c997d06bb857aaffb",
-    "generatedAt":  "2026-07-18T22:08:51.1339665Z",
+    "branch":  "threshold-governed-refactor-demo-181",
+    "generatedFromHead":  "25cf8474693b028aaa75608cb76d4a2e0f4327c9",
+    "generatedAt":  "2026-07-19T07:03:51.5565244Z",
     "discovery":  {
                       "method":  "static-heuristic-scan",
                       "sourceRoot":  "src/main/java/org/springframework/samples/petclinic",
                       "gatePath":  "threshold/gates/auto-patchable-candidate-classes.json",
                       "trainerReportPath":  "threshold/trainer/training-report.json",
                       "approvedAutoPatchableCandidateClasses":  [
+                                                                    "annotation_attribute_wrap_cleanup",
                                                                     "application_bootstrap_readability_cleanup",
                                                                     "comment_wrap_cleanup",
                                                                     "duplicate_literal_local_constant_extraction",
@@ -28,6 +29,7 @@
                                                                     "utility_readability_cleanup"
                                                                 ],
                       "trainerDecisionClasses":  [
+                                                     "annotation_attribute_wrap_cleanup",
                                                      "application_bootstrap_readability_cleanup",
                                                      "comment_wrap_cleanup",
                                                      "controller_branch_readability_decomposition",
@@ -71,11 +73,11 @@
                                       "member lexical"
                                   ],
                       "thresholds":  {
-                                         "longLineThreshold":  68,
-                                         "commentWrapThreshold":  72,
-                                         "springDataQueryThreshold":  40,
-                                         "repositoryMethodLengthThreshold":  2,
-                                         "utilityMethodLengthThreshold":  2
+                                         "longLineThreshold":  80,
+                                         "commentWrapThreshold":  84,
+                                         "springDataQueryThreshold":  50,
+                                         "repositoryMethodLengthThreshold":  4,
+                                         "utilityMethodLengthThreshold":  4
                                      },
                       "allowedCandidateTypes":  [
                                                     "private_helper_extraction_for_readability",
@@ -91,6 +93,7 @@
                                                     "string_constant_wrap_cleanup",
                                                     "utility_readability_cleanup",
                                                     "application_bootstrap_readability_cleanup",
+                                                    "annotation_attribute_wrap_cleanup",
                                                     "leading_tab_indentation_cleanup",
                                                     "comment_wrap_cleanup",
                                                     "line_comment_wrap_cleanup",
@@ -99,10 +102,34 @@
                                                 ]
                   },
     "candidates":  [
-
+                       {
+                           "tieBreak":  {
+                                            "layerScore":  5,
+                                            "path":  "src/main/java/org/springframework/samples/petclinic/web/VetController.java",
+                                            "member":  "line-60"
+                                        },
+                           "gate":  {
+                                        "required":  true,
+                                        "approved":  true,
+                                        "gatePath":  "threshold/gates/auto-patchable-candidate-classes.json",
+                                        "trainerDecision":  "autoPatchable",
+                                        "trainerReportPath":  "threshold/trainer/training-report.json"
+                                    },
+                           "score":  95,
+                           "expectedDiffSummary":  "Wrap a long annotation attribute list without changing behavior.",
+                           "member":  "line-60",
+                           "reviewOnly":  false,
+                           "executionMode":  "auto_patchable",
+                           "file":  "src/main/java/org/springframework/samples/petclinic/web/VetController.java",
+                           "candidateId":  "src-main-java-org-springframework-samples-petclinic-web-vetcontroller-java-annotation-attribute-wrap-cleanup-line-60",
+                           "autoPatchable":  true,
+                           "annotationArgumentCount":  2,
+                           "candidateClass":  "annotation_attribute_wrap_cleanup",
+                           "estimatedChangedLines":  4
+                       }
                    ],
-    "nextRecommendedCandidateId":  null,
-    "nextAutoPatchableCandidateId":  null,
+    "nextRecommendedCandidateId":  "src-main-java-org-springframework-samples-petclinic-web-vetcontroller-java-annotation-attribute-wrap-cleanup-line-60",
+    "nextAutoPatchableCandidateId":  "src-main-java-org-springframework-samples-petclinic-web-vetcontroller-java-annotation-attribute-wrap-cleanup-line-60",
     "nonClaims":  [
                       "candidate pocket is not an implementation claim",
                       "candidate pocket does not claim behavior preservation until slice validation passes",
@@ -110,8 +137,5 @@
                       "no public correctness claim",
                       "no public security claim",
                       "no public compliance claim"
-                  ],
-    "generatedFromHeadRole":  "sourceHead",
-    "terminalEvidenceHead":  "1ba5da05f836154cc0dc681c997d06bb857aaffb",
-    "terminalEvidencePolicy":  "candidate pocket is generated from the last governed source/evidence head before the terminal governance commit"
+                  ]
 }
