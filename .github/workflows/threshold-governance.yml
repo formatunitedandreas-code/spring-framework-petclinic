@@ -14,7 +14,7 @@ jobs:
           fetch-depth: 0
 
       - name: Fetch pull request base
-        run: git fetch origin ${{ github.base_ref }} --depth=1
+        run: git fetch origin ${{ github.base_ref }}:refs/remotes/origin/${{ github.base_ref }}
 
       - name: Verify Threshold lease, receipts, state, and merge authority
         shell: pwsh
