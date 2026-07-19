@@ -176,10 +176,10 @@ if ($receiptPaths.Count -eq 0) { throw "Missing Threshold receipt under threshol
 $receiptByCommit = @{}
 foreach ($receiptPath in $receiptPaths) {
     $receipt = Get-Content $receiptPath.FullName -Raw | ConvertFrom-Json
-    if ($receipt.commitHash) {
+    if ($receipt.PSObject.Properties["commitHash"] -and $receipt.commitHash) {
         $receiptByCommit[[string] $receipt.commitHash] = @{ path = $receiptPath.FullName; receipt = $receipt }
     }
-    elseif ($receipt.sourceCommit) {
+    elseif ($receipt.PSObject.Properties["sourceCommit"] -and $receipt.sourceCommit) {
         $receiptByCommit[[string] $receipt.sourceCommit] = @{ path = $receiptPath.FullName; receipt = $receipt }
     }
 }
