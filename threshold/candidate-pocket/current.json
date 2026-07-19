@@ -2,8 +2,8 @@
     "schemaVersion":  "threshold.petclinic.candidate-pocket.v0.2",
     "leaseName":  "owned-autonomous-refactor-scope-drain-v0_automation",
     "branch":  "main",
-    "generatedFromHead":  "df05fd96aaa72dc62a1b6370f15d96305bb138e5",
-    "generatedAt":  "2026-07-19T14:00:05.2787443Z",
+    "generatedFromHead":  "f09722547316b9000d17fe859d0ae8636bb7b899",
+    "generatedAt":  "2026-07-19T14:01:08.4718000Z",
     "discovery":  {
                       "method":  "static-heuristic-scan",
                       "sourceRoot":  "src/main/java/org/springframework/samples/petclinic",
@@ -99,31 +99,6 @@
     "candidates":  [
                        {
                            "tieBreak":  {
-                                            "layerScore":  7,
-                                            "path":  "src/main/java/org/springframework/samples/petclinic/repository/jdbc/JdbcVetRepositoryImpl.java",
-                                            "member":  "line-50"
-                                        },
-                           "executionMode":  "auto_patchable",
-                           "gate":  {
-                                        "required":  true,
-                                        "approved":  true,
-                                        "gatePath":  "threshold/gates/auto-patchable-candidate-classes.json",
-                                        "trainerDecision":  "autoPatchable",
-                                        "trainerReportPath":  "threshold/trainer/training-report.json"
-                                    },
-                           "score":  105,
-                           "autoPatchable":  true,
-                           "member":  "line-50",
-                           "reviewOnly":  false,
-                           "estimatedChangedLines":  2,
-                           "file":  "src/main/java/org/springframework/samples/petclinic/repository/jdbc/JdbcVetRepositoryImpl.java",
-                           "candidateId":  "src-main-java-org-springframework-samples-petclinic-repository-jdbc-jdbcvetrepositoryimpl-java-repository-readability-cleanup-line-50-split-string-continuation",
-                           "expectedDiffSummary":  "Normalize a split repository string constant into a canonical two-line continuation format.",
-                           "candidateClass":  "repository_readability_cleanup",
-                           "constantName":  "GET_SPECIALTY_IDS_FOR_SQL"
-                       },
-                       {
-                           "tieBreak":  {
                                             "layerScore":  5,
                                             "path":  "src/main/java/org/springframework/samples/petclinic/web/PetController.java",
                                             "member":  "line-116"
@@ -148,8 +123,8 @@
                            "estimatedChangedLines":  6
                        }
                    ],
-    "nextRecommendedCandidateId":  "src-main-java-org-springframework-samples-petclinic-repository-jdbc-jdbcvetrepositoryimpl-java-repository-readability-cleanup-line-50-split-string-continuation",
-    "nextAutoPatchableCandidateId":  "src-main-java-org-springframework-samples-petclinic-repository-jdbc-jdbcvetrepositoryimpl-java-repository-readability-cleanup-line-50-split-string-continuation",
+    "nextRecommendedCandidateId":  "src-main-java-org-springframework-samples-petclinic-web-petcontroller-java-method-signature-wrap-cleanup-line-116",
+    "nextAutoPatchableCandidateId":  "src-main-java-org-springframework-samples-petclinic-web-petcontroller-java-method-signature-wrap-cleanup-line-116",
     "nonClaims":  [
                       "candidate pocket is not an implementation claim",
                       "candidate pocket does not claim behavior preservation until slice validation passes",
