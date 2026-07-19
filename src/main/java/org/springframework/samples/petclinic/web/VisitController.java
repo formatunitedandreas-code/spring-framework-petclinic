@@ -124,7 +124,11 @@ public class VisitController {
         return VIEWS_VISIT_LIST;
     }
 
-    private void addVisitsToModel(int petId, Map<String, Object> model) {
+    private void addVisitsToModel(
+        int petId,
+        Map<String,
+        Object> model
+    ) {
         model.put(MODEL_ATTRIBUTE_VISITS, this.clinicService.findPetById(petId).getVisits());
     }
 
