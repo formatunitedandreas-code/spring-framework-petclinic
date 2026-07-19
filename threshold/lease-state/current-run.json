@@ -5,21 +5,17 @@
     "mode":  "local_refactor",
     "branch":  "threshold-governed-refactor-demo-181",
     "startHead":  "25cf8474693b028aaa75608cb76d4a2e0f4327c9",
-    "currentHead":  "83fc095aadc9f4ed62ed2d6d67373f2cc8a904af",
-    "currentSourceHead":  "a7345ef8c511eb5d2572c27f81a882b82f55e06e",
-    "candidatesProcessed":  1,
-    "commitsCreated":  1,
+    "currentHead":  "ab429c61d60f9f01879efb91ec0916e7d036b2f8",
+    "currentSourceHead":  "ab429c61d60f9f01879efb91ec0916e7d036b2f8",
+    "candidatesProcessed":  2,
+    "commitsCreated":  2,
     "remainingBudget":  {
-                            "candidates":  4,
-                            "commits":  4,
+                            "candidates":  3,
+                            "commits":  3,
                             "repairAttempts":  1
                         },
-    "lastReceipt":  "threshold/receipts/src-main-java-org-springframework-samples-petclinic-web-vetcontroller-java-annotation-attribute-wrap-cleanup-line-60-a7345ef8c511.json",
+    "lastReceipt":  "threshold/receipts/src-main-java-org-springframework-samples-petclinic-web-vetcontroller-java-annotation-attribute-wrap-cleanup-line-69-ab429c61d60f.json",
     "terminalState":  "active",
-    "updatedAt":  "2026-07-19T07:04:59.8649260Z",
-    "terminalReason":  "no applicable autoPatchable candidates after discovery canary passed",
-    "discoveryCanaryLastPassedAt":  "2026-07-19T07:04:55.0278150Z",
-    "scopeExpansionTier":  4,
-    "scopeExpansionReason":  "mid_wave_candidate_shortage",
-    "scopeExpansionAppliedAt":  "2026-07-19T07:04:59.8643787Z"
+    "updatedAt":  "2026-07-19T07:06:10.5690241Z",
+    "terminalReason":  "no applicable autoPatchable candidates after discovery canary passed"
 }
