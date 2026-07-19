@@ -18,7 +18,7 @@ jobs:
 
       - name: Verify Threshold lease, receipts, state, and merge authority
         shell: pwsh
-        run: pwsh -File threshold/scripts/test-pr-governance.ps1 -BaseRef "${{ github.base_ref }}"
+        run: ./threshold/scripts/test-pr-governance.ps1 -BaseRef "${{ github.base_ref }}"
 
       - name: Legacy inline Threshold governance checker
         if: ${{ false }}
