@@ -2,8 +2,8 @@
     "schemaVersion":  "threshold.petclinic.candidate-pocket.v0.2",
     "leaseName":  "owned-autonomous-refactor-branch-wave-v0_automation",
     "branch":  "threshold-governed-refactor-demo-181",
-    "generatedFromHead":  "25cf8474693b028aaa75608cb76d4a2e0f4327c9",
-    "generatedAt":  "2026-07-19T07:03:51.5565244Z",
+    "generatedFromHead":  "82c47c2cb849dd82ab2a239a7423b8bcc22294b9",
+    "generatedAt":  "2026-07-19T07:04:45.8427798Z",
     "discovery":  {
                       "method":  "static-heuristic-scan",
                       "sourceRoot":  "src/main/java/org/springframework/samples/petclinic",
@@ -102,34 +102,10 @@
                                                 ]
                   },
     "candidates":  [
-                       {
-                           "tieBreak":  {
-                                            "layerScore":  5,
-                                            "path":  "src/main/java/org/springframework/samples/petclinic/web/VetController.java",
-                                            "member":  "line-60"
-                                        },
-                           "gate":  {
-                                        "required":  true,
-                                        "approved":  true,
-                                        "gatePath":  "threshold/gates/auto-patchable-candidate-classes.json",
-                                        "trainerDecision":  "autoPatchable",
-                                        "trainerReportPath":  "threshold/trainer/training-report.json"
-                                    },
-                           "score":  95,
-                           "expectedDiffSummary":  "Wrap a long annotation attribute list without changing behavior.",
-                           "member":  "line-60",
-                           "reviewOnly":  false,
-                           "executionMode":  "auto_patchable",
-                           "file":  "src/main/java/org/springframework/samples/petclinic/web/VetController.java",
-                           "candidateId":  "src-main-java-org-springframework-samples-petclinic-web-vetcontroller-java-annotation-attribute-wrap-cleanup-line-60",
-                           "autoPatchable":  true,
-                           "annotationArgumentCount":  2,
-                           "candidateClass":  "annotation_attribute_wrap_cleanup",
-                           "estimatedChangedLines":  4
-                       }
+
                    ],
-    "nextRecommendedCandidateId":  "src-main-java-org-springframework-samples-petclinic-web-vetcontroller-java-annotation-attribute-wrap-cleanup-line-60",
-    "nextAutoPatchableCandidateId":  "src-main-java-org-springframework-samples-petclinic-web-vetcontroller-java-annotation-attribute-wrap-cleanup-line-60",
+    "nextRecommendedCandidateId":  null,
+    "nextAutoPatchableCandidateId":  null,
     "nonClaims":  [
                       "candidate pocket is not an implementation claim",
                       "candidate pocket does not claim behavior preservation until slice validation passes",
