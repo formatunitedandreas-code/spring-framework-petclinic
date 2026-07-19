@@ -1,13 +1,13 @@
 leaseName: owned-autonomous-refactor-scope-drain-v0_automation
 repository: C:\dev\spring-framework-petclinic
-branch: main
+branch: codex/threshold-minimal-comment-wrap-scope-tier6
 baseRemote: origin
 baseRef: origin/main
 startHead: 2c1c24eaeb421e3cad12214a4ad03d26dd47fdfd
 headPolicy: descendantOfStartHead
-scopeExpansionTier: 5
+scopeExpansionTier: 6
 longLineThreshold: 68
-commentWrapThreshold: 72
+commentWrapThreshold: 71
 springDataQueryThreshold: 40
 repositoryMethodLengthThreshold: 2
 utilityMethodLengthThreshold: 2

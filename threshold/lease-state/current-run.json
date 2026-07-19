@@ -3,7 +3,7 @@
     "invocationId":  "owned-autonomous-refactor-scope-drain-v0_automation-20260719T142456Z",
     "leaseId":  "owned-autonomous-refactor-scope-drain-v0_automation",
     "mode":  "local_refactor",
-    "branch":  "main",
+    "branch":  "codex/threshold-minimal-comment-wrap-scope-tier6",
     "startHead":  "2c1c24eaeb421e3cad12214a4ad03d26dd47fdfd",
     "currentHead":  "be7caf724020212d48ffb174c5783a8778f986ec",
     "currentSourceHead":  "144c4b15f91c0f763efead5444057247036c2f9d",
@@ -15,8 +15,8 @@
                             "repairAttempts":  1
                         },
     "lastReceipt":  "threshold/receipts/src-main-java-org-springframework-samples-petclinic-web-visitcontroller-java-method-signature-wrap-cleanup-line-127-144c4b15f91c.json",
-    "terminalState":  "ready_no_candidates_verified",
-    "updatedAt":  "2026-07-19T14:28:06.0282607Z",
+    "terminalState":  "active",
+    "updatedAt":  "2026-07-19T15:58:22.7302484Z",
     "terminalReason":  "no applicable autoPatchable candidates after discovery canary passed",
     "discoveryCanaryLastPassedAt":  "2026-07-19T14:27:58.6083165Z",
     "currentHeadRole":  "sourceHead",
@@ -25,5 +25,8 @@
     "terminalEvidenceMarkedAt":  "2026-07-19T14:28:05.6034386Z",
     "scopeDrainTerminalState":  "scope_exhausted_verified",
     "scopeDrainTerminalReason":  "terminal segment verified no auto-patchable candidates remain",
-    "scopeDrainCompletedAt":  "2026-07-19T14:28:06.0282607Z"
+    "scopeDrainCompletedAt":  "2026-07-19T14:28:06.0282607Z",
+    "scopeExpansionTier":  6,
+    "scopeExpansionReason":  "phase3_minimal_comment_wrap_scope_probe",
+    "scopeExpansionAppliedAt":  "2026-07-19T15:58:22.7247399Z"
 }
