@@ -2,8 +2,8 @@
     "schemaVersion":  "threshold.petclinic.candidate-pocket.v0.2",
     "leaseName":  "owned-autonomous-refactor-scope-drain-v0_automation",
     "branch":  "main",
-    "generatedFromHead":  "18b51cf164db8b1cd9303d3969029e9250b0e636",
-    "generatedAt":  "2026-07-19T13:58:56.1383208Z",
+    "generatedFromHead":  "df05fd96aaa72dc62a1b6370f15d96305bb138e5",
+    "generatedAt":  "2026-07-19T14:00:05.2787443Z",
     "discovery":  {
                       "method":  "static-heuristic-scan",
                       "sourceRoot":  "src/main/java/org/springframework/samples/petclinic",
@@ -103,6 +103,7 @@
                                             "path":  "src/main/java/org/springframework/samples/petclinic/repository/jdbc/JdbcVetRepositoryImpl.java",
                                             "member":  "line-50"
                                         },
+                           "executionMode":  "auto_patchable",
                            "gate":  {
                                         "required":  true,
                                         "approved":  true,
@@ -110,16 +111,16 @@
                                         "trainerDecision":  "autoPatchable",
                                         "trainerReportPath":  "threshold/trainer/training-report.json"
                                     },
-                           "score":  97,
+                           "score":  105,
                            "autoPatchable":  true,
                            "member":  "line-50",
                            "reviewOnly":  false,
-                           "executionMode":  "auto_patchable",
+                           "estimatedChangedLines":  2,
                            "file":  "src/main/java/org/springframework/samples/petclinic/repository/jdbc/JdbcVetRepositoryImpl.java",
-                           "candidateId":  "src-main-java-org-springframework-samples-petclinic-repository-jdbc-jdbcvetrepositoryimpl-java-repository-readability-cleanup-line-50-long-line-wrap",
-                           "expectedDiffSummary":  "Wrap a long constant or method signature readability line without changing behavior.",
+                           "candidateId":  "src-main-java-org-springframework-samples-petclinic-repository-jdbc-jdbcvetrepositoryimpl-java-repository-readability-cleanup-line-50-split-string-continuation",
+                           "expectedDiffSummary":  "Normalize a split repository string constant into a canonical two-line continuation format.",
                            "candidateClass":  "repository_readability_cleanup",
-                           "estimatedChangedLines":  4
+                           "constantName":  "GET_SPECIALTY_IDS_FOR_SQL"
                        },
                        {
                            "tieBreak":  {
@@ -147,8 +148,8 @@
                            "estimatedChangedLines":  6
                        }
                    ],
-    "nextRecommendedCandidateId":  "src-main-java-org-springframework-samples-petclinic-repository-jdbc-jdbcvetrepositoryimpl-java-repository-readability-cleanup-line-50-long-line-wrap",
-    "nextAutoPatchableCandidateId":  "src-main-java-org-springframework-samples-petclinic-repository-jdbc-jdbcvetrepositoryimpl-java-repository-readability-cleanup-line-50-long-line-wrap",
+    "nextRecommendedCandidateId":  "src-main-java-org-springframework-samples-petclinic-repository-jdbc-jdbcvetrepositoryimpl-java-repository-readability-cleanup-line-50-split-string-continuation",
+    "nextAutoPatchableCandidateId":  "src-main-java-org-springframework-samples-petclinic-repository-jdbc-jdbcvetrepositoryimpl-java-repository-readability-cleanup-line-50-split-string-continuation",
     "nonClaims":  [
                       "candidate pocket is not an implementation claim",
                       "candidate pocket does not claim behavior preservation until slice validation passes",
