@@ -54,7 +54,10 @@ public class PetValidator implements Validator {
         }
     }
 
-    private void validateRequiredFieldsForNewPet(Errors errors, Pet pet) {
+    private void validateRequiredFieldsForNewPet(
+        Errors errors,
+        Pet pet
+    ) {
         if (pet.isNew() && pet.getType() == null) {
             rejectRequiredField(errors, FIELD_TYPE);
         }
@@ -64,7 +67,10 @@ public class PetValidator implements Validator {
         }
     }
 
-    private void rejectRequiredField(Errors errors, String fieldName) {
+    private void rejectRequiredField(
+        Errors errors,
+        String fieldName
+    ) {
         errors.rejectValue(fieldName, REQUIRED, REQUIRED);
     }
 

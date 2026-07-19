@@ -96,7 +96,8 @@ public class OwnerController {
     public String processFindForm(Owner owner, BindingResult result, Map<String, Object> model) {
         normalizeLastName(owner);
 
-        // allow parameterless GET request for /owners to return all records
+        // allow parameterless GET request for /owners to
+        // return all records
         // find owners by last name
         List<OwnerListItem> results = this.searchOwners.searchByLastName(owner.getLastName());
         if (results.isEmpty()) {
