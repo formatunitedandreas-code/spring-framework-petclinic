@@ -112,7 +112,11 @@ public class VisitController {
     }
 
     @GetMapping(value = "/owners/{ownerId}/pets/{petId}/visits")
-    public String showVisits(@PathVariable int petId, Map<String, Object> model) {
+    public String showVisits(
+        @PathVariable int petId,
+        Map<String,
+        Object> model
+    ) {
         addVisitsToModel(petId, model);
         return VIEWS_VISIT_LIST;
     }
