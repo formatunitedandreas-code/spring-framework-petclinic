@@ -134,7 +134,11 @@ public class OwnerController {
         return REDIRECT_TO_OWNERS + ownerId;
     }
 
-    private String handleMultipleOwners(Map<String, Object> model, List<OwnerListItem> results) {
+    private String handleMultipleOwners(
+        Map<String,
+        Object> model,
+        List<OwnerListItem> results
+    ) {
         model.put(MODEL_ATTRIBUTE_SELECTIONS, results);
         return VIEWS_OWNER_LIST;
     }
