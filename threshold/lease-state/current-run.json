@@ -5,7 +5,7 @@
     "mode":  "local_refactor",
     "branch":  "codex/threshold-minimal-comment-wrap-scope-tier6",
     "startHead":  "92ac0bb5b7a4d673108a4f246f8f4429e987660e",
-    "currentHead":  "92ac0bb5b7a4d673108a4f246f8f4429e987660e",
+    "currentHead":  "69361a8f93e76e68b016ae1a01f16d8edbbb7748",
     "currentSourceHead":  "92ac0bb5b7a4d673108a4f246f8f4429e987660e",
     "candidatesProcessed":  0,
     "commitsCreated":  0,
@@ -15,9 +15,14 @@
                             "repairAttempts":  1
                         },
     "lastReceipt":  null,
-    "terminalState":  "active",
-    "updatedAt":  "2026-07-19T16:21:48.3447902Z",
+    "terminalState":  "ready_no_candidates_verified",
+    "updatedAt":  "2026-07-19T16:23:23.0477582Z",
     "scopeExpansionTier":  6,
     "scopeExpansionReason":  "scope_drain_fresh_segment_candidate_shortage",
-    "scopeExpansionAppliedAt":  "2026-07-19T16:21:48.3439080Z"
+    "scopeExpansionAppliedAt":  "2026-07-19T16:21:48.3439080Z",
+    "terminalReason":  "no applicable autoPatchable candidates after discovery canary passed",
+    "scopeDrainTerminalState":  "scope_exhausted_verified",
+    "scopeDrainTerminalReason":  "terminal segment verified no auto-patchable candidates remain at minimal_comment_wrap_deepening",
+    "scopeDrainCompletedAt":  "2026-07-19T16:23:23.0477582Z",
+    "discoveryCanaryLastPassedAt":  "2026-07-19T16:23:23.0302272Z"
 }
