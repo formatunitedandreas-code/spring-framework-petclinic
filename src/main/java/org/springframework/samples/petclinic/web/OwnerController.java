@@ -150,7 +150,10 @@ public class OwnerController {
     }
 
     @GetMapping(value = OWNER_EDIT_PATH)
-    public String initUpdateOwnerForm(@PathVariable(OWNER_ID) int ownerId, Model model) {
+    public String initUpdateOwnerForm(
+        @PathVariable(OWNER_ID) int ownerId,
+        Model model
+    ) {
         addOwnerToModel(model, ownerId);
         return VIEWS_OWNER_CREATE_OR_UPDATE_FORM;
     }
