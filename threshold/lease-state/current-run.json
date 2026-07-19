@@ -5,17 +5,17 @@
     "mode":  "local_refactor",
     "branch":  "main",
     "startHead":  "39663f277fb9d898c4e41541a786d395a06e0ee0",
-    "currentHead":  "403e505b6abbef216366806899039977c9ec20a2",
-    "currentSourceHead":  "403e505b6abbef216366806899039977c9ec20a2",
-    "candidatesProcessed":  2,
-    "commitsCreated":  2,
+    "currentHead":  "a0c19ba43444a0eb88379e51400e9e48108ab081",
+    "currentSourceHead":  "a0c19ba43444a0eb88379e51400e9e48108ab081",
+    "candidatesProcessed":  3,
+    "commitsCreated":  3,
     "remainingBudget":  {
-                            "candidates":  3,
-                            "commits":  3,
+                            "candidates":  2,
+                            "commits":  2,
                             "repairAttempts":  1
                         },
-    "lastReceipt":  "threshold/receipts/src-main-java-org-springframework-samples-petclinic-web-ownercontroller-java-method-signature-wrap-cleanup-line-96-403e505b6abb.json",
+    "lastReceipt":  "threshold/receipts/src-main-java-org-springframework-samples-petclinic-web-ownercontroller-java-method-signature-wrap-cleanup-line-137-a0c19ba43444.json",
     "terminalState":  "active",
-    "updatedAt":  "2026-07-19T14:08:29.7476705Z",
+    "updatedAt":  "2026-07-19T14:09:38.0776656Z",
     "terminalReason":  "no applicable autoPatchable candidates after discovery canary passed"
 }
