@@ -2,8 +2,8 @@
     "schemaVersion":  "threshold.petclinic.candidate-pocket.v0.2",
     "leaseName":  "owned-autonomous-refactor-scope-drain-v0_automation",
     "branch":  "main",
-    "generatedFromHead":  "d1fd50b759860e6e8212192d57c1033e22c5da06",
-    "generatedAt":  "2026-07-19T14:03:22.7203094Z",
+    "generatedFromHead":  "2ce5ec1bf3691c0ced24436e7e04bacc4c4190ef",
+    "generatedAt":  "2026-07-19T14:04:30.2771209Z",
     "discovery":  {
                       "method":  "static-heuristic-scan",
                       "sourceRoot":  "src/main/java/org/springframework/samples/petclinic",
@@ -103,6 +103,7 @@
                                             "path":  "src/main/java/org/springframework/samples/petclinic/repository/jdbc/JdbcPetRepositoryImpl.java",
                                             "member":  "line-54"
                                         },
+                           "executionMode":  "auto_patchable",
                            "gate":  {
                                         "required":  true,
                                         "approved":  true,
@@ -110,16 +111,42 @@
                                         "trainerDecision":  "autoPatchable",
                                         "trainerReportPath":  "threshold/trainer/training-report.json"
                                     },
-                           "score":  97,
+                           "score":  105,
                            "autoPatchable":  true,
                            "member":  "line-54",
                            "reviewOnly":  false,
-                           "executionMode":  "auto_patchable",
+                           "estimatedChangedLines":  2,
                            "file":  "src/main/java/org/springframework/samples/petclinic/repository/jdbc/JdbcPetRepositoryImpl.java",
-                           "candidateId":  "src-main-java-org-springframework-samples-petclinic-repository-jdbc-jdbcpetrepositoryimpl-java-repository-readability-cleanup-line-54-long-line-wrap",
-                           "expectedDiffSummary":  "Wrap a long constant or method signature readability line without changing behavior.",
+                           "candidateId":  "src-main-java-org-springframework-samples-petclinic-repository-jdbc-jdbcpetrepositoryimpl-java-repository-readability-cleanup-line-54-split-string-continuation",
+                           "expectedDiffSummary":  "Normalize a split repository string constant into a canonical two-line continuation format.",
                            "candidateClass":  "repository_readability_cleanup",
-                           "estimatedChangedLines":  4
+                           "constantName":  "FIND_PET_TYPES_SQL"
+                       },
+                       {
+                           "candidateClass":  "duplicate_literal_local_constant_extraction",
+                           "literal":  "\"name\"",
+                           "member":  "name",
+                           "gate":  {
+                                        "required":  true,
+                                        "approved":  true,
+                                        "gatePath":  "threshold/gates/auto-patchable-candidate-classes.json",
+                                        "trainerDecision":  "autoPatchable",
+                                        "trainerReportPath":  "threshold/trainer/training-report.json"
+                                    },
+                           "estimatedChangedLines":  4,
+                           "reviewOnly":  false,
+                           "tieBreak":  {
+                                            "layerScore":  7,
+                                            "path":  "src/main/java/org/springframework/samples/petclinic/repository/jdbc/JdbcPetRepositoryImpl.java",
+                                            "member":  "name"
+                                        },
+                           "score":  97,
+                           "expectedDiffSummary":  "Extract repeated literal \"name\" to a same-class private constant.",
+                           "file":  "src/main/java/org/springframework/samples/petclinic/repository/jdbc/JdbcPetRepositoryImpl.java",
+                           "autoPatchable":  true,
+                           "constantName":  "NAME",
+                           "candidateId":  "src-main-java-org-springframework-samples-petclinic-repository-jdbc-jdbcpetrepositoryimpl-java-duplicate-literal-local-constant-extraction-name",
+                           "executionMode":  "auto_patchable"
                        },
                        {
                            "tieBreak":  {
@@ -147,8 +174,8 @@
                            "estimatedChangedLines":  8
                        }
                    ],
-    "nextRecommendedCandidateId":  "src-main-java-org-springframework-samples-petclinic-repository-jdbc-jdbcpetrepositoryimpl-java-repository-readability-cleanup-line-54-long-line-wrap",
-    "nextAutoPatchableCandidateId":  "src-main-java-org-springframework-samples-petclinic-repository-jdbc-jdbcpetrepositoryimpl-java-repository-readability-cleanup-line-54-long-line-wrap",
+    "nextRecommendedCandidateId":  "src-main-java-org-springframework-samples-petclinic-repository-jdbc-jdbcpetrepositoryimpl-java-repository-readability-cleanup-line-54-split-string-continuation",
+    "nextAutoPatchableCandidateId":  "src-main-java-org-springframework-samples-petclinic-repository-jdbc-jdbcpetrepositoryimpl-java-repository-readability-cleanup-line-54-split-string-continuation",
     "nonClaims":  [
                       "candidate pocket is not an implementation claim",
                       "candidate pocket does not claim behavior preservation until slice validation passes",
@@ -156,5 +183,8 @@
                       "no public correctness claim",
                       "no public security claim",
                       "no public compliance claim"
-                  ]
+                  ],
+    "generatedFromHeadRole":  "sourceHead",
+    "terminalEvidenceHead":  "2ce5ec1bf3691c0ced24436e7e04bacc4c4190ef",
+    "terminalEvidencePolicy":  "candidate pocket is generated from the last governed source/evidence head before the terminal governance commit"
 }
