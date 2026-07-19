@@ -2,8 +2,8 @@
     "schemaVersion":  "threshold.petclinic.candidate-pocket.v0.2",
     "leaseName":  "owned-autonomous-refactor-branch-wave-v0_automation",
     "branch":  "threshold-governed-refactor-demo-183",
-    "generatedFromHead":  "a78f542b9d645ea82af659a4d3c58f5cec7d91ba",
-    "generatedAt":  "2026-07-19T17:39:21.6602479Z",
+    "generatedFromHead":  "34a4966eb8f830c013e5cecd1559de8ab946da16",
+    "generatedAt":  "2026-07-19T17:41:23.8669968Z",
     "discovery":  {
                       "method":  "static-heuristic-scan",
                       "sourceRoot":  "src/main/java/org/springframework/samples/petclinic",
@@ -101,7 +101,7 @@
                            "tieBreak":  {
                                             "layerScore":  5,
                                             "path":  "src/main/java/org/springframework/samples/petclinic/web/VetController.java",
-                                            "member":  "line-49"
+                                            "member":  "line-80"
                                         },
                            "gate":  {
                                         "required":  true,
@@ -112,44 +112,19 @@
                                     },
                            "score":  95,
                            "autoPatchable":  true,
-                           "member":  "line-49",
+                           "member":  "line-80",
                            "reviewOnly":  false,
                            "executionMode":  "auto_patchable",
                            "file":  "src/main/java/org/springframework/samples/petclinic/web/VetController.java",
-                           "candidateId":  "src-main-java-org-springframework-samples-petclinic-web-vetcontroller-java-line-comment-wrap-cleanup-line-49",
-                           "expectedDiffSummary":  "Wrap one long line comment without changing source behavior.",
-                           "candidateClass":  "line_comment_wrap_cleanup",
-                           "commentWrapSplitPointFound":  true,
-                           "estimatedChangedLines":  2
-                       },
-                       {
-                           "tieBreak":  {
-                                            "layerScore":  5,
-                                            "path":  "src/main/java/org/springframework/samples/petclinic/web/VetController.java",
-                                            "member":  "line-79"
-                                        },
-                           "gate":  {
-                                        "required":  true,
-                                        "approved":  true,
-                                        "gatePath":  "threshold/gates/auto-patchable-candidate-classes.json",
-                                        "trainerDecision":  "autoPatchable",
-                                        "trainerReportPath":  "threshold/trainer/training-report.json"
-                                    },
-                           "score":  95,
-                           "autoPatchable":  true,
-                           "member":  "line-79",
-                           "reviewOnly":  false,
-                           "executionMode":  "auto_patchable",
-                           "file":  "src/main/java/org/springframework/samples/petclinic/web/VetController.java",
-                           "candidateId":  "src-main-java-org-springframework-samples-petclinic-web-vetcontroller-java-line-comment-wrap-cleanup-line-79",
+                           "candidateId":  "src-main-java-org-springframework-samples-petclinic-web-vetcontroller-java-line-comment-wrap-cleanup-line-80",
                            "expectedDiffSummary":  "Wrap one long line comment without changing source behavior.",
                            "candidateClass":  "line_comment_wrap_cleanup",
                            "commentWrapSplitPointFound":  true,
                            "estimatedChangedLines":  2
                        }
                    ],
-    "nextRecommendedCandidateId":  "src-main-java-org-springframework-samples-petclinic-web-vetcontroller-java-line-comment-wrap-cleanup-line-49",
-    "nextAutoPatchableCandidateId":  "src-main-java-org-springframework-samples-petclinic-web-vetcontroller-java-line-comment-wrap-cleanup-line-49",
+    "nextRecommendedCandidateId":  "src-main-java-org-springframework-samples-petclinic-web-vetcontroller-java-line-comment-wrap-cleanup-line-80",
+    "nextAutoPatchableCandidateId":  "src-main-java-org-springframework-samples-petclinic-web-vetcontroller-java-line-comment-wrap-cleanup-line-80",
     "nonClaims":  [
                       "candidate pocket is not an implementation claim",
                       "candidate pocket does not claim behavior preservation until slice validation passes",
