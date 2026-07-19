@@ -56,7 +56,10 @@ public class OwnerController {
     private final ClinicService clinicService;
     private final SearchOwners searchOwners;
 
-    public OwnerController(ClinicService clinicService, SearchOwners searchOwners) {
+    public OwnerController(
+        ClinicService clinicService,
+        SearchOwners searchOwners
+    ) {
         this.clinicService = clinicService;
         this.searchOwners = searchOwners;
     }
