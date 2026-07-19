@@ -54,7 +54,10 @@ public class JdbcVisitRepositoryImpl implements VisitRepository {
 
     private final SimpleJdbcInsert insertVisit;
 
-    public JdbcVisitRepositoryImpl(DataSource dataSource, JdbcClient jdbcClient) {
+    public JdbcVisitRepositoryImpl(
+        DataSource dataSource,
+        JdbcClient jdbcClient
+    ) {
         this.jdbcClient = jdbcClient;
 
         this.insertVisit = new SimpleJdbcInsert(dataSource)
