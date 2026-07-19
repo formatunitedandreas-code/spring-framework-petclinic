@@ -1,20 +1,24 @@
 {
     "schemaVersion":  "threshold.petclinic.lease-state.v0.2",
-    "invocationId":  "threshold-score-gated-scope-training-governance-20260719T182624Z",
-    "leaseId":  "threshold-score-gated-scope-training-governance",
+    "invocationId":  "owned-autonomous-refactor-branch-wave-v0_automation-20260719T185449Z",
+    "leaseId":  "owned-autonomous-refactor-branch-wave-v0_automation",
     "mode":  "local_refactor",
-    "branch":  "codex/threshold-score-gated-scope-training",
-    "startHead":  "2f53b7ab896b1e406eb65fead621d31c5f677666",
-    "currentHead":  "2f53b7ab896b1e406eb65fead621d31c5f677666",
-    "currentSourceHead":  "2f53b7ab896b1e406eb65fead621d31c5f677666",
+    "branch":  "threshold-governed-refactor-demo-184",
+    "startHead":  "2a115d45261436c3c53df5cd69c6962f7ed686f1",
+    "currentHead":  "2a115d45261436c3c53df5cd69c6962f7ed686f1",
+    "currentSourceHead":  "2a115d45261436c3c53df5cd69c6962f7ed686f1",
     "candidatesProcessed":  0,
     "commitsCreated":  0,
     "remainingBudget":  {
-                            "candidates":  0,
-                            "commits":  1,
+                            "candidates":  5,
+                            "commits":  5,
                             "repairAttempts":  1
                         },
     "lastReceipt":  null,
     "terminalState":  "active",
-    "updatedAt":  "2026-07-19T18:26:25.1014610Z"
+    "updatedAt":  "2026-07-19T18:55:12.1628965Z",
+    "scopeExpansionTier":  7,
+    "scopeExpansionReason":  "fresh_wave_candidate_shortage",
+    "scopeExpansionAppliedAt":  "2026-07-19T18:55:12.1556801Z",
+    "minScore":  98
 }
