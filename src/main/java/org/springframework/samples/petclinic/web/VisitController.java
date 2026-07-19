@@ -87,11 +87,17 @@ public class VisitController {
     // Spring MVC calls method loadPetWithVisit(...) before
     // processNewVisitForm is called
     @PostMapping(value = VISIT_NEW_PATH)
-    public String processNewVisitForm(@Valid Visit visit, BindingResult result) {
+    public String processNewVisitForm(
+        @Valid Visit visit,
+        BindingResult result
+    ) {
         return handleVisitSubmission(visit, result);
     }
 
-    private String handleVisitSubmission(Visit visit, BindingResult result) {
+    private String handleVisitSubmission(
+        Visit visit,
+        BindingResult result
+    ) {
         if (result.hasErrors()) {
             return visitFormView();
         }
@@ -109,12 +115,20 @@ public class VisitController {
     }
 
     @GetMapping(value = "/owners/{ownerId}/pets/{petId}/visits")
-    public String showVisits(@PathVariable int petId, Map<String, Object> model) {
+    public String showVisits(
+        @PathVariable int petId,
+        Map<String,
+        Object> model
+    ) {
         addVisitsToModel(petId, model);
         return VIEWS_VISIT_LIST;
     }
 
-    private void addVisitsToModel(int petId, Map<String, Object> model) {
+    private void addVisitsToModel(
+        int petId,
+        Map<String,
+        Object> model
+    ) {
         model.put(MODEL_ATTRIBUTE_VISITS, this.clinicService.findPetById(petId).getVisits());
     }
 

@@ -1,9 +1,9 @@
 {
     "schemaVersion":  "threshold.petclinic.candidate-pocket.v0.2",
-    "leaseName":  "owned-autonomous-refactor-branch-wave-v0_automation",
-    "branch":  "threshold-governed-refactor-demo-181",
-    "generatedFromHead":  "1518b6112ccfd52246dde446e373fe3a9a6aa6ac",
-    "generatedAt":  "2026-07-19T07:06:40.6922831Z",
+    "leaseName":  "owned-autonomous-refactor-scope-drain-v0_automation",
+    "branch":  "main",
+    "generatedFromHead":  "be7caf724020212d48ffb174c5783a8778f986ec",
+    "generatedAt":  "2026-07-19T14:28:05.3814964Z",
     "discovery":  {
                       "method":  "static-heuristic-scan",
                       "sourceRoot":  "src/main/java/org/springframework/samples/petclinic",
@@ -19,7 +19,6 @@
                                                                     "method_signature_wrap_cleanup",
                                                                     "method_spacing_normalization",
                                                                     "model_readability_cleanup",
-                                                                    "private_helper_extraction_for_readability",
                                                                     "redundant_local_variable_simplification",
                                                                     "repository_readability_cleanup",
                                                                     "split_string_constant_normalization",
@@ -32,7 +31,6 @@
                                                      "annotation_attribute_wrap_cleanup",
                                                      "application_bootstrap_readability_cleanup",
                                                      "comment_wrap_cleanup",
-                                                     "controller_branch_readability_decomposition",
                                                      "duplicate_literal_local_constant_extraction",
                                                      "leading_tab_indentation_cleanup",
                                                      "line_comment_wrap_cleanup",
@@ -80,10 +78,8 @@
                                          "utilityMethodLengthThreshold":  2
                                      },
                       "allowedCandidateTypes":  [
-                                                    "private_helper_extraction_for_readability",
                                                     "redundant_local_variable_simplification",
                                                     "duplicate_literal_local_constant_extraction",
-                                                    "controller_branch_readability_decomposition",
                                                     "method_signature_wrap_cleanup",
                                                     "repository_readability_cleanup",
                                                     "spring_data_query_wrap_cleanup",
@@ -97,8 +93,7 @@
                                                     "leading_tab_indentation_cleanup",
                                                     "comment_wrap_cleanup",
                                                     "line_comment_wrap_cleanup",
-                                                    "method_spacing_normalization",
-                                                    "threshold_governance_artifact_update"
+                                                    "method_spacing_normalization"
                                                 ]
                   },
     "candidates":  [
@@ -115,6 +110,6 @@
                       "no public compliance claim"
                   ],
     "generatedFromHeadRole":  "sourceHead",
-    "terminalEvidenceHead":  "1518b6112ccfd52246dde446e373fe3a9a6aa6ac",
+    "terminalEvidenceHead":  "be7caf724020212d48ffb174c5783a8778f986ec",
     "terminalEvidencePolicy":  "candidate pocket is generated from the last governed source/evidence head before the terminal governance commit"
 }

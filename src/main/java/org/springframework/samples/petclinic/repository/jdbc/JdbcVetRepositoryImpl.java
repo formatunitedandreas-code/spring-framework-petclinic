@@ -47,7 +47,8 @@ public class JdbcVetRepositoryImpl implements VetRepository {
     private static final String FIND_ALL_SQL = "SELECT id, first_name, last_name FROM vets ORDER BY last_name, "
         + "first_name";
 
-    private static final String GET_SPECIALTY_IDS_FOR_SQL = "SELECT specialty_id FROM vet_specialties WHERE vet_id=?";
+    private static final String GET_SPECIALTY_IDS_FOR_SQL = "SELECT specialty_id FROM vet_specialties WHERE "
+        + "vet_id=?";
 
     private static final String FIND_ALL_SQL_INLINE_SQL = "SELECT id, name FROM specialties";
 
@@ -80,7 +81,10 @@ public class JdbcVetRepositoryImpl implements VetRepository {
         return vets;
     }
 
-    private void addSpecialtiesToVet(Vet vet, List<Specialty> specialties) {
+    private void addSpecialtiesToVet(
+        Vet vet,
+        List<Specialty> specialties
+    ) {
         for (int specialtyId : getSpecialtyIdsFor(vet)) {
             Specialty specialty = EntityUtils.getById(specialties, Specialty.class, specialtyId);
             vet.addSpecialty(specialty);

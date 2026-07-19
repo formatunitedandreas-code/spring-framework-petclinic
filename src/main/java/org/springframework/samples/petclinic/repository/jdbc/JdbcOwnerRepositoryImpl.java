@@ -82,7 +82,10 @@ public class JdbcOwnerRepositoryImpl implements OwnerRepository {
 
     private final SimpleJdbcInsert insertOwner;
 
-    public JdbcOwnerRepositoryImpl(DataSource dataSource, JdbcClient jdbcClient) {
+    public JdbcOwnerRepositoryImpl(
+        DataSource dataSource,
+        JdbcClient jdbcClient
+    ) {
 
         this.insertOwner = new SimpleJdbcInsert(dataSource)
             .withTableName("owners")
@@ -148,7 +151,11 @@ public class JdbcOwnerRepositoryImpl implements OwnerRepository {
             .query(new JdbcPetVisitExtractor());
     }
 
-    private void mapPetToOwner(Owner owner, Collection<PetType> petTypes, JdbcPet pet) {
+    private void mapPetToOwner(
+        Owner owner,
+        Collection<PetType> petTypes,
+        JdbcPet pet
+    ) {
         pet.setType(EntityUtils.getById(petTypes, PetType.class, pet.getTypeId()));
         owner.addPet(pet);
     }

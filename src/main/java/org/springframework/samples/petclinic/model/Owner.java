@@ -149,7 +149,11 @@ public class Owner extends Person {
         return name.toLowerCase();
     }
 
-    private boolean isMatchingPet(Pet pet, String name, boolean ignoreNew) {
+    private boolean isMatchingPet(
+        Pet pet,
+        String name,
+        boolean ignoreNew
+    ) {
         return (!ignoreNew || !pet.isNew()) && pet.getName().toLowerCase().equals(name);
     }
 

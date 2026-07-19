@@ -103,7 +103,10 @@ public class PetController {
     }
 
     @GetMapping(value = PET_EDIT_PATH)
-    public String initUpdateForm(@PathVariable("petId") int petId, ModelMap model) {
+    public String initUpdateForm(
+        @PathVariable("petId") int petId,
+        ModelMap model
+    ) {
         addPetToModelForUpdate(petId, model);
         return VIEWS_PETS_CREATE_OR_UPDATE_FORM;
     }
@@ -113,7 +116,12 @@ public class PetController {
     }
 
     @PostMapping(value = PET_EDIT_PATH)
-    public String processUpdateForm(@Valid Pet pet, BindingResult result, Owner owner, ModelMap model) {
+    public String processUpdateForm(
+        @Valid Pet pet,
+        BindingResult result,
+        Owner owner,
+        ModelMap model
+    ) {
         return savePetFormResult(owner, pet, result, model, false);
     }
 
@@ -122,7 +130,13 @@ public class PetController {
         this.clinicService.savePet(pet);
     }
 
-    private String savePetFormResult(Owner owner, Pet pet, BindingResult result, ModelMap model, boolean duplicate) {
+    private String savePetFormResult(
+        Owner owner,
+        Pet pet,
+        BindingResult result,
+        ModelMap model,
+        boolean duplicate
+    ) {
         if (duplicate) {
             result.rejectValue("name", "duplicate", "already exists");
         }

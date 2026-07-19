@@ -54,7 +54,10 @@ public class JdbcVisitRepositoryImpl implements VisitRepository {
 
     private final SimpleJdbcInsert insertVisit;
 
-    public JdbcVisitRepositoryImpl(DataSource dataSource, JdbcClient jdbcClient) {
+    public JdbcVisitRepositoryImpl(
+        DataSource dataSource,
+        JdbcClient jdbcClient
+    ) {
         this.jdbcClient = jdbcClient;
 
         this.insertVisit = new SimpleJdbcInsert(dataSource)
@@ -111,7 +114,10 @@ public class JdbcVisitRepositoryImpl implements VisitRepository {
             .list();
     }
 
-    private void attachPetToVisits(List<Visit> visits, JdbcPet pet) {
+    private void attachPetToVisits(
+        List<Visit> visits,
+        JdbcPet pet
+    ) {
         for (Visit visit : visits) {
             attachPetToVisit(visit, pet);
         }
