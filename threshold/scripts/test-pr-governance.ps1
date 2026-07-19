@@ -77,9 +77,8 @@ function Get-CommitPathBlobSha256 {
     $spec = "$Commit`:$Path"
     $processInfo = [System.Diagnostics.ProcessStartInfo]::new()
     $processInfo.FileName = "git"
-    [void] $processInfo.ArgumentList.Add("cat-file")
-    [void] $processInfo.ArgumentList.Add("blob")
-    [void] $processInfo.ArgumentList.Add($spec)
+    $escapedSpec = $spec.Replace('"', '\"')
+    $processInfo.Arguments = "cat-file blob `"$escapedSpec`""
     $processInfo.RedirectStandardOutput = $true
     $processInfo.RedirectStandardError = $true
     $processInfo.UseShellExecute = $false
