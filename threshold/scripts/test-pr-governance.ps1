@@ -108,11 +108,11 @@ function Get-CommitPathBlobSha256 {
 function Get-ReceiptCommit {
     param([string] $ReceiptPath)
 
-    $receiptCommit = @(git log --format=%H "origin/${BaseRef}..HEAD" -- $ReceiptPath | Select-Object -First 1)
-    if ($LASTEXITCODE -ne 0 -or $receiptCommit.Count -eq 0 -or [string]::IsNullOrWhiteSpace($receiptCommit[0])) {
+    $receiptCommits = @(git log --format=%H "origin/${BaseRef}..HEAD" -- $ReceiptPath)
+    if ($LASTEXITCODE -ne 0 -or $receiptCommits.Count -eq 0 -or [string]::IsNullOrWhiteSpace($receiptCommits[0])) {
         throw "Could not determine receipt commit for $ReceiptPath."
     }
-    return ([string] $receiptCommit[0]).Trim()
+    return ([string] $receiptCommits[0]).Trim()
 }
 
 function Assert-ReceiptLeaseDigestMatchesReceiptCommit {
