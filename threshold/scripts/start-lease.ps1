@@ -118,6 +118,7 @@ allowedCandidateTypes:
   - string_constant_wrap_cleanup
   - utility_readability_cleanup
   - application_bootstrap_readability_cleanup
+  - annotation_attribute_wrap_cleanup
   - leading_tab_indentation_cleanup
   - comment_wrap_cleanup
   - line_comment_wrap_cleanup

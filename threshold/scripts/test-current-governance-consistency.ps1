@@ -110,7 +110,8 @@ function Assert-NoClassContractViolations {
         [string[]] $GateClasses,
         [string[]] $DiscoveryClasses,
         [string[]] $RunnerClasses,
-        [string[]] $BatchClasses
+        [string[]] $BatchClasses,
+        [string[]] $StartLeaseTemplateClasses
     )
 
     $violations = New-Object System.Collections.Generic.List[string]
@@ -122,6 +123,9 @@ function Assert-NoClassContractViolations {
     }
     foreach ($item in @($BatchClasses | Where-Object { $GateClasses -notcontains $_ })) {
         $violations.Add("batch_class_missing_gate_entry=$item")
+    }
+    foreach ($item in @($GateClasses | Where-Object { $StartLeaseTemplateClasses -notcontains $_ })) {
+        $violations.Add("gate_class_missing_start_lease_template_entry=$item")
     }
 
     if ($violations.Count -gt 0) {
@@ -220,6 +224,7 @@ foreach ($runtimePath in $runtimePaths) {
 
 $leaseLines = Get-Content $LeasePath
 $leaseCandidateTypes = @(Get-LeaseList -Lines $leaseLines -Name "allowedCandidateTypes")
+$startLeaseTemplateCandidateTypes = @(Get-LeaseList -Lines (Get-Content "threshold/scripts/start-lease.ps1") -Name "allowedCandidateTypes")
 $gate = Read-Json -Path $GatePath
 $gateClasses = @($gate.approvedAutoPatchableCandidateClasses | ForEach-Object { [string]$_.candidateClass } | Sort-Object -Unique)
 $batchClasses = @($gate.batchReceiptMode.approvedCandidateClasses | ForEach-Object { [string]$_.candidateClass } | Sort-Object -Unique)
@@ -232,15 +237,17 @@ $runnerClasses = @(Get-UniqueMatches -Text $runnerText -Pattern '"(?<class>[a-z0
 $runnerClasses = @($runnerClasses | Where-Object { $_ -like "*_*" -and $_ -ne "collapse_extra_blank_line" } | Sort-Object -Unique)
 
 Write-List -Name "leaseCandidateTypes" -Values $leaseCandidateTypes
+Write-List -Name "startLeaseTemplateCandidateTypes" -Values $startLeaseTemplateCandidateTypes
 Write-List -Name "gateAutoPatchableClasses" -Values $gateClasses
 Write-List -Name "batchAutoPatchableClasses" -Values $batchClasses
 Write-List -Name "discoveryCandidateClasses" -Values $discoveryClasses
 Write-List -Name "runnerExecutorClasses" -Values $runnerClasses
 
 Compare-ClassSets -LeftName "lease" -Left $leaseCandidateTypes -RightName "gate" -Right $gateClasses
+Compare-ClassSets -LeftName "startLeaseTemplate" -Left $startLeaseTemplateCandidateTypes -RightName "gate" -Right $gateClasses
 Compare-ClassSets -LeftName "lease" -Left $leaseCandidateTypes -RightName "discovery" -Right $discoveryClasses
 Compare-ClassSets -LeftName "gate" -Left $gateClasses -RightName "runner" -Right $runnerClasses
-Assert-NoClassContractViolations -GateClasses $gateClasses -DiscoveryClasses $discoveryClasses -RunnerClasses $runnerClasses -BatchClasses $batchClasses
+Assert-NoClassContractViolations -GateClasses $gateClasses -DiscoveryClasses $discoveryClasses -RunnerClasses $runnerClasses -BatchClasses $batchClasses -StartLeaseTemplateClasses $startLeaseTemplateCandidateTypes
 
 $publicationLines = @(
     Select-String -Path "threshold/scripts/start-next-wave.ps1" -Pattern "git.*push|pr.*create|pr.*checks|pr.*merge|Assert-ReadyForMerge|mergeable|draft"
