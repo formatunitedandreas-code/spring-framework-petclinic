@@ -116,28 +116,46 @@ function Test-ThresholdPathAgainstPattern {
     return [System.Management.Automation.WildcardPattern]::new($normalizedPattern, "IgnoreCase").IsMatch($normalizedPath)
 }
 
-function Test-ThresholdGovernancePath {
+function Test-ThresholdGovernancePolicyPath {
     [CmdletBinding()]
     param([Parameter(Mandatory = $true)][string] $Path)
 
     $normalized = $Path -replace "\\", "/"
     return (
         $normalized -like "threshold/scripts/*" -or
+        $normalized -like "threshold/gates/*" -or
+        $normalized -like "threshold/capability-backlog/*" -or
+        $normalized -like "threshold/authority/*" -or
+        $normalized -eq "threshold/trainer/review-findings.json" -or
+        $normalized -eq ".github/workflows/threshold-governance.yml" -or
+        $normalized -eq ".github/CODEOWNERS"
+    )
+}
+
+function Test-ThresholdGovernanceEvidencePath {
+    [CmdletBinding()]
+    param([Parameter(Mandatory = $true)][string] $Path)
+
+    $normalized = $Path -replace "\\", "/"
+    return (
         $normalized -like "threshold/leases/*" -or
         $normalized -like "threshold/lease-state/*" -or
         $normalized -like "threshold/receipts/*" -or
         $normalized -like "threshold/attestations/*" -or
         $normalized -like "threshold/discovery-canaries/*" -or
         $normalized -like "threshold/kgs/*" -or
+        $normalized -eq "threshold/trainer/training-report.json" -or
+        $normalized -eq "threshold/trainer/generated-canary-rules.json" -or
         $normalized -like "threshold/candidate-pocket/*" -or
-        $normalized -like "threshold/docs/*" -or
-        $normalized -like "threshold/gates/*" -or
-        $normalized -like "threshold/capability-backlog/*" -or
-        $normalized -like "threshold/authority/*" -or
-        $normalized -like "threshold/trainer/*" -or
-        $normalized -eq ".github/workflows/threshold-governance.yml" -or
-        $normalized -eq ".github/CODEOWNERS"
+        $normalized -like "threshold/docs/*"
     )
+}
+
+function Test-ThresholdGovernancePath {
+    [CmdletBinding()]
+    param([Parameter(Mandatory = $true)][string] $Path)
+
+    return (Test-ThresholdGovernancePolicyPath -Path $Path) -or (Test-ThresholdGovernanceEvidencePath -Path $Path)
 }
 
 function Assert-ThresholdHeadPolicy {

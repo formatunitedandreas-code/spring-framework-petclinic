@@ -126,6 +126,21 @@ try {
     if (-not (Test-ThresholdGovernancePath -Path "threshold/discovery-canaries/fixtures/src/main/java/org/springframework/samples/petclinic/web/CanaryAnnotationController.java")) {
         throw "Expected threshold discovery canary fixtures to be governance evidence paths."
     }
+    if (-not (Test-ThresholdGovernanceEvidencePath -Path "threshold/trainer/training-report.json")) {
+        throw "Expected generated trainer report to be a governance evidence path."
+    }
+    if (Test-ThresholdGovernancePolicyPath -Path "threshold/trainer/training-report.json") {
+        throw "Did not expect generated trainer report to be a governance policy path."
+    }
+    if (-not (Test-ThresholdGovernanceEvidencePath -Path "threshold/trainer/generated-canary-rules.json")) {
+        throw "Expected generated canary rules to be a governance evidence path."
+    }
+    if (Test-ThresholdGovernancePolicyPath -Path "threshold/trainer/generated-canary-rules.json") {
+        throw "Did not expect generated canary rules to be a governance policy path."
+    }
+    if (-not (Test-ThresholdGovernancePolicyPath -Path "threshold/trainer/review-findings.json")) {
+        throw "Expected trainer review findings to remain a governance policy path."
+    }
     if (Test-ThresholdGovernancePath -Path "src/main/java/App.java") {
         throw "Did not expect src/main/java/App.java to be a governance path."
     }
