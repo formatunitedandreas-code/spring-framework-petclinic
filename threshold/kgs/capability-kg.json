@@ -4,7 +4,7 @@
     "lease":  {
                   "path":  "threshold/leases/current.yaml",
                   "leaseName":  "owned-autonomous-refactor-scope-drain-v0_automation",
-                  "branch":  "main"
+                  "branch":  "codex/threshold-minimal-comment-wrap-scope-tier6"
               },
     "nodes":  [
                   {
@@ -1000,5 +1000,5 @@
                       "to":  "fidelity:utility_readability_cleanup"
                   }
               ],
-    "semanticDigest":  "53cbb9ff86caafd586cdcddb45864cbedb316700ee3d22bcf6efdffc79653199"
+    "semanticDigest":  "dc1427827cf3694a7303126ba4590e4c9d4c042f7af0b648c8d8efc4385538d0"
 }
