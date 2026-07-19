@@ -186,7 +186,7 @@
                       {
                           "candidateClass":  "string_constant_wrap_cleanup",
                           "fidelityLevel":  "F2_GATED_EXECUTOR",
-                          "decision":  "reviewOnly",
+                          "decision":  "autoPatchable",
                           "reason":  "decision derived from lease, gate, discovery, executor, receipt history, semantic evidence, and review findings"
                       },
                       {
@@ -214,5 +214,5 @@
                           "reason":  "decision derived from lease, gate, discovery, executor, receipt history, semantic evidence, and review findings"
                       }
                   ],
-    "semanticDigest":  "434650848f57770913b431b46e196f8982839d7d1776f0853f8aafa851f9ec24"
+    "semanticDigest":  "14db1710e8fdd34d310857a9a18423dfd3bce8548052b05a3848cbf68ccfccca"
 }
