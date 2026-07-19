@@ -94,7 +94,10 @@ public class VisitController {
         return handleVisitSubmission(visit, result);
     }
 
-    private String handleVisitSubmission(Visit visit, BindingResult result) {
+    private String handleVisitSubmission(
+        Visit visit,
+        BindingResult result
+    ) {
         if (result.hasErrors()) {
             return visitFormView();
         }
