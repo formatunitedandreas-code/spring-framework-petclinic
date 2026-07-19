@@ -5,19 +5,16 @@
     "mode":  "local_refactor",
     "branch":  "main",
     "startHead":  "2c1c24eaeb421e3cad12214a4ad03d26dd47fdfd",
-    "currentHead":  "2c1c24eaeb421e3cad12214a4ad03d26dd47fdfd",
-    "currentSourceHead":  "2c1c24eaeb421e3cad12214a4ad03d26dd47fdfd",
-    "candidatesProcessed":  0,
-    "commitsCreated":  0,
+    "currentHead":  "62576ef4073b27fc78e0167850e331df90518a1c",
+    "currentSourceHead":  "62576ef4073b27fc78e0167850e331df90518a1c",
+    "candidatesProcessed":  1,
+    "commitsCreated":  1,
     "remainingBudget":  {
-                            "candidates":  5,
-                            "commits":  5,
+                            "candidates":  4,
+                            "commits":  4,
                             "repairAttempts":  1
                         },
-    "lastReceipt":  null,
+    "lastReceipt":  "threshold/receipts/src-main-java-org-springframework-samples-petclinic-repository-jdbc-jdbcvisitrepositoryimpl-java-method-signature-wrap-cleanup-line-117-62576ef4073b.json",
     "terminalState":  "active",
-    "updatedAt":  "2026-07-19T14:25:14.0408033Z",
-    "scopeExpansionTier":  5,
-    "scopeExpansionReason":  "scope_drain_fresh_segment_candidate_shortage",
-    "scopeExpansionAppliedAt":  "2026-07-19T14:25:14.0251942Z"
+    "updatedAt":  "2026-07-19T14:26:25.1888001Z"
 }
