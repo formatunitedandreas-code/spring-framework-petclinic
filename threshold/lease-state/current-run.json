@@ -1,25 +1,20 @@
 {
     "schemaVersion":  "threshold.petclinic.lease-state.v0.2",
-    "invocationId":  "owned-autonomous-refactor-scope-drain-v0_automation-20260719T135848Z",
+    "invocationId":  "owned-autonomous-refactor-scope-drain-v0_automation-20260719T140431Z",
     "leaseId":  "owned-autonomous-refactor-scope-drain-v0_automation",
     "mode":  "local_refactor",
     "branch":  "main",
-    "startHead":  "18b51cf164db8b1cd9303d3969029e9250b0e636",
-    "currentHead":  "da8d6be580684a54d0d744648666d69387667b41",
-    "currentSourceHead":  "da8d6be580684a54d0d744648666d69387667b41",
-    "candidatesProcessed":  5,
-    "commitsCreated":  5,
+    "startHead":  "6b96cf91a9da778c8e887363e34ae9cc94e93470",
+    "currentHead":  "6b96cf91a9da778c8e887363e34ae9cc94e93470",
+    "currentSourceHead":  "6b96cf91a9da778c8e887363e34ae9cc94e93470",
+    "candidatesProcessed":  0,
+    "commitsCreated":  0,
     "remainingBudget":  {
-                            "candidates":  0,
-                            "commits":  0,
+                            "candidates":  5,
+                            "commits":  5,
                             "repairAttempts":  1
                         },
-    "lastReceipt":  "threshold/receipts/src-main-java-org-springframework-samples-petclinic-repository-jdbc-jdbcpetrepositoryimpl-java-repository-readability-cleanup-line-54-long-line-wrap-da8d6be58068.json",
-    "terminalState":  "budget_exhausted_verified",
-    "updatedAt":  "2026-07-19T14:04:24.6095689Z",
-    "terminalReason":  "remaining candidate or commit budget is exhausted after slice validation passed",
-    "currentHeadRole":  "sourceHead",
-    "terminalEvidenceHead":  "2ce5ec1bf3691c0ced24436e7e04bacc4c4190ef",
-    "terminalEvidencePolicy":  "terminal evidence is generated from the last governed source/evidence head before the terminal governance commit",
-    "terminalEvidenceMarkedAt":  "2026-07-19T14:04:30.5562827Z"
+    "lastReceipt":  null,
+    "terminalState":  "active",
+    "updatedAt":  "2026-07-19T14:04:31.7749335Z"
 }
