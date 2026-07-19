@@ -5,17 +5,17 @@
     "mode":  "local_refactor",
     "branch":  "main",
     "startHead":  "aa2f241aab97da67049a225255bbc4aa589a5355",
-    "currentHead":  "1272cd5dc7c8c25a6908f4a9573fda2c086acacf",
-    "currentSourceHead":  "1272cd5dc7c8c25a6908f4a9573fda2c086acacf",
-    "candidatesProcessed":  3,
-    "commitsCreated":  3,
+    "currentHead":  "b3d1bb848f126cee8126cb8337a4fa61b46dd0c5",
+    "currentSourceHead":  "b3d1bb848f126cee8126cb8337a4fa61b46dd0c5",
+    "candidatesProcessed":  4,
+    "commitsCreated":  4,
     "remainingBudget":  {
-                            "candidates":  2,
-                            "commits":  2,
+                            "candidates":  1,
+                            "commits":  1,
                             "repairAttempts":  1
                         },
-    "lastReceipt":  "threshold/receipts/src-main-java-org-springframework-samples-petclinic-repository-jdbc-jdbcvetrepositoryimpl-java-method-signature-wrap-cleanup-line-84-1272cd5dc7c8.json",
+    "lastReceipt":  "threshold/receipts/src-main-java-org-springframework-samples-petclinic-model-owner-java-method-signature-wrap-cleanup-line-152-b3d1bb848f12.json",
     "terminalState":  "active",
-    "updatedAt":  "2026-07-19T14:22:37.8199785Z",
+    "updatedAt":  "2026-07-19T14:23:45.1703550Z",
     "terminalReason":  "no applicable autoPatchable candidates after discovery canary passed"
 }
