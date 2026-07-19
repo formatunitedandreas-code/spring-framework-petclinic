@@ -55,6 +55,7 @@ commentWrapThreshold: 120
 springDataQueryThreshold: 80
 repositoryMethodLengthThreshold: 8
 utilityMethodLengthThreshold: 8
+minScore: 70
 
 budget:
   maxCandidatesThisRun: $MaxCandidatesThisRun

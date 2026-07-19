@@ -98,6 +98,19 @@
         "repositoryMethodLengthThreshold": 2,
         "utilityMethodLengthThreshold": 2
       }
+    },
+    {
+      "tier": 7,
+      "name": "score_gated_service_comment_wrap_training",
+      "description": "Training tier that probes the next comment-wrap threshold only for the highest-confidence score band.",
+      "minScore": 98,
+      "thresholds": {
+        "longLineThreshold": 68,
+        "commentWrapThreshold": 69,
+        "springDataQueryThreshold": 40,
+        "repositoryMethodLengthThreshold": 2,
+        "utilityMethodLengthThreshold": 2
+      }
     }
   ]
   },

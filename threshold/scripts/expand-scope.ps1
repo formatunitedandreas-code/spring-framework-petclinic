@@ -72,6 +72,9 @@ Set-OrAppendLeaseScalar -Lines $leaseLines -Name "commentWrapThreshold" -Value (
 Set-OrAppendLeaseScalar -Lines $leaseLines -Name "springDataQueryThreshold" -Value ([string]$nextTier.thresholds.springDataQueryThreshold)
 Set-OrAppendLeaseScalar -Lines $leaseLines -Name "repositoryMethodLengthThreshold" -Value ([string]$nextTier.thresholds.repositoryMethodLengthThreshold)
 Set-OrAppendLeaseScalar -Lines $leaseLines -Name "utilityMethodLengthThreshold" -Value ([string]$nextTier.thresholds.utilityMethodLengthThreshold)
+if ($nextTier.PSObject.Properties["minScore"]) {
+    Set-OrAppendLeaseScalar -Lines $leaseLines -Name "minScore" -Value ([string]$nextTier.minScore)
+}
 
 $leaseLines | Set-Content $LeasePath
 
@@ -94,6 +97,14 @@ if (-not $state.PSObject.Properties["scopeExpansionAppliedAt"]) {
 else {
     $state.scopeExpansionAppliedAt = (Get-Date).ToUniversalTime().ToString("o")
 }
+if ($nextTier.PSObject.Properties["minScore"]) {
+    if (-not $state.PSObject.Properties["minScore"]) {
+        $state | Add-Member -NotePropertyName "minScore" -NotePropertyValue ([int]$nextTier.minScore)
+    }
+    else {
+        $state.minScore = [int]$nextTier.minScore
+    }
+}
 $state.terminalState = "active"
 $state.updatedAt = (Get-Date).ToUniversalTime().ToString("o")
 $state | ConvertTo-Json -Depth 10 | Set-Content $StatePath
@@ -102,4 +113,7 @@ Write-Host "scopeExpansionApplied=true"
 Write-Host "previousTier=$currentTier"
 Write-Host "nextTier=$($nextTier.tier)"
 Write-Host "tierName=$($nextTier.name)"
+if ($nextTier.PSObject.Properties["minScore"]) {
+    Write-Host "minScore=$($nextTier.minScore)"
+}
 Write-Host "reason=$Reason"

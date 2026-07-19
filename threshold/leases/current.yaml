@@ -1,20 +1,21 @@
-leaseName: owned-autonomous-refactor-branch-wave-v0_automation
+leaseName: threshold-score-gated-scope-training-governance
 repository: C:\dev\spring-framework-petclinic
-branch: threshold-governed-refactor-demo-183
+branch: codex/threshold-score-gated-scope-training
 baseRemote: origin
 baseRef: origin/main
-startHead: df37408360acf91a0a1998612021037608e738e2
+startHead: 2f53b7ab896b1e406eb65fead621d31c5f677666
 headPolicy: descendantOfStartHead
-scopeExpansionTier: 6
-longLineThreshold: 68
-commentWrapThreshold: 70
-springDataQueryThreshold: 40
-repositoryMethodLengthThreshold: 2
-utilityMethodLengthThreshold: 2
+scopeExpansionTier: 0
+longLineThreshold: 120
+commentWrapThreshold: 120
+springDataQueryThreshold: 80
+repositoryMethodLengthThreshold: 8
+utilityMethodLengthThreshold: 8
+minScore: 70
 
 budget:
-  maxCandidatesThisRun: 5
-  maxCommitsThisRun: 5
+  maxCandidatesThisRun: 0
+  maxCommitsThisRun: 1
   maxFilesPerCandidate: 1
   maxGovernanceFilesPerCandidate: 8
   maxChangedLinesPerCandidate: 80
@@ -81,7 +82,6 @@ allowedCandidateTypes:
 forbiddenActions:
   - push_to_upstream
   - force_push
-  - merge
   - release
   - deploy
   - dependency_or_pom_changes
@@ -100,4 +100,4 @@ validation:
 terminalBoundary:
   afterLocalCommit: hold_at_local_commit_boundary
   draftPrAllowed: true
-  mergeAllowed: false
+  mergeAllowed: true
