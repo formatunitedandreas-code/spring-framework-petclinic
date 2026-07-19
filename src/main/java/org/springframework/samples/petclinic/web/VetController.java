@@ -77,7 +77,8 @@ public class VetController {
     }
 
     private Vets getVets() {
-        // Here we are returning an object of type 'Vets' rather than a
+        // Here we are returning an object of type
+        // 'Vets' rather than a
         // collection of Vet objects
         // so it is simpler for JSon/Object mapping
         return createVets(this.clinicService.findVets());
