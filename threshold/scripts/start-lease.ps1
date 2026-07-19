@@ -105,10 +105,8 @@ forbiddenPaths:
   - .github/dependabot.yml
 
 allowedCandidateTypes:
-  - private_helper_extraction_for_readability
   - redundant_local_variable_simplification
   - duplicate_literal_local_constant_extraction
-  - controller_branch_readability_decomposition
   - method_signature_wrap_cleanup
   - repository_readability_cleanup
   - spring_data_query_wrap_cleanup
@@ -123,7 +121,6 @@ allowedCandidateTypes:
   - comment_wrap_cleanup
   - line_comment_wrap_cleanup
   - method_spacing_normalization
-  - threshold_governance_artifact_update
 
 forbiddenActions:
   - push_to_upstream

@@ -96,6 +96,10 @@ function Get-ApprovedBatchClasses {
     return @($gate.batchReceiptMode.approvedCandidateClasses | ForEach-Object { [string]$_.candidateClass })
 }
 
+function Get-SupportedBatchClasses {
+    return @("comment_wrap_cleanup")
+}
+
 function Find-ConservativeCommentSplitPoint {
     param([string] $Text)
 
@@ -294,7 +298,11 @@ if ([int]$state.remainingBudget.candidates -le 0 -or [int]$state.remainingBudget
     throw "No batch budget remains in $StatePath."
 }
 
-$approvedBatchClasses = Get-ApprovedBatchClasses
+$approvedBatchClasses = @(Get-ApprovedBatchClasses | Where-Object { (Get-SupportedBatchClasses) -contains $_ })
+if (-not $approvedBatchClasses) {
+    Write-Host "ready_no_supported_batch_classes_verified"
+    exit 0
+}
 Invoke-DiscoveryCanary
 $pocketPath = New-CandidatePocket
 $candidates = @(Get-BatchCandidates -PocketPath $pocketPath -ApprovedBatchClasses $approvedBatchClasses)
