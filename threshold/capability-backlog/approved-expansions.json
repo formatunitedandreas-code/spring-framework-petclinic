@@ -15,6 +15,26 @@
   },
   "approvedExpansions": [
     {
+      "id": "expand-scope-tier6-minimal-comment-and-line-wrap-deepening",
+      "status": "ready",
+      "enabled": true,
+      "triggerTerminalStates": [
+        "ready_no_candidates_on_fresh_wave"
+      ],
+      "applyScript": "threshold/scripts/expand-scope.ps1",
+      "allowedChangedPaths": [
+        "threshold/leases/current.yaml",
+        "threshold/lease-state/current-run.json"
+      ],
+      "validationCommands": [
+        "git diff --check",
+        "powershell -ExecutionPolicy Bypass -File threshold/scripts/discover-candidates.ps1 -LeasePath threshold/leases/current.yaml -GatePath threshold/gates/auto-patchable-candidate-classes.json -PocketPath threshold/candidate-pocket/current.json -Limit 20"
+      ],
+      "arguments": [],
+      "commitMessage": "feat: authorize minimal comment wrap tier6 expansion",
+      "prTitle": "Authorize minimal comment wrap tier6 expansion"
+    },
+    {
       "id": "expand-scope-tier5-comment-and-method-wrap-recovery",
       "status": "ready",
       "enabled": true,
