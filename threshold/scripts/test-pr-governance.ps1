@@ -108,7 +108,7 @@ function Get-CommitPathBlobSha256 {
 function Get-ReceiptCommit {
     param([string] $ReceiptPath)
 
-    $receiptCommit = @(git log --format=%H "origin/$BaseRef..HEAD" -- $ReceiptPath | Select-Object -First 1)
+    $receiptCommit = @(git log --format=%H "origin/${BaseRef}..HEAD" -- $ReceiptPath | Select-Object -First 1)
     if ($LASTEXITCODE -ne 0 -or $receiptCommit.Count -eq 0 -or [string]::IsNullOrWhiteSpace($receiptCommit[0])) {
         throw "Could not determine receipt commit for $ReceiptPath."
     }
@@ -145,7 +145,7 @@ if ($BaseRef -ne $expectedBaseRef.Replace("origin/", "")) {
     throw "PR base ref '$BaseRef' does not match threshold baseRef '$expectedBaseRef'."
 }
 
-$changedPaths = @(git diff --name-only "origin/$BaseRef...HEAD")
+$changedPaths = @(git diff --name-only "origin/${BaseRef}...HEAD")
 if ($changedPaths.Count -eq 0) { throw "No changed paths detected for the pull request." }
 
 $governancePolicyPaths = @($changedPaths | Where-Object { Test-ThresholdGovernancePolicyPath -Path $_ })
@@ -203,7 +203,7 @@ if (-not $state.invocationId) { throw "Lease state is missing invocationId." }
 if (-not $state.currentHead) { throw "Lease state is missing currentHead." }
 if (-not $state.remainingBudget) { throw "Lease state is missing remainingBudget." }
 
-$prCommits = @(git rev-list --reverse "origin/$BaseRef..HEAD")
+$prCommits = @(git rev-list --reverse "origin/${BaseRef}..HEAD")
 if ($prCommits.Count -eq 0) { throw "No PR commits detected." }
 
 $sourceCommitCount = 0
