@@ -57,7 +57,10 @@ public class VetController {
         model.put(MODEL_ATTRIBUTE_VETS, getVets());
     }
 
-    @GetMapping(value = "/vets.json", produces = MediaType.APPLICATION_JSON_VALUE)
+    @GetMapping(
+        value = "/vets.json",
+        produces = MediaType.APPLICATION_JSON_VALUE
+    )
     @ResponseBody
     public Vets showJsonVetList() {
         return getVets();
