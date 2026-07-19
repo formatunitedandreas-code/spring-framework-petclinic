@@ -1,16 +1,16 @@
-leaseName: owned-autonomous-refactor-branch-wave-v0_automation
+leaseName: owned-autonomous-refactor-scope-drain-v0_automation
 repository: C:\dev\spring-framework-petclinic
-branch: threshold-governed-refactor-demo-181
+branch: main
 baseRemote: origin
 baseRef: origin/main
-startHead: 25cf8474693b028aaa75608cb76d4a2e0f4327c9
+startHead: 18b51cf164db8b1cd9303d3969029e9250b0e636
 headPolicy: descendantOfStartHead
-scopeExpansionTier: 5
-longLineThreshold: 68
-commentWrapThreshold: 72
-springDataQueryThreshold: 40
-repositoryMethodLengthThreshold: 2
-utilityMethodLengthThreshold: 2
+scopeExpansionTier: 1
+longLineThreshold: 100
+commentWrapThreshold: 100
+springDataQueryThreshold: 70
+repositoryMethodLengthThreshold: 6
+utilityMethodLengthThreshold: 6
 
 budget:
   maxCandidatesThisRun: 5
@@ -81,6 +81,7 @@ allowedCandidateTypes:
 forbiddenActions:
   - push_to_upstream
   - force_push
+  - merge
   - release
   - deploy
   - dependency_or_pom_changes
@@ -98,5 +99,5 @@ validation:
 
 terminalBoundary:
   afterLocalCommit: hold_at_local_commit_boundary
-  draftPrAllowed: true
-  mergeAllowed: true
+  draftPrAllowed: false
+  mergeAllowed: false

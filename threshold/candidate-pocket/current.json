@@ -1,9 +1,9 @@
 {
     "schemaVersion":  "threshold.petclinic.candidate-pocket.v0.2",
-    "leaseName":  "owned-autonomous-refactor-branch-wave-v0_automation",
-    "branch":  "threshold-governed-refactor-demo-181",
-    "generatedFromHead":  "1518b6112ccfd52246dde446e373fe3a9a6aa6ac",
-    "generatedAt":  "2026-07-19T07:06:40.6922831Z",
+    "leaseName":  "owned-autonomous-refactor-scope-drain-v0_automation",
+    "branch":  "main",
+    "generatedFromHead":  "18b51cf164db8b1cd9303d3969029e9250b0e636",
+    "generatedAt":  "2026-07-19T13:58:56.1383208Z",
     "discovery":  {
                       "method":  "static-heuristic-scan",
                       "sourceRoot":  "src/main/java/org/springframework/samples/petclinic",
@@ -19,7 +19,6 @@
                                                                     "method_signature_wrap_cleanup",
                                                                     "method_spacing_normalization",
                                                                     "model_readability_cleanup",
-                                                                    "private_helper_extraction_for_readability",
                                                                     "redundant_local_variable_simplification",
                                                                     "repository_readability_cleanup",
                                                                     "split_string_constant_normalization",
@@ -32,7 +31,6 @@
                                                      "annotation_attribute_wrap_cleanup",
                                                      "application_bootstrap_readability_cleanup",
                                                      "comment_wrap_cleanup",
-                                                     "controller_branch_readability_decomposition",
                                                      "duplicate_literal_local_constant_extraction",
                                                      "leading_tab_indentation_cleanup",
                                                      "line_comment_wrap_cleanup",
@@ -73,17 +71,15 @@
                                       "member lexical"
                                   ],
                       "thresholds":  {
-                                         "longLineThreshold":  68,
-                                         "commentWrapThreshold":  72,
-                                         "springDataQueryThreshold":  40,
-                                         "repositoryMethodLengthThreshold":  2,
-                                         "utilityMethodLengthThreshold":  2
+                                         "longLineThreshold":  100,
+                                         "commentWrapThreshold":  100,
+                                         "springDataQueryThreshold":  70,
+                                         "repositoryMethodLengthThreshold":  6,
+                                         "utilityMethodLengthThreshold":  6
                                      },
                       "allowedCandidateTypes":  [
-                                                    "private_helper_extraction_for_readability",
                                                     "redundant_local_variable_simplification",
                                                     "duplicate_literal_local_constant_extraction",
-                                                    "controller_branch_readability_decomposition",
                                                     "method_signature_wrap_cleanup",
                                                     "repository_readability_cleanup",
                                                     "spring_data_query_wrap_cleanup",
@@ -97,15 +93,62 @@
                                                     "leading_tab_indentation_cleanup",
                                                     "comment_wrap_cleanup",
                                                     "line_comment_wrap_cleanup",
-                                                    "method_spacing_normalization",
-                                                    "threshold_governance_artifact_update"
+                                                    "method_spacing_normalization"
                                                 ]
                   },
     "candidates":  [
-
+                       {
+                           "tieBreak":  {
+                                            "layerScore":  7,
+                                            "path":  "src/main/java/org/springframework/samples/petclinic/repository/jdbc/JdbcVetRepositoryImpl.java",
+                                            "member":  "line-50"
+                                        },
+                           "gate":  {
+                                        "required":  true,
+                                        "approved":  true,
+                                        "gatePath":  "threshold/gates/auto-patchable-candidate-classes.json",
+                                        "trainerDecision":  "autoPatchable",
+                                        "trainerReportPath":  "threshold/trainer/training-report.json"
+                                    },
+                           "score":  97,
+                           "autoPatchable":  true,
+                           "member":  "line-50",
+                           "reviewOnly":  false,
+                           "executionMode":  "auto_patchable",
+                           "file":  "src/main/java/org/springframework/samples/petclinic/repository/jdbc/JdbcVetRepositoryImpl.java",
+                           "candidateId":  "src-main-java-org-springframework-samples-petclinic-repository-jdbc-jdbcvetrepositoryimpl-java-repository-readability-cleanup-line-50-long-line-wrap",
+                           "expectedDiffSummary":  "Wrap a long constant or method signature readability line without changing behavior.",
+                           "candidateClass":  "repository_readability_cleanup",
+                           "estimatedChangedLines":  4
+                       },
+                       {
+                           "tieBreak":  {
+                                            "layerScore":  5,
+                                            "path":  "src/main/java/org/springframework/samples/petclinic/web/PetController.java",
+                                            "member":  "line-116"
+                                        },
+                           "parameterCount":  4,
+                           "gate":  {
+                                        "required":  true,
+                                        "approved":  true,
+                                        "gatePath":  "threshold/gates/auto-patchable-candidate-classes.json",
+                                        "trainerDecision":  "autoPatchable",
+                                        "trainerReportPath":  "threshold/trainer/training-report.json"
+                                    },
+                           "score":  95,
+                           "autoPatchable":  true,
+                           "member":  "line-116",
+                           "reviewOnly":  false,
+                           "executionMode":  "auto_patchable",
+                           "file":  "src/main/java/org/springframework/samples/petclinic/web/PetController.java",
+                           "candidateId":  "src-main-java-org-springframework-samples-petclinic-web-petcontroller-java-method-signature-wrap-cleanup-line-116",
+                           "expectedDiffSummary":  "Wrap a long constant or method signature readability line without changing behavior.",
+                           "candidateClass":  "method_signature_wrap_cleanup",
+                           "estimatedChangedLines":  6
+                       }
                    ],
-    "nextRecommendedCandidateId":  null,
-    "nextAutoPatchableCandidateId":  null,
+    "nextRecommendedCandidateId":  "src-main-java-org-springframework-samples-petclinic-repository-jdbc-jdbcvetrepositoryimpl-java-repository-readability-cleanup-line-50-long-line-wrap",
+    "nextAutoPatchableCandidateId":  "src-main-java-org-springframework-samples-petclinic-repository-jdbc-jdbcvetrepositoryimpl-java-repository-readability-cleanup-line-50-long-line-wrap",
     "nonClaims":  [
                       "candidate pocket is not an implementation claim",
                       "candidate pocket does not claim behavior preservation until slice validation passes",
@@ -113,8 +156,5 @@
                       "no public correctness claim",
                       "no public security claim",
                       "no public compliance claim"
-                  ],
-    "generatedFromHeadRole":  "sourceHead",
-    "terminalEvidenceHead":  "1518b6112ccfd52246dde446e373fe3a9a6aa6ac",
-    "terminalEvidencePolicy":  "candidate pocket is generated from the last governed source/evidence head before the terminal governance commit"
+                  ]
 }
