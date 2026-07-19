@@ -5,7 +5,7 @@
     "mode":  "local_refactor",
     "branch":  "main",
     "startHead":  "18b51cf164db8b1cd9303d3969029e9250b0e636",
-    "currentHead":  "556787055b98aa19956c79f7a82e9c8317108480",
+    "currentHead":  "d1fd50b759860e6e8212192d57c1033e22c5da06",
     "currentSourceHead":  "556787055b98aa19956c79f7a82e9c8317108480",
     "candidatesProcessed":  4,
     "commitsCreated":  4,
@@ -16,5 +16,10 @@
                         },
     "lastReceipt":  "threshold/receipts/src-main-java-org-springframework-samples-petclinic-web-petcontroller-java-method-signature-wrap-cleanup-line-130-556787055b98.json",
     "terminalState":  "active",
-    "updatedAt":  "2026-07-19T14:03:05.3501413Z"
+    "updatedAt":  "2026-07-19T14:03:20.7466830Z",
+    "terminalReason":  "no applicable autoPatchable candidates after discovery canary passed",
+    "discoveryCanaryLastPassedAt":  "2026-07-19T14:03:17.7085014Z",
+    "scopeExpansionTier":  2,
+    "scopeExpansionReason":  "scope_drain_mid_segment_candidate_shortage",
+    "scopeExpansionAppliedAt":  "2026-07-19T14:03:20.7346532Z"
 }
