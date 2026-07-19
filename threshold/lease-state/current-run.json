@@ -5,16 +5,16 @@
     "mode":  "local_refactor",
     "branch":  "codex/threshold-minimal-comment-wrap-scope-tier6",
     "startHead":  "70756b26ba566edf4344205c27874df82ad6df4e",
-    "currentHead":  "ac4f972640d6feb16dd4870b40016aca4714b02c",
-    "currentSourceHead":  "ac4f972640d6feb16dd4870b40016aca4714b02c",
-    "candidatesProcessed":  1,
-    "commitsCreated":  1,
+    "currentHead":  "0def440544e210b0071aa537f35441f570a4bfb0",
+    "currentSourceHead":  "0def440544e210b0071aa537f35441f570a4bfb0",
+    "candidatesProcessed":  2,
+    "commitsCreated":  2,
     "remainingBudget":  {
-                            "candidates":  4,
-                            "commits":  4,
+                            "candidates":  3,
+                            "commits":  3,
                             "repairAttempts":  1
                         },
-    "lastReceipt":  "threshold/receipts/src-main-java-org-springframework-samples-petclinic-repository-springdatajpa-springdatapetrepository-java-comment-wrap-cleanup-line-29-ac4f972640d6.json",
+    "lastReceipt":  "threshold/receipts/src-main-java-org-springframework-samples-petclinic-repository-springdatajpa-springdatavetrepository-java-comment-wrap-cleanup-line-24-0def440544e2.json",
     "terminalState":  "active",
-    "updatedAt":  "2026-07-19T16:17:10.2778576Z"
+    "updatedAt":  "2026-07-19T16:19:12.9260006Z"
 }
