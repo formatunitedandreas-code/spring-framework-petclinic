@@ -51,7 +51,8 @@ public class JdbcPetRepositoryImpl implements PetRepository {
     private static final String FIND_OWNER_ID_BY_PET_ID_SQL = "SELECT owner_id FROM pets WHERE "
         + "id=:id";
 
-    private static final String FIND_PET_TYPES_SQL = "SELECT id, name FROM types ORDER BY name";
+    private static final String FIND_PET_TYPES_SQL = "SELECT id, name FROM types ORDER BY " +
+        "name";
 
     private static final String SAVE_SQL = """
                     UPDATE pets
