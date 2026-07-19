@@ -81,7 +81,10 @@ public class JdbcVetRepositoryImpl implements VetRepository {
         return vets;
     }
 
-    private void addSpecialtiesToVet(Vet vet, List<Specialty> specialties) {
+    private void addSpecialtiesToVet(
+        Vet vet,
+        List<Specialty> specialties
+    ) {
         for (int specialtyId : getSpecialtyIdsFor(vet)) {
             Specialty specialty = EntityUtils.getById(specialties, Specialty.class, specialtyId);
             vet.addSpecialty(specialty);
