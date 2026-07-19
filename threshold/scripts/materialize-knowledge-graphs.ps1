@@ -142,6 +142,11 @@ $gateClasses = @(Get-JsonProperty $gate "approvedAutoPatchableCandidateClasses" 
     $value = Get-JsonProperty $_ "candidateClass" ""
     if (-not [string]::IsNullOrWhiteSpace([string]$value)) { [string]$value }
 } | Sort-Object -Unique)
+$gatePilotAutoClasses = @(Get-JsonProperty $gate "approvedAutoPatchableCandidateClasses" @() | ForEach-Object {
+    $value = Get-JsonProperty $_ "candidateClass" ""
+    $pilot = Get-JsonProperty $_ "pilotAutoPatchableAtF2" $false
+    if (-not [string]::IsNullOrWhiteSpace([string]$value) -and $pilot -eq $true) { [string]$value }
+} | Sort-Object -Unique)
 $batchMode = Get-JsonProperty $gate "batchReceiptMode" $null
 $batchClasses = @(Get-JsonProperty $batchMode "approvedCandidateClasses" @() | ForEach-Object {
     $value = Get-JsonProperty $_ "candidateClass" ""
@@ -239,6 +244,7 @@ foreach ($className in $allClasses) {
     }
     $isInLease = $leaseAllowedClasses -contains $className
     $isInGate = $gateClasses -contains $className
+    $isPilotAutoAtF2 = $gatePilotAutoClasses -contains $className
     $isDiscovered = $discoveryClasses -contains $className
     $isExecutable = $runnerClasses -contains $className
     $isBatch = $batchClasses -contains $className
@@ -255,6 +261,9 @@ foreach ($className in $allClasses) {
     if ($level -in @("F3_VALIDATED_RECEIPT", "F4_CI_RECEIPT_STABLE") -and $isInLease -and $isInGate -and $isExecutable -and $isDiscovered -and $stats.reviewFindingCount -eq 0) {
         $decision = "autoPatchable"
     }
+    elseif ($level -eq "F2_GATED_EXECUTOR" -and $isPilotAutoAtF2 -and $isInLease -and $isInGate -and $isExecutable -and $isDiscovered -and $stats.reviewFindingCount -eq 0) {
+        $decision = "autoPatchable"
+    }
     elseif ($level -ne "F0_UNOBSERVED" -or $isInGate -or $isDiscovered) {
         $decision = "reviewOnly"
     }
@@ -264,6 +273,7 @@ foreach ($className in $allClasses) {
         candidateClass = $className
         allowedByLease = $isInLease
         approvedByGate = $isInGate
+        pilotAutoPatchableAtF2 = $isPilotAutoAtF2
         discoveredByRunner = $isDiscovered
         executableByRunner = $isExecutable
         batchExecutable = $isBatch
@@ -354,7 +364,7 @@ $capabilityKg["semanticDigest"] = New-SemanticDigest @(
     "schema=$($capabilityKg.schemaVersion)"
     "lease=$($capabilityKg.lease.path)|$($capabilityKg.lease.leaseName)|$($capabilityKg.lease.branch)"
     @($capabilityNodeArray | ForEach-Object {
-        "node=$($_.id)|$($_.candidateClass)|lease=$($_.allowedByLease)|gate=$($_.approvedByGate)|discover=$($_.discoveredByRunner)|exec=$($_.executableByRunner)|batch=$($_.batchExecutable)|paths=$($_.allowedPathCount)|decision=$($_.trainerDecision)"
+        "node=$($_.id)|$($_.candidateClass)|lease=$($_.allowedByLease)|gate=$($_.approvedByGate)|pilotF2=$($_.pilotAutoPatchableAtF2)|discover=$($_.discoveredByRunner)|exec=$($_.executableByRunner)|batch=$($_.batchExecutable)|paths=$($_.allowedPathCount)|decision=$($_.trainerDecision)"
     })
     @($capabilityKg.edges | ForEach-Object {
         "edge=$($_.from)|$($_.relation)|$($_.to)"

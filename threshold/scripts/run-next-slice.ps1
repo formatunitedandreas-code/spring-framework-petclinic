@@ -107,6 +107,74 @@ function Test-BootstrapStringInvocationWrapCandidateLine {
     return $Line -match '^\s*[A-Za-z0-9_.]+\(\s*"[^"\\]+"\s*(,\s*"[^"\\]+"\s*)+\);\s*$'
 }
 
+function Split-TopLevelCommaArguments {
+    param([string] $Text)
+
+    $parts = New-Object System.Collections.Generic.List[string]
+    $start = 0
+    $depth = 0
+    $inString = $false
+    $escaped = $false
+
+    for ($i = 0; $i -lt $Text.Length; $i++) {
+        $char = $Text[$i]
+        if ($inString) {
+            if ($escaped) {
+                $escaped = $false
+                continue
+            }
+            if ($char -eq '\') {
+                $escaped = $true
+                continue
+            }
+            if ($char -eq '"') {
+                $inString = $false
+            }
+            continue
+        }
+
+        if ($char -eq '"') {
+            $inString = $true
+            continue
+        }
+        if ($char -eq '(' -or $char -eq '{' -or $char -eq '[') {
+            $depth++
+            continue
+        }
+        if ($char -eq ')' -or $char -eq '}' -or $char -eq ']') {
+            if ($depth -gt 0) { $depth-- }
+            continue
+        }
+        if ($char -eq ',' -and $depth -eq 0) {
+            $parts.Add($Text.Substring($start, $i - $start).Trim())
+            $start = $i + 1
+        }
+    }
+
+    $parts.Add($Text.Substring($start).Trim())
+    return @($parts.ToArray() | Where-Object { -not [string]::IsNullOrWhiteSpace($_) })
+}
+
+function Test-NamedAnnotationAttributeWrapCandidateLine {
+    param([string] $Line)
+
+    $match = [regex]::Match($Line, '^\s*@(?<name>[A-Za-z][A-Za-z0-9_.]*)\((?<args>.+)\)\s*$')
+    if (-not $match.Success) {
+        return $false
+    }
+
+    $arguments = @(Split-TopLevelCommaArguments -Text $match.Groups["args"].Value)
+    if ($arguments.Count -lt 2) {
+        return $false
+    }
+    foreach ($argument in $arguments) {
+        if ($argument -notmatch '^[A-Za-z_][A-Za-z0-9_]*\s*=') {
+            return $false
+        }
+    }
+    return $true
+}
+
 function Test-MethodOrAnnotationBoundaryLine {
     param([string] $Line)
     return $Line -match '^\s*(?:@|public\b|private\b|protected\b)'
@@ -715,6 +783,26 @@ function Get-NextCandidate {
                 }
                 if (-not (Test-BootstrapStringInvocationWrapCandidateLine $lines[$lineNumber - 1])) {
                     Write-Host "candidateSkippedReason=unsupported_bootstrap_cleanup:$($candidate.candidateId)"
+                    $applicable = $false
+                    break
+                }
+            }
+            "annotation_attribute_wrap_cleanup" {
+                $member = [string]$candidate.member
+                if (-not $member.StartsWith("line-")) {
+                    Write-Host "candidateSkippedReason=unsupported_annotation_marker:$($candidate.candidateId)"
+                    $applicable = $false
+                    break
+                }
+                $lineNumber = [int]($member.Substring(5))
+                $lines = Get-Content $path
+                if ($lineNumber -lt 1 -or $lineNumber -gt $lines.Count) {
+                    Write-Host "candidateSkippedReason=line_outside_file:$($candidate.candidateId)"
+                    $applicable = $false
+                    break
+                }
+                if (-not (Test-NamedAnnotationAttributeWrapCandidateLine $lines[$lineNumber - 1])) {
+                    Write-Host "candidateSkippedReason=unsupported_annotation_cleanup:$($candidate.candidateId)"
                     $applicable = $false
                     break
                 }
@@ -1520,6 +1608,67 @@ function Apply-ApplicationBootstrapReadabilityCleanup {
     Write-Host "wrappedBootstrapInvocation=$lineNumber"
 }
 
+function Apply-AnnotationAttributeWrapCleanup {
+    param([pscustomobject] $Candidate)
+
+    $path = ConvertTo-RepoPath $Candidate.file
+    if (-not (Test-Path $path)) { throw "Candidate file not found: $path" }
+
+    $member = [string]$Candidate.member
+    if (-not $member.StartsWith("line-")) {
+        throw "Annotation attribute cleanup requires a line marker candidate."
+    }
+
+    $lineNumber = [int]($member.Substring(5))
+    $lines = Get-Content $path
+    if ($lineNumber -lt 1 -or $lineNumber -gt $lines.Count) {
+        throw "Candidate line '$lineNumber' is outside file range in $path."
+    }
+
+    $line = $lines[$lineNumber - 1]
+    $match = [regex]::Match($line, '^(?<indent>\s*)@(?<name>[A-Za-z][A-Za-z0-9_.]*)\((?<args>.+)\)\s*$')
+    if (-not $match.Success) {
+        throw "Line '$lineNumber' is not a supported single-line annotation in $path."
+    }
+
+    $arguments = @(Split-TopLevelCommaArguments -Text $match.Groups["args"].Value)
+    if ($arguments.Count -lt 2) {
+        throw "Annotation on line '$lineNumber' does not have enough attributes to wrap in $path."
+    }
+    foreach ($argument in $arguments) {
+        if ($argument -notmatch '^[A-Za-z_][A-Za-z0-9_]*\s*=') {
+            throw "Annotation on line '$lineNumber' contains a non-named top-level argument in $path."
+        }
+    }
+
+    $indent = $match.Groups["indent"].Value
+    $annotationName = $match.Groups["name"].Value
+    $wrapped = @()
+    $wrapped += "$indent@$annotationName("
+    for ($i = 0; $i -lt $arguments.Count; $i++) {
+        $suffix = if ($i -lt $arguments.Count - 1) { "," } else { "" }
+        $wrapped += "$indent    $($arguments[$i])$suffix"
+    }
+    $wrapped += "$indent)"
+
+    $updatedLines = @()
+    if ($lineNumber -gt 1) {
+        $updatedLines += $lines[0..($lineNumber - 2)]
+    }
+    $updatedLines += $wrapped
+    if ($lineNumber -lt $lines.Count) {
+        $updatedLines += $lines[$lineNumber..($lines.Count - 1)]
+    }
+
+    $originalText = Get-Content $path -Raw
+    $updatedText = $updatedLines -join (Get-LineEnding -Content $originalText)
+    Write-TextFile -Path $path -Content $updatedText
+
+    Write-Host "appliedCandidate=$($Candidate.candidateId)"
+    Write-Host "changedFile=$path"
+    Write-Host "wrappedAnnotationAttributes=$lineNumber"
+}
+
 function Apply-LeadingTabIndentationCleanup {
     param([pscustomobject] $Candidate)
 
@@ -1648,6 +1797,9 @@ switch ([string]$candidate.candidateClass) {
     }
     "application_bootstrap_readability_cleanup" {
         Apply-ApplicationBootstrapReadabilityCleanup -Candidate $candidate
+    }
+    "annotation_attribute_wrap_cleanup" {
+        Apply-AnnotationAttributeWrapCleanup -Candidate $candidate
     }
     "leading_tab_indentation_cleanup" {
         Apply-LeadingTabIndentationCleanup -Candidate $candidate

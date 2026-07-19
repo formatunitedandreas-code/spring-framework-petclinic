@@ -10,6 +10,12 @@
                },
     "decisions":  [
                       {
+                          "candidateClass":  "annotation_attribute_wrap_cleanup",
+                          "fidelityLevel":  "F2_GATED_EXECUTOR",
+                          "decision":  "autoPatchable",
+                          "reason":  "decision derived from lease, gate, discovery, executor, receipt history, semantic evidence, and review findings"
+                      },
+                      {
                           "candidateClass":  "application_bootstrap_readability_cleanup",
                           "fidelityLevel":  "F3_VALIDATED_RECEIPT",
                           "decision":  "autoPatchable",
@@ -208,5 +214,5 @@
                           "reason":  "decision derived from lease, gate, discovery, executor, receipt history, semantic evidence, and review findings"
                       }
                   ],
-    "semanticDigest":  "29b48d06f8d93e463ff3de11d0a9c3dc52e0a5d60731a21e5caaf87e9782ae8c"
+    "semanticDigest":  "b5cbcc2178c86987a1c934d9eadf7dc887d1900e4b1afd3cbb33e04fa5f692a9"
 }
