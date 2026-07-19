@@ -196,7 +196,9 @@
       "candidateClass": "string_constant_wrap_cleanup",
       "authorizedBy": "governance-hardening-bootstrap",
       "scope": "format-only wrapping of long private static final string constants",
-      "requiresCanary": true
+      "requiresCanary": true,
+      "pilotAutoPatchableAtF2": true,
+      "pilotScope": "first receipts may be produced for simple private static final string constants after gate, discovery canary, and runner support are present"
     },
     {
       "candidateClass": "utility_readability_cleanup",

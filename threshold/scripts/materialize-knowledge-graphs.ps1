@@ -156,7 +156,9 @@ $batchClasses = @(Get-JsonProperty $batchMode "approvedCandidateClasses" @() | F
 $discoveryText = Get-Content "threshold/scripts/discover-candidates.ps1" -Raw
 $discoveryClasses = @(
     @(Get-UniqueMatches -Text $discoveryText -Pattern 'Add-Candidate\s+-CandidateClass\s+"(?<class>[a-z0-9_]+)"' -GroupName "class") +
-    @(Get-UniqueMatches -Text $discoveryText -Pattern '\$candidateClass\s*=\s*"(?<class>[a-z0-9_]+)"' -GroupName "class") |
+    @(Get-UniqueMatches -Text $discoveryText -Pattern '\$candidateClass\s*=\s*"(?<class>[a-z0-9_]+)"' -GroupName "class") +
+    @(Get-UniqueMatches -Text $discoveryText -Pattern '\$candidateClass\s*=\s*if\s*\([^)]+\)\s*\{\s*"(?<class>[a-z0-9_]+)"' -GroupName "class") +
+    @(Get-UniqueMatches -Text $discoveryText -Pattern '\$candidateClass\s*=\s*if\s*\([^)]+\)\s*\{\s*"[^"]+"\s*\}\s*else\s*\{\s*"(?<class>[a-z0-9_]+)"' -GroupName "class") |
         Sort-Object -Unique
 )
 $runnerText = Get-Content "threshold/scripts/run-next-slice.ps1" -Raw

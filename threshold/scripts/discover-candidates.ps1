@@ -609,15 +609,23 @@ foreach ($file in $sourceFiles) {
         }
     }
     if ($longLines.Count -gt 0) {
-        $member = "line-$($longLines[0])"
-        $candidateLine = $lines[$longLines[0] - 1]
+        $member = $null
         $candidateClass = $null
-        if (Test-SimpleStringConstantWrapCandidateLine $candidateLine) {
-            $candidateClass = if ($path -like "*/repository/*") { "repository_readability_cleanup" } else { "string_constant_wrap_cleanup" }
-        }
-        $parameterCount = Get-WrappableMethodSignatureParameterCount $candidateLine
-        if (-not $candidateClass -and $parameterCount -ge 2) {
-            $candidateClass = "method_signature_wrap_cleanup"
+        $parameterCount = 0
+        foreach ($longLine in $longLines) {
+            $candidateLine = $lines[$longLine - 1]
+            if (Test-SimpleStringConstantWrapCandidateLine $candidateLine) {
+                $member = "line-$longLine"
+                $candidateClass = if ($path -like "*/repository/*") { "repository_readability_cleanup" } else { "string_constant_wrap_cleanup" }
+                break
+            }
+            $currentParameterCount = Get-WrappableMethodSignatureParameterCount $candidateLine
+            if ($currentParameterCount -ge 2) {
+                $member = "line-$longLine"
+                $candidateClass = "method_signature_wrap_cleanup"
+                $parameterCount = $currentParameterCount
+                break
+            }
         }
     }
     if ($longLines.Count -gt 0 -and $candidateClass) {

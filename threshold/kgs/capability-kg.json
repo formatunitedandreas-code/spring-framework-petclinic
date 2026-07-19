@@ -737,8 +737,8 @@
                       "candidateClass":  "string_constant_wrap_cleanup",
                       "allowedByLease":  true,
                       "approvedByGate":  true,
-                      "pilotAutoPatchableAtF2":  false,
-                      "discoveredByRunner":  false,
+                      "pilotAutoPatchableAtF2":  true,
+                      "discoveredByRunner":  true,
                       "executableByRunner":  true,
                       "batchExecutable":  false,
                       "forbiddenActions":  [
@@ -755,7 +755,7 @@
                                                "public_compliance_claim"
                                            ],
                       "allowedPathCount":  22,
-                      "trainerDecision":  "reviewOnly"
+                      "trainerDecision":  "autoPatchable"
                   },
                   {
                       "id":  "capability:threshold_enforcement",
@@ -1030,5 +1030,5 @@
                       "to":  "fidelity:utility_readability_cleanup"
                   }
               ],
-    "semanticDigest":  "bb2284fcaed36cb8fd9c9424c1b1ec5f2c5776f30964b8f5afa1df3f853219c9"
+    "semanticDigest":  "30eee1ff52a03849d88004188d8ad351c05ed7f6840b23060d6360503a508bcd"
 }
