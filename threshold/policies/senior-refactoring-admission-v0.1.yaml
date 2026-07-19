@@ -1,0 +1,21 @@
+schemaVersion: threshold.senior-refactoring-admission.v0.1
+singleAdmissionDecider: SeniorRefactoringGovernor
+semanticWorkorders:
+  idPrefixes:
+    - semantic-workorder:
+    - twin-delta:
+  semanticEvidenceRequired: true
+  legacyTwinStatusRequired: verified
+  semanticGuardianResultRequired: target_admissible_for_delta_planning
+  behaviorLockRequired: true
+  rollbackRequired: true
+  authorityLeaseRequired: true
+thresholds:
+  engineeringValueMinimum: 65
+  evidenceStrengthMinimum: 80
+  changeConfidenceMinimum: 80
+stopConditions:
+  - stop_authority_missing
+  - stop_missing_behavior_lock
+  - stop_file_economy_breach
+  - stop_no_material_improvement

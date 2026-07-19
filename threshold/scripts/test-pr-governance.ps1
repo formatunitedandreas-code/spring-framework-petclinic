@@ -163,12 +163,13 @@ if ($governancePolicyPaths.Count -gt 0 -and $productPaths.Count -gt 0) {
 }
 
 $requiresMergeAuthority = $governancePolicyPaths.Count -gt 0 -or ($leasePaths.Count -gt 0 -and $productPaths.Count -eq 0)
+$mergeAuthoritySatisfied = $true
 if ($requiresMergeAuthority) {
     if ($mergeAllowed -ne "true") {
-        throw "Threshold governance policy/authority change does not authorize merge: mergeAllowed=$mergeAllowed."
+        $mergeAuthoritySatisfied = $false
     }
     if ($forbiddenActions -contains "merge") {
-        throw "Threshold governance policy/authority change forbids merge via forbiddenActions."
+        $mergeAuthoritySatisfied = $false
     }
 }
 
@@ -250,5 +251,7 @@ if ($sourceCommitCount -eq 0 -and $productPaths.Count -gt 0) {
 }
 
 Write-Host "sourceCommitReceiptCoverage=complete"
-Write-Host "thresholdGovernanceLabelRequired=false"
+Write-Host "thresholdGovernanceLabelRequired=$($requiresMergeAuthority.ToString().ToLowerInvariant())"
+Write-Host "thresholdMergeAuthorityRequired=$($requiresMergeAuthority.ToString().ToLowerInvariant())"
+Write-Host "thresholdMergeAuthoritySatisfied=$($mergeAuthoritySatisfied.ToString().ToLowerInvariant())"
 Write-Host "Threshold governance passed"

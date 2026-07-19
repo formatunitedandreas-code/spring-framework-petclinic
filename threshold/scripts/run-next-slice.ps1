@@ -1744,6 +1744,11 @@ if (-not $candidate) {
     exit 0
 }
 
+$candidateId = [string]$candidate.candidateId
+if ($candidateId -like "semantic-workorder:*" -or $candidateId -like "twin-delta:*") {
+    throw "semantic_workorders_must_use_semantic_lane"
+}
+
 Write-Host "selectedCandidateId=$($candidate.candidateId)"
 Write-Host "selectedCandidateClass=$($candidate.candidateClass)"
 Write-Host "selectedCandidateScore=$($candidate.score)"

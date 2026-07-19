@@ -1,0 +1,15 @@
+schemaVersion: threshold.file-economy.v0.1
+forbiddenInPullRequest:
+  - threshold/runtime/**
+  - threshold/candidate-pocket/**
+  - threshold/lease-state/**
+  - threshold/leases/current.yaml
+  - threshold/kgs/**
+semanticRunEvidence:
+  requiredFiles:
+    - twin-delta.json
+    - aggregate-receipt.json
+    - evidence-digests.json
+  maximumEvidenceFiles: 3
+  maximumEvidenceChangedLines: 300
+  branchFinalValidationRequired: true
