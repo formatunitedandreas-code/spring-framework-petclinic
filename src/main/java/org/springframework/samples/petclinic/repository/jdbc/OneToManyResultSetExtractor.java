@@ -160,7 +160,8 @@ public abstract class OneToManyResultSetExtractor<R, C, K> implements ResultSetE
 	 * Map the primary key value to the required type.
 	 * This method must be implemented by subclasses.
 	 * This method should not call <code>next()</code> on
-	 * the ResultSet; it is only supposed to map values of the current row.
+	 * the ResultSet; it is only supposed to map values of
+	 * the current row.
 	 *
 	 * @param rs the ResultSet
 	 * @return the primary key value
@@ -172,7 +173,8 @@ public abstract class OneToManyResultSetExtractor<R, C, K> implements ResultSetE
 	 * Map the foreign key value to the required type.
 	 * This method must be implemented by subclasses.
 	 * This method should not call <code>next()</code> on
-	 * the ResultSet; it is only supposed to map values of the current row.
+	 * the ResultSet; it is only supposed to map values of
+	 * the current row.
 	 *
 	 * @param rs the ResultSet
 	 * @return the foreign key value
