@@ -1,20 +1,23 @@
 {
     "schemaVersion":  "threshold.petclinic.lease-state.v0.2",
-    "invocationId":  "owned-autonomous-refactor-scope-drain-v0_automation-20260719T161431Z",
+    "invocationId":  "owned-autonomous-refactor-scope-drain-v0_automation-20260719T162128Z",
     "leaseId":  "owned-autonomous-refactor-scope-drain-v0_automation",
     "mode":  "local_refactor",
     "branch":  "codex/threshold-minimal-comment-wrap-scope-tier6",
-    "startHead":  "70756b26ba566edf4344205c27874df82ad6df4e",
-    "currentHead":  "33c2ace04fce8985b5fdbbaf7e8752a6bc8a7ab1",
-    "currentSourceHead":  "33c2ace04fce8985b5fdbbaf7e8752a6bc8a7ab1",
-    "candidatesProcessed":  3,
-    "commitsCreated":  3,
+    "startHead":  "92ac0bb5b7a4d673108a4f246f8f4429e987660e",
+    "currentHead":  "92ac0bb5b7a4d673108a4f246f8f4429e987660e",
+    "currentSourceHead":  "92ac0bb5b7a4d673108a4f246f8f4429e987660e",
+    "candidatesProcessed":  0,
+    "commitsCreated":  0,
     "remainingBudget":  {
-                            "candidates":  2,
-                            "commits":  2,
+                            "candidates":  5,
+                            "commits":  5,
                             "repairAttempts":  1
                         },
-    "lastReceipt":  "threshold/receipts/src-main-java-org-springframework-samples-petclinic-repository-vetrepository-java-comment-wrap-cleanup-line-24-33c2ace04fce.json",
+    "lastReceipt":  null,
     "terminalState":  "active",
-    "updatedAt":  "2026-07-19T16:21:18.2275713Z"
+    "updatedAt":  "2026-07-19T16:21:48.3447902Z",
+    "scopeExpansionTier":  6,
+    "scopeExpansionReason":  "scope_drain_fresh_segment_candidate_shortage",
+    "scopeExpansionAppliedAt":  "2026-07-19T16:21:48.3439080Z"
 }
