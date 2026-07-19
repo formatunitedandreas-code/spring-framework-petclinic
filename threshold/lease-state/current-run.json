@@ -1,12 +1,12 @@
 {
     "schemaVersion":  "threshold.petclinic.lease-state.v0.2",
-    "invocationId":  "owned-autonomous-refactor-scope-drain-v0_automation-20260719T140431Z",
+    "invocationId":  "owned-autonomous-refactor-scope-drain-v0_automation-20260719T140549Z",
     "leaseId":  "owned-autonomous-refactor-scope-drain-v0_automation",
     "mode":  "local_refactor",
     "branch":  "main",
-    "startHead":  "6b96cf91a9da778c8e887363e34ae9cc94e93470",
-    "currentHead":  "6b96cf91a9da778c8e887363e34ae9cc94e93470",
-    "currentSourceHead":  "6b96cf91a9da778c8e887363e34ae9cc94e93470",
+    "startHead":  "39663f277fb9d898c4e41541a786d395a06e0ee0",
+    "currentHead":  "39663f277fb9d898c4e41541a786d395a06e0ee0",
+    "currentSourceHead":  "39663f277fb9d898c4e41541a786d395a06e0ee0",
     "candidatesProcessed":  0,
     "commitsCreated":  0,
     "remainingBudget":  {
@@ -16,5 +16,5 @@
                         },
     "lastReceipt":  null,
     "terminalState":  "active",
-    "updatedAt":  "2026-07-19T14:04:31.7749335Z"
+    "updatedAt":  "2026-07-19T14:05:49.8436787Z"
 }
