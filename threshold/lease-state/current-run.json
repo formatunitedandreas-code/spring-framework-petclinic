@@ -5,19 +5,16 @@
     "mode":  "local_refactor",
     "branch":  "main",
     "startHead":  "18b51cf164db8b1cd9303d3969029e9250b0e636",
-    "currentHead":  "18b51cf164db8b1cd9303d3969029e9250b0e636",
-    "currentSourceHead":  "18b51cf164db8b1cd9303d3969029e9250b0e636",
-    "candidatesProcessed":  0,
-    "commitsCreated":  0,
+    "currentHead":  "4b3bcbf22afc44aba4282b1da71649b4ec60f92a",
+    "currentSourceHead":  "4b3bcbf22afc44aba4282b1da71649b4ec60f92a",
+    "candidatesProcessed":  1,
+    "commitsCreated":  1,
     "remainingBudget":  {
-                            "candidates":  5,
-                            "commits":  5,
+                            "candidates":  4,
+                            "commits":  4,
                             "repairAttempts":  1
                         },
-    "lastReceipt":  null,
+    "lastReceipt":  "threshold/receipts/src-main-java-org-springframework-samples-petclinic-repository-jdbc-jdbcvetrepositoryimpl-java-repository-readability-cleanup-line-50-long-line-wrap-4b3bcbf22afc.json",
     "terminalState":  "active",
-    "updatedAt":  "2026-07-19T13:58:52.7239819Z",
-    "scopeExpansionTier":  1,
-    "scopeExpansionReason":  "scope_drain_fresh_segment_candidate_shortage",
-    "scopeExpansionAppliedAt":  "2026-07-19T13:58:52.7132403Z"
+    "updatedAt":  "2026-07-19T14:00:01.1814833Z"
 }
