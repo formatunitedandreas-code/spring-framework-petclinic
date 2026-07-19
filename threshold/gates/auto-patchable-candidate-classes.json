@@ -211,6 +211,14 @@
       "requiresCanary": true
     },
     {
+      "candidateClass": "annotation_attribute_wrap_cleanup",
+      "authorizedBy": "scope-executor-expansion-v0-annotation-attribute-wrap",
+      "scope": "format-only wrapping of a single Java annotation line with two or more named top-level attributes",
+      "requiresCanary": true,
+      "pilotAutoPatchableAtF2": true,
+      "pilotScope": "first receipts may be produced after gate, discovery canary, and runner support are present"
+    },
+    {
       "candidateClass": "leading_tab_indentation_cleanup",
       "authorizedBy": "scope-executor-expansion-v0-leading-tab-indentation",
       "scope": "format-only normalization of one contiguous leading-tab indentation block to spaces",

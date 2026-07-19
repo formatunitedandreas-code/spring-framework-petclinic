@@ -270,6 +270,12 @@ function Test-AutoPatchableCandidate {
             $Candidate.ContainsKey("bootstrapWrapPattern") -and
             [string]$Candidate.bootstrapWrapPattern -eq "string_argument_invocation_wrap"
     }
+    if ($CandidateClass -eq "annotation_attribute_wrap_cleanup") {
+        return $Candidate.ContainsKey("member") -and
+            ([string]$Candidate.member).StartsWith("line-") -and
+            $Candidate.ContainsKey("annotationArgumentCount") -and
+            [int]$Candidate.annotationArgumentCount -ge 2
+    }
     if ($CandidateClass -eq "leading_tab_indentation_cleanup") {
         return $Candidate.ContainsKey("member") -and
             ([string]$Candidate.member).StartsWith("line-") -and
@@ -340,6 +346,74 @@ function Test-SplitQueryAnnotationStartLine {
 function Test-BootstrapStringInvocationWrapCandidateLine {
     param([string] $Line)
     return $Line -match '^\s*[A-Za-z0-9_.]+\(\s*"[^"\\]+"\s*(,\s*"[^"\\]+"\s*)+\);\s*$'
+}
+
+function Split-TopLevelCommaArguments {
+    param([string] $Text)
+
+    $parts = New-Object System.Collections.Generic.List[string]
+    $start = 0
+    $depth = 0
+    $inString = $false
+    $escaped = $false
+
+    for ($i = 0; $i -lt $Text.Length; $i++) {
+        $char = $Text[$i]
+        if ($inString) {
+            if ($escaped) {
+                $escaped = $false
+                continue
+            }
+            if ($char -eq '\') {
+                $escaped = $true
+                continue
+            }
+            if ($char -eq '"') {
+                $inString = $false
+            }
+            continue
+        }
+
+        if ($char -eq '"') {
+            $inString = $true
+            continue
+        }
+        if ($char -eq '(' -or $char -eq '{' -or $char -eq '[') {
+            $depth++
+            continue
+        }
+        if ($char -eq ')' -or $char -eq '}' -or $char -eq ']') {
+            if ($depth -gt 0) { $depth-- }
+            continue
+        }
+        if ($char -eq ',' -and $depth -eq 0) {
+            $parts.Add($Text.Substring($start, $i - $start).Trim())
+            $start = $i + 1
+        }
+    }
+
+    $parts.Add($Text.Substring($start).Trim())
+    return @($parts.ToArray() | Where-Object { -not [string]::IsNullOrWhiteSpace($_) })
+}
+
+function Get-NamedAnnotationAttributeCount {
+    param([string] $Line)
+
+    $match = [regex]::Match($Line, '^\s*@(?<name>[A-Za-z][A-Za-z0-9_.]*)\((?<args>.+)\)\s*$')
+    if (-not $match.Success) {
+        return 0
+    }
+
+    $arguments = @(Split-TopLevelCommaArguments -Text $match.Groups["args"].Value)
+    if ($arguments.Count -lt 2) {
+        return 0
+    }
+    foreach ($argument in $arguments) {
+        if ($argument -notmatch '^[A-Za-z_][A-Za-z0-9_]*\s*=') {
+            return 0
+        }
+    }
+    return $arguments.Count
 }
 
 function Test-MethodOrAnnotationBoundaryLine {
@@ -585,6 +659,29 @@ foreach ($file in $sourceFiles) {
                 tieBreak = [ordered]@{ layerScore = 4; path = $path; member = $member }
             })
         }
+    }
+
+    # Heuristic 3b: format-only wrap for single-line annotations with named attributes.
+    for ($i = 0; $i -lt $lines.Count; $i++) {
+        if ($lines[$i].Length -le $longLineThreshold) {
+            continue
+        }
+        $annotationArgumentCount = Get-NamedAnnotationAttributeCount -Line $lines[$i]
+        if ($annotationArgumentCount -lt 2) {
+            continue
+        }
+
+        $member = "line-$($i + 1)"
+        Add-Candidate -CandidateClass "annotation_attribute_wrap_cleanup" -AllowedTypes $allowedCandidateTypes -Bucket $candidates -Candidate ([ordered]@{
+            candidateId = New-CandidateId $path "annotation_attribute_wrap_cleanup" $member
+            score = 30 + 30 + 20 + 10 + $layerScore
+            file = $path
+            member = $member
+            annotationArgumentCount = $annotationArgumentCount
+            expectedDiffSummary = "Wrap a long annotation attribute list without changing behavior."
+            estimatedChangedLines = [Math]::Min(8, $annotationArgumentCount + 2)
+            tieBreak = [ordered]@{ layerScore = $layerScore; path = $path; member = $member }
+        })
     }
 
     # Heuristic 3b: Spring Data JPA query annotation readability cleanup.

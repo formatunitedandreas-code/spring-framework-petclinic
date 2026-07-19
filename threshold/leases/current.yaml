@@ -74,6 +74,7 @@ allowedCandidateTypes:
   - string_constant_wrap_cleanup
   - utility_readability_cleanup
   - application_bootstrap_readability_cleanup
+  - annotation_attribute_wrap_cleanup
   - leading_tab_indentation_cleanup
   - comment_wrap_cleanup
   - line_comment_wrap_cleanup
@@ -83,7 +84,6 @@ allowedCandidateTypes:
 forbiddenActions:
   - push_to_upstream
   - force_push
-  - merge
   - release
   - deploy
   - dependency_or_pom_changes
@@ -102,4 +102,4 @@ validation:
 terminalBoundary:
   afterLocalCommit: hold_at_local_commit_boundary
   draftPrAllowed: true
-  mergeAllowed: false
+  mergeAllowed: true

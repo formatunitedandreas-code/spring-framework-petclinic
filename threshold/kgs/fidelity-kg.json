@@ -3,6 +3,18 @@
     "generatedAt":  "deterministic-from-current-repo-state",
     "nodes":  [
                   {
+                      "id":  "fidelity:annotation_attribute_wrap_cleanup",
+                      "candidateClass":  "annotation_attribute_wrap_cleanup",
+                      "level":  "F2_GATED_EXECUTOR",
+                      "receiptCount":  0,
+                      "validationPassCount":  0,
+                      "validationFailCount":  0,
+                      "semanticPassCount":  0,
+                      "semanticUnknownCount":  0,
+                      "reviewFindingCount":  0,
+                      "validationPassRate":  "0"
+                  },
+                  {
                       "id":  "fidelity:application_bootstrap_readability_cleanup",
                       "candidateClass":  "application_bootstrap_readability_cleanup",
                       "level":  "F3_VALIDATED_RECEIPT",
@@ -3919,5 +3931,5 @@
                            "F3_VALIDATED_RECEIPT",
                            "F4_CI_RECEIPT_STABLE"
                        ],
-    "semanticDigest":  "e25f3451089e232a8e9d15e96c5ee6583642522b75cef131d3d9c909c6e9eda0"
+    "semanticDigest":  "e765fddea6962fb41ad7e1bfd2076491470bd27483ff4392b846fc4d3dcbd4a3"
 }
