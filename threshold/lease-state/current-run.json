@@ -5,7 +5,7 @@
     "mode":  "local_refactor",
     "branch":  "threshold-governed-refactor-demo-182",
     "startHead":  "3d1c0c1cf76a6ff15d4675d0b08b16db3458cf37",
-    "currentHead":  "431810a840aa20cb3203fd63378ce34c8ee00842",
+    "currentHead":  "f6b47a83cdba190b528696c9b9b80005d8472541",
     "currentSourceHead":  "431810a840aa20cb3203fd63378ce34c8ee00842",
     "candidatesProcessed":  4,
     "commitsCreated":  4,
@@ -16,5 +16,10 @@
                         },
     "lastReceipt":  "threshold/receipts/src-main-java-org-springframework-samples-petclinic-web-petcontroller-java-method-signature-wrap-cleanup-line-130-431810a840aa.json",
     "terminalState":  "active",
-    "updatedAt":  "2026-07-19T12:21:09.0497771Z"
+    "updatedAt":  "2026-07-19T12:21:32.1366431Z",
+    "terminalReason":  "no applicable autoPatchable candidates after discovery canary passed",
+    "discoveryCanaryLastPassedAt":  "2026-07-19T12:21:29.0968668Z",
+    "scopeExpansionTier":  2,
+    "scopeExpansionReason":  "mid_wave_candidate_shortage",
+    "scopeExpansionAppliedAt":  "2026-07-19T12:21:32.1288733Z"
 }
