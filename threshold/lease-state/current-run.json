@@ -5,17 +5,17 @@
     "mode":  "local_refactor",
     "branch":  "codex/threshold-minimal-comment-wrap-scope-tier6",
     "startHead":  "2c1c24eaeb421e3cad12214a4ad03d26dd47fdfd",
-    "currentHead":  "f3c1d01cbe582543cd0376cd8461fee37f7a5992",
-    "currentSourceHead":  "f3c1d01cbe582543cd0376cd8461fee37f7a5992",
-    "candidatesProcessed":  4,
-    "commitsCreated":  4,
+    "currentHead":  "7811b7c6f88c7a5f48b28bfc1516b33f0a89afce",
+    "currentSourceHead":  "7811b7c6f88c7a5f48b28bfc1516b33f0a89afce",
+    "candidatesProcessed":  5,
+    "commitsCreated":  5,
     "remainingBudget":  {
-                            "candidates":  1,
-                            "commits":  1,
+                            "candidates":  0,
+                            "commits":  0,
                             "repairAttempts":  1
                         },
-    "lastReceipt":  "threshold/receipts/src-main-java-org-springframework-samples-petclinic-repository-jdbc-onetomanyresultsetextractor-java-comment-wrap-cleanup-line-176-f3c1d01cbe58.json",
-    "terminalState":  "active",
-    "updatedAt":  "2026-07-19T16:12:31.0295973Z",
-    "terminalReason":  "no applicable autoPatchable candidates after discovery canary passed"
+    "lastReceipt":  "threshold/receipts/src-main-java-org-springframework-samples-petclinic-repository-petrepository-java-comment-wrap-cleanup-line-26-7811b7c6f88c.json",
+    "terminalState":  "budget_exhausted_verified",
+    "updatedAt":  "2026-07-19T16:13:55.6381334Z",
+    "terminalReason":  "remaining candidate or commit budget is exhausted after slice validation passed"
 }
