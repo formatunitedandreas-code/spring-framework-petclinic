@@ -2,8 +2,8 @@
     "schemaVersion":  "threshold.petclinic.candidate-pocket.v0.2",
     "leaseName":  "owned-autonomous-refactor-branch-wave-v0_automation",
     "branch":  "threshold-governed-refactor-demo-182",
-    "generatedFromHead":  "f6b47a83cdba190b528696c9b9b80005d8472541",
-    "generatedAt":  "2026-07-19T12:21:35.3858721Z",
+    "generatedFromHead":  "e15935a103e4d20f88a0429cf84771ef017db4ba",
+    "generatedAt":  "2026-07-19T12:22:42.8240743Z",
     "discovery":  {
                       "method":  "static-heuristic-scan",
                       "sourceRoot":  "src/main/java/org/springframework/samples/petclinic",
@@ -108,6 +108,7 @@
                                             "path":  "src/main/java/org/springframework/samples/petclinic/repository/jdbc/JdbcPetRepositoryImpl.java",
                                             "member":  "line-54"
                                         },
+                           "executionMode":  "auto_patchable",
                            "gate":  {
                                         "required":  true,
                                         "approved":  true,
@@ -115,16 +116,42 @@
                                         "trainerDecision":  "autoPatchable",
                                         "trainerReportPath":  "threshold/trainer/training-report.json"
                                     },
-                           "score":  97,
+                           "score":  105,
                            "autoPatchable":  true,
                            "member":  "line-54",
                            "reviewOnly":  false,
-                           "executionMode":  "auto_patchable",
+                           "estimatedChangedLines":  2,
                            "file":  "src/main/java/org/springframework/samples/petclinic/repository/jdbc/JdbcPetRepositoryImpl.java",
                            "candidateId":  "src-main-java-org-springframework-samples-petclinic-repository-jdbc-jdbcpetrepositoryimpl-java-repository-readability-cleanup-line-54",
-                           "expectedDiffSummary":  "Wrap a long constant or method signature readability line without changing behavior.",
+                           "expectedDiffSummary":  "Normalize a split repository string constant into a canonical two-line continuation format.",
                            "candidateClass":  "repository_readability_cleanup",
-                           "estimatedChangedLines":  4
+                           "constantName":  "FIND_PET_TYPES_SQL"
+                       },
+                       {
+                           "candidateClass":  "duplicate_literal_local_constant_extraction",
+                           "literal":  "\"name\"",
+                           "member":  "name",
+                           "gate":  {
+                                        "required":  true,
+                                        "approved":  true,
+                                        "gatePath":  "threshold/gates/auto-patchable-candidate-classes.json",
+                                        "trainerDecision":  "autoPatchable",
+                                        "trainerReportPath":  "threshold/trainer/training-report.json"
+                                    },
+                           "estimatedChangedLines":  4,
+                           "reviewOnly":  false,
+                           "tieBreak":  {
+                                            "layerScore":  7,
+                                            "path":  "src/main/java/org/springframework/samples/petclinic/repository/jdbc/JdbcPetRepositoryImpl.java",
+                                            "member":  "name"
+                                        },
+                           "score":  97,
+                           "expectedDiffSummary":  "Extract repeated literal \"name\" to a same-class private constant.",
+                           "file":  "src/main/java/org/springframework/samples/petclinic/repository/jdbc/JdbcPetRepositoryImpl.java",
+                           "autoPatchable":  true,
+                           "constantName":  "NAME",
+                           "candidateId":  "src-main-java-org-springframework-samples-petclinic-repository-jdbc-jdbcpetrepositoryimpl-java-duplicate-literal-local-constant-extraction-name",
+                           "executionMode":  "auto_patchable"
                        },
                        {
                            "tieBreak":  {
@@ -161,5 +188,8 @@
                       "no public correctness claim",
                       "no public security claim",
                       "no public compliance claim"
-                  ]
+                  ],
+    "generatedFromHeadRole":  "sourceHead",
+    "terminalEvidenceHead":  "e15935a103e4d20f88a0429cf84771ef017db4ba",
+    "terminalEvidencePolicy":  "candidate pocket is generated from the last governed source/evidence head before the terminal governance commit"
 }
