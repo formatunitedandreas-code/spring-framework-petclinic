@@ -66,7 +66,10 @@ public class VetController {
         return getVets();
     }
 
-    @GetMapping(value = "/vets.xml", produces = MediaType.APPLICATION_XML_VALUE)
+    @GetMapping(
+        value = "/vets.xml",
+        produces = MediaType.APPLICATION_XML_VALUE
+    )
     @ResponseBody
     public Vets showXmlVetList() {
         return getVets();
