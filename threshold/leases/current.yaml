@@ -5,12 +5,12 @@ baseRemote: origin
 baseRef: origin/main
 startHead: 39663f277fb9d898c4e41541a786d395a06e0ee0
 headPolicy: descendantOfStartHead
-scopeExpansionTier: 0
-longLineThreshold: 120
-commentWrapThreshold: 120
-springDataQueryThreshold: 80
-repositoryMethodLengthThreshold: 8
-utilityMethodLengthThreshold: 8
+scopeExpansionTier: 1
+longLineThreshold: 100
+commentWrapThreshold: 100
+springDataQueryThreshold: 70
+repositoryMethodLengthThreshold: 6
+utilityMethodLengthThreshold: 6
 
 budget:
   maxCandidatesThisRun: 5
