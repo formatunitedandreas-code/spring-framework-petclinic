@@ -1,20 +1,25 @@
 {
     "schemaVersion":  "threshold.petclinic.lease-state.v0.2",
-    "invocationId":  "threshold-comment-wrap-tier6-expansion-governance-20260719T170504Z",
-    "leaseId":  "threshold-comment-wrap-tier6-expansion-governance",
+    "invocationId":  "owned-autonomous-refactor-branch-wave-v0_automation-20260719T173517Z",
+    "leaseId":  "owned-autonomous-refactor-branch-wave-v0_automation",
     "mode":  "local_refactor",
-    "branch":  "codex/threshold-comment-wrap-tier6-expansion",
-    "startHead":  "33a4371f2da7242c23b87faad4ddcb940174c6a4",
-    "currentHead":  "33a4371f2da7242c23b87faad4ddcb940174c6a4",
-    "currentSourceHead":  "33a4371f2da7242c23b87faad4ddcb940174c6a4",
-    "candidatesProcessed":  0,
-    "commitsCreated":  0,
+    "branch":  "threshold-governed-refactor-demo-183",
+    "startHead":  "df37408360acf91a0a1998612021037608e738e2",
+    "currentHead":  "e2f5ee051a11bb48bbce1a475206b2d7b21d7e5a",
+    "currentSourceHead":  "e2f5ee051a11bb48bbce1a475206b2d7b21d7e5a",
+    "candidatesProcessed":  5,
+    "commitsCreated":  5,
     "remainingBudget":  {
                             "candidates":  0,
-                            "commits":  1,
+                            "commits":  0,
                             "repairAttempts":  1
                         },
-    "lastReceipt":  null,
-    "terminalState":  "active",
-    "updatedAt":  "2026-07-19T17:05:04.5864473Z"
+    "lastReceipt":  "threshold/receipts/src-main-java-org-springframework-samples-petclinic-web-vetcontroller-java-line-comment-wrap-cleanup-line-80-e2f5ee051a11.json",
+    "terminalState":  "budget_exhausted_verified",
+    "updatedAt":  "2026-07-19T17:42:35.0204934Z",
+    "terminalReason":  "remaining candidate or commit budget is exhausted after slice validation passed",
+    "currentHeadRole":  "sourceHead",
+    "terminalEvidenceHead":  "8eed0deee9f5de5dece416268123d2aae332cc7f",
+    "terminalEvidencePolicy":  "terminal evidence is generated from the last governed source/evidence head before the terminal governance commit",
+    "terminalEvidenceMarkedAt":  "2026-07-19T17:42:38.0426492Z"
 }

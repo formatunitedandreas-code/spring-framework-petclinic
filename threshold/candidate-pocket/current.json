@@ -1,9 +1,9 @@
 {
     "schemaVersion":  "threshold.petclinic.candidate-pocket.v0.2",
-    "leaseName":  "owned-autonomous-refactor-scope-drain-v0_automation",
-    "branch":  "codex/threshold-minimal-comment-wrap-scope-tier6",
-    "generatedFromHead":  "92ac0bb5b7a4d673108a4f246f8f4429e987660e",
-    "generatedAt":  "2026-07-19T16:21:51.4614254Z",
+    "leaseName":  "owned-autonomous-refactor-branch-wave-v0_automation",
+    "branch":  "threshold-governed-refactor-demo-183",
+    "generatedFromHead":  "8eed0deee9f5de5dece416268123d2aae332cc7f",
+    "generatedAt":  "2026-07-19T17:42:37.7948846Z",
     "discovery":  {
                       "method":  "static-heuristic-scan",
                       "sourceRoot":  "src/main/java/org/springframework/samples/petclinic",
@@ -72,7 +72,7 @@
                                   ],
                       "thresholds":  {
                                          "longLineThreshold":  68,
-                                         "commentWrapThreshold":  71,
+                                         "commentWrapThreshold":  70,
                                          "springDataQueryThreshold":  40,
                                          "repositoryMethodLengthThreshold":  2,
                                          "utilityMethodLengthThreshold":  2
@@ -108,5 +108,8 @@
                       "no public correctness claim",
                       "no public security claim",
                       "no public compliance claim"
-                  ]
+                  ],
+    "generatedFromHeadRole":  "sourceHead",
+    "terminalEvidenceHead":  "8eed0deee9f5de5dece416268123d2aae332cc7f",
+    "terminalEvidencePolicy":  "candidate pocket is generated from the last governed source/evidence head before the terminal governance commit"
 }
