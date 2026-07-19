@@ -1,15 +1,16 @@
 {
     "schemaVersion":  "threshold.petclinic.candidate-pocket.v0.2",
     "leaseName":  "owned-autonomous-refactor-branch-wave-v0_automation",
-    "branch":  "threshold-governed-refactor-demo-180",
-    "generatedFromHead":  "1ba5da05f836154cc0dc681c997d06bb857aaffb",
-    "generatedAt":  "2026-07-18T22:08:51.1339665Z",
+    "branch":  "threshold-governed-refactor-demo-181",
+    "generatedFromHead":  "1518b6112ccfd52246dde446e373fe3a9a6aa6ac",
+    "generatedAt":  "2026-07-19T07:06:40.6922831Z",
     "discovery":  {
                       "method":  "static-heuristic-scan",
                       "sourceRoot":  "src/main/java/org/springframework/samples/petclinic",
                       "gatePath":  "threshold/gates/auto-patchable-candidate-classes.json",
                       "trainerReportPath":  "threshold/trainer/training-report.json",
                       "approvedAutoPatchableCandidateClasses":  [
+                                                                    "annotation_attribute_wrap_cleanup",
                                                                     "application_bootstrap_readability_cleanup",
                                                                     "comment_wrap_cleanup",
                                                                     "duplicate_literal_local_constant_extraction",
@@ -28,6 +29,7 @@
                                                                     "utility_readability_cleanup"
                                                                 ],
                       "trainerDecisionClasses":  [
+                                                     "annotation_attribute_wrap_cleanup",
                                                      "application_bootstrap_readability_cleanup",
                                                      "comment_wrap_cleanup",
                                                      "controller_branch_readability_decomposition",
@@ -91,6 +93,7 @@
                                                     "string_constant_wrap_cleanup",
                                                     "utility_readability_cleanup",
                                                     "application_bootstrap_readability_cleanup",
+                                                    "annotation_attribute_wrap_cleanup",
                                                     "leading_tab_indentation_cleanup",
                                                     "comment_wrap_cleanup",
                                                     "line_comment_wrap_cleanup",
@@ -112,6 +115,6 @@
                       "no public compliance claim"
                   ],
     "generatedFromHeadRole":  "sourceHead",
-    "terminalEvidenceHead":  "1ba5da05f836154cc0dc681c997d06bb857aaffb",
+    "terminalEvidenceHead":  "1518b6112ccfd52246dde446e373fe3a9a6aa6ac",
     "terminalEvidencePolicy":  "candidate pocket is generated from the last governed source/evidence head before the terminal governance commit"
 }
