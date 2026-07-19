@@ -113,7 +113,12 @@ public class PetController {
     }
 
     @PostMapping(value = PET_EDIT_PATH)
-    public String processUpdateForm(@Valid Pet pet, BindingResult result, Owner owner, ModelMap model) {
+    public String processUpdateForm(
+        @Valid Pet pet,
+        BindingResult result,
+        Owner owner,
+        ModelMap model
+    ) {
         return savePetFormResult(owner, pet, result, model, false);
     }
 
