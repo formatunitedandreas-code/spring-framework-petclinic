@@ -5,7 +5,7 @@
     "mode":  "local_refactor",
     "branch":  "threshold-governed-refactor-demo-181",
     "startHead":  "25cf8474693b028aaa75608cb76d4a2e0f4327c9",
-    "currentHead":  "ce465b60abb9fd487f2b6b5a9d67c496394272c7",
+    "currentHead":  "1518b6112ccfd52246dde446e373fe3a9a6aa6ac",
     "currentSourceHead":  "ab429c61d60f9f01879efb91ec0916e7d036b2f8",
     "candidatesProcessed":  2,
     "commitsCreated":  2,
@@ -15,11 +15,15 @@
                             "repairAttempts":  1
                         },
     "lastReceipt":  "threshold/receipts/src-main-java-org-springframework-samples-petclinic-web-vetcontroller-java-annotation-attribute-wrap-cleanup-line-69-ab429c61d60f.json",
-    "terminalState":  "active",
-    "updatedAt":  "2026-07-19T07:06:23.8947222Z",
+    "terminalState":  "ready_no_candidates_verified",
+    "updatedAt":  "2026-07-19T07:06:35.7875414Z",
     "terminalReason":  "no applicable autoPatchable candidates after discovery canary passed",
-    "discoveryCanaryLastPassedAt":  "2026-07-19T07:06:21.0599306Z",
+    "discoveryCanaryLastPassedAt":  "2026-07-19T07:06:35.7811701Z",
     "scopeExpansionTier":  5,
     "scopeExpansionReason":  "mid_wave_candidate_shortage",
-    "scopeExpansionAppliedAt":  "2026-07-19T07:06:23.8868708Z"
+    "scopeExpansionAppliedAt":  "2026-07-19T07:06:23.8868708Z",
+    "currentHeadRole":  "sourceHead",
+    "terminalEvidenceHead":  "1518b6112ccfd52246dde446e373fe3a9a6aa6ac",
+    "terminalEvidencePolicy":  "terminal evidence is generated from the last governed source/evidence head before the terminal governance commit",
+    "terminalEvidenceMarkedAt":  "2026-07-19T07:06:40.9153538Z"
 }
