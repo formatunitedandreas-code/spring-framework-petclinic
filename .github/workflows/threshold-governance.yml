@@ -74,6 +74,7 @@ jobs:
               $normalized -like "threshold/leases/*" -or
               $normalized -like "threshold/receipts/*" -or
               $normalized -like "threshold/attestations/*" -or
+              $normalized -like "threshold/discovery-canaries/*" -or
               $normalized -like "threshold/kgs/*" -or
               $normalized -like "threshold/candidate-pocket/*" -or
               $normalized -like "threshold/docs/*"
