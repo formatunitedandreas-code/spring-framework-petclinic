@@ -2,8 +2,8 @@
     "schemaVersion":  "threshold.petclinic.candidate-pocket.v0.2",
     "leaseName":  "owned-autonomous-refactor-branch-wave-v0_automation",
     "branch":  "threshold-governed-refactor-demo-182",
-    "generatedFromHead":  "3d1c0c1cf76a6ff15d4675d0b08b16db3458cf37",
-    "generatedAt":  "2026-07-19T12:15:35.5537158Z",
+    "generatedFromHead":  "22eb7ff44da0f11bf68b843c77bff0976ad1e2cb",
+    "generatedAt":  "2026-07-19T12:17:04.3159458Z",
     "discovery":  {
                       "method":  "static-heuristic-scan",
                       "sourceRoot":  "src/main/java/org/springframework/samples/petclinic",
@@ -108,6 +108,7 @@
                                             "path":  "src/main/java/org/springframework/samples/petclinic/repository/jdbc/JdbcVetRepositoryImpl.java",
                                             "member":  "line-50"
                                         },
+                           "executionMode":  "auto_patchable",
                            "gate":  {
                                         "required":  true,
                                         "approved":  true,
@@ -115,16 +116,16 @@
                                         "trainerDecision":  "autoPatchable",
                                         "trainerReportPath":  "threshold/trainer/training-report.json"
                                     },
-                           "score":  97,
+                           "score":  105,
                            "autoPatchable":  true,
                            "member":  "line-50",
                            "reviewOnly":  false,
-                           "executionMode":  "auto_patchable",
+                           "estimatedChangedLines":  2,
                            "file":  "src/main/java/org/springframework/samples/petclinic/repository/jdbc/JdbcVetRepositoryImpl.java",
                            "candidateId":  "src-main-java-org-springframework-samples-petclinic-repository-jdbc-jdbcvetrepositoryimpl-java-repository-readability-cleanup-line-50",
-                           "expectedDiffSummary":  "Wrap a long constant or method signature readability line without changing behavior.",
+                           "expectedDiffSummary":  "Normalize a split repository string constant into a canonical two-line continuation format.",
                            "candidateClass":  "repository_readability_cleanup",
-                           "estimatedChangedLines":  4
+                           "constantName":  "GET_SPECIALTY_IDS_FOR_SQL"
                        },
                        {
                            "tieBreak":  {
