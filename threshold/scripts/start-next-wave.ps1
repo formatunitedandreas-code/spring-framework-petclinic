@@ -127,6 +127,20 @@ function Read-LeaseLines {
     return @(Get-Content $LeasePath)
 }
 
+function Get-LeaseIntScalarOrDefault {
+    param(
+        [string] $Name,
+        [int] $DefaultValue
+    )
+
+    $leaseLines = Read-LeaseLines
+    $match = $leaseLines | Where-Object { $_ -match "^\s*$([regex]::Escape($Name)):\s*(\d+)\s*$" } | Select-Object -First 1
+    if (-not $match) {
+        return $DefaultValue
+    }
+    return [int]($match -replace "^\s*$([regex]::Escape($Name)):\s*", "").Trim()
+}
+
 function Commit-PathsIfNeeded {
     param(
         [string[]] $Paths,
@@ -199,7 +213,8 @@ function Update-CandidatePocket {
 function Get-AutoPatchableCandidateCount {
     param([string] $Path)
     $pocket = Read-JsonFile -Path $Path
-    return @($pocket.candidates | Where-Object { $_.autoPatchable -eq $true }).Count
+    $minScore = Get-LeaseIntScalarOrDefault -Name "minScore" -DefaultValue 70
+    return @($pocket.candidates | Where-Object { $_.autoPatchable -eq $true -and [int]$_.score -ge $minScore }).Count
 }
 
 function Sync-LeaseStateWrite {
@@ -458,7 +473,9 @@ function Invoke-LocalWave {
                 "-ExecutionPolicy",
                 "Bypass",
                 "-File",
-                ".\threshold\scripts\run-next-slice.ps1"
+                ".\threshold\scripts\run-next-slice.ps1",
+                "-MinScore",
+                "$(Get-LeaseIntScalarOrDefault -Name "minScore" -DefaultValue 70)"
             ) -FailureMessage "run-next-slice failed."
         }
 

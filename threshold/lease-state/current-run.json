@@ -1,25 +1,20 @@
 {
     "schemaVersion":  "threshold.petclinic.lease-state.v0.2",
-    "invocationId":  "owned-autonomous-refactor-branch-wave-v0_automation-20260719T173517Z",
-    "leaseId":  "owned-autonomous-refactor-branch-wave-v0_automation",
+    "invocationId":  "threshold-score-gated-scope-training-governance-20260719T182624Z",
+    "leaseId":  "threshold-score-gated-scope-training-governance",
     "mode":  "local_refactor",
-    "branch":  "threshold-governed-refactor-demo-183",
-    "startHead":  "df37408360acf91a0a1998612021037608e738e2",
-    "currentHead":  "e2f5ee051a11bb48bbce1a475206b2d7b21d7e5a",
-    "currentSourceHead":  "e2f5ee051a11bb48bbce1a475206b2d7b21d7e5a",
-    "candidatesProcessed":  5,
-    "commitsCreated":  5,
+    "branch":  "codex/threshold-score-gated-scope-training",
+    "startHead":  "2f53b7ab896b1e406eb65fead621d31c5f677666",
+    "currentHead":  "2f53b7ab896b1e406eb65fead621d31c5f677666",
+    "currentSourceHead":  "2f53b7ab896b1e406eb65fead621d31c5f677666",
+    "candidatesProcessed":  0,
+    "commitsCreated":  0,
     "remainingBudget":  {
                             "candidates":  0,
-                            "commits":  0,
+                            "commits":  1,
                             "repairAttempts":  1
                         },
-    "lastReceipt":  "threshold/receipts/src-main-java-org-springframework-samples-petclinic-web-vetcontroller-java-line-comment-wrap-cleanup-line-80-e2f5ee051a11.json",
-    "terminalState":  "budget_exhausted_verified",
-    "updatedAt":  "2026-07-19T17:42:35.0204934Z",
-    "terminalReason":  "remaining candidate or commit budget is exhausted after slice validation passed",
-    "currentHeadRole":  "sourceHead",
-    "terminalEvidenceHead":  "8eed0deee9f5de5dece416268123d2aae332cc7f",
-    "terminalEvidencePolicy":  "terminal evidence is generated from the last governed source/evidence head before the terminal governance commit",
-    "terminalEvidenceMarkedAt":  "2026-07-19T17:42:38.0426492Z"
+    "lastReceipt":  null,
+    "terminalState":  "active",
+    "updatedAt":  "2026-07-19T18:26:25.1014610Z"
 }
