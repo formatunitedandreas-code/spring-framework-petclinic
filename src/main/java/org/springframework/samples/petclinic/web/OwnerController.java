@@ -93,7 +93,12 @@ public class OwnerController {
     }
 
     @GetMapping(value = "/owners")
-    public String processFindForm(Owner owner, BindingResult result, Map<String, Object> model) {
+    public String processFindForm(
+        Owner owner,
+        BindingResult result,
+        Map<String,
+        Object> model
+    ) {
         normalizeLastName(owner);
 
         // allow parameterless GET request for /owners to
