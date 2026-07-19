@@ -1,10 +1,10 @@
 {
     "schemaVersion":  "threshold.petclinic.receipt-chain.v0.1",
     "generatedAt":  "deterministic-from-current-repo-state",
-    "gitHead":  "c58bee0ed6ab3c823944aeaf04e1832a328562a3",
+    "gitHead":  "e13cf3eacb95ef404181e603e363df767fa7c854",
     "algorithm":  "sha256(previousLink|path|receiptGitBlobDigest)",
-    "receiptCount":  348,
-    "root":  "78dea0e432e44dd71166a0556468d6eaf126b0058f6afb4f7fec7e0b6ab92966",
+    "receiptCount":  350,
+    "root":  "5fbdddb38104935c5190c59f66dffb74f93eb6a3220e4022221b48ddb01cad7b",
     "entries":  [
                     {
                         "path":  "threshold/receipts/no-candidate-wave-threshold-governed-refactor-demo-109-20260716T191437Z.json",
@@ -1975,124 +1975,136 @@
                         "chainLink":  "64a3d7e0431c325cc7f1c3c3eca9f41f437496a8969f0e8736f4f8bcec304cfb"
                     },
                     {
+                        "path":  "threshold/receipts/src-main-java-org-springframework-samples-petclinic-web-vetcontroller-java-annotation-attribute-wrap-cleanup-line-60-a7345ef8c511.json",
+                        "receiptGitBlobDigest":  "19689f59f68f201ba9323bb381173b3ca886f686",
+                        "previousLink":  "64a3d7e0431c325cc7f1c3c3eca9f41f437496a8969f0e8736f4f8bcec304cfb",
+                        "chainLink":  "d6140bf20a6f6a030e7dd77faf1c3bbd4742184ebc8433483ea8cd41032078a2"
+                    },
+                    {
+                        "path":  "threshold/receipts/src-main-java-org-springframework-samples-petclinic-web-vetcontroller-java-annotation-attribute-wrap-cleanup-line-69-ab429c61d60f.json",
+                        "receiptGitBlobDigest":  "db548c977f39011dea198a1658fdd904b6d22091",
+                        "previousLink":  "d6140bf20a6f6a030e7dd77faf1c3bbd4742184ebc8433483ea8cd41032078a2",
+                        "chainLink":  "16f3c644c67bfc2b1942b5e0823c9f814eb111b9d09d30a465ca5a5c46f12c84"
+                    },
+                    {
                         "path":  "threshold/receipts/src-main-java-org-springframework-samples-petclinic-web-vetcontroller-java-comment-wrap-cleanup-line-12-d8d4fd34d1c6.json",
                         "receiptGitBlobDigest":  "17b1034eba33c8ef504fb5356d27cd875b2b03c6",
-                        "previousLink":  "64a3d7e0431c325cc7f1c3c3eca9f41f437496a8969f0e8736f4f8bcec304cfb",
-                        "chainLink":  "22cfbb0d0ceda1fff0bf1ff4d408d717b572f4620234906a820c90a1bd5a86e4"
+                        "previousLink":  "16f3c644c67bfc2b1942b5e0823c9f814eb111b9d09d30a465ca5a5c46f12c84",
+                        "chainLink":  "a4fa11bee07c60c0d3e2bc7ca55f0d1c7198e149d19afc534a987f4c36eb268c"
                     },
                     {
                         "path":  "threshold/receipts/src-main-java-org-springframework-samples-petclinic-web-vetcontroller-java-line-comment-wrap-cleanup-line-48-5f2652925055.json",
                         "receiptGitBlobDigest":  "ff6c8239cb50e0b04661b645d43d71a6d30ed665",
-                        "previousLink":  "22cfbb0d0ceda1fff0bf1ff4d408d717b572f4620234906a820c90a1bd5a86e4",
-                        "chainLink":  "c1bd1b95698767a100c6dc6896b6250da2a03ad07ad36ba69e752750f8987fcf"
+                        "previousLink":  "a4fa11bee07c60c0d3e2bc7ca55f0d1c7198e149d19afc534a987f4c36eb268c",
+                        "chainLink":  "6f4ac58e1c4a0343905b9188a74e2db36b958ff9d7caf605d36e21dc14afeb84"
                     },
                     {
                         "path":  "threshold/receipts/src-main-java-org-springframework-samples-petclinic-web-vetcontroller-java-line-comment-wrap-cleanup-line-72-934747ceb963.json",
                         "receiptGitBlobDigest":  "982b2d4efb36a1a0a78b871b2ebe333ece2565f7",
-                        "previousLink":  "c1bd1b95698767a100c6dc6896b6250da2a03ad07ad36ba69e752750f8987fcf",
-                        "chainLink":  "7925f81e4e8862511f34c71ad1daeed4cecf587d66431207b18f0e74393e9d0d"
+                        "previousLink":  "6f4ac58e1c4a0343905b9188a74e2db36b958ff9d7caf605d36e21dc14afeb84",
+                        "chainLink":  "03f58d914fa4b811fd012d636eab797856357d8ff55a866b520af3556a932734"
                     },
                     {
                         "path":  "threshold/receipts/src-main-java-org-springframework-samples-petclinic-web-visitcontroller-java-comment-wrap-cleanup-line-12-8b0c11495e39.json",
                         "receiptGitBlobDigest":  "cb91cef259cdad2c9e93af011b29065a53525a1b",
-                        "previousLink":  "7925f81e4e8862511f34c71ad1daeed4cecf587d66431207b18f0e74393e9d0d",
-                        "chainLink":  "37a980fa8770f60ec9b5dac34b4eca648411941fa8d8630dec86a9af451a7973"
+                        "previousLink":  "03f58d914fa4b811fd012d636eab797856357d8ff55a866b520af3556a932734",
+                        "chainLink":  "b53b26449ad6957721aad3df9d3fe6097822132cd3d55321b6ed796a70430ac4"
                     },
                     {
                         "path":  "threshold/receipts/src-main-java-org-springframework-samples-petclinic-web-visitcontroller-java-comment-wrap-cleanup-line-56-6505726fbec4.json",
                         "receiptGitBlobDigest":  "5aaf8b5f677acf27c09387d6fba9fce98139f34c",
-                        "previousLink":  "37a980fa8770f60ec9b5dac34b4eca648411941fa8d8630dec86a9af451a7973",
-                        "chainLink":  "b95fbed817f2105f5d36450499453de5adcdb1ace7579ee9cb8d741867956b20"
+                        "previousLink":  "b53b26449ad6957721aad3df9d3fe6097822132cd3d55321b6ed796a70430ac4",
+                        "chainLink":  "7ad8f1b02ec33c7a7c1d07fe5121f499d30ddd779e05dac93cf08aef91d849cf"
                     },
                     {
                         "path":  "threshold/receipts/src-main-java-org-springframework-samples-petclinic-web-visitcontroller-java-comment-wrap-cleanup-line-59-ba7fdf6278d5.json",
                         "receiptGitBlobDigest":  "de7c7b0a667ca01034a89edac4a58aa0925ffe81",
-                        "previousLink":  "b95fbed817f2105f5d36450499453de5adcdb1ace7579ee9cb8d741867956b20",
-                        "chainLink":  "f5f0628aa64cb0bf403fd0b24b01e0e716ba677145557fbbf90eb26a8a5ca8dc"
+                        "previousLink":  "7ad8f1b02ec33c7a7c1d07fe5121f499d30ddd779e05dac93cf08aef91d849cf",
+                        "chainLink":  "9065ea82ff84ffa7a9162c5844a7b3085b36adac8b703fa403c6f770def7a410"
                     },
                     {
                         "path":  "threshold/receipts/src-main-java-org-springframework-samples-petclinic-web-visitcontroller-java-comment-wrap-cleanup-line-61-f7bee5159a32.json",
                         "receiptGitBlobDigest":  "aa0bdb576cc4630f07914312902345d3ff45302e",
-                        "previousLink":  "f5f0628aa64cb0bf403fd0b24b01e0e716ba677145557fbbf90eb26a8a5ca8dc",
-                        "chainLink":  "6211e636935813666d2107ce8c7bef22f56369bdc9196f171b1602349b971afa"
+                        "previousLink":  "9065ea82ff84ffa7a9162c5844a7b3085b36adac8b703fa403c6f770def7a410",
+                        "chainLink":  "d83fc9a4bc007cd8fd8d81217ac20a773c96e7b13219aaaab136ea5c5424eeb5"
                     },
                     {
                         "path":  "threshold/receipts/src-main-java-org-springframework-samples-petclinic-web-visitcontroller-java-line-comment-wrap-cleanup-line-77-324e3cb5f884.json",
                         "receiptGitBlobDigest":  "06dd3a7bea33673b96c14db5b2eb2363aa095301",
-                        "previousLink":  "6211e636935813666d2107ce8c7bef22f56369bdc9196f171b1602349b971afa",
-                        "chainLink":  "936c77d921171645712c62a5f3326ab37af9535bf3fecc5c01be8a46f8ac33a0"
+                        "previousLink":  "d83fc9a4bc007cd8fd8d81217ac20a773c96e7b13219aaaab136ea5c5424eeb5",
+                        "chainLink":  "30a98dfa969123cab17871eb9466970fe964c6b4bf970e7b6e730f1a9a55b40d"
                     },
                     {
                         "path":  "threshold/receipts/src-main-java-org-springframework-samples-petclinic-web-visitcontroller-java-line-comment-wrap-cleanup-line-84-3aaf174e5e33.json",
                         "receiptGitBlobDigest":  "5cf919897a563115602a12aa52772ceecc489d43",
-                        "previousLink":  "936c77d921171645712c62a5f3326ab37af9535bf3fecc5c01be8a46f8ac33a0",
-                        "chainLink":  "c7b49be34ce802e350a47e4e4237ad53333302fba2eddf52af13fe0b2ed7903f"
+                        "previousLink":  "30a98dfa969123cab17871eb9466970fe964c6b4bf970e7b6e730f1a9a55b40d",
+                        "chainLink":  "8f752e1bbd7d5e01aa85d4ef8be33c2516433c1da3837ad13d0996af5ae343e4"
                     },
                     {
                         "path":  "threshold/receipts/threshold-add-split-string-constant-normalization-2ba184ba0824.json",
                         "receiptGitBlobDigest":  "13ef720ebc1dc0377149aa95031a136d714a602c",
-                        "previousLink":  "c7b49be34ce802e350a47e4e4237ad53333302fba2eddf52af13fe0b2ed7903f",
-                        "chainLink":  "92dcd07b546faa071bbe860f7e8f5738b2fb045a2cf8ca921b98835c230135d2"
+                        "previousLink":  "8f752e1bbd7d5e01aa85d4ef8be33c2516433c1da3837ad13d0996af5ae343e4",
+                        "chainLink":  "befb1205a1318a94f56ea8b9c7e747d60ada1bc503a2387929f524b752d342a7"
                     },
                     {
                         "path":  "threshold/receipts/threshold-batch-08a3fef16303-20260714T210900Z.json",
                         "receiptGitBlobDigest":  "e34e4fbd4bcff7041c9a0ab3cb627102015896c7",
-                        "previousLink":  "92dcd07b546faa071bbe860f7e8f5738b2fb045a2cf8ca921b98835c230135d2",
-                        "chainLink":  "935430a958c29e6485d4ae467ecddc2204d5deb57161dfb126a85ae20c6a7844"
+                        "previousLink":  "befb1205a1318a94f56ea8b9c7e747d60ada1bc503a2387929f524b752d342a7",
+                        "chainLink":  "d8ba6856a2f985013b14c111f34f5c99bb95e078ec27ebc13b6cf4704c2b1304"
                     },
                     {
                         "path":  "threshold/receipts/threshold-batch-9a0ae5e5f52c-20260714T214938Z.json",
                         "receiptGitBlobDigest":  "a04f953fd34ef227274edc1e050725897590b920",
-                        "previousLink":  "935430a958c29e6485d4ae467ecddc2204d5deb57161dfb126a85ae20c6a7844",
-                        "chainLink":  "5ec4901885c6a1741e81258eee5c81bbe3147c70a2e64325dfcc10a70a862fd5"
+                        "previousLink":  "d8ba6856a2f985013b14c111f34f5c99bb95e078ec27ebc13b6cf4704c2b1304",
+                        "chainLink":  "f301173cea2ef77355b6382e093eaaf33a95065f546da14e40c6c68567fee1f3"
                     },
                     {
                         "path":  "threshold/receipts/threshold-batch-c5df16221d22-20260714T220010Z.json",
                         "receiptGitBlobDigest":  "4114f995cb1cd978796a4ed2849961c1a0618daf",
-                        "previousLink":  "5ec4901885c6a1741e81258eee5c81bbe3147c70a2e64325dfcc10a70a862fd5",
-                        "chainLink":  "3413c5c722ddf00b25ba31d228bbf593151bd19f18a72e38fa1b1ae6481362f1"
+                        "previousLink":  "f301173cea2ef77355b6382e093eaaf33a95065f546da14e40c6c68567fee1f3",
+                        "chainLink":  "2282260db27fd04348fd16a83362ec25f03e4d66c352fde889ea61843463c234"
                     },
                     {
                         "path":  "threshold/receipts/threshold-batch-c9adf28daa22-20260714T220500Z.json",
                         "receiptGitBlobDigest":  "407f8e30960112b6ea67aafe535e5d817b8a31eb",
-                        "previousLink":  "3413c5c722ddf00b25ba31d228bbf593151bd19f18a72e38fa1b1ae6481362f1",
-                        "chainLink":  "62ff70c650f1f89bb1ab434a301618d28f409dc13377d5ccbe07f661cd1baa4b"
+                        "previousLink":  "2282260db27fd04348fd16a83362ec25f03e4d66c352fde889ea61843463c234",
+                        "chainLink":  "e58cb60496bb632efdedc4fae51d05bf8a8931f163ae6a49fc97be0388bf5650"
                     },
                     {
                         "path":  "threshold/receipts/threshold-discovery-skip-existing-utility-helper-52a88e0d651f.json",
                         "receiptGitBlobDigest":  "05662ff681560b0c46d1f2a56f85870b4f68ad81",
-                        "previousLink":  "62ff70c650f1f89bb1ab434a301618d28f409dc13377d5ccbe07f661cd1baa4b",
-                        "chainLink":  "825434ef5717273a94b934a6b9188dfc7a19d203ab5cc15adf959edf7dadbdde"
+                        "previousLink":  "e58cb60496bb632efdedc4fae51d05bf8a8931f163ae6a49fc97be0388bf5650",
+                        "chainLink":  "67cf5c21d89e3695f4ae69e444c80e16e2a13e2619cda90c3e6eabfc4d8be5d4"
                     },
                     {
                         "path":  "threshold/receipts/threshold-expanded-scope-method-spacing-normalization-86cdd43f38d7.json",
                         "receiptGitBlobDigest":  "44f5a1b7cd44f3018006cbaa26d4a16bf21f3966",
-                        "previousLink":  "825434ef5717273a94b934a6b9188dfc7a19d203ab5cc15adf959edf7dadbdde",
-                        "chainLink":  "7abbdeb0bc73edf007a1b9dde39d9e38d5093d758de3bf8fae7e6677e5fe2392"
+                        "previousLink":  "67cf5c21d89e3695f4ae69e444c80e16e2a13e2619cda90c3e6eabfc4d8be5d4",
+                        "chainLink":  "eedb37fb380dab2f3ad3f24542828d37ea19689fb25166a72a0cc621f45148bc"
                     },
                     {
                         "path":  "threshold/receipts/threshold-expanded-scope-signature-and-constant-wraps-a53fc3f420da.json",
                         "receiptGitBlobDigest":  "76dada2656df2bc6eb663b390d7a55f64f7987cc",
-                        "previousLink":  "7abbdeb0bc73edf007a1b9dde39d9e38d5093d758de3bf8fae7e6677e5fe2392",
-                        "chainLink":  "065cd76aa975863c3e414970a3e6d19577b40f3c47a20c969faec3e48b7de60f"
+                        "previousLink":  "eedb37fb380dab2f3ad3f24542828d37ea19689fb25166a72a0cc621f45148bc",
+                        "chainLink":  "e12c9379e69a12649eb7f0cc39856acd9c2de881a5cb42edddd39ff2be6ecc9e"
                     },
                     {
                         "path":  "threshold/receipts/threshold-fix-wrap-executor-materialization-7a13dc842fa3.json",
                         "receiptGitBlobDigest":  "938eab851a9947de51dec9df72370bf42ed51fda",
-                        "previousLink":  "065cd76aa975863c3e414970a3e6d19577b40f3c47a20c969faec3e48b7de60f",
-                        "chainLink":  "79b92c44b0587fec9688c40f7ee7289daf266b6478559d1f6526246f0f4e06e9"
+                        "previousLink":  "e12c9379e69a12649eb7f0cc39856acd9c2de881a5cb42edddd39ff2be6ecc9e",
+                        "chainLink":  "c2e3daf3ed920cd25608844c576372618b5811703640a9badc55a01630584a74"
                     },
                     {
                         "path":  "threshold/receipts/threshold-governance-recording-v1.json",
                         "receiptGitBlobDigest":  "4fc2120603d2d57e69161486066f520920ed840b",
-                        "previousLink":  "79b92c44b0587fec9688c40f7ee7289daf266b6478559d1f6526246f0f4e06e9",
-                        "chainLink":  "8db3392ec8a443e90b9b9bb47a4b8a0cd186686381a701792012407c4b90e337"
+                        "previousLink":  "c2e3daf3ed920cd25608844c576372618b5811703640a9badc55a01630584a74",
+                        "chainLink":  "e0452baeecfae32e4df426b5a64d101c4e6f61f2400bf03d531be6a354d23174"
                     },
                     {
                         "path":  "threshold/receipts/threshold-runner-simple-string-constant-gate-hardening-66a80197520a.json",
                         "receiptGitBlobDigest":  "666baf4ba31919a8e14d8dceb2474cc526b247f2",
-                        "previousLink":  "8db3392ec8a443e90b9b9bb47a4b8a0cd186686381a701792012407c4b90e337",
-                        "chainLink":  "78dea0e432e44dd71166a0556468d6eaf126b0058f6afb4f7fec7e0b6ab92966"
+                        "previousLink":  "e0452baeecfae32e4df426b5a64d101c4e6f61f2400bf03d531be6a354d23174",
+                        "chainLink":  "5fbdddb38104935c5190c59f66dffb74f93eb6a3220e4022221b48ddb01cad7b"
                     }
                 ],
     "nonClaims":  [
