@@ -18,6 +18,19 @@ function Get-LeaseScalar {
     return ($match -replace "^\s*$([regex]::Escape($Name)):\s*", "").Trim()
 }
 
+function ConvertTo-RepoPath {
+    param([string] $Path)
+
+    $root = (git rev-parse --show-toplevel).Trim()
+    $fullPath = [System.IO.Path]::GetFullPath($Path)
+    $fullRoot = [System.IO.Path]::GetFullPath($root)
+    if ($fullPath.StartsWith($fullRoot, [System.StringComparison]::OrdinalIgnoreCase)) {
+        $relative = $fullPath.Substring($fullRoot.Length).TrimStart([System.IO.Path]::DirectorySeparatorChar, [System.IO.Path]::AltDirectorySeparatorChar)
+        return ($relative -replace "\\", "/")
+    }
+    return ($Path -replace "\\", "/")
+}
+
 function Test-LeasePath {
     param([string] $Path)
 
@@ -176,11 +189,12 @@ if ($receiptPaths.Count -eq 0) { throw "Missing Threshold receipt under threshol
 $receiptByCommit = @{}
 foreach ($receiptPath in $receiptPaths) {
     $receipt = Get-Content $receiptPath.FullName -Raw | ConvertFrom-Json
+    $repoReceiptPath = ConvertTo-RepoPath -Path $receiptPath.FullName
     if ($receipt.PSObject.Properties["commitHash"] -and $receipt.commitHash) {
-        $receiptByCommit[[string] $receipt.commitHash] = @{ path = $receiptPath.FullName; receipt = $receipt }
+        $receiptByCommit[[string] $receipt.commitHash] = @{ path = $repoReceiptPath; receipt = $receipt }
     }
     elseif ($receipt.PSObject.Properties["sourceCommit"] -and $receipt.sourceCommit) {
-        $receiptByCommit[[string] $receipt.sourceCommit] = @{ path = $receiptPath.FullName; receipt = $receipt }
+        $receiptByCommit[[string] $receipt.sourceCommit] = @{ path = $repoReceiptPath; receipt = $receipt }
     }
 }
 
