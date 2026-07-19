@@ -82,7 +82,10 @@ public class JdbcOwnerRepositoryImpl implements OwnerRepository {
 
     private final SimpleJdbcInsert insertOwner;
 
-    public JdbcOwnerRepositoryImpl(DataSource dataSource, JdbcClient jdbcClient) {
+    public JdbcOwnerRepositoryImpl(
+        DataSource dataSource,
+        JdbcClient jdbcClient
+    ) {
 
         this.insertOwner = new SimpleJdbcInsert(dataSource)
             .withTableName("owners")
