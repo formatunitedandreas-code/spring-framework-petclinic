@@ -19,7 +19,6 @@
                       "forbiddenActions":  [
                                                "push_to_upstream",
                                                "force_push",
-                                               "merge",
                                                "release",
                                                "deploy",
                                                "dependency_or_pom_changes",
@@ -44,7 +43,6 @@
                       "forbiddenActions":  [
                                                "push_to_upstream",
                                                "force_push",
-                                               "merge",
                                                "release",
                                                "deploy",
                                                "dependency_or_pom_changes",
@@ -69,7 +67,6 @@
                       "forbiddenActions":  [
                                                "push_to_upstream",
                                                "force_push",
-                                               "merge",
                                                "release",
                                                "deploy",
                                                "dependency_or_pom_changes",
@@ -83,31 +80,6 @@
                       "trainerDecision":  "autoPatchable"
                   },
                   {
-                      "id":  "capability:controller_branch_readability_decomposition",
-                      "candidateClass":  "controller_branch_readability_decomposition",
-                      "allowedByLease":  true,
-                      "approvedByGate":  false,
-                      "pilotAutoPatchableAtF2":  false,
-                      "discoveredByRunner":  false,
-                      "executableByRunner":  false,
-                      "batchExecutable":  false,
-                      "forbiddenActions":  [
-                                               "push_to_upstream",
-                                               "force_push",
-                                               "merge",
-                                               "release",
-                                               "deploy",
-                                               "dependency_or_pom_changes",
-                                               "src_test_changes",
-                                               "public_readiness_claim",
-                                               "public_correctness_claim",
-                                               "public_security_claim",
-                                               "public_compliance_claim"
-                                           ],
-                      "allowedPathCount":  22,
-                      "trainerDecision":  "held"
-                  },
-                  {
                       "id":  "capability:duplicate_literal_local_constant_extraction",
                       "candidateClass":  "duplicate_literal_local_constant_extraction",
                       "allowedByLease":  true,
@@ -119,7 +91,6 @@
                       "forbiddenActions":  [
                                                "push_to_upstream",
                                                "force_push",
-                                               "merge",
                                                "release",
                                                "deploy",
                                                "dependency_or_pom_changes",
@@ -144,7 +115,6 @@
                       "forbiddenActions":  [
                                                "push_to_upstream",
                                                "force_push",
-                                               "merge",
                                                "release",
                                                "deploy",
                                                "dependency_or_pom_changes",
@@ -169,7 +139,6 @@
                       "forbiddenActions":  [
                                                "push_to_upstream",
                                                "force_push",
-                                               "merge",
                                                "release",
                                                "deploy",
                                                "dependency_or_pom_changes",
@@ -194,7 +163,6 @@
                       "forbiddenActions":  [
                                                "push_to_upstream",
                                                "force_push",
-                                               "merge",
                                                "release",
                                                "deploy",
                                                "dependency_or_pom_changes",
@@ -219,7 +187,6 @@
                       "forbiddenActions":  [
                                                "push_to_upstream",
                                                "force_push",
-                                               "merge",
                                                "release",
                                                "deploy",
                                                "dependency_or_pom_changes",
@@ -244,7 +211,6 @@
                       "forbiddenActions":  [
                                                "push_to_upstream",
                                                "force_push",
-                                               "merge",
                                                "release",
                                                "deploy",
                                                "dependency_or_pom_changes",
@@ -269,7 +235,6 @@
                       "forbiddenActions":  [
                                                "push_to_upstream",
                                                "force_push",
-                                               "merge",
                                                "release",
                                                "deploy",
                                                "dependency_or_pom_changes",
@@ -294,7 +259,6 @@
                       "forbiddenActions":  [
                                                "push_to_upstream",
                                                "force_push",
-                                               "merge",
                                                "release",
                                                "deploy",
                                                "dependency_or_pom_changes",
@@ -319,7 +283,6 @@
                       "forbiddenActions":  [
                                                "push_to_upstream",
                                                "force_push",
-                                               "merge",
                                                "release",
                                                "deploy",
                                                "dependency_or_pom_changes",
@@ -344,7 +307,6 @@
                       "forbiddenActions":  [
                                                "push_to_upstream",
                                                "force_push",
-                                               "merge",
                                                "release",
                                                "deploy",
                                                "dependency_or_pom_changes",
@@ -369,7 +331,6 @@
                       "forbiddenActions":  [
                                                "push_to_upstream",
                                                "force_push",
-                                               "merge",
                                                "release",
                                                "deploy",
                                                "dependency_or_pom_changes",
@@ -394,7 +355,6 @@
                       "forbiddenActions":  [
                                                "push_to_upstream",
                                                "force_push",
-                                               "merge",
                                                "release",
                                                "deploy",
                                                "dependency_or_pom_changes",
@@ -419,7 +379,6 @@
                       "forbiddenActions":  [
                                                "push_to_upstream",
                                                "force_push",
-                                               "merge",
                                                "release",
                                                "deploy",
                                                "dependency_or_pom_changes",
@@ -444,7 +403,6 @@
                       "forbiddenActions":  [
                                                "push_to_upstream",
                                                "force_push",
-                                               "merge",
                                                "release",
                                                "deploy",
                                                "dependency_or_pom_changes",
@@ -469,7 +427,6 @@
                       "forbiddenActions":  [
                                                "push_to_upstream",
                                                "force_push",
-                                               "merge",
                                                "release",
                                                "deploy",
                                                "dependency_or_pom_changes",
@@ -494,7 +451,6 @@
                       "forbiddenActions":  [
                                                "push_to_upstream",
                                                "force_push",
-                                               "merge",
                                                "release",
                                                "deploy",
                                                "dependency_or_pom_changes",
@@ -519,7 +475,6 @@
                       "forbiddenActions":  [
                                                "push_to_upstream",
                                                "force_push",
-                                               "merge",
                                                "release",
                                                "deploy",
                                                "dependency_or_pom_changes",
@@ -544,7 +499,6 @@
                       "forbiddenActions":  [
                                                "push_to_upstream",
                                                "force_push",
-                                               "merge",
                                                "release",
                                                "deploy",
                                                "dependency_or_pom_changes",
@@ -560,16 +514,15 @@
                   {
                       "id":  "capability:private_helper_extraction_for_readability",
                       "candidateClass":  "private_helper_extraction_for_readability",
-                      "allowedByLease":  true,
-                      "approvedByGate":  true,
+                      "allowedByLease":  false,
+                      "approvedByGate":  false,
                       "pilotAutoPatchableAtF2":  false,
                       "discoveredByRunner":  false,
-                      "executableByRunner":  true,
+                      "executableByRunner":  false,
                       "batchExecutable":  false,
                       "forbiddenActions":  [
                                                "push_to_upstream",
                                                "force_push",
-                                               "merge",
                                                "release",
                                                "deploy",
                                                "dependency_or_pom_changes",
@@ -580,7 +533,7 @@
                                                "public_compliance_claim"
                                            ],
                       "allowedPathCount":  22,
-                      "trainerDecision":  "reviewOnly"
+                      "trainerDecision":  "held"
                   },
                   {
                       "id":  "capability:redundant private helper inline cleanup",
@@ -594,7 +547,6 @@
                       "forbiddenActions":  [
                                                "push_to_upstream",
                                                "force_push",
-                                               "merge",
                                                "release",
                                                "deploy",
                                                "dependency_or_pom_changes",
@@ -619,7 +571,6 @@
                       "forbiddenActions":  [
                                                "push_to_upstream",
                                                "force_push",
-                                               "merge",
                                                "release",
                                                "deploy",
                                                "dependency_or_pom_changes",
@@ -640,11 +591,10 @@
                       "pilotAutoPatchableAtF2":  false,
                       "discoveredByRunner":  true,
                       "executableByRunner":  true,
-                      "batchExecutable":  true,
+                      "batchExecutable":  false,
                       "forbiddenActions":  [
                                                "push_to_upstream",
                                                "force_push",
-                                               "merge",
                                                "release",
                                                "deploy",
                                                "dependency_or_pom_changes",
@@ -669,7 +619,6 @@
                       "forbiddenActions":  [
                                                "push_to_upstream",
                                                "force_push",
-                                               "merge",
                                                "release",
                                                "deploy",
                                                "dependency_or_pom_changes",
@@ -694,7 +643,6 @@
                       "forbiddenActions":  [
                                                "push_to_upstream",
                                                "force_push",
-                                               "merge",
                                                "release",
                                                "deploy",
                                                "dependency_or_pom_changes",
@@ -715,11 +663,10 @@
                       "pilotAutoPatchableAtF2":  false,
                       "discoveredByRunner":  true,
                       "executableByRunner":  true,
-                      "batchExecutable":  true,
+                      "batchExecutable":  false,
                       "forbiddenActions":  [
                                                "push_to_upstream",
                                                "force_push",
-                                               "merge",
                                                "release",
                                                "deploy",
                                                "dependency_or_pom_changes",
@@ -744,7 +691,6 @@
                       "forbiddenActions":  [
                                                "push_to_upstream",
                                                "force_push",
-                                               "merge",
                                                "release",
                                                "deploy",
                                                "dependency_or_pom_changes",
@@ -769,7 +715,6 @@
                       "forbiddenActions":  [
                                                "push_to_upstream",
                                                "force_push",
-                                               "merge",
                                                "release",
                                                "deploy",
                                                "dependency_or_pom_changes",
@@ -785,7 +730,7 @@
                   {
                       "id":  "capability:threshold_governance_artifact_update",
                       "candidateClass":  "threshold_governance_artifact_update",
-                      "allowedByLease":  true,
+                      "allowedByLease":  false,
                       "approvedByGate":  false,
                       "pilotAutoPatchableAtF2":  false,
                       "discoveredByRunner":  false,
@@ -794,7 +739,6 @@
                       "forbiddenActions":  [
                                                "push_to_upstream",
                                                "force_push",
-                                               "merge",
                                                "release",
                                                "deploy",
                                                "dependency_or_pom_changes",
@@ -819,7 +763,6 @@
                       "forbiddenActions":  [
                                                "push_to_upstream",
                                                "force_push",
-                                               "merge",
                                                "release",
                                                "deploy",
                                                "dependency_or_pom_changes",
@@ -844,7 +787,6 @@
                       "forbiddenActions":  [
                                                "push_to_upstream",
                                                "force_push",
-                                               "merge",
                                                "release",
                                                "deploy",
                                                "dependency_or_pom_changes",
@@ -873,11 +815,6 @@
                       "from":  "capability:comment_wrap_cleanup",
                       "relation":  "has_fidelity",
                       "to":  "fidelity:comment_wrap_cleanup"
-                  },
-                  {
-                      "from":  "capability:controller_branch_readability_decomposition",
-                      "relation":  "has_fidelity",
-                      "to":  "fidelity:controller_branch_readability_decomposition"
                   },
                   {
                       "from":  "capability:duplicate_literal_local_constant_extraction",
@@ -1030,5 +967,5 @@
                       "to":  "fidelity:utility_readability_cleanup"
                   }
               ],
-    "semanticDigest":  "30eee1ff52a03849d88004188d8ad351c05ed7f6840b23060d6360503a508bcd"
+    "semanticDigest":  "8c03f2d63c8d0972f1994762f119f17003f0a1f66d3c93643d31b6713da85eec"
 }
