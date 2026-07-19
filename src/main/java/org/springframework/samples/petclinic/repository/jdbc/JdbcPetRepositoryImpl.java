@@ -47,12 +47,14 @@ public class JdbcPetRepositoryImpl implements PetRepository {
 
     private static final String ID = "id";
 
+    private static final String NAME = "name";
+
 
     private static final String FIND_OWNER_ID_BY_PET_ID_SQL = "SELECT owner_id FROM pets WHERE "
         + "id=:id";
 
     private static final String FIND_PET_TYPES_SQL = "SELECT id, name FROM types ORDER BY " +
-        "name";
+        NAME;
 
     private static final String SAVE_SQL = """
                     UPDATE pets
@@ -130,7 +132,7 @@ public class JdbcPetRepositoryImpl implements PetRepository {
     private MapSqlParameterSource createPetParameterSource(Pet pet) {
         return new MapSqlParameterSource()
             .addValue(ID, pet.getId())
-            .addValue("name", pet.getName())
+            .addValue(NAME, pet.getName())
             .addValue("birth_date", pet.getBirthDate())
             .addValue("type_id", pet.getType().getId())
             .addValue("owner_id", pet.getOwner().getId());
