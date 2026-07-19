@@ -5,16 +5,16 @@
     "mode":  "local_refactor",
     "branch":  "main",
     "startHead":  "39663f277fb9d898c4e41541a786d395a06e0ee0",
-    "currentHead":  "39663f277fb9d898c4e41541a786d395a06e0ee0",
-    "currentSourceHead":  "39663f277fb9d898c4e41541a786d395a06e0ee0",
-    "candidatesProcessed":  0,
-    "commitsCreated":  0,
+    "currentHead":  "110712bcf17719ad52aa0be756b48fc82446d7c9",
+    "currentSourceHead":  "110712bcf17719ad52aa0be756b48fc82446d7c9",
+    "candidatesProcessed":  1,
+    "commitsCreated":  1,
     "remainingBudget":  {
-                            "candidates":  5,
-                            "commits":  5,
+                            "candidates":  4,
+                            "commits":  4,
                             "repairAttempts":  1
                         },
-    "lastReceipt":  null,
+    "lastReceipt":  "threshold/receipts/src-main-java-org-springframework-samples-petclinic-repository-jdbc-jdbcpetrepositoryimpl-java-duplicate-literal-local-constant-extraction-name-110712bcf177.json",
     "terminalState":  "active",
-    "updatedAt":  "2026-07-19T14:05:49.8436787Z"
+    "updatedAt":  "2026-07-19T14:06:52.5953823Z"
 }
