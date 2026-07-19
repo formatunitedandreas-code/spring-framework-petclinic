@@ -151,7 +151,11 @@ public class JdbcOwnerRepositoryImpl implements OwnerRepository {
             .query(new JdbcPetVisitExtractor());
     }
 
-    private void mapPetToOwner(Owner owner, Collection<PetType> petTypes, JdbcPet pet) {
+    private void mapPetToOwner(
+        Owner owner,
+        Collection<PetType> petTypes,
+        JdbcPet pet
+    ) {
         pet.setType(EntityUtils.getById(petTypes, PetType.class, pet.getTypeId()));
         owner.addPet(pet);
     }
