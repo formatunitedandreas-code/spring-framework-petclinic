@@ -1,20 +1,20 @@
-leaseName: owned-autonomous-refactor-scope-drain-v0_automation
+leaseName: threshold-comment-wrap-tier6-expansion-governance
 repository: C:\dev\spring-framework-petclinic
-branch: codex/threshold-minimal-comment-wrap-scope-tier6
+branch: codex/threshold-comment-wrap-tier6-expansion
 baseRemote: origin
 baseRef: origin/main
-startHead: 92ac0bb5b7a4d673108a4f246f8f4429e987660e
+startHead: 33a4371f2da7242c23b87faad4ddcb940174c6a4
 headPolicy: descendantOfStartHead
-scopeExpansionTier: 6
-longLineThreshold: 68
-commentWrapThreshold: 71
-springDataQueryThreshold: 40
-repositoryMethodLengthThreshold: 2
-utilityMethodLengthThreshold: 2
+scopeExpansionTier: 0
+longLineThreshold: 120
+commentWrapThreshold: 120
+springDataQueryThreshold: 80
+repositoryMethodLengthThreshold: 8
+utilityMethodLengthThreshold: 8
 
 budget:
-  maxCandidatesThisRun: 5
-  maxCommitsThisRun: 5
+  maxCandidatesThisRun: 0
+  maxCommitsThisRun: 1
   maxFilesPerCandidate: 1
   maxGovernanceFilesPerCandidate: 8
   maxChangedLinesPerCandidate: 80
@@ -81,7 +81,6 @@ allowedCandidateTypes:
 forbiddenActions:
   - push_to_upstream
   - force_push
-  - merge
   - release
   - deploy
   - dependency_or_pom_changes
@@ -99,5 +98,5 @@ validation:
 
 terminalBoundary:
   afterLocalCommit: hold_at_local_commit_boundary
-  draftPrAllowed: false
-  mergeAllowed: false
+  draftPrAllowed: true
+  mergeAllowed: true

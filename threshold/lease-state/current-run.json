@@ -1,28 +1,20 @@
 {
     "schemaVersion":  "threshold.petclinic.lease-state.v0.2",
-    "invocationId":  "owned-autonomous-refactor-scope-drain-v0_automation-20260719T162128Z",
-    "leaseId":  "owned-autonomous-refactor-scope-drain-v0_automation",
+    "invocationId":  "threshold-comment-wrap-tier6-expansion-governance-20260719T170504Z",
+    "leaseId":  "threshold-comment-wrap-tier6-expansion-governance",
     "mode":  "local_refactor",
-    "branch":  "codex/threshold-minimal-comment-wrap-scope-tier6",
-    "startHead":  "92ac0bb5b7a4d673108a4f246f8f4429e987660e",
-    "currentHead":  "69361a8f93e76e68b016ae1a01f16d8edbbb7748",
-    "currentSourceHead":  "92ac0bb5b7a4d673108a4f246f8f4429e987660e",
+    "branch":  "codex/threshold-comment-wrap-tier6-expansion",
+    "startHead":  "33a4371f2da7242c23b87faad4ddcb940174c6a4",
+    "currentHead":  "33a4371f2da7242c23b87faad4ddcb940174c6a4",
+    "currentSourceHead":  "33a4371f2da7242c23b87faad4ddcb940174c6a4",
     "candidatesProcessed":  0,
     "commitsCreated":  0,
     "remainingBudget":  {
-                            "candidates":  5,
-                            "commits":  5,
+                            "candidates":  0,
+                            "commits":  1,
                             "repairAttempts":  1
                         },
     "lastReceipt":  null,
-    "terminalState":  "ready_no_candidates_verified",
-    "updatedAt":  "2026-07-19T16:23:23.0477582Z",
-    "scopeExpansionTier":  6,
-    "scopeExpansionReason":  "scope_drain_fresh_segment_candidate_shortage",
-    "scopeExpansionAppliedAt":  "2026-07-19T16:21:48.3439080Z",
-    "terminalReason":  "no applicable autoPatchable candidates after discovery canary passed",
-    "scopeDrainTerminalState":  "scope_exhausted_verified",
-    "scopeDrainTerminalReason":  "terminal segment verified no auto-patchable candidates remain at minimal_comment_wrap_deepening",
-    "scopeDrainCompletedAt":  "2026-07-19T16:23:23.0477582Z",
-    "discoveryCanaryLastPassedAt":  "2026-07-19T16:23:23.0302272Z"
+    "terminalState":  "active",
+    "updatedAt":  "2026-07-19T17:05:04.5864473Z"
 }
