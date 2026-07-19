@@ -3,14 +3,14 @@ repository: C:\dev\spring-framework-petclinic
 branch: main
 baseRemote: origin
 baseRef: origin/main
-startHead: aa2f241aab97da67049a225255bbc4aa589a5355
+startHead: 2c1c24eaeb421e3cad12214a4ad03d26dd47fdfd
 headPolicy: descendantOfStartHead
-scopeExpansionTier: 4
-longLineThreshold: 74
-commentWrapThreshold: 76
-springDataQueryThreshold: 44
-repositoryMethodLengthThreshold: 3
-utilityMethodLengthThreshold: 3
+scopeExpansionTier: 5
+longLineThreshold: 68
+commentWrapThreshold: 72
+springDataQueryThreshold: 40
+repositoryMethodLengthThreshold: 2
+utilityMethodLengthThreshold: 2
 
 budget:
   maxCandidatesThisRun: 5
