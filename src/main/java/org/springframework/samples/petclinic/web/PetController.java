@@ -127,7 +127,13 @@ public class PetController {
         this.clinicService.savePet(pet);
     }
 
-    private String savePetFormResult(Owner owner, Pet pet, BindingResult result, ModelMap model, boolean duplicate) {
+    private String savePetFormResult(
+        Owner owner,
+        Pet pet,
+        BindingResult result,
+        ModelMap model,
+        boolean duplicate
+    ) {
         if (duplicate) {
             result.rejectValue("name", "duplicate", "already exists");
         }
