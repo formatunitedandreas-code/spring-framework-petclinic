@@ -5,17 +5,17 @@
     "mode":  "local_refactor",
     "branch":  "main",
     "startHead":  "aa2f241aab97da67049a225255bbc4aa589a5355",
-    "currentHead":  "b3d1bb848f126cee8126cb8337a4fa61b46dd0c5",
-    "currentSourceHead":  "b3d1bb848f126cee8126cb8337a4fa61b46dd0c5",
-    "candidatesProcessed":  4,
-    "commitsCreated":  4,
+    "currentHead":  "08e47fe6aa57cdcecfd4cecc5a236ebbeac2795e",
+    "currentSourceHead":  "08e47fe6aa57cdcecfd4cecc5a236ebbeac2795e",
+    "candidatesProcessed":  5,
+    "commitsCreated":  5,
     "remainingBudget":  {
-                            "candidates":  1,
-                            "commits":  1,
+                            "candidates":  0,
+                            "commits":  0,
                             "repairAttempts":  1
                         },
-    "lastReceipt":  "threshold/receipts/src-main-java-org-springframework-samples-petclinic-model-owner-java-method-signature-wrap-cleanup-line-152-b3d1bb848f12.json",
-    "terminalState":  "active",
-    "updatedAt":  "2026-07-19T14:23:45.1703550Z",
-    "terminalReason":  "no applicable autoPatchable candidates after discovery canary passed"
+    "lastReceipt":  "threshold/receipts/src-main-java-org-springframework-samples-petclinic-web-visitcontroller-java-method-signature-wrap-cleanup-line-97-08e47fe6aa57.json",
+    "terminalState":  "budget_exhausted_verified",
+    "updatedAt":  "2026-07-19T14:24:51.8094156Z",
+    "terminalReason":  "remaining candidate or commit budget is exhausted after slice validation passed"
 }
