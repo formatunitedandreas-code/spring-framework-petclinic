@@ -5,19 +5,16 @@
     "mode":  "local_refactor",
     "branch":  "main",
     "startHead":  "aa2f241aab97da67049a225255bbc4aa589a5355",
-    "currentHead":  "aa2f241aab97da67049a225255bbc4aa589a5355",
-    "currentSourceHead":  "aa2f241aab97da67049a225255bbc4aa589a5355",
-    "candidatesProcessed":  0,
-    "commitsCreated":  0,
+    "currentHead":  "4fcb392a63977833660c361a53fa7fd36f94eefa",
+    "currentSourceHead":  "4fcb392a63977833660c361a53fa7fd36f94eefa",
+    "candidatesProcessed":  1,
+    "commitsCreated":  1,
     "remainingBudget":  {
-                            "candidates":  5,
-                            "commits":  5,
+                            "candidates":  4,
+                            "commits":  4,
                             "repairAttempts":  1
                         },
-    "lastReceipt":  null,
+    "lastReceipt":  "threshold/receipts/src-main-java-org-springframework-samples-petclinic-web-visitcontroller-java-method-signature-wrap-cleanup-line-90-4fcb392a6397.json",
     "terminalState":  "active",
-    "updatedAt":  "2026-07-19T14:18:15.3918826Z",
-    "scopeExpansionTier":  3,
-    "scopeExpansionReason":  "scope_drain_fresh_segment_candidate_shortage",
-    "scopeExpansionAppliedAt":  "2026-07-19T14:18:15.3785946Z"
+    "updatedAt":  "2026-07-19T14:19:45.5176775Z"
 }
