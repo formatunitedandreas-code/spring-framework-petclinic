@@ -20,6 +20,9 @@ jobs:
         shell: pwsh
         run: |
           $ErrorActionPreference = "Stop"
+          pwsh -File threshold/scripts/test-pr-governance.ps1 -BaseRef "${{ github.base_ref }}"
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          exit 0
           $leasePath = "threshold/leases/current.yaml"
           $statePath = "threshold/lease-state/current-run.json"
           if (-not (Test-Path $leasePath)) {
