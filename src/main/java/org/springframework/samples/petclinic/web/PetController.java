@@ -103,7 +103,10 @@ public class PetController {
     }
 
     @GetMapping(value = PET_EDIT_PATH)
-    public String initUpdateForm(@PathVariable("petId") int petId, ModelMap model) {
+    public String initUpdateForm(
+        @PathVariable("petId") int petId,
+        ModelMap model
+    ) {
         addPetToModelForUpdate(petId, model);
         return VIEWS_PETS_CREATE_OR_UPDATE_FORM;
     }
