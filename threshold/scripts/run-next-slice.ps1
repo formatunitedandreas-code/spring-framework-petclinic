@@ -1759,9 +1759,6 @@ switch ([string]$candidate.candidateClass) {
     "duplicate_literal_local_constant_extraction" {
         Apply-DuplicateLiteralConstantExtraction -Candidate $candidate
     }
-    "private_helper_extraction_for_readability" {
-        Apply-ReadableMethodSignatureWrap -Candidate $candidate
-    }
     "method_signature_wrap_cleanup" {
         Apply-ReadableMethodSignatureWrap -Candidate $candidate
     }

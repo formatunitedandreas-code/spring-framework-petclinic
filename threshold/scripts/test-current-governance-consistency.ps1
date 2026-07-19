@@ -173,7 +173,8 @@ $pocketRepresentsTerminalSourceHead = $false
 if ($state.terminalState -ne "active" -and
     $pocket.PSObject.Properties["generatedFromHeadRole"] -and
     [string]$pocket.generatedFromHeadRole -eq "sourceHead" -and
-    [string]$pocket.generatedFromHead -eq [string]$state.currentHead) {
+    $state.PSObject.Properties["terminalEvidenceHead"] -and
+    [string]$pocket.generatedFromHead -eq [string]$state.terminalEvidenceHead) {
     $pocketRepresentsTerminalSourceHead = $true
     Write-Host "pocketIdentity=terminal_source_head_evidence"
 }

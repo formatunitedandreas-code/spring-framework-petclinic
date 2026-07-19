@@ -28,12 +28,6 @@
                           "reason":  "decision derived from lease, gate, discovery, executor, receipt history, semantic evidence, and review findings"
                       },
                       {
-                          "candidateClass":  "controller_branch_readability_decomposition",
-                          "fidelityLevel":  "F0_UNOBSERVED",
-                          "decision":  "held",
-                          "reason":  "decision derived from lease, gate, discovery, executor, receipt history, semantic evidence, and review findings"
-                      },
-                      {
                           "candidateClass":  "duplicate_literal_local_constant_extraction",
                           "fidelityLevel":  "F4_CI_RECEIPT_STABLE",
                           "decision":  "autoPatchable",
@@ -143,8 +137,8 @@
                       },
                       {
                           "candidateClass":  "private_helper_extraction_for_readability",
-                          "fidelityLevel":  "F3_VALIDATED_RECEIPT",
-                          "decision":  "reviewOnly",
+                          "fidelityLevel":  "F0_UNOBSERVED",
+                          "decision":  "held",
                           "reason":  "decision derived from lease, gate, discovery, executor, receipt history, semantic evidence, and review findings"
                       },
                       {
@@ -214,5 +208,5 @@
                           "reason":  "decision derived from lease, gate, discovery, executor, receipt history, semantic evidence, and review findings"
                       }
                   ],
-    "semanticDigest":  "14db1710e8fdd34d310857a9a18423dfd3bce8548052b05a3848cbf68ccfccca"
+    "semanticDigest":  "fbd3aacc74e1da82a25c7c077ce6be00d21a1f1e439c7200891bd16305201aaf"
 }

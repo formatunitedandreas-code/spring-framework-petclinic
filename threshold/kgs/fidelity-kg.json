@@ -39,18 +39,6 @@
                       "validationPassRate":  "1"
                   },
                   {
-                      "id":  "fidelity:controller_branch_readability_decomposition",
-                      "candidateClass":  "controller_branch_readability_decomposition",
-                      "level":  "F0_UNOBSERVED",
-                      "receiptCount":  0,
-                      "validationPassCount":  0,
-                      "validationFailCount":  0,
-                      "semanticPassCount":  0,
-                      "semanticUnknownCount":  0,
-                      "reviewFindingCount":  0,
-                      "validationPassRate":  "0"
-                  },
-                  {
                       "id":  "fidelity:duplicate_literal_local_constant_extraction",
                       "candidateClass":  "duplicate_literal_local_constant_extraction",
                       "level":  "F4_CI_RECEIPT_STABLE",
@@ -269,7 +257,7 @@
                   {
                       "id":  "fidelity:private_helper_extraction_for_readability",
                       "candidateClass":  "private_helper_extraction_for_readability",
-                      "level":  "F3_VALIDATED_RECEIPT",
+                      "level":  "F0_UNOBSERVED",
                       "receiptCount":  1,
                       "validationPassCount":  1,
                       "validationFailCount":  0,
@@ -3951,5 +3939,5 @@
                            "F3_VALIDATED_RECEIPT",
                            "F4_CI_RECEIPT_STABLE"
                        ],
-    "semanticDigest":  "84717782e1d48e63a4e49c8db04e02fca9c4335c8179e77315cb9c1e901bfa92"
+    "semanticDigest":  "df7954848bffc7636806de681f1113254e8bc439474a0c7cb734e11ebe42ec82"
 }

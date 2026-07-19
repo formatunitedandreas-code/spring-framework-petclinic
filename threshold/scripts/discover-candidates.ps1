@@ -616,7 +616,12 @@ foreach ($file in $sourceFiles) {
             $candidateLine = $lines[$longLine - 1]
             if (Test-SimpleStringConstantWrapCandidateLine $candidateLine) {
                 $member = "line-$longLine"
-                $candidateClass = if ($path -like "*/repository/*") { "repository_readability_cleanup" } else { "string_constant_wrap_cleanup" }
+                if ($path -like "*/repository/*") {
+                    $candidateClass = "repository_readability_cleanup"
+                }
+                else {
+                    $candidateClass = "string_constant_wrap_cleanup"
+                }
                 break
             }
             $currentParameterCount = Get-WrappableMethodSignatureParameterCount $candidateLine
@@ -630,8 +635,9 @@ foreach ($file in $sourceFiles) {
     }
     if ($longLines.Count -gt 0 -and $candidateClass) {
         $score = 30 + 30 + 20 + 10 + $layerScore
+        $candidateMember = if ($candidateClass -eq "repository_readability_cleanup") { "$member-long-line-wrap" } else { $member }
         $candidate = [ordered]@{
-            candidateId = New-CandidateId $path $candidateClass $member
+            candidateId = New-CandidateId $path $candidateClass $candidateMember
             score = $score
             file = $path
             member = $member
@@ -759,7 +765,7 @@ foreach ($file in $sourceFiles) {
             $constantMatch = [regex]::Match($lines[$i], '^\s*private static final String (?<name>[A-Z0-9_]+) =')
             $constantName = if ($constantMatch.Success) { $constantMatch.Groups["name"].Value } else { $null }
             Add-Candidate -CandidateClass "repository_readability_cleanup" -AllowedTypes $allowedCandidateTypes -Bucket $candidates -Candidate ([ordered]@{
-                candidateId = New-CandidateId $path "repository_readability_cleanup" $member
+                candidateId = New-CandidateId $path "repository_readability_cleanup" "$member-split-string-continuation"
                 score = 30 + 30 + 20 + 18 + $layerScore
                 file = $path
                 member = $member
