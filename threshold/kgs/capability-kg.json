@@ -3,8 +3,8 @@
     "generatedAt":  "deterministic-from-current-repo-state",
     "lease":  {
                   "path":  "threshold/leases/current.yaml",
-                  "leaseName":  "threshold-score-gated-scope-training-governance",
-                  "branch":  "codex/threshold-score-gated-scope-training"
+                  "leaseName":  "owned-autonomous-refactor-branch-wave-v0_automation",
+                  "branch":  "threshold-governed-refactor-demo-184"
               },
     "nodes":  [
                   {
@@ -19,6 +19,7 @@
                       "forbiddenActions":  [
                                                "push_to_upstream",
                                                "force_push",
+                                               "merge",
                                                "release",
                                                "deploy",
                                                "dependency_or_pom_changes",
@@ -43,6 +44,7 @@
                       "forbiddenActions":  [
                                                "push_to_upstream",
                                                "force_push",
+                                               "merge",
                                                "release",
                                                "deploy",
                                                "dependency_or_pom_changes",
@@ -67,6 +69,7 @@
                       "forbiddenActions":  [
                                                "push_to_upstream",
                                                "force_push",
+                                               "merge",
                                                "release",
                                                "deploy",
                                                "dependency_or_pom_changes",
@@ -91,6 +94,7 @@
                       "forbiddenActions":  [
                                                "push_to_upstream",
                                                "force_push",
+                                               "merge",
                                                "release",
                                                "deploy",
                                                "dependency_or_pom_changes",
@@ -115,6 +119,7 @@
                       "forbiddenActions":  [
                                                "push_to_upstream",
                                                "force_push",
+                                               "merge",
                                                "release",
                                                "deploy",
                                                "dependency_or_pom_changes",
@@ -139,6 +144,7 @@
                       "forbiddenActions":  [
                                                "push_to_upstream",
                                                "force_push",
+                                               "merge",
                                                "release",
                                                "deploy",
                                                "dependency_or_pom_changes",
@@ -163,6 +169,7 @@
                       "forbiddenActions":  [
                                                "push_to_upstream",
                                                "force_push",
+                                               "merge",
                                                "release",
                                                "deploy",
                                                "dependency_or_pom_changes",
@@ -187,6 +194,7 @@
                       "forbiddenActions":  [
                                                "push_to_upstream",
                                                "force_push",
+                                               "merge",
                                                "release",
                                                "deploy",
                                                "dependency_or_pom_changes",
@@ -211,6 +219,7 @@
                       "forbiddenActions":  [
                                                "push_to_upstream",
                                                "force_push",
+                                               "merge",
                                                "release",
                                                "deploy",
                                                "dependency_or_pom_changes",
@@ -235,6 +244,7 @@
                       "forbiddenActions":  [
                                                "push_to_upstream",
                                                "force_push",
+                                               "merge",
                                                "release",
                                                "deploy",
                                                "dependency_or_pom_changes",
@@ -259,6 +269,7 @@
                       "forbiddenActions":  [
                                                "push_to_upstream",
                                                "force_push",
+                                               "merge",
                                                "release",
                                                "deploy",
                                                "dependency_or_pom_changes",
@@ -283,6 +294,7 @@
                       "forbiddenActions":  [
                                                "push_to_upstream",
                                                "force_push",
+                                               "merge",
                                                "release",
                                                "deploy",
                                                "dependency_or_pom_changes",
@@ -307,6 +319,7 @@
                       "forbiddenActions":  [
                                                "push_to_upstream",
                                                "force_push",
+                                               "merge",
                                                "release",
                                                "deploy",
                                                "dependency_or_pom_changes",
@@ -331,6 +344,7 @@
                       "forbiddenActions":  [
                                                "push_to_upstream",
                                                "force_push",
+                                               "merge",
                                                "release",
                                                "deploy",
                                                "dependency_or_pom_changes",
@@ -355,6 +369,7 @@
                       "forbiddenActions":  [
                                                "push_to_upstream",
                                                "force_push",
+                                               "merge",
                                                "release",
                                                "deploy",
                                                "dependency_or_pom_changes",
@@ -379,6 +394,7 @@
                       "forbiddenActions":  [
                                                "push_to_upstream",
                                                "force_push",
+                                               "merge",
                                                "release",
                                                "deploy",
                                                "dependency_or_pom_changes",
@@ -403,6 +419,7 @@
                       "forbiddenActions":  [
                                                "push_to_upstream",
                                                "force_push",
+                                               "merge",
                                                "release",
                                                "deploy",
                                                "dependency_or_pom_changes",
@@ -427,6 +444,7 @@
                       "forbiddenActions":  [
                                                "push_to_upstream",
                                                "force_push",
+                                               "merge",
                                                "release",
                                                "deploy",
                                                "dependency_or_pom_changes",
@@ -451,6 +469,7 @@
                       "forbiddenActions":  [
                                                "push_to_upstream",
                                                "force_push",
+                                               "merge",
                                                "release",
                                                "deploy",
                                                "dependency_or_pom_changes",
@@ -475,6 +494,7 @@
                       "forbiddenActions":  [
                                                "push_to_upstream",
                                                "force_push",
+                                               "merge",
                                                "release",
                                                "deploy",
                                                "dependency_or_pom_changes",
@@ -499,6 +519,7 @@
                       "forbiddenActions":  [
                                                "push_to_upstream",
                                                "force_push",
+                                               "merge",
                                                "release",
                                                "deploy",
                                                "dependency_or_pom_changes",
@@ -523,6 +544,7 @@
                       "forbiddenActions":  [
                                                "push_to_upstream",
                                                "force_push",
+                                               "merge",
                                                "release",
                                                "deploy",
                                                "dependency_or_pom_changes",
@@ -547,6 +569,7 @@
                       "forbiddenActions":  [
                                                "push_to_upstream",
                                                "force_push",
+                                               "merge",
                                                "release",
                                                "deploy",
                                                "dependency_or_pom_changes",
@@ -571,6 +594,7 @@
                       "forbiddenActions":  [
                                                "push_to_upstream",
                                                "force_push",
+                                               "merge",
                                                "release",
                                                "deploy",
                                                "dependency_or_pom_changes",
@@ -595,6 +619,7 @@
                       "forbiddenActions":  [
                                                "push_to_upstream",
                                                "force_push",
+                                               "merge",
                                                "release",
                                                "deploy",
                                                "dependency_or_pom_changes",
@@ -619,6 +644,7 @@
                       "forbiddenActions":  [
                                                "push_to_upstream",
                                                "force_push",
+                                               "merge",
                                                "release",
                                                "deploy",
                                                "dependency_or_pom_changes",
@@ -643,6 +669,7 @@
                       "forbiddenActions":  [
                                                "push_to_upstream",
                                                "force_push",
+                                               "merge",
                                                "release",
                                                "deploy",
                                                "dependency_or_pom_changes",
@@ -667,6 +694,7 @@
                       "forbiddenActions":  [
                                                "push_to_upstream",
                                                "force_push",
+                                               "merge",
                                                "release",
                                                "deploy",
                                                "dependency_or_pom_changes",
@@ -691,6 +719,7 @@
                       "forbiddenActions":  [
                                                "push_to_upstream",
                                                "force_push",
+                                               "merge",
                                                "release",
                                                "deploy",
                                                "dependency_or_pom_changes",
@@ -715,6 +744,7 @@
                       "forbiddenActions":  [
                                                "push_to_upstream",
                                                "force_push",
+                                               "merge",
                                                "release",
                                                "deploy",
                                                "dependency_or_pom_changes",
@@ -739,6 +769,7 @@
                       "forbiddenActions":  [
                                                "push_to_upstream",
                                                "force_push",
+                                               "merge",
                                                "release",
                                                "deploy",
                                                "dependency_or_pom_changes",
@@ -763,6 +794,7 @@
                       "forbiddenActions":  [
                                                "push_to_upstream",
                                                "force_push",
+                                               "merge",
                                                "release",
                                                "deploy",
                                                "dependency_or_pom_changes",
@@ -787,6 +819,7 @@
                       "forbiddenActions":  [
                                                "push_to_upstream",
                                                "force_push",
+                                               "merge",
                                                "release",
                                                "deploy",
                                                "dependency_or_pom_changes",
@@ -967,5 +1000,5 @@
                       "to":  "fidelity:utility_readability_cleanup"
                   }
               ],
-    "semanticDigest":  "1453e649ea065cff4c4ef1fc8ed2d4154b162fe55ba90e4a9c25fd2a05ad57da"
+    "semanticDigest":  "d5a0aea94ce0fbf35b75346ea3a9d4b2edc3631f83e2c9d9bebc14a387620210"
 }
