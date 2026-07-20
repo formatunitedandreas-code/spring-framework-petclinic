@@ -1829,28 +1829,25 @@ if ($shortSummary.Length -gt 54) {
 }
 
 $commitMessage = "Refactor PetClinic $shortSummary"
-if ($SkipMavenTest.IsPresent) {
-    & powershell.exe -NoProfile -ExecutionPolicy Bypass -File "threshold/scripts/complete-slice.ps1" `
-        -LeasePath $LeasePath `
-        -StatePath $StatePath `
-        -CandidateId $candidate.candidateId `
-        -CandidateClass $candidate.candidateClass `
-        -CommitMessage $commitMessage `
-        -AllowedPath $candidate.file `
-        -ReceiptRoot $ReceiptRoot `
-        -CompactEvidence:$CompactEvidence `
-        -SkipMavenTest
-} else {
-    & powershell.exe -NoProfile -ExecutionPolicy Bypass -File "threshold/scripts/complete-slice.ps1" `
-        -LeasePath $LeasePath `
-        -StatePath $StatePath `
-        -CandidateId $candidate.candidateId `
-        -CandidateClass $candidate.candidateClass `
-        -CommitMessage $commitMessage `
-        -AllowedPath $candidate.file `
-        -ReceiptRoot $ReceiptRoot `
-        -CompactEvidence:$CompactEvidence
+$completeSliceArgs = @(
+    "-NoProfile",
+    "-ExecutionPolicy", "Bypass",
+    "-File", "threshold/scripts/complete-slice.ps1",
+    "-LeasePath", $LeasePath,
+    "-StatePath", $StatePath,
+    "-CandidateId", $candidate.candidateId,
+    "-CandidateClass", $candidate.candidateClass,
+    "-CommitMessage", $commitMessage,
+    "-AllowedPath", $candidate.file,
+    "-ReceiptRoot", $ReceiptRoot
+)
+if ($CompactEvidence.IsPresent) {
+    $completeSliceArgs += "-CompactEvidence"
 }
+if ($SkipMavenTest.IsPresent) {
+    $completeSliceArgs += "-SkipMavenTest"
+}
+& powershell.exe @completeSliceArgs
 if ($LASTEXITCODE -ne 0) { throw "complete-slice failed." }
 
 Write-Host "run-next-slice completed"
