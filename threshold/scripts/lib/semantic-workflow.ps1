@@ -94,7 +94,10 @@ function Assert-ThresholdSemanticEvidenceFileEconomy {
         [switch] $RequireCompleteRunEvidence
     )
 
-    $changed = @(git diff --name-only "$BaseRef...HEAD")
+    $changed = @(
+        @(& git diff --name-only "$BaseRef...HEAD") +
+        @(& git ls-files --others --exclude-standard)
+    ) | Where-Object { -not [string]::IsNullOrWhiteSpace($_) } | Sort-Object -Unique
     $forbidden = @($changed | Where-Object {
         $_ -like "threshold/runtime/*" -or
         $_ -like "threshold/candidate-pocket/*" -or
