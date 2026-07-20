@@ -9,6 +9,14 @@ Set-StrictMode -Version Latest
 $ErrorActionPreference = "Stop"
 
 . (Join-Path $PSScriptRoot "lib/lease-policy.ps1")
+. (Join-Path $PSScriptRoot "lib/semantic-workflow.ps1")
+
+$AllowedValidationResults = @(
+    "BUILD SUCCESS",
+    "BUILD FAILURE",
+    "TEST_FAILURE",
+    "SKIPPED_BY_LEASE_INVOCATION"
+)
 
 function Get-LeaseScalar {
     param([string[]] $Lines, [string] $Name)
@@ -135,6 +143,45 @@ function Assert-ReceiptLeaseDigestMatchesReceiptCommit {
     }
 }
 
+function Assert-ReceiptValidation {
+    param([string] $ReceiptPath, [pscustomobject] $Receipt, [string] $ExpectedHead = "")
+
+    if (-not $Receipt.validation) { throw "Receipt is missing validation object: $ReceiptPath" }
+    if ($AllowedValidationResults -notcontains [string]$Receipt.validation.result) {
+        throw "Receipt has undefined validation result '$($Receipt.validation.result)': $ReceiptPath"
+    }
+    foreach ($field in @("testedHead", "command", "testsRun", "failures", "errors", "profile", "executedAt", "resultDigest", "branchFinalValidationPassed", "validationReportRef")) {
+        if ($null -eq $Receipt.validation.PSObject.Properties[$field]) {
+            throw "Receipt validation is missing ${field}: $ReceiptPath"
+        }
+    }
+    if (-not [string]::IsNullOrWhiteSpace($ExpectedHead) -and [string]$Receipt.validation.testedHead -ne $ExpectedHead) {
+        throw "Receipt validation testedHead mismatch for $ReceiptPath. expected=$ExpectedHead actual=$($Receipt.validation.testedHead)"
+    }
+}
+
+function Get-AggregateProductCommits {
+    param([pscustomobject] $AggregateReceipt)
+
+    if ($null -eq $AggregateReceipt.PSObject.Properties["productCommits"]) { return @() }
+    return @($AggregateReceipt.productCommits | ForEach-Object { [string]$_ } | Where-Object { -not [string]::IsNullOrWhiteSpace($_) })
+}
+
+function Assert-AggregateReceipt {
+    param([string] $Path, [pscustomobject] $AggregateReceipt, [bool] $BranchFinalValidationRequired)
+
+    foreach ($field in @("schemaVersion", "runId", "sourceHead", "finalHead", "terminalState", "productCommits", "changedProductFiles", "receiptCount", "nonClaims")) {
+        if ($null -eq $AggregateReceipt.PSObject.Properties[$field]) {
+            throw "Aggregate receipt is missing ${field}: $Path"
+        }
+    }
+    if ($BranchFinalValidationRequired) {
+        if ($null -eq $AggregateReceipt.PSObject.Properties["branchFinalValidationPassed"] -or $AggregateReceipt.branchFinalValidationPassed -ne $true) {
+            throw "Aggregate receipt is missing branch final validation pass: $Path"
+        }
+    }
+}
+
 if (-not (Test-Path $LeasePath)) {
     throw "Missing Threshold lease: $LeasePath"
 }
@@ -154,6 +201,9 @@ if ($BaseRef -ne $expectedBaseRef.Replace("origin/", "")) {
 
 $changedPaths = @(git diff --name-only "origin/${BaseRef}...HEAD")
 if ($changedPaths.Count -eq 0) { throw "No changed paths detected for the pull request." }
+
+$runEvidencePaths = @($changedPaths | Where-Object { $_ -like "threshold/runs/*" })
+Assert-ThresholdSemanticEvidenceFileEconomy -BaseRef "origin/${BaseRef}" -RequireCompleteRunEvidence:($runEvidencePaths.Count -gt 0)
 
 $governancePolicyPaths = @($changedPaths | Where-Object { Test-ThresholdGovernancePolicyPath -Path $_ })
 $leasePaths = @($changedPaths | Where-Object { Test-LeasePath $_ })
@@ -209,6 +259,17 @@ foreach ($receiptPath in $receiptPaths) {
     }
 }
 
+$aggregateReceiptByCommit = @{}
+$aggregateReceiptPaths = @(Get-ChildItem threshold/runs -Recurse -Filter aggregate-receipt.json -ErrorAction SilentlyContinue)
+foreach ($aggregatePath in $aggregateReceiptPaths) {
+    $repoAggregatePath = ConvertTo-RepoPath -Path $aggregatePath.FullName
+    $aggregate = Get-Content $aggregatePath.FullName -Raw | ConvertFrom-Json
+    Assert-AggregateReceipt -Path $repoAggregatePath -AggregateReceipt $aggregate -BranchFinalValidationRequired:($productPaths.Count -gt 0)
+    foreach ($commit in Get-AggregateProductCommits -AggregateReceipt $aggregate) {
+        $aggregateReceiptByCommit[$commit] = @{ path = $repoAggregatePath; receipt = $aggregate }
+    }
+}
+
 $state = Get-Content $StatePath -Raw | ConvertFrom-Json
 if (-not $state.invocationId) { throw "Lease state is missing invocationId." }
 if (-not $state.currentHead) { throw "Lease state is missing currentHead." }
@@ -235,8 +296,12 @@ foreach ($commit in $prCommits) {
     }
 
     $sourceCommitCount += 1
-    if (-not $receiptByCommit.ContainsKey($commit)) {
+    if (-not $receiptByCommit.ContainsKey($commit) -and -not $aggregateReceiptByCommit.ContainsKey($commit)) {
         throw "Source commit without corresponding Threshold receipt: $commit"
+    }
+    if ($aggregateReceiptByCommit.ContainsKey($commit)) {
+        Write-Host "Source commit covered by aggregate Threshold receipt: $commit"
+        continue
     }
 
     $entry = $receiptByCommit[$commit]
@@ -245,6 +310,7 @@ foreach ($commit in $prCommits) {
     if (-not $receipt.baseHead) { throw "Receipt is missing baseHead: $($entry.path)" }
     if (-not $receipt.validation -or -not $receipt.validation.result) { throw "Receipt is missing validation result: $($entry.path)" }
     if (-not $receipt.nonClaims -or $receipt.nonClaims.Count -eq 0) { throw "Receipt is missing nonClaims: $($entry.path)" }
+    Assert-ReceiptValidation -ReceiptPath $entry.path -Receipt $receipt -ExpectedHead $commit
     Assert-ReceiptLeaseDigestMatchesReceiptCommit -ReceiptPath $entry.path -Receipt $receipt
     Assert-ChangedFilesMatchReceipt -Commit $commit -Receipt $receipt
 }

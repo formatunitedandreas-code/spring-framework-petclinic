@@ -140,6 +140,7 @@ function Save-CompactScopeDrainEvidence {
         productCommits = $productCommits
         changedProductFiles = $changedProductFiles
         receiptCount = $receipts.Count
+        branchFinalValidationPassed = $false
         candidatePocketDigest = if (Test-Path $PocketPath) { (Get-FileHash -Algorithm SHA256 -LiteralPath $PocketPath).Hash.ToLowerInvariant() } else { $null }
         runtimeReceiptDigest = if (Test-Path $receiptRoot) { Get-ThresholdSha256 -Value ((Get-ChildItem $receiptRoot -Filter *.json | Sort-Object Name | ForEach-Object { Get-Content $_.FullName -Raw }) -join "`n") } else { $null }
         nonClaims = @(

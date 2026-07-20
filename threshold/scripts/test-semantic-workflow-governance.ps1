@@ -36,6 +36,12 @@ if ($fileEconomyText -notmatch "semantic_file_economy_missing_required_file") {
 if ($fileEconomyText -notmatch "git ls-files --others --exclude-standard") {
     throw "semantic_file_economy_untracked_run_evidence_check_missing"
 }
+if ($fileEconomyText -notmatch "Get-ThresholdFileEconomyPolicy") {
+    throw "semantic_file_economy_policy_loader_missing"
+}
+if ($fileEconomyText -notmatch "Get-ThresholdChangedLineCount") {
+    throw "semantic_file_economy_untracked_line_count_missing"
+}
 
 $scopeDrainText = Get-Content (Join-Path $PSScriptRoot "run-until-scope-exhausted.ps1") -Raw
 if ($scopeDrainText -notmatch '\[string\] \$EvidenceMode = "Compact"') {
@@ -46,6 +52,20 @@ if ($scopeDrainText -notmatch "Save-CompactScopeDrainEvidence") {
 }
 if ($scopeDrainText -notmatch "threshold/runtime/scope-drain/current") {
     throw "scope_drain_runtime_state_path_missing"
+}
+if ($scopeDrainText -notmatch 'branchFinalValidationPassed = \$false') {
+    throw "scope_drain_aggregate_branch_final_validation_field_missing"
+}
+
+$prGovernanceText = Get-Content (Join-Path $PSScriptRoot "test-pr-governance.ps1") -Raw
+if ($prGovernanceText -notmatch "Assert-ThresholdSemanticEvidenceFileEconomy") {
+    throw "pr_governance_file_economy_enforcement_missing"
+}
+if ($prGovernanceText -notmatch "Source commit covered by aggregate Threshold receipt") {
+    throw "pr_governance_aggregate_receipt_coverage_missing"
+}
+if ($prGovernanceText -notmatch "AllowedValidationResults") {
+    throw "pr_governance_validation_status_allowlist_missing"
 }
 
 $completeSliceText = Get-Content (Join-Path $PSScriptRoot "complete-slice.ps1") -Raw
