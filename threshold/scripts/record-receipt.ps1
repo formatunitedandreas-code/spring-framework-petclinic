@@ -11,6 +11,8 @@ param(
     [string] $DiffSummary = "",
     [string] $ValidationCommand = ".\mvnw.cmd test",
     [string] $ValidationResult = "",
+    [string] $ValidationProfile = "default",
+    [string] $ValidationReportRef = "target/surefire-reports",
     [int] $TestsRun = 0,
     [int] $Failures = 0,
     [int] $Errors = 0,
@@ -94,6 +96,19 @@ function ConvertTo-RepoPath {
     return ($Path -replace "\\", "/").Trim()
 }
 
+function Get-ThresholdSha256 {
+    param([string] $Value)
+
+    $sha = [System.Security.Cryptography.SHA256]::Create()
+    try {
+        $bytes = [System.Text.Encoding]::UTF8.GetBytes($Value)
+        return ([System.BitConverter]::ToString($sha.ComputeHash($bytes)) -replace "-", "").ToLowerInvariant()
+    }
+    finally {
+        $sha.Dispose()
+    }
+}
+
 if (-not (Test-Path $LeasePath)) { throw "Lease file not found: $LeasePath" }
 
 $leaseLines = Get-Content $LeasePath
@@ -111,6 +126,16 @@ if ([string]::IsNullOrWhiteSpace($leaseDigest)) {
 
 $changedPaths = @(& git diff --name-only "$BaseHead..$CommitHash" | Where-Object { -not [string]::IsNullOrWhiteSpace($_) })
 if (-not $changedPaths) { throw "No changed files detected for commit range $BaseHead..$CommitHash" }
+
+$allowedValidationResults = @(
+    "BUILD SUCCESS",
+    "BUILD FAILURE",
+    "TEST_FAILURE",
+    "SKIPPED_BY_LEASE_INVOCATION"
+)
+if ($allowedValidationResults -notcontains $ValidationResult) {
+    throw "Undefined validation result '$ValidationResult'. Allowed values: $($allowedValidationResults -join ', ')"
+}
 
 if ($AllowedPath.Count -gt 0) {
     $allowedNormalized = @($AllowedPath | ForEach-Object { ConvertTo-RepoPath $_ })
@@ -173,7 +198,22 @@ $receipt = [ordered]@{
     changedFiles = $changedFiles
     diffSummary = $DiffSummary
     diffStat = [ordered]@{ filesChanged = $changedFiles.Count; insertions = $insertions; deletions = $deletions }
-    validation = [ordered]@{ diffCheck = "passed"; command = $ValidationCommand; result = $ValidationResult; testsRun = $TestsRun; failures = $Failures; errors = $Errors; skipped = $Skipped }
+    validation = [ordered]@{
+        schemaVersion = "threshold.petclinic.validation.v0.1"
+        testedHead = $CommitHash
+        command = $ValidationCommand
+        result = $ValidationResult
+        testsRun = $TestsRun
+        failures = $Failures
+        errors = $Errors
+        skipped = $Skipped
+        profile = $ValidationProfile
+        executedAt = (Get-Date).ToUniversalTime().ToString("o")
+        resultDigest = Get-ThresholdSha256 -Value "$CommitHash|$ValidationCommand|$ValidationResult|$TestsRun|$Failures|$Errors|$Skipped|$ValidationProfile"
+        branchFinalValidationPassed = [bool]$BranchFinalValidationPassed
+        validationReportRef = $ValidationReportRef
+        diffCheck = "passed"
+    }
     nonClaims = $nonClaims
 }
 

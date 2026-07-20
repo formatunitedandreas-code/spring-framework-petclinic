@@ -2,13 +2,36 @@
 param(
     [string] $BaseRef = "main",
     [string] $LeasePath = "threshold/leases/current.yaml",
-    [string] $StatePath = "threshold/lease-state/current-run.json"
+    [string] $StatePath = "threshold/lease-state/current-run.json",
+    [switch] $PublicationPreflight,
+    [string] $AuthorityPath = "threshold/runtime/authority/publication-authority.json",
+    [string] $ConsumedAuthorityPath = "threshold/runtime/authority/consumed-authorities.json",
+    [string] $ThresholdCorePath = $env:THRESHOLD_CORE_PATH,
+    [string] $ReviewHead = "",
+    [string] $ReviewDecision = "",
+    [int] $OpenP1P2Count = 0
 )
 
 Set-StrictMode -Version Latest
 $ErrorActionPreference = "Stop"
 
 . (Join-Path $PSScriptRoot "lib/lease-policy.ps1")
+. (Join-Path $PSScriptRoot "lib/semantic-workflow.ps1")
+
+$AllowedValidationResults = @(
+    "BUILD SUCCESS",
+    "BUILD FAILURE",
+    "TEST_FAILURE",
+    "SKIPPED_BY_LEASE_INVOCATION"
+)
+
+function Get-GitFirstLine {
+    param([string[]] $GitArgs)
+
+    $output = @(& git @GitArgs)
+    if ($output.Count -eq 0 -or $null -eq $output[0]) { return "" }
+    return ([string]$output[0]).Trim()
+}
 
 function Get-LeaseScalar {
     param([string[]] $Lines, [string] $Name)
@@ -135,6 +158,384 @@ function Assert-ReceiptLeaseDigestMatchesReceiptCommit {
     }
 }
 
+function Get-TextSha256 {
+    param([string] $Value)
+
+    $sha = [System.Security.Cryptography.SHA256]::Create()
+    try {
+        $bytes = [System.Text.Encoding]::UTF8.GetBytes($Value)
+        return ([System.BitConverter]::ToString($sha.ComputeHash($bytes)) -replace "-", "").ToLowerInvariant()
+    }
+    finally {
+        $sha.Dispose()
+    }
+}
+
+function Get-FileSha256 {
+    param([string] $Path)
+    return (Get-FileHash -Algorithm SHA256 -LiteralPath $Path).Hash.ToLowerInvariant()
+}
+
+function Assert-ReceiptValidation {
+    param([string] $ReceiptPath, [pscustomobject] $Receipt, [string] $ExpectedHead = "")
+
+    if (-not $Receipt.validation) { throw "Receipt is missing validation object: $ReceiptPath" }
+    if ($AllowedValidationResults -notcontains [string]$Receipt.validation.result) {
+        throw "Receipt has undefined validation result '$($Receipt.validation.result)': $ReceiptPath"
+    }
+    foreach ($field in @("testedHead", "command", "testsRun", "failures", "errors", "profile", "executedAt", "resultDigest", "branchFinalValidationPassed", "validationReportRef")) {
+        if ($null -eq $Receipt.validation.PSObject.Properties[$field]) {
+            throw "Receipt validation is missing ${field}: $ReceiptPath"
+        }
+    }
+    if (-not [string]::IsNullOrWhiteSpace($ExpectedHead) -and [string]$Receipt.validation.testedHead -ne $ExpectedHead) {
+        throw "Receipt validation testedHead mismatch for $ReceiptPath. expected=$ExpectedHead actual=$($Receipt.validation.testedHead)"
+    }
+}
+
+function Get-AggregateProductCommits {
+    param([pscustomobject] $AggregateReceipt)
+
+    if ($null -eq $AggregateReceipt.PSObject.Properties["productCommits"]) { return @() }
+    return @($AggregateReceipt.productCommits | ForEach-Object { [string]$_ } | Where-Object { -not [string]::IsNullOrWhiteSpace($_) })
+}
+
+function Assert-AggregateReceipt {
+    param([string] $Path, [pscustomobject] $AggregateReceipt, [bool] $BranchFinalValidationRequired)
+
+    foreach ($field in @("schemaVersion", "runId", "sourceHead", "finalHead", "terminalState", "productCommits", "changedProductFiles", "receiptCount", "nonClaims")) {
+        if ($null -eq $AggregateReceipt.PSObject.Properties[$field]) {
+            throw "Aggregate receipt is missing ${field}: $Path"
+        }
+    }
+    if ($BranchFinalValidationRequired) {
+        if ($null -eq $AggregateReceipt.PSObject.Properties["branchFinalValidationPassed"] -or $AggregateReceipt.branchFinalValidationPassed -ne $true) {
+            throw "Aggregate receipt is missing branch final validation pass: $Path"
+        }
+    }
+}
+
+function Get-ConsumedAuthorityIds {
+    param([string] $Path)
+
+    if (-not (Test-Path $Path)) { return @() }
+    $json = Get-Content $Path -Raw | ConvertFrom-Json
+    if ($json.PSObject.Properties["consumedAuthorityIds"]) {
+        return @($json.consumedAuthorityIds | ForEach-Object { [string]$_ })
+    }
+    if ($json.PSObject.Properties["consumedConsumptionIds"]) {
+        return @($json.consumedConsumptionIds | ForEach-Object { [string]$_ })
+    }
+    return @()
+}
+
+function Get-PolicyDigest {
+    $policyPaths = @(
+        "threshold/policies/file-economy-v0.1.yaml",
+        "threshold/policies/semantic-twin-v0.1.yaml",
+        "threshold/policies/senior-refactoring-admission-v0.1.yaml",
+        "threshold/policies/target-twin-v0.1.yaml"
+    ) | Where-Object { Test-Path $_ }
+    $content = @($policyPaths | Sort-Object | ForEach-Object { "$_`n$(Get-Content $_ -Raw)" }) -join "`n---threshold-policy---`n"
+    return Get-TextSha256 -Value $content
+}
+
+function Get-PreflightSubjectDigest {
+    param([string[]] $ChangedPaths, [string] $Head)
+    return Get-TextSha256 -Value ((@($Head) + @($ChangedPaths | Sort-Object)) -join "`n")
+}
+
+function Get-JsonPropertyOrNull {
+    param([object] $Object, [string] $Name)
+
+    if ($null -eq $Object) { return $null }
+    if ($Object -is [System.Collections.IDictionary] -and $Object.Contains($Name)) {
+        return $Object[$Name]
+    }
+    if ($Object.PSObject.Properties.Name -contains $Name) {
+        return $Object.$Name
+    }
+    return $null
+}
+
+function Test-JsonProperty {
+    param([object] $Object, [string] $Name)
+
+    if ($null -eq $Object) { return $false }
+    if ($Object -is [System.Collections.IDictionary]) {
+        return $Object.Contains($Name)
+    }
+    return $Object.PSObject.Properties.Name -contains $Name
+}
+
+function Assert-AllowedJsonProperties {
+    param([object] $Object, [string[]] $AllowedNames, [string] $Context)
+
+    foreach ($property in @($Object.PSObject.Properties.Name)) {
+        if ($AllowedNames -notcontains [string]$property) {
+            throw "stop_authority_validator_unavailable=${Context}_unknown_field=$property"
+        }
+    }
+}
+
+function Assert-StringArray {
+    param([object] $Object, [string] $Name, [string] $Context)
+
+    if (-not (Test-JsonProperty -Object $Object -Name $Name)) {
+        throw "stop_authority_validator_unavailable=${Context}_missing"
+    }
+    $Value = if ($Object -is [System.Collections.IDictionary]) {
+        $Object[$Name]
+    }
+    else {
+        $Object.PSObject.Properties[$Name].Value
+    }
+    if ($null -eq $Value) { return }
+    if ($Value -is [string]) {
+        if ([string]::IsNullOrWhiteSpace([string]$Value)) {
+            throw "stop_authority_validator_unavailable=${Context}_invalid"
+        }
+        return
+    }
+    foreach ($item in @($Value)) {
+        if (-not ($item -is [string]) -or [string]::IsNullOrWhiteSpace([string]$item)) {
+            throw "stop_authority_validator_unavailable=${Context}_invalid"
+        }
+    }
+}
+
+function Get-PublicationStopFromFailedConstraints {
+    param([string[]] $FailedConstraintIds)
+
+    if ($FailedConstraintIds -contains "publication-branch-binding") { return "stop_authority_mismatch=branchRef" }
+    if ($FailedConstraintIds -contains "publication-head-binding") { return "stop_authority_mismatch=headSha" }
+    if ($FailedConstraintIds -contains "publication-authority-expiry") { return "stop_authority_expired" }
+    if ($FailedConstraintIds -contains "publication-authority-unconsumed" -or $FailedConstraintIds -contains "publication-authority-consumption-id-unused") {
+        return "stop_authority_consumed"
+    }
+    if ($FailedConstraintIds -contains "publication-action-binding" -or $FailedConstraintIds -contains "one-shot-authority-action-binding") { return "stop_authority_mismatch=action" }
+    if ($FailedConstraintIds -contains "publication-authority-present") { return "stop_authority_missing" }
+    return "stop_authority_invalid"
+}
+
+function ConvertFrom-SingleJsonDocument {
+    param([string] $Text)
+
+    if ($Text.Trim() -match "(?s)^\s*\{.*\}\s*\{") {
+        throw "stop_authority_validator_unavailable=canonical validator emitted multiple JSON documents"
+    }
+    try {
+        $documents = @($Text | ConvertFrom-Json)
+    }
+    catch {
+        throw "stop_authority_validator_unavailable=canonical validator emitted invalid JSON"
+    }
+    if ($documents.Count -ne 1) {
+        throw "stop_authority_validator_unavailable=canonical validator emitted multiple JSON documents"
+    }
+    return $documents[0]
+}
+
+function Assert-CorePublicationAuthorityResult {
+    param([object] $Result, [string] $ExpectedHead)
+
+    Assert-AllowedJsonProperties -Object $Result -AllowedNames @(
+        "valid",
+        "evaluatedHead",
+        "inputDigest",
+        "effectDecisions",
+        "failedConstraintIds",
+        "decision",
+        "reasonCodes",
+        "constraintOutcomes",
+        "authorityDigest",
+        "policyDigest",
+        "nonClaims"
+    ) -Context "publication_authority_result"
+
+    if (-not ((Get-JsonPropertyOrNull -Object $Result -Name "valid") -is [bool])) {
+        throw "stop_authority_validator_unavailable=publication_authority_result_valid_missing"
+    }
+    $evaluatedHead = [string](Get-JsonPropertyOrNull -Object $Result -Name "evaluatedHead")
+    if ([string]::IsNullOrWhiteSpace($evaluatedHead)) {
+        throw "stop_authority_validator_unavailable=publication_authority_result_evaluatedHead_missing"
+    }
+    if ($evaluatedHead -ne $ExpectedHead) {
+        throw "stop_authority_toctou=evaluatedHead_mismatch expected=$ExpectedHead actual=$evaluatedHead"
+    }
+    $inputDigest = [string](Get-JsonPropertyOrNull -Object $Result -Name "inputDigest")
+    if ([string]::IsNullOrWhiteSpace($inputDigest)) {
+        throw "stop_authority_validator_unavailable=publication_authority_result_inputDigest_missing"
+    }
+
+    Assert-StringArray -Object $Result -Name "failedConstraintIds" -Context "publication_authority_result_failedConstraintIds"
+
+    $effectDecisions = Get-JsonPropertyOrNull -Object $Result -Name "effectDecisions"
+    if ($null -eq $effectDecisions) {
+        throw "stop_authority_validator_unavailable=publication_authority_result_effectDecisions_missing"
+    }
+    Assert-AllowedJsonProperties -Object $effectDecisions -AllowedNames @(
+        "observe",
+        "localExperiment",
+        "shadowIntegration",
+        "publication",
+        "merge"
+    ) -Context "publication_authority_result_effectDecisions"
+
+    $publicationDecision = Get-JsonPropertyOrNull -Object $effectDecisions -Name "publication"
+    if ($null -eq $publicationDecision) {
+        throw "stop_authority_validator_unavailable=publication_authority_result_publication_decision_missing"
+    }
+    Assert-AllowedJsonProperties -Object $publicationDecision -AllowedNames @(
+        "effect",
+        "allowed",
+        "disposition",
+        "failedConstraintIds"
+    ) -Context "publication_authority_result_publication_decision"
+    if (-not ((Get-JsonPropertyOrNull -Object $publicationDecision -Name "allowed") -is [bool])) {
+        throw "stop_authority_validator_unavailable=publication_authority_result_publication_allowed_missing"
+    }
+    Assert-StringArray -Object $publicationDecision -Name "failedConstraintIds" -Context "publication_authority_result_publication_failedConstraintIds"
+}
+
+function Invoke-CanonicalPublicationAuthorityValidation {
+    param(
+        [string] $Path,
+        [string] $RepositoryRef,
+        [string] $Branch,
+        [string] $SubjectRef,
+        [string] $Head,
+        [string] $WorkorderDigest,
+        [string] $PolicyDigest
+    )
+
+    if (-not (Test-Path $Path)) {
+        throw "stop_authority_missing=one-shot publication authority required for publication preflight"
+    }
+
+    if ([string]::IsNullOrWhiteSpace($ThresholdCorePath)) {
+        throw "stop_authority_validator_unavailable=ThresholdCorePath or THRESHOLD_CORE_PATH is required"
+    }
+    $coreRoot = [System.IO.Path]::GetFullPath($ThresholdCorePath)
+    $cliPath = Join-Path $coreRoot "packages/refactoring-governor/dist/cli/thresholdRefactoringCliV0_1.js"
+    if (-not (Test-Path $cliPath)) {
+        throw "stop_authority_validator_unavailable=canonical validator CLI not found at ThresholdCorePath"
+    }
+
+    $runtimeRoot = "threshold/runtime/authority-validation"
+    if (-not (Test-Path $runtimeRoot)) { New-Item -ItemType Directory -Path $runtimeRoot | Out-Null }
+    $inputPath = Join-Path $runtimeRoot "publication-authority-input.json"
+    $resultPath = Join-Path $runtimeRoot "publication-authority-result.json"
+
+    $input = [ordered]@{
+        authority = (Get-Content $Path -Raw | ConvertFrom-Json)
+        context = [ordered]@{
+            repositoryRef = $RepositoryRef
+            branchRef = $Branch
+            subjectRef = $SubjectRef
+            headSha = $Head
+            workorderDigest = $WorkorderDigest
+            policyDigest = $PolicyDigest
+            action = "push"
+            now = (Get-Date).ToUniversalTime().ToString("o")
+            consumedConsumptionIds = @(Get-ConsumedAuthorityIds -Path $ConsumedAuthorityPath)
+        }
+        verificationRef = "test-pr-governance:structural"
+        reviewRef = "review:$ReviewDecision@$ReviewHead"
+    }
+    $input | ConvertTo-Json -Depth 20 | Set-Content -Path $inputPath -Encoding UTF8
+
+    $preValidationHead = (& git rev-parse HEAD).Trim()
+    if ($preValidationHead -ne $Head) {
+        throw "stop_authority_toctou=prevalidation_head_mismatch expected=$Head actual=$preValidationHead"
+    }
+    $preValidationBranch = Get-GitFirstLine -GitArgs @("branch", "--show-current")
+    if ([string]::IsNullOrWhiteSpace($preValidationBranch)) {
+        throw "stop_authority_toctou=prevalidation_detached_head"
+    }
+    $preValidationTree = (& git rev-parse "$preValidationHead^{tree}").Trim()
+    $output = @(& node $cliPath validate-publication-authority --input $inputPath 2>&1)
+    $outputText = ($output | ForEach-Object { [string]$_ }) -join "`n"
+    $outputText | Set-Content -Path $resultPath -Encoding UTF8
+    $result = ConvertFrom-SingleJsonDocument -Text $outputText
+    Assert-CorePublicationAuthorityResult -Result $result -ExpectedHead $preValidationHead
+    $postValidationHead = (& git rev-parse HEAD).Trim()
+    $postValidationBranch = Get-GitFirstLine -GitArgs @("branch", "--show-current")
+    $postValidationTree = (& git rev-parse "$postValidationHead^{tree}").Trim()
+    if ($postValidationHead -ne $preValidationHead) {
+        throw "stop_authority_toctou=postvalidation_head_changed pre=$preValidationHead post=$postValidationHead"
+    }
+    if ([string]::IsNullOrWhiteSpace($postValidationBranch) -or $postValidationBranch -ne $preValidationBranch) {
+        throw "stop_authority_toctou=postvalidation_branch_changed pre=$preValidationBranch post=$postValidationBranch"
+    }
+    if ($postValidationTree -ne $preValidationTree) {
+        throw "stop_authority_toctou=postvalidation_tree_changed pre=$preValidationTree post=$postValidationTree"
+    }
+    if ($postValidationHead -ne [string]$result.evaluatedHead) {
+        throw "stop_authority_toctou=postvalidation_evaluatedHead_mismatch post=$postValidationHead evaluated=$($result.evaluatedHead)"
+    }
+
+    $publicationDecision = $result.effectDecisions.publication
+    $publicationFailedConstraintIds = @($publicationDecision.failedConstraintIds | ForEach-Object { [string]$_ })
+    Write-Host "publicationAuthorityValidator=threshold-core"
+    Write-Host "publicationAuthorityEvaluatedHead=$($result.evaluatedHead)"
+    Write-Host "publicationAuthorityInputDigest=$($result.inputDigest)"
+    Write-Host "publicationAuthorityPublicationAllowed=$($publicationDecision.allowed.ToString().ToLowerInvariant())"
+    Write-Host "publicationAuthorityFailedConstraintIds=$((@($result.failedConstraintIds) | Sort-Object) -join ',')"
+    if ($result.PSObject.Properties.Name -contains "reasonCodes") {
+        Write-Host "publicationAuthorityReasonCodes=$((@($result.reasonCodes) | Sort-Object) -join ',')"
+    }
+    if ($result.valid -ne $true -or $publicationDecision.allowed -ne $true) {
+        throw (Get-PublicationStopFromFailedConstraints -FailedConstraintIds $publicationFailedConstraintIds)
+    }
+}
+
+function Assert-PublicationPreflight {
+    param([string[]] $ChangedPaths)
+
+    $head = (& git rev-parse HEAD).Trim()
+    $branch = Get-GitFirstLine -GitArgs @("branch", "--show-current")
+    $remoteUrl = (& git remote get-url origin).Trim()
+    $repositoryRef = if ($remoteUrl -match "github.com[:/](.+?)(\.git)?$") { $Matches[1] -replace "\.git$", "" } else { $remoteUrl }
+    $subjectRef = "pull-request:$branch->$BaseRef"
+    $policyDigest = Get-PolicyDigest
+    $subjectDigest = Get-PreflightSubjectDigest -ChangedPaths $ChangedPaths -Head $head
+
+    if ([string]::IsNullOrWhiteSpace($ReviewHead)) {
+        throw "stop_review_missing=publication preflight requires review on final head"
+    }
+    if ($ReviewHead -ne $head) {
+        throw "stop_review_stale_head"
+    }
+    if ($ReviewDecision -ne "APPROVED") {
+        throw "stop_review_missing=publication preflight requires independent approval"
+    }
+    if ($OpenP1P2Count -gt 0) {
+        throw "stop_open_p1_p2_findings=$OpenP1P2Count"
+    }
+
+    Invoke-CanonicalPublicationAuthorityValidation `
+        -Path $AuthorityPath `
+        -RepositoryRef $repositoryRef `
+        -Branch $branch `
+        -SubjectRef $subjectRef `
+        -Head $head `
+        -WorkorderDigest $subjectDigest `
+        -PolicyDigest $policyDigest
+
+    $actionHead = (& git rev-parse HEAD).Trim()
+    $actionBranch = Get-GitFirstLine -GitArgs @("branch", "--show-current")
+    if ($actionHead -ne $head) {
+        throw "stop_authority_toctou=action_head_mismatch expected=$head actual=$actionHead"
+    }
+    if ([string]::IsNullOrWhiteSpace($actionBranch) -or $actionBranch -ne $branch) {
+        throw "stop_authority_toctou=action_branch_mismatch expected=$branch actual=$actionBranch"
+    }
+    Write-Host "publicationActionHead=$actionHead"
+    Write-Host "publicationValidatedPushRef=git push origin ${actionHead}:refs/heads/<targetBranch>"
+    Write-Host "publicationPreflight=passed"
+}
+
 if (-not (Test-Path $LeasePath)) {
     throw "Missing Threshold lease: $LeasePath"
 }
@@ -155,6 +556,15 @@ if ($BaseRef -ne $expectedBaseRef.Replace("origin/", "")) {
 $changedPaths = @(git diff --name-only "origin/${BaseRef}...HEAD")
 if ($changedPaths.Count -eq 0) { throw "No changed paths detected for the pull request." }
 
+$publicationAuthoritySatisfied = $false
+if ($PublicationPreflight.IsPresent) {
+    Assert-PublicationPreflight -ChangedPaths $changedPaths
+    $publicationAuthoritySatisfied = $true
+}
+
+$runEvidencePaths = @($changedPaths | Where-Object { $_ -like "threshold/runs/*" })
+Assert-ThresholdSemanticEvidenceFileEconomy -BaseRef "origin/${BaseRef}" -RequireCompleteRunEvidence:($runEvidencePaths.Count -gt 0)
+
 $governancePolicyPaths = @($changedPaths | Where-Object { Test-ThresholdGovernancePolicyPath -Path $_ })
 $leasePaths = @($changedPaths | Where-Object { Test-LeasePath $_ })
 $productPaths = @($changedPaths | Where-Object { Test-ProductPath $_ })
@@ -163,17 +573,12 @@ if ($governancePolicyPaths.Count -gt 0 -and $productPaths.Count -gt 0) {
 }
 
 $requiresMergeAuthority = $governancePolicyPaths.Count -gt 0 -or ($leasePaths.Count -gt 0 -and $productPaths.Count -eq 0)
-$mergeAuthoritySatisfied = $true
-if ($requiresMergeAuthority) {
-    if ($mergeAllowed -ne "true") {
-        $mergeAuthoritySatisfied = $false
-    }
-    if ($forbiddenActions -contains "merge") {
-        $mergeAuthoritySatisfied = $false
-    }
-    if (-not $mergeAuthoritySatisfied) {
-        throw "Threshold governance policy/authority change requires explicit merge authority."
-    }
+$mergeAuthoritySatisfied = $publicationAuthoritySatisfied
+if ($mergeAllowed -eq "true") {
+    Write-Host "legacyLeaseMergeAllowed=ignored_for_publication_authority"
+}
+if ($forbiddenActions -contains "merge") {
+    Write-Host "leaseForbiddenMergeAction=structural_hold_only"
 }
 
 foreach ($path in $changedPaths) {
@@ -209,6 +614,17 @@ foreach ($receiptPath in $receiptPaths) {
     }
 }
 
+$aggregateReceiptByCommit = @{}
+$aggregateReceiptPaths = @(Get-ChildItem threshold/runs -Recurse -Filter aggregate-receipt.json -ErrorAction SilentlyContinue)
+foreach ($aggregatePath in $aggregateReceiptPaths) {
+    $repoAggregatePath = ConvertTo-RepoPath -Path $aggregatePath.FullName
+    $aggregate = Get-Content $aggregatePath.FullName -Raw | ConvertFrom-Json
+    Assert-AggregateReceipt -Path $repoAggregatePath -AggregateReceipt $aggregate -BranchFinalValidationRequired:($productPaths.Count -gt 0)
+    foreach ($commit in Get-AggregateProductCommits -AggregateReceipt $aggregate) {
+        $aggregateReceiptByCommit[$commit] = @{ path = $repoAggregatePath; receipt = $aggregate }
+    }
+}
+
 $state = Get-Content $StatePath -Raw | ConvertFrom-Json
 if (-not $state.invocationId) { throw "Lease state is missing invocationId." }
 if (-not $state.currentHead) { throw "Lease state is missing currentHead." }
@@ -235,8 +651,12 @@ foreach ($commit in $prCommits) {
     }
 
     $sourceCommitCount += 1
-    if (-not $receiptByCommit.ContainsKey($commit)) {
+    if (-not $receiptByCommit.ContainsKey($commit) -and -not $aggregateReceiptByCommit.ContainsKey($commit)) {
         throw "Source commit without corresponding Threshold receipt: $commit"
+    }
+    if ($aggregateReceiptByCommit.ContainsKey($commit)) {
+        Write-Host "Source commit covered by aggregate Threshold receipt: $commit"
+        continue
     }
 
     $entry = $receiptByCommit[$commit]
@@ -245,6 +665,7 @@ foreach ($commit in $prCommits) {
     if (-not $receipt.baseHead) { throw "Receipt is missing baseHead: $($entry.path)" }
     if (-not $receipt.validation -or -not $receipt.validation.result) { throw "Receipt is missing validation result: $($entry.path)" }
     if (-not $receipt.nonClaims -or $receipt.nonClaims.Count -eq 0) { throw "Receipt is missing nonClaims: $($entry.path)" }
+    Assert-ReceiptValidation -ReceiptPath $entry.path -Receipt $receipt -ExpectedHead $commit
     Assert-ReceiptLeaseDigestMatchesReceiptCommit -ReceiptPath $entry.path -Receipt $receipt
     Assert-ChangedFilesMatchReceipt -Commit $commit -Receipt $receipt
 }
@@ -254,6 +675,8 @@ if ($sourceCommitCount -eq 0 -and $productPaths.Count -gt 0) {
 }
 
 Write-Host "sourceCommitReceiptCoverage=complete"
+Write-Host "governanceStructureValid=true"
+Write-Host "publicationAuthoritySatisfied=$($publicationAuthoritySatisfied.ToString().ToLowerInvariant())"
 Write-Host "thresholdGovernanceLabelRequired=$($requiresMergeAuthority.ToString().ToLowerInvariant())"
 Write-Host "thresholdMergeAuthorityRequired=$($requiresMergeAuthority.ToString().ToLowerInvariant())"
 Write-Host "thresholdMergeAuthoritySatisfied=$($mergeAuthoritySatisfied.ToString().ToLowerInvariant())"

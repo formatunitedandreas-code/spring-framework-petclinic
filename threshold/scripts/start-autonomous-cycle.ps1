@@ -14,6 +14,7 @@ Set-StrictMode -Version Latest
 $ErrorActionPreference = "Stop"
 
 . (Join-Path $PSScriptRoot "lib/lease-policy.ps1")
+. (Join-Path $PSScriptRoot "lib/branch-range-validation.ps1")
 
 function ConvertTo-RepoPath {
     param([string] $Path)
@@ -153,7 +154,7 @@ function Invoke-CapabilityExpansion {
     ) + $arguments -FailureMessage "Capability expansion apply script failed: $applyScript" | ForEach-Object { Write-Host $_ }
 
     Assert-AllowedChangedPaths -AllowedPatterns @($Expansion.allowedChangedPaths)
-    Invoke-Checked -FilePath "git" -ArgumentList @("diff", "--check") -FailureMessage "git diff --check failed after capability expansion." | Out-Null
+    Assert-ThresholdBranchRangeDiffClean -BaseRef "$BaseRemote/$BaseBranch" -LeasePath $LeasePath
     foreach ($command in @($Expansion.validationCommands)) {
         Invoke-ValidationCommand -Command ([string]$command)
     }
