@@ -6,6 +6,8 @@ param(
 Set-StrictMode -Version Latest
 $ErrorActionPreference = "Stop"
 
+. (Join-Path $PSScriptRoot "lib/branch-range-validation.ps1")
+
 function Get-JavaPublicSurface {
     param([string] $Text)
     return @(
@@ -33,8 +35,7 @@ foreach ($path in $changedJavaFiles) {
     }
 }
 
-& git diff --check
-if ($LASTEXITCODE -ne 0) { throw "semantic_diff_check_failed" }
+Assert-ThresholdBranchRangeDiffClean -BaseRef $BaseRef
 
 & powershell.exe -NoProfile -ExecutionPolicy Bypass -Command "`$env:JAVA_HOME='C:\Program Files\Java\jdk-17'; .\mvnw.cmd test"
 if ($LASTEXITCODE -ne 0) { throw "semantic_maven_test_failed" }
