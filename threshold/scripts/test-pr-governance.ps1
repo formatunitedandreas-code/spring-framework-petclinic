@@ -6,6 +6,7 @@ param(
     [switch] $PublicationPreflight,
     [string] $AuthorityPath = "threshold/runtime/authority/merge-authority.json",
     [string] $ConsumedAuthorityPath = "threshold/runtime/authority/consumed-authorities.json",
+    [string] $ThresholdCorePath = $env:THRESHOLD_CORE_PATH,
     [string] $ReviewHead = "",
     [string] $ReviewDecision = "",
     [int] $OpenP1P2Count = 0
@@ -236,7 +237,7 @@ function Get-PreflightSubjectDigest {
     return Get-TextSha256 -Value ((@($Head) + @($ChangedPaths | Sort-Object)) -join "`n")
 }
 
-function Assert-OneShotMergeAuthority {
+function Invoke-CanonicalPublicationAuthorityValidation {
     param(
         [string] $Path,
         [string] $RepositoryRef,
@@ -250,31 +251,53 @@ function Assert-OneShotMergeAuthority {
     if (-not (Test-Path $Path)) {
         throw "stop_authority_missing=one-shot merge authority required for publication preflight"
     }
-    $authority = Get-Content $Path -Raw | ConvertFrom-Json
-    $consumedIds = @(Get-ConsumedAuthorityIds -Path $ConsumedAuthorityPath)
-    $checks = [ordered]@{
-        schemaVersion = "threshold.one-shot-authority.v0.1"
-        repositoryRef = $RepositoryRef
-        branchRef = $Branch
-        subjectRef = $SubjectRef
-        headSha = $Head
-        workorderDigest = $WorkorderDigest
-        policyDigest = $PolicyDigest
-        action = "merge"
+
+    if ([string]::IsNullOrWhiteSpace($ThresholdCorePath)) {
+        throw "stop_authority_validator_unavailable=ThresholdCorePath or THRESHOLD_CORE_PATH is required"
     }
-    foreach ($name in $checks.Keys) {
-        if ([string]$authority.$name -ne [string]$checks[$name]) {
-            throw "stop_authority_mismatch=$name"
+    $coreRoot = [System.IO.Path]::GetFullPath($ThresholdCorePath)
+    $cliPath = Join-Path $coreRoot "packages/refactoring-governor/dist/cli/thresholdRefactoringCliV0_1.js"
+    if (-not (Test-Path $cliPath)) {
+        throw "stop_authority_validator_unavailable=canonical validator CLI not found at ThresholdCorePath"
+    }
+
+    $runtimeRoot = "threshold/runtime/authority-validation"
+    if (-not (Test-Path $runtimeRoot)) { New-Item -ItemType Directory -Path $runtimeRoot | Out-Null }
+    $inputPath = Join-Path $runtimeRoot "publication-authority-input.json"
+    $resultPath = Join-Path $runtimeRoot "publication-authority-result.json"
+
+    $input = [ordered]@{
+        authority = (Get-Content $Path -Raw | ConvertFrom-Json)
+        context = [ordered]@{
+            repositoryRef = $RepositoryRef
+            branchRef = $Branch
+            subjectRef = $SubjectRef
+            headSha = $Head
+            workorderDigest = $WorkorderDigest
+            policyDigest = $PolicyDigest
+            action = "merge"
+            now = (Get-Date).ToUniversalTime().ToString("o")
+            consumedConsumptionIds = @(Get-ConsumedAuthorityIds -Path $ConsumedAuthorityPath)
         }
+        verificationRef = "test-pr-governance:structural"
+        reviewRef = "review:$ReviewDecision@$ReviewHead"
     }
-    if ($authority.PSObject.Properties["consumedAt"] -and -not [string]::IsNullOrWhiteSpace([string]$authority.consumedAt)) {
-        throw "stop_authority_consumed"
+    $input | ConvertTo-Json -Depth 20 | Set-Content -Path $inputPath -Encoding UTF8
+
+    $output = @(& node $cliPath validate-publication-authority --input $inputPath 2>&1)
+    $outputText = ($output | ForEach-Object { [string]$_ }) -join "`n"
+    $outputText | Set-Content -Path $resultPath -Encoding UTF8
+    try {
+        $result = $outputText | ConvertFrom-Json
     }
-    if ($consumedIds -contains [string]$authority.consumptionId) {
-        throw "stop_authority_consumed"
+    catch {
+        throw "stop_authority_validator_unavailable=canonical validator emitted invalid JSON"
     }
-    if ([DateTimeOffset]::Parse([string]$authority.expiresAt) -le [DateTimeOffset]::UtcNow) {
-        throw "stop_authority_expired"
+    Write-Host "publicationAuthorityValidator=threshold-core"
+    Write-Host "publicationAuthorityDecision=$($result.decision)"
+    Write-Host "publicationAuthorityReasonCodes=$((@($result.reasonCodes) | Sort-Object) -join ',')"
+    if ($result.valid -ne $true) {
+        throw [string]$result.decision
     }
 }
 
@@ -302,7 +325,7 @@ function Assert-PublicationPreflight {
         throw "stop_open_p1_p2_findings=$OpenP1P2Count"
     }
 
-    Assert-OneShotMergeAuthority `
+    Invoke-CanonicalPublicationAuthorityValidation `
         -Path $AuthorityPath `
         -RepositoryRef $repositoryRef `
         -Branch $branch `
@@ -334,8 +357,10 @@ if ($BaseRef -ne $expectedBaseRef.Replace("origin/", "")) {
 $changedPaths = @(git diff --name-only "origin/${BaseRef}...HEAD")
 if ($changedPaths.Count -eq 0) { throw "No changed paths detected for the pull request." }
 
+$publicationAuthoritySatisfied = $false
 if ($PublicationPreflight.IsPresent) {
     Assert-PublicationPreflight -ChangedPaths $changedPaths
+    $publicationAuthoritySatisfied = $true
 }
 
 $runEvidencePaths = @($changedPaths | Where-Object { $_ -like "threshold/runs/*" })
@@ -349,17 +374,12 @@ if ($governancePolicyPaths.Count -gt 0 -and $productPaths.Count -gt 0) {
 }
 
 $requiresMergeAuthority = $governancePolicyPaths.Count -gt 0 -or ($leasePaths.Count -gt 0 -and $productPaths.Count -eq 0)
-$mergeAuthoritySatisfied = $true
-if ($requiresMergeAuthority) {
-    if ($mergeAllowed -ne "true") {
-        $mergeAuthoritySatisfied = $false
-    }
-    if ($forbiddenActions -contains "merge") {
-        $mergeAuthoritySatisfied = $false
-    }
-    if (-not $mergeAuthoritySatisfied) {
-        throw "Threshold governance policy/authority change requires explicit merge authority."
-    }
+$mergeAuthoritySatisfied = $publicationAuthoritySatisfied
+if ($mergeAllowed -eq "true") {
+    Write-Host "legacyLeaseMergeAllowed=ignored_for_publication_authority"
+}
+if ($forbiddenActions -contains "merge") {
+    Write-Host "leaseForbiddenMergeAction=structural_hold_only"
 }
 
 foreach ($path in $changedPaths) {
@@ -456,6 +476,8 @@ if ($sourceCommitCount -eq 0 -and $productPaths.Count -gt 0) {
 }
 
 Write-Host "sourceCommitReceiptCoverage=complete"
+Write-Host "governanceStructureValid=true"
+Write-Host "publicationAuthoritySatisfied=$($publicationAuthoritySatisfied.ToString().ToLowerInvariant())"
 Write-Host "thresholdGovernanceLabelRequired=$($requiresMergeAuthority.ToString().ToLowerInvariant())"
 Write-Host "thresholdMergeAuthorityRequired=$($requiresMergeAuthority.ToString().ToLowerInvariant())"
 Write-Host "thresholdMergeAuthoritySatisfied=$($mergeAuthoritySatisfied.ToString().ToLowerInvariant())"

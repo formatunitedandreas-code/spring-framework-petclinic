@@ -1,6 +1,7 @@
 [CmdletBinding()]
 param(
-    [string] $BaseRef = "main"
+    [string] $BaseRef = "main",
+    [string] $ThresholdCorePath = $env:THRESHOLD_CORE_PATH
 )
 
 Set-StrictMode -Version Latest
@@ -58,6 +59,7 @@ function Invoke-Preflight {
         -PublicationPreflight `
         -AuthorityPath $AuthorityPath `
         -ConsumedAuthorityPath $ConsumedAuthorityPath `
+        -ThresholdCorePath $ThresholdCorePath `
         -ReviewHead $ReviewHead `
         -ReviewDecision $ReviewDecision `
         -OpenP1P2Count $OpenP1P2Count 2>&1)
@@ -65,6 +67,17 @@ function Invoke-Preflight {
         throw (($output | ForEach-Object { [string]$_ }) -join "`n")
     }
     return $output
+}
+
+if ([string]::IsNullOrWhiteSpace($ThresholdCorePath)) {
+    $repoRoot = (& git rev-parse --show-toplevel).Trim()
+    $candidate = Join-Path (Split-Path -Parent $repoRoot) "threshold-ai-slim"
+    if (Test-Path (Join-Path $candidate "packages/refactoring-governor/package.json")) {
+        $ThresholdCorePath = $candidate
+    }
+}
+if ([string]::IsNullOrWhiteSpace($ThresholdCorePath)) {
+    throw "threshold_core_path_required_for_publication_preflight_fixtures"
 }
 
 function Assert-ThrowsLike {
@@ -142,6 +155,11 @@ Assert-ThrowsLike -Name "wrong-head-authority" -Pattern "stop_authority_mismatch
 
 Write-Authority -Path $authorityPath -Overrides @{ branchRef = "codex/wrong-branch" }
 Assert-ThrowsLike -Name "wrong-branch-authority" -Pattern "stop_authority_mismatch=branchRef" -ScriptBlock {
+    Invoke-Preflight -AuthorityPath $authorityPath -ConsumedAuthorityPath $consumedPath -ReviewHead $head
+}
+
+Write-Authority -Path $authorityPath -Overrides @{ branchRef = "threshold-governed-refactor-demo-184" }
+Assert-ThrowsLike -Name "stale-legacy-lease-branch" -Pattern "stop_authority_mismatch=branchRef" -ScriptBlock {
     Invoke-Preflight -AuthorityPath $authorityPath -ConsumedAuthorityPath $consumedPath -ReviewHead $head
 }
 
