@@ -51,7 +51,8 @@ function Invoke-Preflight {
         [string] $ConsumedAuthorityPath,
         [string] $ReviewHead,
         [string] $ReviewDecision = "APPROVED",
-        [int] $OpenP1P2Count = 0
+        [int] $OpenP1P2Count = 0,
+        [string] $CorePath = $ThresholdCorePath
     )
 
     $output = @(& powershell.exe -NoProfile -ExecutionPolicy Bypass -File "threshold/scripts/test-pr-governance.ps1" `
@@ -59,7 +60,7 @@ function Invoke-Preflight {
         -PublicationPreflight `
         -AuthorityPath $AuthorityPath `
         -ConsumedAuthorityPath $ConsumedAuthorityPath `
-        -ThresholdCorePath $ThresholdCorePath `
+        -ThresholdCorePath $CorePath `
         -ReviewHead $ReviewHead `
         -ReviewDecision $ReviewDecision `
         -OpenP1P2Count $OpenP1P2Count 2>&1)
@@ -132,56 +133,286 @@ function Write-Authority {
     $authority | ConvertTo-Json -Depth 8 | Set-Content -Path $Path -Encoding UTF8
 }
 
+function New-StubCore {
+    param([string] $Root, [string] $Mode = "valid")
+
+    $cliDir = Join-Path $Root "packages/refactoring-governor/dist/cli"
+    if (-not (Test-Path $cliDir)) { New-Item -ItemType Directory -Path $cliDir | Out-Null }
+    $cliPath = Join-Path $cliDir "thresholdRefactoringCliV0_1.js"
+    $script = @"
+#!/usr/bin/env node
+const fs = require("fs");
+const { execFileSync } = require("child_process");
+const mode = process.env.THRESHOLD_STUB_CORE_MODE || "$Mode";
+const inputPath = process.argv[process.argv.indexOf("--input") + 1];
+const inputText = fs.readFileSync(inputPath, "utf8").replace(/^\uFEFF/, "");
+const input = JSON.parse(inputText);
+const head = input.context.headSha;
+const digest = "fixture-input-digest";
+function decision(effect, allowed, failedConstraintIds) {
+  return { effect, allowed, disposition: allowed ? "allowed" : "stop_no_action", failedConstraintIds };
+}
+function output(value, exitCode) {
+  process.stdout.write(JSON.stringify(value, null, 2) + "\n");
+  process.exitCode = exitCode;
+}
+if (mode === "multi-json") {
+  process.stdout.write(JSON.stringify({ valid: true }) + "\n" + JSON.stringify({ valid: true }) + "\n");
+  process.exitCode = 0;
+} else if (mode === "detach-head") {
+  execFileSync("git", ["switch", "--detach", "HEAD"], { stdio: "ignore" });
+  output({
+    valid: true,
+    evaluatedHead: head,
+    inputDigest: digest,
+    effectDecisions: {
+      observe: decision("observe", true, []),
+      localExperiment: decision("localExperiment", true, []),
+      shadowIntegration: decision("shadowIntegration", true, []),
+      publication: decision("publication", true, []),
+      merge: decision("merge", true, [])
+    },
+    failedConstraintIds: []
+  }, 0);
+} else if (mode === "missing-typed") {
+  output({ valid: true, evaluatedHead: head, reasonCodes: ["diagnostic_only"] }, 0);
+} else if (mode === "unknown-field") {
+  output({
+    valid: true,
+    evaluatedHead: head,
+    inputDigest: digest,
+    effectDecisions: {
+      observe: decision("observe", true, []),
+      localExperiment: decision("localExperiment", true, []),
+      shadowIntegration: decision("shadowIntegration", true, []),
+      publication: decision("publication", true, []),
+      merge: decision("merge", true, [])
+    },
+    failedConstraintIds: [],
+    unexpectedDecisionSurface: "must-fail-closed"
+  }, 0);
+} else if (mode === "wrong-evaluated-head") {
+  output({
+    valid: true,
+    evaluatedHead: "0000000000000000000000000000000000000000",
+    inputDigest: digest,
+    effectDecisions: {
+      observe: decision("observe", true, []),
+      localExperiment: decision("localExperiment", true, []),
+      shadowIntegration: decision("shadowIntegration", true, []),
+      publication: decision("publication", true, []),
+      merge: decision("merge", true, [])
+    },
+    failedConstraintIds: []
+  }, 0);
+} else if (mode.startsWith("publication-blocked")) {
+  const constraintByMode = {
+    "publication-blocked-reason-allowed": "publication-head-binding",
+    "publication-blocked-head": "publication-head-binding",
+    "publication-blocked-branch": "publication-branch-binding",
+    "publication-blocked-expired": "publication-authority-expiry",
+    "publication-blocked-consumed": "publication-authority-unconsumed"
+  };
+  const failed = [constraintByMode[mode] || "publication-head-binding"];
+  output({
+    valid: false,
+    decision: "publication_authority_satisfied",
+    reasonCodes: ["publication_authority_satisfied", "interference_finding_visible"],
+    evaluatedHead: head,
+    inputDigest: digest,
+    effectDecisions: {
+      observe: decision("observe", true, []),
+      localExperiment: decision("localExperiment", true, []),
+      shadowIntegration: decision("shadowIntegration", true, []),
+      publication: decision("publication", false, failed),
+      merge: decision("merge", false, failed)
+    },
+    failedConstraintIds: failed
+  }, 2);
+} else {
+  output({
+    valid: true,
+    decision: "publication_authority_satisfied",
+    reasonCodes: ["diagnostic_only"],
+    evaluatedHead: head,
+    inputDigest: digest,
+    effectDecisions: {
+      observe: decision("observe", true, []),
+      localExperiment: decision("localExperiment", true, []),
+      shadowIntegration: decision("shadowIntegration", true, []),
+      publication: decision("publication", true, []),
+      merge: decision("merge", true, [])
+    },
+    failedConstraintIds: []
+  }, 0);
+}
+"@
+    [System.IO.File]::WriteAllText(
+        [System.IO.Path]::GetFullPath($cliPath),
+        $script,
+        [System.Text.UTF8Encoding]::new($false)
+    )
+    return $Root
+}
+
+function Invoke-WithStubCoreMode {
+    param([string] $Mode, [scriptblock] $ScriptBlock)
+
+    $previous = $env:THRESHOLD_STUB_CORE_MODE
+    $env:THRESHOLD_STUB_CORE_MODE = $Mode
+    try {
+        & $ScriptBlock
+    }
+    finally {
+        if ($null -eq $previous) {
+            Remove-Item Env:\THRESHOLD_STUB_CORE_MODE -ErrorAction SilentlyContinue
+        }
+        else {
+            $env:THRESHOLD_STUB_CORE_MODE = $previous
+        }
+    }
+}
+
 $runtimeRoot = "threshold/runtime/publication-preflight-fixtures"
 $authorityPath = "$runtimeRoot/merge-authority.json"
 $consumedPath = "$runtimeRoot/consumed-authorities.json"
 if (Test-Path $runtimeRoot) { Remove-Item -Recurse -Force $runtimeRoot }
 New-Item -ItemType Directory -Path $runtimeRoot | Out-Null
+$stubCorePath = New-StubCore -Root (Join-Path $runtimeRoot "stub-core")
 
 $head = (& git rev-parse HEAD).Trim()
+$originalBranch = (& git branch --show-current).Trim()
 
 Assert-ThrowsLike -Name "missing-authority" -Pattern "stop_authority_missing" -ScriptBlock {
-    Invoke-Preflight -AuthorityPath $authorityPath -ConsumedAuthorityPath $consumedPath -ReviewHead $head
+    Invoke-Preflight -AuthorityPath $authorityPath -ConsumedAuthorityPath $consumedPath -ReviewHead $head -CorePath $stubCorePath
 }
 
 Write-Authority -Path $authorityPath
-Invoke-Preflight -AuthorityPath $authorityPath -ConsumedAuthorityPath $consumedPath -ReviewHead $head | Out-Null
+Invoke-Preflight -AuthorityPath $authorityPath -ConsumedAuthorityPath $consumedPath -ReviewHead $head -CorePath $stubCorePath | Out-Null
 Write-Host "publicationPreflightFixture=valid-authority-passed"
 
 Write-Authority -Path $authorityPath -Overrides @{ headSha = "stale-head" }
 Assert-ThrowsLike -Name "wrong-head-authority" -Pattern "stop_authority_mismatch=headSha" -ScriptBlock {
-    Invoke-Preflight -AuthorityPath $authorityPath -ConsumedAuthorityPath $consumedPath -ReviewHead $head
+    Invoke-WithStubCoreMode -Mode "publication-blocked-head" -ScriptBlock {
+        Invoke-Preflight -AuthorityPath $authorityPath -ConsumedAuthorityPath $consumedPath -ReviewHead $head -CorePath $stubCorePath
+    }
 }
 
 Write-Authority -Path $authorityPath -Overrides @{ branchRef = "codex/wrong-branch" }
 Assert-ThrowsLike -Name "wrong-branch-authority" -Pattern "stop_authority_mismatch=branchRef" -ScriptBlock {
-    Invoke-Preflight -AuthorityPath $authorityPath -ConsumedAuthorityPath $consumedPath -ReviewHead $head
+    Invoke-WithStubCoreMode -Mode "publication-blocked-branch" -ScriptBlock {
+        Invoke-Preflight -AuthorityPath $authorityPath -ConsumedAuthorityPath $consumedPath -ReviewHead $head -CorePath $stubCorePath
+    }
 }
 
 Write-Authority -Path $authorityPath -Overrides @{ branchRef = "threshold-governed-refactor-demo-184" }
 Assert-ThrowsLike -Name "stale-legacy-lease-branch" -Pattern "stop_authority_mismatch=branchRef" -ScriptBlock {
-    Invoke-Preflight -AuthorityPath $authorityPath -ConsumedAuthorityPath $consumedPath -ReviewHead $head
+    Invoke-WithStubCoreMode -Mode "publication-blocked-branch" -ScriptBlock {
+        Invoke-Preflight -AuthorityPath $authorityPath -ConsumedAuthorityPath $consumedPath -ReviewHead $head -CorePath $stubCorePath
+    }
 }
 
 Write-Authority -Path $authorityPath -Overrides @{ expiresAt = (Get-Date).ToUniversalTime().AddMinutes(-1).ToString("o") }
 Assert-ThrowsLike -Name "expired-authority" -Pattern "stop_authority_expired" -ScriptBlock {
-    Invoke-Preflight -AuthorityPath $authorityPath -ConsumedAuthorityPath $consumedPath -ReviewHead $head
+    Invoke-WithStubCoreMode -Mode "publication-blocked-expired" -ScriptBlock {
+        Invoke-Preflight -AuthorityPath $authorityPath -ConsumedAuthorityPath $consumedPath -ReviewHead $head -CorePath $stubCorePath
+    }
 }
 
 Write-Authority -Path $authorityPath
 @{ consumedConsumptionIds = @("consume:publication-preflight:test") } | ConvertTo-Json -Depth 4 | Set-Content -Path $consumedPath -Encoding UTF8
 Assert-ThrowsLike -Name "consumed-authority" -Pattern "stop_authority_consumed" -ScriptBlock {
-    Invoke-Preflight -AuthorityPath $authorityPath -ConsumedAuthorityPath $consumedPath -ReviewHead $head
+    Invoke-WithStubCoreMode -Mode "publication-blocked-consumed" -ScriptBlock {
+        Invoke-Preflight -AuthorityPath $authorityPath -ConsumedAuthorityPath $consumedPath -ReviewHead $head -CorePath $stubCorePath
+    }
 }
 Remove-Item -Force $consumedPath
 
 Write-Authority -Path $authorityPath
 Assert-ThrowsLike -Name "stale-review-head" -Pattern "stop_review_stale_head" -ScriptBlock {
-    Invoke-Preflight -AuthorityPath $authorityPath -ConsumedAuthorityPath $consumedPath -ReviewHead "stale-review-head"
+    Invoke-Preflight -AuthorityPath $authorityPath -ConsumedAuthorityPath $consumedPath -ReviewHead "stale-review-head" -CorePath $stubCorePath
 }
 
 Assert-ThrowsLike -Name "open-p1-p2-findings" -Pattern "stop_open_p1_p2_findings=1" -ScriptBlock {
-    Invoke-Preflight -AuthorityPath $authorityPath -ConsumedAuthorityPath $consumedPath -ReviewHead $head -OpenP1P2Count 1
+    Invoke-Preflight -AuthorityPath $authorityPath -ConsumedAuthorityPath $consumedPath -ReviewHead $head -OpenP1P2Count 1 -CorePath $stubCorePath
+}
+
+Assert-ThrowsLike -Name "core-cli-missing" -Pattern "stop_authority_validator_unavailable=.*canonical validator CLI not found" -ScriptBlock {
+    Invoke-Preflight -AuthorityPath $authorityPath -ConsumedAuthorityPath $consumedPath -ReviewHead $head -CorePath (Join-Path $runtimeRoot "missing-core")
+}
+
+Assert-ThrowsLike -Name "multiple-json-values" -Pattern "multiple JSON documents" -ScriptBlock {
+    Invoke-WithStubCoreMode -Mode "multi-json" -ScriptBlock {
+        Invoke-Preflight -AuthorityPath $authorityPath -ConsumedAuthorityPath $consumedPath -ReviewHead $head -CorePath $stubCorePath
+    }
+}
+
+Assert-ThrowsLike -Name "missing-typed-fields" -Pattern "inputDigest_missing|effectDecisions_missing|failedConstraintIds_missing" -ScriptBlock {
+    Invoke-WithStubCoreMode -Mode "missing-typed" -ScriptBlock {
+        Invoke-Preflight -AuthorityPath $authorityPath -ConsumedAuthorityPath $consumedPath -ReviewHead $head -CorePath $stubCorePath
+    }
+}
+
+Assert-ThrowsLike -Name "unknown-core-field" -Pattern "unknown_field=unexpectedDecisionSurface" -ScriptBlock {
+    Invoke-WithStubCoreMode -Mode "unknown-field" -ScriptBlock {
+        Invoke-Preflight -AuthorityPath $authorityPath -ConsumedAuthorityPath $consumedPath -ReviewHead $head -CorePath $stubCorePath
+    }
+}
+
+Assert-ThrowsLike -Name "validator-evaluated-different-head" -Pattern "evaluatedHead_mismatch" -ScriptBlock {
+    Invoke-WithStubCoreMode -Mode "wrong-evaluated-head" -ScriptBlock {
+        Invoke-Preflight -AuthorityPath $authorityPath -ConsumedAuthorityPath $consumedPath -ReviewHead $head -CorePath $stubCorePath
+    }
+}
+
+Assert-ThrowsLike -Name "typed-publication-blocked-reason-string-allowed" -Pattern "stop_authority_mismatch=headSha" -ScriptBlock {
+    Invoke-WithStubCoreMode -Mode "publication-blocked-reason-allowed" -ScriptBlock {
+        Invoke-Preflight -AuthorityPath $authorityPath -ConsumedAuthorityPath $consumedPath -ReviewHead $head -CorePath $stubCorePath
+    }
+}
+
+$gitWriteProbePath = ".git/threshold-publication-preflight-write-probe.tmp"
+$gitMetadataWritable = $false
+try {
+    "probe" | Set-Content -Path $gitWriteProbePath -Encoding UTF8
+    Remove-Item -Force $gitWriteProbePath
+    $gitMetadataWritable = $true
+}
+catch {
+    if (Test-Path $gitWriteProbePath) { Remove-Item -Force $gitWriteProbePath -ErrorAction SilentlyContinue }
+}
+if ($gitMetadataWritable) {
+    Assert-ThrowsLike -Name "post-cli-head-detached" -Pattern "postvalidation_branch_changed" -ScriptBlock {
+        try {
+            Invoke-WithStubCoreMode -Mode "detach-head" -ScriptBlock {
+                Invoke-Preflight -AuthorityPath $authorityPath -ConsumedAuthorityPath $consumedPath -ReviewHead $head -CorePath $stubCorePath
+            }
+        }
+        finally {
+            git switch $originalBranch | Out-Null
+        }
+    }
+}
+else {
+    Write-Host "publicationPreflightFixture=post-cli-head-detached-skipped-readonly-git"
+}
+
+try {
+    Invoke-WithStubCoreMode -Mode "publication-blocked-reason-allowed" -ScriptBlock {
+        Invoke-Preflight -AuthorityPath $authorityPath -ConsumedAuthorityPath $consumedPath -ReviewHead $head -CorePath $stubCorePath
+    }
+}
+catch {
+    $resultText = if (Test-Path "threshold/runtime/authority-validation/publication-authority-result.json") {
+        Get-Content "threshold/runtime/authority-validation/publication-authority-result.json" -Raw
+    }
+    else {
+        [string]$_.Exception.Message
+    }
+    if ($resultText -notmatch "interference_finding_visible") {
+        throw "interference_finding_not_visible_after_authority_stop"
+    }
+    Write-Host "publicationPreflightFixture=interference-finding-visible"
 }
 
 Remove-Item -Recurse -Force $runtimeRoot

@@ -82,7 +82,14 @@ foreach ($requiredMarker in @(
     "expired-authority",
     "consumed-authority",
     "stale-review-head",
-    "open-p1-p2-findings"
+    "open-p1-p2-findings",
+    "core-cli-missing",
+    "multiple-json-values",
+    "missing-typed-fields",
+    "unknown-core-field",
+    "validator-evaluated-different-head",
+    "typed-publication-blocked-reason-string-allowed",
+    "post-cli-head-detached"
 )) {
     if ($publicationPreflightText -notmatch $requiredMarker) {
         throw "publication_preflight_fixture_missing=$requiredMarker"

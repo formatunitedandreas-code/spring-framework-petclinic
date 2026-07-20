@@ -237,6 +237,158 @@ function Get-PreflightSubjectDigest {
     return Get-TextSha256 -Value ((@($Head) + @($ChangedPaths | Sort-Object)) -join "`n")
 }
 
+function Get-JsonPropertyOrNull {
+    param([object] $Object, [string] $Name)
+
+    if ($null -eq $Object) { return $null }
+    if ($Object -is [System.Collections.IDictionary] -and $Object.Contains($Name)) {
+        return $Object[$Name]
+    }
+    if ($Object.PSObject.Properties.Name -contains $Name) {
+        return $Object.$Name
+    }
+    return $null
+}
+
+function Test-JsonProperty {
+    param([object] $Object, [string] $Name)
+
+    if ($null -eq $Object) { return $false }
+    if ($Object -is [System.Collections.IDictionary]) {
+        return $Object.Contains($Name)
+    }
+    return $Object.PSObject.Properties.Name -contains $Name
+}
+
+function Assert-AllowedJsonProperties {
+    param([object] $Object, [string[]] $AllowedNames, [string] $Context)
+
+    foreach ($property in @($Object.PSObject.Properties.Name)) {
+        if ($AllowedNames -notcontains [string]$property) {
+            throw "stop_authority_validator_unavailable=${Context}_unknown_field=$property"
+        }
+    }
+}
+
+function Assert-StringArray {
+    param([object] $Object, [string] $Name, [string] $Context)
+
+    if (-not (Test-JsonProperty -Object $Object -Name $Name)) {
+        throw "stop_authority_validator_unavailable=${Context}_missing"
+    }
+    $Value = if ($Object -is [System.Collections.IDictionary]) {
+        $Object[$Name]
+    }
+    else {
+        $Object.PSObject.Properties[$Name].Value
+    }
+    if ($null -eq $Value) { return }
+    if ($Value -is [string]) {
+        if ([string]::IsNullOrWhiteSpace([string]$Value)) {
+            throw "stop_authority_validator_unavailable=${Context}_invalid"
+        }
+        return
+    }
+    foreach ($item in @($Value)) {
+        if (-not ($item -is [string]) -or [string]::IsNullOrWhiteSpace([string]$item)) {
+            throw "stop_authority_validator_unavailable=${Context}_invalid"
+        }
+    }
+}
+
+function Get-PublicationStopFromFailedConstraints {
+    param([string[]] $FailedConstraintIds)
+
+    if ($FailedConstraintIds -contains "publication-branch-binding") { return "stop_authority_mismatch=branchRef" }
+    if ($FailedConstraintIds -contains "publication-head-binding") { return "stop_authority_mismatch=headSha" }
+    if ($FailedConstraintIds -contains "publication-authority-expiry") { return "stop_authority_expired" }
+    if ($FailedConstraintIds -contains "publication-authority-unconsumed" -or $FailedConstraintIds -contains "publication-authority-consumption-id-unused") {
+        return "stop_authority_consumed"
+    }
+    if ($FailedConstraintIds -contains "publication-authority-present") { return "stop_authority_missing" }
+    return "stop_authority_invalid"
+}
+
+function ConvertFrom-SingleJsonDocument {
+    param([string] $Text)
+
+    if ($Text.Trim() -match "(?s)^\s*\{.*\}\s*\{") {
+        throw "stop_authority_validator_unavailable=canonical validator emitted multiple JSON documents"
+    }
+    try {
+        $documents = @($Text | ConvertFrom-Json)
+    }
+    catch {
+        throw "stop_authority_validator_unavailable=canonical validator emitted invalid JSON"
+    }
+    if ($documents.Count -ne 1) {
+        throw "stop_authority_validator_unavailable=canonical validator emitted multiple JSON documents"
+    }
+    return $documents[0]
+}
+
+function Assert-CorePublicationAuthorityResult {
+    param([object] $Result, [string] $ExpectedHead)
+
+    Assert-AllowedJsonProperties -Object $Result -AllowedNames @(
+        "valid",
+        "evaluatedHead",
+        "inputDigest",
+        "effectDecisions",
+        "failedConstraintIds",
+        "decision",
+        "reasonCodes",
+        "constraintOutcomes",
+        "authorityDigest",
+        "policyDigest",
+        "nonClaims"
+    ) -Context "publication_authority_result"
+
+    if (-not ((Get-JsonPropertyOrNull -Object $Result -Name "valid") -is [bool])) {
+        throw "stop_authority_validator_unavailable=publication_authority_result_valid_missing"
+    }
+    $evaluatedHead = [string](Get-JsonPropertyOrNull -Object $Result -Name "evaluatedHead")
+    if ([string]::IsNullOrWhiteSpace($evaluatedHead)) {
+        throw "stop_authority_validator_unavailable=publication_authority_result_evaluatedHead_missing"
+    }
+    if ($evaluatedHead -ne $ExpectedHead) {
+        throw "stop_authority_toctou=evaluatedHead_mismatch expected=$ExpectedHead actual=$evaluatedHead"
+    }
+    $inputDigest = [string](Get-JsonPropertyOrNull -Object $Result -Name "inputDigest")
+    if ([string]::IsNullOrWhiteSpace($inputDigest)) {
+        throw "stop_authority_validator_unavailable=publication_authority_result_inputDigest_missing"
+    }
+
+    Assert-StringArray -Object $Result -Name "failedConstraintIds" -Context "publication_authority_result_failedConstraintIds"
+
+    $effectDecisions = Get-JsonPropertyOrNull -Object $Result -Name "effectDecisions"
+    if ($null -eq $effectDecisions) {
+        throw "stop_authority_validator_unavailable=publication_authority_result_effectDecisions_missing"
+    }
+    Assert-AllowedJsonProperties -Object $effectDecisions -AllowedNames @(
+        "observe",
+        "localExperiment",
+        "shadowIntegration",
+        "publication",
+        "merge"
+    ) -Context "publication_authority_result_effectDecisions"
+
+    $publicationDecision = Get-JsonPropertyOrNull -Object $effectDecisions -Name "publication"
+    if ($null -eq $publicationDecision) {
+        throw "stop_authority_validator_unavailable=publication_authority_result_publication_decision_missing"
+    }
+    Assert-AllowedJsonProperties -Object $publicationDecision -AllowedNames @(
+        "effect",
+        "allowed",
+        "disposition",
+        "failedConstraintIds"
+    ) -Context "publication_authority_result_publication_decision"
+    if (-not ((Get-JsonPropertyOrNull -Object $publicationDecision -Name "allowed") -is [bool])) {
+        throw "stop_authority_validator_unavailable=publication_authority_result_publication_allowed_missing"
+    }
+    Assert-StringArray -Object $publicationDecision -Name "failedConstraintIds" -Context "publication_authority_result_publication_failedConstraintIds"
+}
+
 function Invoke-CanonicalPublicationAuthorityValidation {
     param(
         [string] $Path,
@@ -284,20 +436,48 @@ function Invoke-CanonicalPublicationAuthorityValidation {
     }
     $input | ConvertTo-Json -Depth 20 | Set-Content -Path $inputPath -Encoding UTF8
 
+    $preValidationHead = (& git rev-parse HEAD).Trim()
+    if ($preValidationHead -ne $Head) {
+        throw "stop_authority_toctou=prevalidation_head_mismatch expected=$Head actual=$preValidationHead"
+    }
+    $preValidationBranch = (& git branch --show-current).Trim()
+    if ([string]::IsNullOrWhiteSpace($preValidationBranch)) {
+        throw "stop_authority_toctou=prevalidation_detached_head"
+    }
+    $preValidationTree = (& git rev-parse "$preValidationHead^{tree}").Trim()
     $output = @(& node $cliPath validate-publication-authority --input $inputPath 2>&1)
     $outputText = ($output | ForEach-Object { [string]$_ }) -join "`n"
     $outputText | Set-Content -Path $resultPath -Encoding UTF8
-    try {
-        $result = $outputText | ConvertFrom-Json
+    $result = ConvertFrom-SingleJsonDocument -Text $outputText
+    Assert-CorePublicationAuthorityResult -Result $result -ExpectedHead $preValidationHead
+    $postValidationHead = (& git rev-parse HEAD).Trim()
+    $postValidationBranch = (& git branch --show-current).Trim()
+    $postValidationTree = (& git rev-parse "$postValidationHead^{tree}").Trim()
+    if ($postValidationHead -ne $preValidationHead) {
+        throw "stop_authority_toctou=postvalidation_head_changed pre=$preValidationHead post=$postValidationHead"
     }
-    catch {
-        throw "stop_authority_validator_unavailable=canonical validator emitted invalid JSON"
+    if ([string]::IsNullOrWhiteSpace($postValidationBranch) -or $postValidationBranch -ne $preValidationBranch) {
+        throw "stop_authority_toctou=postvalidation_branch_changed pre=$preValidationBranch post=$postValidationBranch"
     }
+    if ($postValidationTree -ne $preValidationTree) {
+        throw "stop_authority_toctou=postvalidation_tree_changed pre=$preValidationTree post=$postValidationTree"
+    }
+    if ($postValidationHead -ne [string]$result.evaluatedHead) {
+        throw "stop_authority_toctou=postvalidation_evaluatedHead_mismatch post=$postValidationHead evaluated=$($result.evaluatedHead)"
+    }
+
+    $publicationDecision = $result.effectDecisions.publication
+    $publicationFailedConstraintIds = @($publicationDecision.failedConstraintIds | ForEach-Object { [string]$_ })
     Write-Host "publicationAuthorityValidator=threshold-core"
-    Write-Host "publicationAuthorityDecision=$($result.decision)"
-    Write-Host "publicationAuthorityReasonCodes=$((@($result.reasonCodes) | Sort-Object) -join ',')"
-    if ($result.valid -ne $true) {
-        throw [string]$result.decision
+    Write-Host "publicationAuthorityEvaluatedHead=$($result.evaluatedHead)"
+    Write-Host "publicationAuthorityInputDigest=$($result.inputDigest)"
+    Write-Host "publicationAuthorityPublicationAllowed=$($publicationDecision.allowed.ToString().ToLowerInvariant())"
+    Write-Host "publicationAuthorityFailedConstraintIds=$((@($result.failedConstraintIds) | Sort-Object) -join ',')"
+    if ($result.PSObject.Properties.Name -contains "reasonCodes") {
+        Write-Host "publicationAuthorityReasonCodes=$((@($result.reasonCodes) | Sort-Object) -join ',')"
+    }
+    if ($result.valid -ne $true -or $publicationDecision.allowed -ne $true) {
+        throw (Get-PublicationStopFromFailedConstraints -FailedConstraintIds $publicationFailedConstraintIds)
     }
 }
 
@@ -334,6 +514,16 @@ function Assert-PublicationPreflight {
         -WorkorderDigest $subjectDigest `
         -PolicyDigest $policyDigest
 
+    $actionHead = (& git rev-parse HEAD).Trim()
+    $actionBranch = (& git branch --show-current).Trim()
+    if ($actionHead -ne $head) {
+        throw "stop_authority_toctou=action_head_mismatch expected=$head actual=$actionHead"
+    }
+    if ([string]::IsNullOrWhiteSpace($actionBranch) -or $actionBranch -ne $branch) {
+        throw "stop_authority_toctou=action_branch_mismatch expected=$branch actual=$actionBranch"
+    }
+    Write-Host "publicationActionHead=$actionHead"
+    Write-Host "publicationValidatedPushRef=git push origin ${actionHead}:refs/heads/<targetBranch>"
     Write-Host "publicationPreflight=passed"
 }
 
