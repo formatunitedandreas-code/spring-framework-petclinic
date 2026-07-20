@@ -127,6 +127,7 @@ $candidateMaturityText = Get-Content (Join-Path $PSScriptRoot "test-candidate-ma
 foreach ($requiredMarker in @(
     "comment_wrap_cleanup_must_not_be_batch_auto_patchable",
     "line_comment_wrap_cleanup_trainer_decision_must_be_reviewOnly",
+    "threshold.candidate-twin-delta-evidence.v0.1",
     "Test-CandidateMaturityAutoPatchable"
 )) {
     if ($candidateMaturityText -notmatch [regex]::Escape($requiredMarker)) {

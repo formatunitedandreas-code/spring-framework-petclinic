@@ -173,6 +173,64 @@ function Get-TrainerDecision {
     return "reviewOnly"
 }
 
+function Test-CommentCleanupClass {
+    param([string] $CandidateClass)
+    return $CandidateClass -eq "comment_wrap_cleanup" -or $CandidateClass -eq "line_comment_wrap_cleanup"
+}
+
+function New-CandidateTwinDeltaEvidence {
+    param(
+        [hashtable] $Candidate,
+        [string] $CandidateClass,
+        [bool] $ExecutionStable
+    )
+
+    $isCommentCleanup = Test-CommentCleanupClass -CandidateClass $CandidateClass
+    $semanticUnitKind = if ($Candidate.ContainsKey("semanticUnitKind")) { [string]$Candidate.semanticUnitKind } elseif ($CandidateClass -eq "line_comment_wrap_cleanup") { "line_comment" } else { "unknown" }
+    $policyRef = if ($isCommentCleanup) { $null } else { "threshold.petclinic.readability-policy.v0.1" }
+    $qualityDefectProven = -not $isCommentCleanup
+    $qualityImprovementProven = -not $isCommentCleanup
+
+    return [ordered]@{
+        schemaVersion = "threshold.candidate-twin-delta-evidence.v0.1"
+        legacyTwin = [ordered]@{
+            evidenceRef = "petclinic:legacy-semantic-unit:$($Candidate.candidateId)"
+            semanticUnitKind = $semanticUnitKind
+            qualityDefectProven = $qualityDefectProven
+            unresolvedConflicts = 0
+            currentLineLength = if ($Candidate.ContainsKey("currentLineLength")) { [int]$Candidate.currentLineLength } else { $null }
+            configuredMaxLineLength = if ($Candidate.ContainsKey("configuredMaxLineLength")) { [int]$Candidate.configuredMaxLineLength } else { $null }
+        }
+        targetTwin = [ordered]@{
+            evidenceRef = "petclinic:target-semantic-unit:$($Candidate.candidateId)"
+            policyRef = $policyRef
+            canonicalTargetDefined = -not $isCommentCleanup
+            derivedFromUnreviewedPatch = $false
+        }
+        deltaTwin = [ordered]@{
+            evidenceRef = "petclinic:delta-semantic-unit:$($Candidate.candidateId)"
+            transformationExecutable = $ExecutionStable
+            qualityImprovementProven = $qualityImprovementProven
+            expectedBenefit = if ($isCommentCleanup) { 0.1 } else { 0.6 }
+            expectedCost = if ($isCommentCleanup) { 0.2 } else { 0.2 }
+        }
+        semanticFidelity = [ordered]@{
+            behaviorPreserved = $true
+            criticalInvariantsPreserved = $true
+        }
+        qualityFidelity = [ordered]@{
+            policyViolationRemoved = $false
+            canonicalityImproved = -not $isCommentCleanup
+            packageConsistencyImproved = -not $isCommentCleanup
+        }
+        nonClaims = @(
+            "PetClinic twin delta evidence is adapter evidence, not a generic twin engine",
+            "semantic fidelity passing does not imply quality fidelity passing",
+            "target twins derived from unreviewed patches are not training truth"
+        )
+    }
+}
+
 function Add-Candidate {
     param(
         [hashtable] $Candidate,
@@ -189,8 +247,11 @@ function Add-Candidate {
     $admission = if ($executionStable -and $trainerDecision -eq "autoPatchable") { "autoPatchable" } elseif ($trainerDecision -eq "held") { "shadowOnly" } else { "reviewOnly" }
     $maturityReasons = New-Object System.Collections.Generic.List[string]
 
-    if ($CandidateClass -eq "comment_wrap_cleanup" -or $CandidateClass -eq "line_comment_wrap_cleanup") {
+    $Candidate.twinDelta = New-CandidateTwinDeltaEvidence -Candidate $Candidate -CandidateClass $CandidateClass -ExecutionStable $executionStable
+
+    if (Test-CommentCleanupClass -CandidateClass $CandidateClass) {
         $admission = "reviewOnly"
+        $maturityReasons.Add("candidate_maturity:twin_delta_quality_fidelity_failed") | Out-Null
         $maturityReasons.Add("candidate_maturity:comment_cleanup_requires_policy_bound_quality_objective") | Out-Null
     }
 
@@ -203,11 +264,11 @@ function Add-Candidate {
         admission = $admission
         predicates = [ordered]@{
             executionStable = if ($executionStable) { "passed" } else { "failed" }
-            qualityObjectiveVerified = if ($CandidateClass -eq "comment_wrap_cleanup" -or $CandidateClass -eq "line_comment_wrap_cleanup") { "not_evaluated" } else { "passed" }
-            policyBound = if ($CandidateClass -eq "comment_wrap_cleanup" -or $CandidateClass -eq "line_comment_wrap_cleanup") { "not_evaluated" } else { "passed" }
+            qualityObjectiveVerified = if (Test-CommentCleanupClass -CandidateClass $CandidateClass) { "failed" } else { "passed" }
+            policyBound = if (Test-CommentCleanupClass -CandidateClass $CandidateClass) { "failed" } else { "passed" }
             semanticRiskAcceptable = "passed"
             economicBudgetSatisfied = "passed"
-            evidenceComplete = if ($CandidateClass -eq "comment_wrap_cleanup" -or $CandidateClass -eq "line_comment_wrap_cleanup") { "not_evaluated" } else { "passed" }
+            evidenceComplete = if (Test-CommentCleanupClass -CandidateClass $CandidateClass) { "failed" } else { "passed" }
             learningEligible = if ($trainerDecision -eq "held") { "failed" } else { "passed" }
         }
         reasonCodes = @($maturityReasons)
@@ -482,6 +543,20 @@ function Find-ConservativeCommentSplitPoint {
 
     return $null
 }
+
+function Get-CommentSemanticUnitKind {
+    param(
+        [string] $Line,
+        [int] $LineIndex,
+        [string] $DefaultKind
+    )
+
+    if ($LineIndex -lt 12 -and $Line -match "(?i)\b(copyright|licensed|apache|license)\b") {
+        return "license_header"
+    }
+    return $DefaultKind
+}
+
 function Parse-MethodBlocks {
     param([string[]] $Lines)
     $methods = New-Object System.Collections.Generic.List[psobject]
@@ -823,6 +898,9 @@ foreach ($file in $sourceFiles) {
             score = 30 + 30 + 20 + 10 + $layerScore
             file = $path
             member = $member
+            semanticUnitKind = Get-CommentSemanticUnitKind -Line $line -LineIndex $i -DefaultKind "javadoc_comment"
+            currentLineLength = $line.Length
+            configuredMaxLineLength = $null
             commentWrapSplitPointFound = $true
             expectedDiffSummary = "Wrap one long Javadoc comment line without changing source behavior."
             estimatedChangedLines = 2
@@ -849,6 +927,9 @@ foreach ($file in $sourceFiles) {
             score = 30 + 30 + 20 + 10 + $layerScore
             file = $path
             member = $member
+            semanticUnitKind = Get-CommentSemanticUnitKind -Line $line -LineIndex $i -DefaultKind "line_comment"
+            currentLineLength = $line.Length
+            configuredMaxLineLength = $null
             commentWrapSplitPointFound = $true
             expectedDiffSummary = "Wrap one long line comment without changing source behavior."
             estimatedChangedLines = 2

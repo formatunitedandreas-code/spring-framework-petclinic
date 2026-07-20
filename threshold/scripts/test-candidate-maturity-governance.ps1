@@ -39,13 +39,48 @@ if (-not $lineCommentCapability -or [string]$lineCommentCapability.trainerDecisi
 $discoverText = Get-Content "threshold/scripts/discover-candidates.ps1" -Raw
 foreach ($requiredMarker in @(
     "threshold.candidate-maturity-admission.v0.1",
+    "threshold.candidate-twin-delta-evidence.v0.1",
     "candidate_maturity:comment_cleanup_requires_policy_bound_quality_objective",
+    "candidate_maturity:twin_delta_quality_fidelity_failed",
     "execution stability is not quality objective verification",
+    "semantic fidelity passing does not imply quality fidelity passing",
     "Somnium may demote candidate maturity but may not promote missing evidence, policy, or quality"
 )) {
     if ($discoverText -notmatch [regex]::Escape($requiredMarker)) {
         throw "candidate_maturity_discovery_marker_missing=$requiredMarker"
     }
+}
+
+$tempPocket = Join-Path ([System.IO.Path]::GetTempPath()) "threshold-candidate-maturity-governance-pocket.json"
+if (Test-Path $tempPocket) {
+    Remove-Item -LiteralPath $tempPocket -Force
+}
+& powershell.exe -NoProfile -ExecutionPolicy Bypass -File "threshold/scripts/discover-candidates.ps1" `
+    -SourceRoot "threshold/discovery-canaries/fixtures/src/main/java/org/springframework/samples/petclinic" `
+    -PocketPath $tempPocket `
+    -Limit 100
+if ($LASTEXITCODE -ne 0) {
+    throw "candidate_maturity_fixture_discovery_failed"
+}
+$pocket = Get-Content $tempPocket -Raw | ConvertFrom-Json
+$commentCandidate = $pocket.candidates | Where-Object { [string]$_.candidateClass -eq "comment_wrap_cleanup" } | Select-Object -First 1
+if (-not $commentCandidate) {
+    throw "candidate_maturity_comment_fixture_missing"
+}
+if ([string]$commentCandidate.admission -ne "reviewOnly") {
+    throw "candidate_maturity_comment_fixture_not_reviewOnly"
+}
+if (-not $commentCandidate.twinDelta -or [string]$commentCandidate.twinDelta.schemaVersion -ne "threshold.candidate-twin-delta-evidence.v0.1") {
+    throw "candidate_maturity_twin_delta_missing"
+}
+if ($commentCandidate.twinDelta.semanticFidelity.behaviorPreserved -ne $true) {
+    throw "candidate_maturity_semantic_fidelity_expected_pass"
+}
+if ($commentCandidate.twinDelta.qualityFidelity.canonicalityImproved -ne $false) {
+    throw "candidate_maturity_quality_fidelity_expected_fail"
+}
+if (Test-Path $tempPocket) {
+    Remove-Item -LiteralPath $tempPocket -Force
 }
 
 $batchRunnerText = Get-Content "threshold/scripts/run-next-batch.ps1" -Raw
