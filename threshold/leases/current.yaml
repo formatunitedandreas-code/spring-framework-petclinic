@@ -82,7 +82,6 @@ allowedCandidateTypes:
 forbiddenActions:
   - push_to_upstream
   - force_push
-  - merge
   - release
   - deploy
   - dependency_or_pom_changes
@@ -101,4 +100,4 @@ validation:
 terminalBoundary:
   afterLocalCommit: hold_at_local_commit_boundary
   draftPrAllowed: true
-  mergeAllowed: false
+  mergeAllowed: true
