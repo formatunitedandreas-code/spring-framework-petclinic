@@ -4,7 +4,7 @@ param(
     [string] $LeasePath = "threshold/leases/current.yaml",
     [string] $StatePath = "threshold/lease-state/current-run.json",
     [switch] $PublicationPreflight,
-    [string] $AuthorityPath = "threshold/runtime/authority/merge-authority.json",
+    [string] $AuthorityPath = "threshold/runtime/authority/publication-authority.json",
     [string] $ConsumedAuthorityPath = "threshold/runtime/authority/consumed-authorities.json",
     [string] $ThresholdCorePath = $env:THRESHOLD_CORE_PATH,
     [string] $ReviewHead = "",
@@ -24,6 +24,14 @@ $AllowedValidationResults = @(
     "TEST_FAILURE",
     "SKIPPED_BY_LEASE_INVOCATION"
 )
+
+function Get-GitFirstLine {
+    param([string[]] $GitArgs)
+
+    $output = @(& git @GitArgs)
+    if ($output.Count -eq 0 -or $null -eq $output[0]) { return "" }
+    return ([string]$output[0]).Trim()
+}
 
 function Get-LeaseScalar {
     param([string[]] $Lines, [string] $Name)
@@ -305,6 +313,7 @@ function Get-PublicationStopFromFailedConstraints {
     if ($FailedConstraintIds -contains "publication-authority-unconsumed" -or $FailedConstraintIds -contains "publication-authority-consumption-id-unused") {
         return "stop_authority_consumed"
     }
+    if ($FailedConstraintIds -contains "publication-action-binding" -or $FailedConstraintIds -contains "one-shot-authority-action-binding") { return "stop_authority_mismatch=action" }
     if ($FailedConstraintIds -contains "publication-authority-present") { return "stop_authority_missing" }
     return "stop_authority_invalid"
 }
@@ -401,7 +410,7 @@ function Invoke-CanonicalPublicationAuthorityValidation {
     )
 
     if (-not (Test-Path $Path)) {
-        throw "stop_authority_missing=one-shot merge authority required for publication preflight"
+        throw "stop_authority_missing=one-shot publication authority required for publication preflight"
     }
 
     if ([string]::IsNullOrWhiteSpace($ThresholdCorePath)) {
@@ -427,7 +436,7 @@ function Invoke-CanonicalPublicationAuthorityValidation {
             headSha = $Head
             workorderDigest = $WorkorderDigest
             policyDigest = $PolicyDigest
-            action = "merge"
+            action = "push"
             now = (Get-Date).ToUniversalTime().ToString("o")
             consumedConsumptionIds = @(Get-ConsumedAuthorityIds -Path $ConsumedAuthorityPath)
         }
@@ -440,7 +449,7 @@ function Invoke-CanonicalPublicationAuthorityValidation {
     if ($preValidationHead -ne $Head) {
         throw "stop_authority_toctou=prevalidation_head_mismatch expected=$Head actual=$preValidationHead"
     }
-    $preValidationBranch = (& git branch --show-current).Trim()
+    $preValidationBranch = Get-GitFirstLine -GitArgs @("branch", "--show-current")
     if ([string]::IsNullOrWhiteSpace($preValidationBranch)) {
         throw "stop_authority_toctou=prevalidation_detached_head"
     }
@@ -451,7 +460,7 @@ function Invoke-CanonicalPublicationAuthorityValidation {
     $result = ConvertFrom-SingleJsonDocument -Text $outputText
     Assert-CorePublicationAuthorityResult -Result $result -ExpectedHead $preValidationHead
     $postValidationHead = (& git rev-parse HEAD).Trim()
-    $postValidationBranch = (& git branch --show-current).Trim()
+    $postValidationBranch = Get-GitFirstLine -GitArgs @("branch", "--show-current")
     $postValidationTree = (& git rev-parse "$postValidationHead^{tree}").Trim()
     if ($postValidationHead -ne $preValidationHead) {
         throw "stop_authority_toctou=postvalidation_head_changed pre=$preValidationHead post=$postValidationHead"
@@ -485,7 +494,7 @@ function Assert-PublicationPreflight {
     param([string[]] $ChangedPaths)
 
     $head = (& git rev-parse HEAD).Trim()
-    $branch = (& git branch --show-current).Trim()
+    $branch = Get-GitFirstLine -GitArgs @("branch", "--show-current")
     $remoteUrl = (& git remote get-url origin).Trim()
     $repositoryRef = if ($remoteUrl -match "github.com[:/](.+?)(\.git)?$") { $Matches[1] -replace "\.git$", "" } else { $remoteUrl }
     $subjectRef = "pull-request:$branch->$BaseRef"
@@ -515,7 +524,7 @@ function Assert-PublicationPreflight {
         -PolicyDigest $policyDigest
 
     $actionHead = (& git rev-parse HEAD).Trim()
-    $actionBranch = (& git branch --show-current).Trim()
+    $actionBranch = Get-GitFirstLine -GitArgs @("branch", "--show-current")
     if ($actionHead -ne $head) {
         throw "stop_authority_toctou=action_head_mismatch expected=$head actual=$actionHead"
     }

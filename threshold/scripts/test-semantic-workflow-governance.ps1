@@ -70,7 +70,7 @@ if ($prGovernanceText -notmatch "AllowedValidationResults") {
 if ($prGovernanceText -notmatch "PublicationPreflight") {
     throw "pr_governance_publication_preflight_missing"
 }
-if ($prGovernanceText -notmatch "stop_authority_missing=one-shot merge authority required") {
+if ($prGovernanceText -notmatch "stop_authority_missing=one-shot publication authority required") {
     throw "pr_governance_one_shot_authority_stop_missing"
 }
 
@@ -89,10 +89,37 @@ foreach ($requiredMarker in @(
     "unknown-core-field",
     "validator-evaluated-different-head",
     "typed-publication-blocked-reason-string-allowed",
+    "reason-renaming-does-not-decide",
+    "reason-ablation-does-not-decide",
+    "merge-authority-not-publication",
     "post-cli-head-detached"
 )) {
     if ($publicationPreflightText -notmatch $requiredMarker) {
         throw "publication_preflight_fixture_missing=$requiredMarker"
+    }
+}
+
+$isolatedToctouText = Get-Content (Join-Path $PSScriptRoot "test-publication-toctou-isolated-fixture.ps1") -Raw
+if ($isolatedToctouText -notmatch "isolated-post-cli-head-detached") {
+    throw "publication_toctou_isolated_fixture_missing"
+}
+
+$reasonAuditText = Get-Content (Join-Path $PSScriptRoot "audit-publication-reason-boundary.ps1") -Raw
+foreach ($requiredMarker in @(
+    "nonAuthorizing",
+    "effectDecisions.publication.allowed",
+    "failedConstraintIds as report/projection data",
+    "reason audit is not publication authority",
+    "allowedEffects = @(""observe"", ""shadowIntegration"")",
+    "Somnium shadow_ready is technical observation readiness only",
+    "Somnium may only affect observe and shadowIntegration in this adapter lane",
+    "SomniumDecision <= GuardianDecision <= AuthorityDecision is an ordering invariant",
+    "Somnium outputs may not return as training truth through telemetry, Chunky bias, KG projection, or training artifacts without grounding and independent review",
+    "Publication and merge readiness remain false until separate exact-head authority exists",
+    "publication remains bound to typed effect decisions"
+)) {
+    if ($reasonAuditText -notmatch [regex]::Escape($requiredMarker)) {
+        throw "reason_audit_boundary_marker_missing=$requiredMarker"
     }
 }
 

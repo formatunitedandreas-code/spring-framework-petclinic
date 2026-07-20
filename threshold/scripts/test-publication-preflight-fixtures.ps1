@@ -7,6 +7,14 @@ param(
 Set-StrictMode -Version Latest
 $ErrorActionPreference = "Stop"
 
+function Get-GitFirstLine {
+    param([string[]] $GitArgs)
+
+    $output = @(& git @GitArgs)
+    if ($output.Count -eq 0 -or $null -eq $output[0]) { return "" }
+    return ([string]$output[0]).Trim()
+}
+
 function Get-TextSha256 {
     param([string] $Value)
 
@@ -108,7 +116,7 @@ function Write-Authority {
     )
 
     $head = (& git rev-parse HEAD).Trim()
-    $branch = (& git branch --show-current).Trim()
+    $branch = Get-GitFirstLine -GitArgs @("branch", "--show-current")
     $authority = [ordered]@{
         schemaVersion = "threshold.one-shot-authority.v0.1"
         authorityId = "authority:publication-preflight:test"
@@ -118,7 +126,7 @@ function Write-Authority {
         headSha = $head
         workorderDigest = Get-SubjectDigest -Head $head
         policyDigest = Get-PolicyDigest
-        action = "merge"
+        action = "push"
         issuer = "fixture:publication-preflight"
         issuedAt = (Get-Date).ToUniversalTime().AddMinutes(-5).ToString("o")
         expiresAt = (Get-Date).ToUniversalTime().AddMinutes(30).ToString("o")
@@ -205,13 +213,44 @@ if (mode === "multi-json") {
     },
     failedConstraintIds: []
   }, 0);
+} else if (mode === "valid-reason-renamed") {
+  output({
+    valid: true,
+    decision: "legacy_label_renamed_must_not_decide",
+    reasonCodes: ["stop_authority_expired", "renamed_diagnostic_only"],
+    evaluatedHead: head,
+    inputDigest: digest,
+    effectDecisions: {
+      observe: decision("observe", true, []),
+      localExperiment: decision("localExperiment", true, []),
+      shadowIntegration: decision("shadowIntegration", true, []),
+      publication: decision("publication", true, []),
+      merge: decision("merge", true, [])
+    },
+    failedConstraintIds: []
+  }, 0);
+} else if (mode === "valid-reason-ablation") {
+  output({
+    valid: true,
+    evaluatedHead: head,
+    inputDigest: digest,
+    effectDecisions: {
+      observe: decision("observe", true, []),
+      localExperiment: decision("localExperiment", true, []),
+      shadowIntegration: decision("shadowIntegration", true, []),
+      publication: decision("publication", true, []),
+      merge: decision("merge", true, [])
+    },
+    failedConstraintIds: []
+  }, 0);
 } else if (mode.startsWith("publication-blocked")) {
   const constraintByMode = {
     "publication-blocked-reason-allowed": "publication-head-binding",
     "publication-blocked-head": "publication-head-binding",
     "publication-blocked-branch": "publication-branch-binding",
     "publication-blocked-expired": "publication-authority-expiry",
-    "publication-blocked-consumed": "publication-authority-unconsumed"
+    "publication-blocked-consumed": "publication-authority-unconsumed",
+    "publication-blocked-action": "one-shot-authority-action-binding"
   };
   const failed = [constraintByMode[mode] || "publication-head-binding"];
   output({
@@ -274,14 +313,14 @@ function Invoke-WithStubCoreMode {
 }
 
 $runtimeRoot = "threshold/runtime/publication-preflight-fixtures"
-$authorityPath = "$runtimeRoot/merge-authority.json"
+$authorityPath = "$runtimeRoot/publication-authority.json"
 $consumedPath = "$runtimeRoot/consumed-authorities.json"
 if (Test-Path $runtimeRoot) { Remove-Item -Recurse -Force $runtimeRoot }
 New-Item -ItemType Directory -Path $runtimeRoot | Out-Null
 $stubCorePath = New-StubCore -Root (Join-Path $runtimeRoot "stub-core")
 
 $head = (& git rev-parse HEAD).Trim()
-$originalBranch = (& git branch --show-current).Trim()
+$originalBranch = Get-GitFirstLine -GitArgs @("branch", "--show-current")
 
 Assert-ThrowsLike -Name "missing-authority" -Pattern "stop_authority_missing" -ScriptBlock {
     Invoke-Preflight -AuthorityPath $authorityPath -ConsumedAuthorityPath $consumedPath -ReviewHead $head -CorePath $stubCorePath
@@ -290,6 +329,25 @@ Assert-ThrowsLike -Name "missing-authority" -Pattern "stop_authority_missing" -S
 Write-Authority -Path $authorityPath
 Invoke-Preflight -AuthorityPath $authorityPath -ConsumedAuthorityPath $consumedPath -ReviewHead $head -CorePath $stubCorePath | Out-Null
 Write-Host "publicationPreflightFixture=valid-authority-passed"
+
+Invoke-WithStubCoreMode -Mode "valid-reason-renamed" -ScriptBlock {
+    Invoke-Preflight -AuthorityPath $authorityPath -ConsumedAuthorityPath $consumedPath -ReviewHead $head -CorePath $stubCorePath | Out-Null
+}
+Write-Host "publicationPreflightFixture=reason-renaming-does-not-decide"
+
+Invoke-WithStubCoreMode -Mode "valid-reason-ablation" -ScriptBlock {
+    Invoke-Preflight -AuthorityPath $authorityPath -ConsumedAuthorityPath $consumedPath -ReviewHead $head -CorePath $stubCorePath | Out-Null
+}
+Write-Host "publicationPreflightFixture=reason-ablation-does-not-decide"
+
+Write-Authority -Path $authorityPath -Overrides @{ action = "merge" }
+Assert-ThrowsLike -Name "merge-authority-not-publication" -Pattern "stop_authority_mismatch=action" -ScriptBlock {
+    Invoke-WithStubCoreMode -Mode "publication-blocked-action" -ScriptBlock {
+        Invoke-Preflight -AuthorityPath $authorityPath -ConsumedAuthorityPath $consumedPath -ReviewHead $head -CorePath $stubCorePath
+    }
+}
+
+Write-Authority -Path $authorityPath
 
 Write-Authority -Path $authorityPath -Overrides @{ headSha = "stale-head" }
 Assert-ThrowsLike -Name "wrong-head-authority" -Pattern "stop_authority_mismatch=headSha" -ScriptBlock {
