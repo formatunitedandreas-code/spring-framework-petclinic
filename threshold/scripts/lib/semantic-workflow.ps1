@@ -88,7 +88,10 @@ function Write-ThresholdJsonFile {
 function Assert-ThresholdSemanticEvidenceFileEconomy {
     [CmdletBinding()]
     param(
-        [string] $BaseRef = "origin/main"
+        [string] $BaseRef = "origin/main",
+        [int] $MaximumEvidenceFiles = 3,
+        [int] $MaximumEvidenceChangedLines = 300,
+        [switch] $RequireCompleteRunEvidence
     )
 
     $changed = @(git diff --name-only "$BaseRef...HEAD")
@@ -104,9 +107,41 @@ function Assert-ThresholdSemanticEvidenceFileEconomy {
     }
 
     $runEvidence = @($changed | Where-Object { $_ -like "threshold/runs/*" })
+    if ($runEvidence.Count -gt $MaximumEvidenceFiles) {
+        throw "semantic_file_economy_evidence_file_count_breach=$($runEvidence.Count)"
+    }
+
+    if ($runEvidence.Count -gt 0) {
+        $lineStats = @(git diff --numstat "$BaseRef...HEAD" -- threshold/runs)
+        $changedLines = 0
+        foreach ($line in $lineStats) {
+            $parts = ([string]$line) -split "\s+"
+            foreach ($index in @(0, 1)) {
+                if ($parts[$index] -match "^\d+$") {
+                    $changedLines += [int]$parts[$index]
+                }
+            }
+        }
+        if ($changedLines -gt $MaximumEvidenceChangedLines) {
+            throw "semantic_file_economy_changed_line_breach=$changedLines"
+        }
+    }
+
     foreach ($path in $runEvidence) {
         if ($path -notmatch "^threshold/runs/[^/]+/(twin-delta|aggregate-receipt|evidence-digests)\.json$") {
             throw "unexpected_semantic_run_evidence=$path"
+        }
+    }
+
+    if ($RequireCompleteRunEvidence) {
+        $runIds = @($runEvidence | ForEach-Object { ($_ -split "/")[2] } | Sort-Object -Unique)
+        foreach ($runId in $runIds) {
+            foreach ($fileName in @("twin-delta.json", "aggregate-receipt.json", "evidence-digests.json")) {
+                $requiredPath = "threshold/runs/$runId/$fileName"
+                if ($runEvidence -notcontains $requiredPath) {
+                    throw "semantic_file_economy_missing_required_file=$requiredPath"
+                }
+            }
         }
     }
 }

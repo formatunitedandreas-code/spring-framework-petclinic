@@ -28,6 +28,41 @@ if ([string]::IsNullOrWhiteSpace($RunId)) {
     $RunId = "semantic-$($legacyTwin.sourceHead.Substring(0, 12))"
 }
 $paths = Get-ThresholdSemanticRuntimePaths -RunId $RunId
+$legacyCapabilities = @($legacyTwin.capabilities | ForEach-Object { [string]$_.id } | Where-Object { -not [string]::IsNullOrWhiteSpace($_) })
+$preservedCapabilities = @($targetTwin.preservedCapabilities | ForEach-Object { [string]$_ } | Where-Object { -not [string]::IsNullOrWhiteSpace($_) })
+$legacyBehaviors = @($legacyTwin.behaviorInvariants | ForEach-Object { [string]$_.id } | Where-Object { -not [string]::IsNullOrWhiteSpace($_) })
+$preservedBehaviors = @($targetTwin.preservedBehaviorInvariants | ForEach-Object { [string]$_ } | Where-Object { -not [string]::IsNullOrWhiteSpace($_) })
+$unresolvedConflicts = @($legacyTwin.unresolvedConflicts)
+$findings = New-Object System.Collections.Generic.List[object]
+
+$missingCapabilities = @($legacyCapabilities | Where-Object { $preservedCapabilities -notcontains $_ })
+foreach ($missing in $missingCapabilities) {
+    $findings.Add([pscustomobject]@{ code = "target_loses_capability"; ref = $missing })
+}
+
+$missingBehaviors = @($legacyBehaviors | Where-Object { $preservedBehaviors -notcontains $_ })
+foreach ($missing in $missingBehaviors) {
+    $findings.Add([pscustomobject]@{ code = "target_loses_behavior_invariant"; ref = $missing })
+}
+
+foreach ($conflict in $unresolvedConflicts) {
+    $findings.Add([pscustomobject]@{ code = "unresolved_semantic_conflict"; ref = $conflict })
+}
+
+$capabilityPreservationPassed = $missingCapabilities.Count -eq 0
+$behaviorPreservationPassed = $missingBehaviors.Count -eq 0
+$evidenceSufficiencyPassed = $unresolvedConflicts.Count -eq 0 -and $legacyTwin.status -in @("triangulated", "verified")
+$transitionFeasibilityPassed = $targetTwin.transformations.Count -eq 0
+$guardianResult = if ($capabilityPreservationPassed -and $behaviorPreservationPassed -and $evidenceSufficiencyPassed -and $transitionFeasibilityPassed) {
+    "target_admissible_for_delta_planning"
+}
+elseif (-not $evidenceSufficiencyPassed) {
+    "target_requires_more_evidence"
+}
+else {
+    "target_rejected"
+}
+
 $delta = [ordered]@{
     deltaId = "twin-delta:$RunId"
     legacyTwinDigest = $legacyTwin.twinDigest
@@ -48,13 +83,17 @@ $delta = [ordered]@{
 $guardian = [ordered]@{
     proposalId = $targetTwin.proposalId
     legacyTwinDigest = $legacyTwin.twinDigest
-    capabilityPreservationPassed = $true
-    behaviorPreservationPassed = $true
+    capabilityPreservationPassed = $capabilityPreservationPassed
+    behaviorPreservationPassed = $behaviorPreservationPassed
     dependencyPolicyPassed = $true
-    evidenceSufficiencyPassed = $true
-    transitionFeasibilityPassed = $true
-    findings = @()
-    result = "target_admissible_for_delta_planning"
+    evidenceSufficiencyPassed = $evidenceSufficiencyPassed
+    transitionFeasibilityPassed = $transitionFeasibilityPassed
+    findings = @($findings.ToArray())
+    result = $guardianResult
+}
+
+if ($guardian.result -ne "target_admissible_for_delta_planning") {
+    throw "semantic_guardian_blocked=$($guardian.result)"
 }
 
 if ($PlanOnly) {

@@ -24,7 +24,7 @@ $targetTwinPath = "$($paths.TargetProposalDirectory)/target-twin-$head.json"
 
 & (Join-Path $PSScriptRoot "materialize-legacy-twin.ps1") -OutputPath $legacyTwinPath
 & (Join-Path $PSScriptRoot "propose-target-twin.ps1") -LegacyTwinPath $legacyTwinPath -OutputPath $targetTwinPath
-& (Join-Path $PSScriptRoot "plan-twin-delta.ps1") -LegacyTwinPath $legacyTwinPath -TargetTwinPath $targetTwinPath -RunId $RunId -PlanOnly:$PlanOnly
+& (Join-Path $PSScriptRoot "plan-twin-delta.ps1") -LegacyTwinPath $legacyTwinPath -TargetTwinPath $targetTwinPath -RunId $RunId -PlanOnly
 if ($PlanOnly) {
     Assert-ThresholdSemanticEvidenceFileEconomy
     Write-Host "semanticLane.runId=$RunId"
@@ -32,8 +32,4 @@ if ($PlanOnly) {
     exit 0
 }
 
-& (Join-Path $PSScriptRoot "verify-twin-outcome.ps1") -RunId $RunId -PlanOnly:$PlanOnly
-
-Assert-ThresholdSemanticEvidenceFileEconomy
-Write-Host "semanticLane.runId=$RunId"
-Write-Host "semanticLane.terminalState=ready_for_review"
+throw "stop_authority_missing=semantic workorder execution requires SeniorRefactoringGovernor admission"

@@ -171,6 +171,9 @@ if ($requiresMergeAuthority) {
     if ($forbiddenActions -contains "merge") {
         $mergeAuthoritySatisfied = $false
     }
+    if (-not $mergeAuthoritySatisfied) {
+        throw "Threshold governance policy/authority change requires explicit merge authority."
+    }
 }
 
 foreach ($path in $changedPaths) {

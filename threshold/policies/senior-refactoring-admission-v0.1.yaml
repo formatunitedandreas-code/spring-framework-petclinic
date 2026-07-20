@@ -5,7 +5,8 @@ semanticWorkorders:
     - semantic-workorder:
     - twin-delta:
   semanticEvidenceRequired: true
-  legacyTwinStatusRequired: verified
+  legacyTwinStatusRequired: triangulated
+  laneMaturity: plan_only
   semanticGuardianResultRequired: target_admissible_for_delta_planning
   behaviorLockRequired: true
   rollbackRequired: true
