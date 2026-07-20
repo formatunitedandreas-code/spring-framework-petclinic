@@ -1,0 +1,51 @@
+{
+    "schemaVersion":  "threshold.petclinic.slice-receipt.v0.2",
+    "candidateId":  "src-main-java-org-springframework-samples-petclinic-repository-jdbc-JdbcOwnerRepositoryImpl.java-comment-wrap-cleanup",
+    "leaseName":  "owned-autonomous-refactor-branch-wave-v0_automation",
+    "leaseDigest":  "86d2ffcbbedeed5c751ada85a1380a9a223cd317fe5541ea551878e12a6de115",
+    "branch":  "threshold-governed-refactor-demo-184",
+    "candidateClass":  "comment_wrap_cleanup",
+    "leaseStartHead":  "2a115d45261436c3c53df5cd69c6962f7ed686f1",
+    "baseHead":  "8ff957c25ac2abcc202d713d57a102fec6b1bb70",
+    "commitHash":  "f6f93c13881a0acdbfef7a9f23e02cef798bb27e",
+    "receiptMaterialization":  "prospective",
+    "perCommitValidationLogAvailable":  false,
+    "branchFinalValidationPassed":  false,
+    "changedFiles":  [
+                         {
+                             "path":  "src/main/java/org/springframework/samples/petclinic/repository/jdbc/JdbcOwnerRepositoryImpl.java",
+                             "beforeSha256":  "e9b0eb3a0f22d5a0627de905ccc1c5cff3846a337f6191b4de437f2b84d50f55",
+                             "afterSha256":  "66d593fd0e226be3226c15cd57d30505098724906b96f45aca82de19d31ea343"
+                         }
+                     ],
+    "diffSummary":  "Refactor PetClinic Wrap one long Javadoc comment line without changing source behavior",
+    "diffStat":  {
+                     "filesChanged":  1,
+                     "insertions":  2,
+                     "deletions":  1
+                 },
+    "validation":  {
+                       "diffCheck":  "passed",
+                       "command":  "local-autonomous",
+                       "result":  "pack-01-auto",
+                       "testsRun":  0,
+                       "failures":  0,
+                       "errors":  0,
+                       "skipped":  0
+                   },
+    "nonClaims":  [
+                      "no push in candidate slice",
+                      "no PR update in candidate slice",
+                      "no upstream interaction",
+                      "no pom.xml change",
+                      "no dependency change",
+                      "no src/test change",
+                      "no merge",
+                      "no release",
+                      "no deploy",
+                      "no public readiness claim",
+                      "no public correctness claim",
+                      "no public security claim",
+                      "no public compliance claim"
+                  ]
+}
