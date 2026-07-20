@@ -5,6 +5,8 @@ param(
     [string] $PocketPath = "",
     [string] $GatePath = "",
     [int] $MinScore = 70,
+    [string] $ReceiptRoot = "threshold/receipts",
+    [switch] $CompactEvidence,
     [switch] $SkipMavenTest
 )
 
@@ -1744,6 +1746,11 @@ if (-not $candidate) {
     exit 0
 }
 
+$candidateId = [string]$candidate.candidateId
+if ($candidateId -like "semantic-workorder:*" -or $candidateId -like "twin-delta:*") {
+    throw "semantic_workorders_must_use_semantic_lane"
+}
+
 Write-Host "selectedCandidateId=$($candidate.candidateId)"
 Write-Host "selectedCandidateClass=$($candidate.candidateClass)"
 Write-Host "selectedCandidateScore=$($candidate.score)"
@@ -1830,6 +1837,8 @@ if ($SkipMavenTest.IsPresent) {
         -CandidateClass $candidate.candidateClass `
         -CommitMessage $commitMessage `
         -AllowedPath $candidate.file `
+        -ReceiptRoot $ReceiptRoot `
+        -CompactEvidence:$CompactEvidence `
         -SkipMavenTest
 } else {
     & powershell.exe -NoProfile -ExecutionPolicy Bypass -File "threshold/scripts/complete-slice.ps1" `
@@ -1838,7 +1847,9 @@ if ($SkipMavenTest.IsPresent) {
         -CandidateId $candidate.candidateId `
         -CandidateClass $candidate.candidateClass `
         -CommitMessage $commitMessage `
-        -AllowedPath $candidate.file
+        -AllowedPath $candidate.file `
+        -ReceiptRoot $ReceiptRoot `
+        -CompactEvidence:$CompactEvidence
 }
 if ($LASTEXITCODE -ne 0) { throw "complete-slice failed." }
 

@@ -9,6 +9,8 @@ param(
     [Parameter(Mandatory = $true)]
     [string] $CommitMessage,
     [string[]] $AllowedPath = @(),
+    [string] $ReceiptRoot = "threshold/receipts",
+    [switch] $CompactEvidence,
     [switch] $SkipMavenTest
 )
 
@@ -109,12 +111,21 @@ $validationCommand = if ($SkipMavenTest.IsPresent) { "git diff --check" } else {
     -Errors $totals.errors `
     -Skipped $totals.skipped `
     -ReceiptMaterialization "post-commit" `
+    -ReceiptRoot $ReceiptRoot `
     -PerCommitValidationLogAvailable `
     -UpdateState
 if ($LASTEXITCODE -ne 0) { throw "Receipt recording failed for source commit $sourceCommit." }
 
-$trackedReceiptChanges = @(& git diff --name-only | Where-Object { $_ -like "threshold/receipts/*" -or $_ -eq "threshold/lease-state/current-run.json" })
-$untrackedReceiptChanges = @(& git ls-files --others --exclude-standard threshold/receipts | Where-Object { $_ -like "threshold/receipts/*" })
+if ($CompactEvidence.IsPresent) {
+    Write-Host "Threshold compact-evidence slice completed"
+    Write-Host "candidateId=$CandidateId"
+    Write-Host "sourceCommit=$sourceCommit"
+    Write-Host "baseHead=$baseHead"
+    exit 0
+}
+
+$trackedReceiptChanges = @(& git diff --name-only | Where-Object { $_ -like "$ReceiptRoot/*" -or $_ -eq $StatePath })
+$untrackedReceiptChanges = @(& git ls-files --others --exclude-standard $ReceiptRoot | Where-Object { $_ -like "$ReceiptRoot/*" })
 $receiptChanges = @($trackedReceiptChanges + $untrackedReceiptChanges | Select-Object -Unique)
 if (-not $receiptChanges) {
     throw "Receipt recording produced no receipt/state changes."
