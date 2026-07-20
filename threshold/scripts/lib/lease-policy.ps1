@@ -124,9 +124,12 @@ function Test-ThresholdGovernancePolicyPath {
     return (
         $normalized -like "threshold/scripts/*" -or
         $normalized -like "threshold/gates/*" -or
+        $normalized -like "threshold/policies/*" -or
+        $normalized -like "threshold/adapters/*" -or
         $normalized -like "threshold/capability-backlog/*" -or
         $normalized -like "threshold/authority/*" -or
         $normalized -eq "threshold/trainer/review-findings.json" -or
+        $normalized -eq ".gitignore" -or
         $normalized -eq ".github/workflows/threshold-governance.yml" -or
         $normalized -eq ".github/CODEOWNERS"
     )
@@ -144,6 +147,7 @@ function Test-ThresholdGovernanceEvidencePath {
         $normalized -like "threshold/attestations/*" -or
         $normalized -like "threshold/discovery-canaries/*" -or
         $normalized -like "threshold/kgs/*" -or
+        $normalized -like "threshold/runs/*" -or
         $normalized -eq "threshold/trainer/training-report.json" -or
         $normalized -eq "threshold/trainer/generated-canary-rules.json" -or
         $normalized -like "threshold/candidate-pocket/*" -or

@@ -16,6 +16,7 @@ param(
     [int] $Errors = 0,
     [int] $Skipped = 0,
     [string] $ReceiptMaterialization = "prospective",
+    [string] $ReceiptRoot = "threshold/receipts",
     [switch] $PerCommitValidationLogAvailable,
     [switch] $BranchFinalValidationPassed,
     [switch] $UpdateState,
@@ -42,19 +43,50 @@ function Get-CommitParent {
 
 function Get-GitBlobSha256 {
     param([string] $Revision, [string] $Path)
+    $repoPath = ConvertTo-RepoPath $Path
     $previousErrorActionPreference = $ErrorActionPreference
     $ErrorActionPreference = "Continue"
-    & git cat-file -e "$Revision`:$Path" 2>$null
+    & git cat-file -e "$Revision`:$repoPath" 2>$null
     $exists = $LASTEXITCODE -eq 0
     $ErrorActionPreference = $previousErrorActionPreference
     if (-not $exists) { return $null }
-    $spec = "$Revision`:$Path"
-    $quotedSpec = "'" + ($spec -replace "'", "'\''") + "'"
-    $digestOutput = @(bash -lc "git cat-file blob $quotedSpec | sha256sum")
-    if ($LASTEXITCODE -ne 0 -or $digestOutput.Count -eq 0) {
-        throw "Failed to hash git blob: $spec"
+
+    $spec = "$Revision`:$repoPath"
+    $processInfo = [System.Diagnostics.ProcessStartInfo]::new()
+    $processInfo.FileName = "git"
+    $argumentListProperty = $processInfo.GetType().GetProperty("ArgumentList")
+    if ($null -ne $argumentListProperty) {
+        [void] $processInfo.ArgumentList.Add("cat-file")
+        [void] $processInfo.ArgumentList.Add("blob")
+        [void] $processInfo.ArgumentList.Add($spec)
     }
-    return ([string]$digestOutput[0]).Split(" ")[0].Trim().ToLowerInvariant()
+    else {
+        $escapedSpec = $spec.Replace('"', '\"')
+        $processInfo.Arguments = "cat-file blob `"$escapedSpec`""
+    }
+    $processInfo.RedirectStandardOutput = $true
+    $processInfo.RedirectStandardError = $true
+    $processInfo.UseShellExecute = $false
+
+    $process = [System.Diagnostics.Process]::Start($processInfo)
+    $sha256 = [System.Security.Cryptography.SHA256]::Create()
+    $buffer = [byte[]]::new(8192)
+    try {
+        while (($read = $process.StandardOutput.BaseStream.Read($buffer, 0, $buffer.Length)) -gt 0) {
+            [void] $sha256.TransformBlock($buffer, 0, $read, $null, 0)
+        }
+        [void] $sha256.TransformFinalBlock($buffer, 0, 0)
+        $stderr = $process.StandardError.ReadToEnd()
+        $process.WaitForExit()
+        if ($process.ExitCode -ne 0) {
+            throw "Failed to hash git blob: $spec. $stderr"
+        }
+        return ([System.BitConverter]::ToString($sha256.Hash) -replace "-", "").ToLowerInvariant()
+    }
+    finally {
+        $sha256.Dispose()
+        $process.Dispose()
+    }
 }
 
 function ConvertTo-RepoPath {
@@ -74,7 +106,7 @@ if ([string]::IsNullOrWhiteSpace($BaseHead)) { $BaseHead = Get-CommitParent $Com
 if ([string]::IsNullOrWhiteSpace($DiffSummary)) { $DiffSummary = ((& git show --format=%s --no-patch $CommitHash) -join " ").Trim() }
 $leaseDigest = Get-GitBlobSha256 -Revision "HEAD" -Path (ConvertTo-RepoPath $LeasePath)
 if ([string]::IsNullOrWhiteSpace($leaseDigest)) {
-    throw "Cannot compute leaseDigest from committed git blob: $LeasePath"
+    $leaseDigest = (Get-FileHash -Algorithm SHA256 -LiteralPath $LeasePath).Hash.ToLowerInvariant()
 }
 
 $changedPaths = @(& git diff --name-only "$BaseHead..$CommitHash" | Where-Object { -not [string]::IsNullOrWhiteSpace($_) })
@@ -145,7 +177,7 @@ $receipt = [ordered]@{
     nonClaims = $nonClaims
 }
 
-$outDir = "threshold/receipts"
+$outDir = $ReceiptRoot
 if (-not (Test-Path $outDir)) { New-Item -ItemType Directory -Path $outDir | Out-Null }
 $safeCandidateId = $CandidateId -replace "[^A-Za-z0-9_.-]", "-"
 $shortCommit = $CommitHash.Substring(0, [Math]::Min(12, $CommitHash.Length))

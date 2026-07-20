@@ -13,6 +13,9 @@ param(
     [int] $MaxRepairAttemptsPerCandidate = 1,
     [int] $MinAutoPatchableCandidates = 1,
     [int] $MinScore = 70,
+    [ValidateSet("Compact", "Legacy")]
+    [string] $EvidenceMode = "Compact",
+    [string] $RunId = "",
     [switch] $SkipMavenTest,
     [switch] $PlanOnly
 )
@@ -21,12 +24,26 @@ Set-StrictMode -Version Latest
 $ErrorActionPreference = "Stop"
 
 . (Join-Path $PSScriptRoot "lib/runtime-paths.ps1")
+. (Join-Path $PSScriptRoot "lib/semantic-workflow.ps1")
 
 $runtimePaths = Get-ThresholdRuntimePaths
-if ([string]::IsNullOrWhiteSpace($LeasePath)) { $LeasePath = $runtimePaths.LeasePath }
-if ([string]::IsNullOrWhiteSpace($StatePath)) { $StatePath = $runtimePaths.LeaseStatePath }
-if ([string]::IsNullOrWhiteSpace($PocketPath)) { $PocketPath = $runtimePaths.CandidatePocketPath }
+$compactRuntimeRoot = "threshold/runtime/scope-drain/current"
+if ([string]::IsNullOrWhiteSpace($RunId)) {
+    $RunId = "scope-drain-$((Get-Date).ToUniversalTime().ToString("yyyyMMddTHHmmssZ"))"
+}
+if ($EvidenceMode -eq "Compact") {
+    if ([string]::IsNullOrWhiteSpace($LeasePath)) { $LeasePath = "$compactRuntimeRoot/lease.yaml" }
+    if ([string]::IsNullOrWhiteSpace($StatePath)) { $StatePath = "$compactRuntimeRoot/current-run.json" }
+    if ([string]::IsNullOrWhiteSpace($PocketPath)) { $PocketPath = "$compactRuntimeRoot/candidate-pocket.json" }
+}
+else {
+    if ([string]::IsNullOrWhiteSpace($LeasePath)) { $LeasePath = $runtimePaths.LeasePath }
+    if ([string]::IsNullOrWhiteSpace($StatePath)) { $StatePath = $runtimePaths.LeaseStatePath }
+    if ([string]::IsNullOrWhiteSpace($PocketPath)) { $PocketPath = $runtimePaths.CandidatePocketPath }
+}
 if ([string]::IsNullOrWhiteSpace($GatePath)) { $GatePath = $runtimePaths.AutoPatchableGatePath }
+$receiptRoot = if ($EvidenceMode -eq "Compact") { "$compactRuntimeRoot/receipts" } else { $runtimePaths.ReceiptDirectory }
+$semanticRunPaths = Get-ThresholdSemanticRuntimePaths -RunId $RunId
 
 function ConvertTo-RepoPath {
     param([string] $Path)
@@ -80,6 +97,96 @@ function Commit-PathsIfNeeded {
     & git commit -m $Message
     if ($LASTEXITCODE -ne 0) { throw "Failed to create commit '$Message'." }
     return $true
+}
+
+function Save-CompactScopeDrainEvidence {
+    param(
+        [string] $TerminalState,
+        [string] $Reason
+    )
+
+    $head = (& git rev-parse HEAD).Trim()
+    $state = if (Test-Path $StatePath) { Read-JsonFile -Path $StatePath } else { $null }
+    $pocket = if (Test-Path $PocketPath) { Read-JsonFile -Path $PocketPath } else { $null }
+    $receipts = @()
+    if (Test-Path $receiptRoot) {
+        $receipts = @(Get-ChildItem $receiptRoot -Filter *.json | Sort-Object Name | ForEach-Object {
+            Get-Content $_.FullName -Raw | ConvertFrom-Json
+        })
+    }
+
+    $changedProductFiles = @(
+        $receipts |
+            ForEach-Object { @($_.changedFiles | ForEach-Object { [string]$_.path }) } |
+            Where-Object { -not [string]::IsNullOrWhiteSpace($_) } |
+            Sort-Object -Unique
+    )
+    $productCommits = @(
+        $receipts |
+            ForEach-Object { [string]$_.commitHash } |
+            Where-Object { -not [string]::IsNullOrWhiteSpace($_) } |
+            Sort-Object -Unique
+    )
+
+    $aggregate = [ordered]@{
+        schemaVersion = "threshold.scope-drain.aggregate-receipt.v0.1"
+        runId = $RunId
+        evidenceMode = "Compact"
+        sourceHead = if ($state -and $state.PSObject.Properties["startHead"]) { [string]$state.startHead } else { $null }
+        finalHead = $head
+        terminalState = $TerminalState
+        terminalReason = $Reason
+        processedCandidates = if ($state) { [int]$state.candidatesProcessed } else { 0 }
+        productCommits = $productCommits
+        changedProductFiles = $changedProductFiles
+        receiptCount = $receipts.Count
+        candidatePocketDigest = if (Test-Path $PocketPath) { (Get-FileHash -Algorithm SHA256 -LiteralPath $PocketPath).Hash.ToLowerInvariant() } else { $null }
+        runtimeReceiptDigest = if (Test-Path $receiptRoot) { Get-ThresholdSha256 -Value ((Get-ChildItem $receiptRoot -Filter *.json | Sort-Object Name | ForEach-Object { Get-Content $_.FullName -Raw }) -join "`n") } else { $null }
+        nonClaims = @(
+            "aggregate receipt does not publish mutable runtime state",
+            "aggregate receipt does not claim semantic target realization",
+            "aggregate receipt does not grant merge, release, or deploy authority"
+        )
+    }
+
+    $delta = [ordered]@{
+        schemaVersion = "threshold.scope-drain-delta.v0.1"
+        deltaId = "twin-delta:$RunId"
+        runId = $RunId
+        source = "classic-scope-drain"
+        semanticTwinMaterialized = $false
+        selectedCandidateIds = @($receipts | ForEach-Object { [string]$_.candidateId })
+        predictedFiles = $changedProductFiles
+        actualFiles = $changedProductFiles
+        transformations = @($receipts | ForEach-Object {
+            [ordered]@{
+                candidateId = [string]$_.candidateId
+                candidateClass = [string]$_.candidateClass
+                commitHash = [string]$_.commitHash
+            }
+        })
+    }
+
+    $digests = [ordered]@{
+        schemaVersion = "threshold.scope-drain.evidence-digests.v0.1"
+        runId = $RunId
+        finalHead = $head
+        aggregateReceiptDigest = Get-ThresholdSha256 -Value (ConvertTo-CanonicalJson -Value $aggregate)
+        twinDeltaDigest = Get-ThresholdSha256 -Value (ConvertTo-CanonicalJson -Value $delta)
+        candidatePocketDigest = $aggregate.candidatePocketDigest
+        runtimeReceiptDigest = $aggregate.runtimeReceiptDigest
+    }
+
+    Write-ThresholdJsonFile -Path $semanticRunPaths.AggregateReceiptPath -Value $aggregate
+    Write-ThresholdJsonFile -Path $semanticRunPaths.TwinDeltaPath -Value $delta
+    Write-ThresholdJsonFile -Path $semanticRunPaths.EvidenceDigestsPath -Value $digests
+
+    Assert-ThresholdSemanticEvidenceFileEconomy -RequireCompleteRunEvidence
+    [void](Commit-PathsIfNeeded -Paths @(
+        $semanticRunPaths.TwinDeltaPath,
+        $semanticRunPaths.AggregateReceiptPath,
+        $semanticRunPaths.EvidenceDigestsPath
+    ) -Message "Record Threshold scope drain compact evidence")
 }
 
 function Get-AutoPatchableCandidateCount {
@@ -168,7 +275,9 @@ function Start-DrainSegment {
         $autoPatchableCandidateCount = Get-AutoPatchableCandidateCount -Path $PocketPath
     }
 
-    [void](Commit-PathsIfNeeded -Paths @($LeasePath, $StatePath, $PocketPath) -Message "Start Threshold scope drain segment $Segment")
+    if ($EvidenceMode -ne "Compact") {
+        [void](Commit-PathsIfNeeded -Paths @($LeasePath, $StatePath, $PocketPath) -Message "Start Threshold scope drain segment $Segment")
+    }
     return $autoPatchableCandidateCount
 }
 
@@ -237,6 +346,9 @@ function Invoke-RunNextSlice {
         "$MinScore"
     )
     if ($SkipMavenTest.IsPresent) { $args += "-SkipMavenTest" }
+    if ($EvidenceMode -eq "Compact") {
+        $args += @("-ReceiptRoot", $receiptRoot, "-CompactEvidence")
+    }
     Invoke-Checked -FilePath "powershell.exe" -ArgumentList $args -FailureMessage "run-next-slice failed." | ForEach-Object { Write-Host $_ }
 }
 
@@ -255,6 +367,9 @@ if ($PlanOnly.IsPresent) {
     Write-Host "statePath=$(ConvertTo-RepoPath $StatePath)"
     Write-Host "pocketPath=$(ConvertTo-RepoPath $PocketPath)"
     Write-Host "gatePath=$(ConvertTo-RepoPath $GatePath)"
+    Write-Host "evidenceMode=$EvidenceMode"
+    Write-Host "runId=$RunId"
+    Write-Host "receiptRoot=$(ConvertTo-RepoPath $receiptRoot)"
     Write-Host "scopeDrain=completed"
     exit 0
 }
@@ -269,7 +384,12 @@ while ($segment -lt $MaxSegments) {
     if ($initialAutoPatchableCount -lt $MinAutoPatchableCandidates) {
         Mark-TerminalEvidenceSourceHead
         Set-ScopeDrainTerminalState -TerminalState "scope_exhausted_verified" -Reason "fresh segment discovery found no auto-patchable candidates after all available scope expansion tiers"
-        [void](Commit-PathsIfNeeded -Paths @($LeasePath, $StatePath, $PocketPath) -Message "Record Threshold scope drain exhausted state")
+        if ($EvidenceMode -eq "Compact") {
+            Save-CompactScopeDrainEvidence -TerminalState "scope_exhausted_verified" -Reason "fresh segment discovery found no auto-patchable candidates after all available scope expansion tiers"
+        }
+        else {
+            [void](Commit-PathsIfNeeded -Paths @($LeasePath, $StatePath, $PocketPath) -Message "Record Threshold scope drain exhausted state")
+        }
         Write-Host "scopeDrainTerminalState=scope_exhausted_verified"
         Write-Host "scopeDrainSegmentsRun=$segment"
         Write-Host "scopeDrain=completed"
@@ -287,7 +407,9 @@ while ($segment -lt $MaxSegments) {
                 $autoPatchableCandidateCount -lt $MinAutoPatchableCandidates -and
                 (Try-ExpandScope -Reason "scope_drain_mid_segment_candidate_shortage")) {
                 Update-CandidatePocket
-                [void](Commit-PathsIfNeeded -Paths @($LeasePath, $StatePath, $PocketPath) -Message "Expand Threshold scope drain segment $segment")
+                if ($EvidenceMode -ne "Compact") {
+                    [void](Commit-PathsIfNeeded -Paths @($LeasePath, $StatePath, $PocketPath) -Message "Expand Threshold scope drain segment $segment")
+                }
                 continue
             }
             break
@@ -297,13 +419,17 @@ while ($segment -lt $MaxSegments) {
         }
 
         Update-CandidatePocket
-        [void](Commit-PathsIfNeeded -Paths @($PocketPath) -Message "Record Threshold scope drain segment $segment updated candidate pocket")
+        if ($EvidenceMode -ne "Compact") {
+            [void](Commit-PathsIfNeeded -Paths @($PocketPath) -Message "Record Threshold scope drain segment $segment updated candidate pocket")
+        }
     }
 
     Update-CandidatePocket
     Mark-TerminalEvidenceSourceHead
     $state = Read-JsonFile -Path $StatePath
-    [void](Commit-PathsIfNeeded -Paths @($LeasePath, $StatePath, $PocketPath) -Message "Record Threshold scope drain segment $segment terminal state")
+    if ($EvidenceMode -ne "Compact") {
+        [void](Commit-PathsIfNeeded -Paths @($LeasePath, $StatePath, $PocketPath) -Message "Record Threshold scope drain segment $segment terminal state")
+    }
 
     Write-Host "scopeDrainSegmentTerminalState=$($state.terminalState)"
     Write-Host "scopeDrainSegmentCandidatesProcessed=$($state.candidatesProcessed)"
@@ -311,7 +437,12 @@ while ($segment -lt $MaxSegments) {
 
     if ($state.terminalState -eq "ready_no_candidates_verified") {
         Set-ScopeDrainTerminalState -TerminalState "scope_exhausted_verified" -Reason "terminal segment verified no auto-patchable candidates remain"
-        [void](Commit-PathsIfNeeded -Paths @($StatePath) -Message "Record Threshold scope drain completion")
+        if ($EvidenceMode -eq "Compact") {
+            Save-CompactScopeDrainEvidence -TerminalState "scope_exhausted_verified" -Reason "terminal segment verified no auto-patchable candidates remain"
+        }
+        else {
+            [void](Commit-PathsIfNeeded -Paths @($StatePath) -Message "Record Threshold scope drain completion")
+        }
         Write-Host "scopeDrainTerminalState=scope_exhausted_verified"
         Write-Host "scopeDrainSegmentsRun=$segment"
         Write-Host "scopeDrain=completed"
@@ -320,7 +451,12 @@ while ($segment -lt $MaxSegments) {
 }
 
 Set-ScopeDrainTerminalState -TerminalState "segment_budget_exhausted_before_scope_exhaustion" -Reason "MaxSegments reached before a no-candidates terminal segment"
-[void](Commit-PathsIfNeeded -Paths @($StatePath) -Message "Record Threshold scope drain segment limit")
+if ($EvidenceMode -eq "Compact") {
+    Save-CompactScopeDrainEvidence -TerminalState "segment_budget_exhausted_before_scope_exhaustion" -Reason "MaxSegments reached before a no-candidates terminal segment"
+}
+else {
+    [void](Commit-PathsIfNeeded -Paths @($StatePath) -Message "Record Threshold scope drain segment limit")
+}
 Write-Host "scopeDrainTerminalState=segment_budget_exhausted_before_scope_exhaustion"
 Write-Host "scopeDrainSegmentsRun=$segment"
 Write-Host "scopeDrain=completed"

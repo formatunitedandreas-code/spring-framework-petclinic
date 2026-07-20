@@ -51,12 +51,41 @@ function Get-GitBlobSha256 {
     }
 
     $spec = "$Revision`:$repoPath"
-    $quotedSpec = "'" + ($spec -replace "'", "'\''") + "'"
-    $digestOutput = @(bash -lc "git cat-file blob $quotedSpec | sha256sum")
-    if ($LASTEXITCODE -ne 0 -or $digestOutput.Count -eq 0) {
-        throw "Failed to hash git blob: $spec"
+    $processInfo = [System.Diagnostics.ProcessStartInfo]::new()
+    $processInfo.FileName = "git"
+    $argumentListProperty = $processInfo.GetType().GetProperty("ArgumentList")
+    if ($null -ne $argumentListProperty) {
+        [void] $processInfo.ArgumentList.Add("cat-file")
+        [void] $processInfo.ArgumentList.Add("blob")
+        [void] $processInfo.ArgumentList.Add($spec)
     }
-    return ([string]$digestOutput[0]).Split(" ")[0].Trim().ToLowerInvariant()
+    else {
+        $escapedSpec = $spec.Replace('"', '\"')
+        $processInfo.Arguments = "cat-file blob `"$escapedSpec`""
+    }
+    $processInfo.RedirectStandardOutput = $true
+    $processInfo.RedirectStandardError = $true
+    $processInfo.UseShellExecute = $false
+
+    $process = [System.Diagnostics.Process]::Start($processInfo)
+    $sha256 = [System.Security.Cryptography.SHA256]::Create()
+    $buffer = [byte[]]::new(8192)
+    try {
+        while (($read = $process.StandardOutput.BaseStream.Read($buffer, 0, $buffer.Length)) -gt 0) {
+            [void] $sha256.TransformBlock($buffer, 0, $read, $null, 0)
+        }
+        [void] $sha256.TransformFinalBlock($buffer, 0, 0)
+        $stderr = $process.StandardError.ReadToEnd()
+        $process.WaitForExit()
+        if ($process.ExitCode -ne 0) {
+            throw "Failed to hash git blob: $spec. $stderr"
+        }
+        return ([System.BitConverter]::ToString($sha256.Hash) -replace "-", "").ToLowerInvariant()
+    }
+    finally {
+        $sha256.Dispose()
+        $process.Dispose()
+    }
 }
 
 function Assert-CleanWorktree {
