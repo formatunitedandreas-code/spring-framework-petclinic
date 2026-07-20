@@ -65,7 +65,7 @@
                   {
                       "id":  "fidelity:line_comment_wrap_cleanup",
                       "candidateClass":  "line_comment_wrap_cleanup",
-                      "level":  "F4_CI_RECEIPT_STABLE",
+                      "level":  "F0_UNOBSERVED",
                       "receiptCount":  16,
                       "validationPassCount":  16,
                       "validationFailCount":  0,
@@ -4519,5 +4519,5 @@
                            "F3_VALIDATED_RECEIPT",
                            "F4_CI_RECEIPT_STABLE"
                        ],
-    "semanticDigest":  "7fec6e240d85dfee567acf4f21e71245dc1159b4544b331feb91c8aa7e719be4"
+    "semanticDigest":  "8c4b658708c3633e14b39311d7684a31434dea3575a4455e09880444c85d191c"
 }

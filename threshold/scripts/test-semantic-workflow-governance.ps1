@@ -123,6 +123,17 @@ foreach ($requiredMarker in @(
     }
 }
 
+$candidateMaturityText = Get-Content (Join-Path $PSScriptRoot "test-candidate-maturity-governance.ps1") -Raw
+foreach ($requiredMarker in @(
+    "comment_wrap_cleanup_must_not_be_batch_auto_patchable",
+    "line_comment_wrap_cleanup_trainer_decision_must_be_reviewOnly",
+    "Test-CandidateMaturityAutoPatchable"
+)) {
+    if ($candidateMaturityText -notmatch [regex]::Escape($requiredMarker)) {
+        throw "candidate_maturity_governance_marker_missing=$requiredMarker"
+    }
+}
+
 $completeSliceText = Get-Content (Join-Path $PSScriptRoot "complete-slice.ps1") -Raw
 if ($completeSliceText -notmatch "CompactEvidence") {
     throw "complete_slice_compact_evidence_mode_missing"

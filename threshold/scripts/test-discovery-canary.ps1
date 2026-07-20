@@ -55,10 +55,24 @@ $autoClasses = @(
         ForEach-Object { [string]$_.candidateClass } |
         Sort-Object -Unique
 )
+$reviewOnlyClasses = @(
+    $pocket.candidates |
+        Where-Object { $_.reviewOnly -eq $true -or [string]$_.admission -eq "reviewOnly" } |
+        ForEach-Object { [string]$_.candidateClass } |
+        Sort-Object -Unique
+)
 
 foreach ($requiredClass in @($expected.requiredAutoPatchableCandidateClasses)) {
     if ($autoClasses -notcontains [string]$requiredClass) {
         throw "Discovery canary failed. Missing autoPatchable candidate class '$requiredClass'."
+    }
+}
+foreach ($requiredClass in @($expected.requiredReviewOnlyCandidateClasses)) {
+    if ($reviewOnlyClasses -notcontains [string]$requiredClass) {
+        throw "Discovery canary failed. Missing reviewOnly candidate class '$requiredClass'."
+    }
+    if ($autoClasses -contains [string]$requiredClass) {
+        throw "Discovery canary failed. ReviewOnly candidate class '$requiredClass' was autoPatchable."
     }
 }
 
@@ -69,3 +83,4 @@ if (Test-Path $tempPocket) {
 Write-Host "discoveryCanary=passed"
 Write-Host "fixtureRoot=$fixtureRoot"
 Write-Host "autoPatchableClasses=$($autoClasses -join ',')"
+Write-Host "reviewOnlyClasses=$($reviewOnlyClasses -join ',')"

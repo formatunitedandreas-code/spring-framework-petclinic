@@ -41,8 +41,8 @@
                       },
                       {
                           "candidateClass":  "line_comment_wrap_cleanup",
-                          "fidelityLevel":  "F4_CI_RECEIPT_STABLE",
-                          "decision":  "autoPatchable",
+                          "fidelityLevel":  "F0_UNOBSERVED",
+                          "decision":  "reviewOnly",
                           "reason":  "decision derived from lease, gate, discovery, executor, receipt history, semantic evidence, and review findings"
                       },
                       {
@@ -208,5 +208,5 @@
                           "reason":  "decision derived from lease, gate, discovery, executor, receipt history, semantic evidence, and review findings"
                       }
                   ],
-    "semanticDigest":  "aa3f4d622621039126c053c2edf027af7d61d47ed491cd383797e75ed81d7b25"
+    "semanticDigest":  "2762538ba44e69ced287064e3e53ff4163bf9bcc1fb4bcc9eec05acf43b1eac0"
 }

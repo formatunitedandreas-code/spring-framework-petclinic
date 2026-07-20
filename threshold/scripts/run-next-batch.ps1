@@ -131,6 +131,19 @@ function Get-SupportedBatchClasses {
     return @("comment_wrap_cleanup")
 }
 
+function Test-CandidateMaturityAutoPatchable {
+    param([pscustomobject] $Candidate)
+
+    if ($Candidate.PSObject.Properties["admission"]) {
+        return [string]$Candidate.admission -eq "autoPatchable"
+    }
+    if ($Candidate.PSObject.Properties["maturity"] -and
+        $Candidate.maturity.PSObject.Properties["admission"]) {
+        return [string]$Candidate.maturity.admission -eq "autoPatchable"
+    }
+    return $false
+}
+
 function Find-ConservativeCommentSplitPoint {
     param([string] $Text)
 
@@ -260,6 +273,7 @@ function Get-BatchCandidates {
             Where-Object {
                 [int]$_.score -ge $MinScore -and
                 $_.autoPatchable -eq $true -and
+                (Test-CandidateMaturityAutoPatchable -Candidate $_) -and
                 $ApprovedBatchClasses -contains [string]$_.candidateClass
             }
     )

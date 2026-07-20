@@ -228,6 +228,8 @@ $leaseCandidateTypes = @(Get-LeaseList -Lines $leaseLines -Name "allowedCandidat
 $startLeaseTemplateCandidateTypes = @(Get-LeaseList -Lines (Get-Content "threshold/scripts/start-lease.ps1") -Name "allowedCandidateTypes")
 $gate = Read-Json -Path $GatePath
 $gateClasses = @($gate.approvedAutoPatchableCandidateClasses | ForEach-Object { [string]$_.candidateClass } | Sort-Object -Unique)
+$heldGateClasses = @($gate.batchReceiptMode.heldCandidateClasses | ForEach-Object { [string]$_.candidateClass } | Sort-Object -Unique)
+$governedGateClasses = @($gateClasses + $heldGateClasses | Sort-Object -Unique)
 $batchClasses = @($gate.batchReceiptMode.approvedCandidateClasses | ForEach-Object { [string]$_.candidateClass } | Sort-Object -Unique)
 $discoveryText = Get-Content "threshold/scripts/discover-candidates.ps1" -Raw
 $discoveryLiteralClasses = @(Get-UniqueMatches -Text $discoveryText -Pattern 'Add-Candidate\s+-CandidateClass\s+"(?<class>[a-z0-9_]+)"' -GroupName "class")
@@ -240,15 +242,17 @@ $runnerClasses = @($runnerClasses | Where-Object { $_ -like "*_*" -and $_ -ne "c
 Write-List -Name "leaseCandidateTypes" -Values $leaseCandidateTypes
 Write-List -Name "startLeaseTemplateCandidateTypes" -Values $startLeaseTemplateCandidateTypes
 Write-List -Name "gateAutoPatchableClasses" -Values $gateClasses
+Write-List -Name "gateHeldClasses" -Values $heldGateClasses
+Write-List -Name "gateGovernedClasses" -Values $governedGateClasses
 Write-List -Name "batchAutoPatchableClasses" -Values $batchClasses
 Write-List -Name "discoveryCandidateClasses" -Values $discoveryClasses
 Write-List -Name "runnerExecutorClasses" -Values $runnerClasses
 
-Compare-ClassSets -LeftName "lease" -Left $leaseCandidateTypes -RightName "gate" -Right $gateClasses
-Compare-ClassSets -LeftName "startLeaseTemplate" -Left $startLeaseTemplateCandidateTypes -RightName "gate" -Right $gateClasses
+Compare-ClassSets -LeftName "lease" -Left $leaseCandidateTypes -RightName "governedGate" -Right $governedGateClasses
+Compare-ClassSets -LeftName "startLeaseTemplate" -Left $startLeaseTemplateCandidateTypes -RightName "governedGate" -Right $governedGateClasses
 Compare-ClassSets -LeftName "lease" -Left $leaseCandidateTypes -RightName "discovery" -Right $discoveryClasses
-Compare-ClassSets -LeftName "gate" -Left $gateClasses -RightName "runner" -Right $runnerClasses
-Assert-NoClassContractViolations -GateClasses $gateClasses -DiscoveryClasses $discoveryClasses -RunnerClasses $runnerClasses -BatchClasses $batchClasses -StartLeaseTemplateClasses $startLeaseTemplateCandidateTypes
+Compare-ClassSets -LeftName "governedGate" -Left $governedGateClasses -RightName "runner" -Right $runnerClasses
+Assert-NoClassContractViolations -GateClasses $governedGateClasses -DiscoveryClasses $discoveryClasses -RunnerClasses $runnerClasses -BatchClasses $batchClasses -StartLeaseTemplateClasses $startLeaseTemplateCandidateTypes
 
 $publicationLines = @(
     Select-String -Path "threshold/scripts/start-next-wave.ps1" -Pattern "git.*push|pr.*create|pr.*checks|pr.*merge|Assert-ReadyForMerge|mergeable|draft"

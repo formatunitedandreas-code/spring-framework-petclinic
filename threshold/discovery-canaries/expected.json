@@ -2,13 +2,15 @@
   "schemaVersion": "threshold.petclinic.discovery-canary.v0.1",
   "fixtureRoot": "threshold/discovery-canaries/fixtures/src/main/java/org/springframework/samples/petclinic",
   "requiredAutoPatchableCandidateClasses": [
-    "comment_wrap_cleanup",
     "method_spacing_normalization",
     "repository_readability_cleanup",
     "spring_data_query_wrap_cleanup",
     "spring_data_query_concat_wrap_cleanup",
     "annotation_attribute_wrap_cleanup",
     "leading_tab_indentation_cleanup"
+  ],
+  "requiredReviewOnlyCandidateClasses": [
+    "comment_wrap_cleanup"
   ],
   "nonClaims": [
     "canary verifies discovery visibility for known fixture patterns only",

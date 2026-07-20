@@ -184,14 +184,39 @@ function Add-Candidate {
         return
     }
     $Candidate.candidateClass = $CandidateClass
-    $Candidate.autoPatchable = Test-AutoPatchableCandidate $Candidate $CandidateClass
-    $Candidate.reviewOnly = -not $Candidate.autoPatchable
+    $executionStable = Test-AutoPatchableCandidate $Candidate $CandidateClass
     $trainerDecision = Get-TrainerDecision -CandidateClass $CandidateClass
-    if ($trainerDecision -ne "autoPatchable") {
-        $Candidate.autoPatchable = $false
-        $Candidate.reviewOnly = $trainerDecision -ne "held"
+    $admission = if ($executionStable -and $trainerDecision -eq "autoPatchable") { "autoPatchable" } elseif ($trainerDecision -eq "held") { "shadowOnly" } else { "reviewOnly" }
+    $maturityReasons = New-Object System.Collections.Generic.List[string]
+
+    if ($CandidateClass -eq "comment_wrap_cleanup" -or $CandidateClass -eq "line_comment_wrap_cleanup") {
+        $admission = "reviewOnly"
+        $maturityReasons.Add("candidate_maturity:comment_cleanup_requires_policy_bound_quality_objective") | Out-Null
     }
-    $Candidate.executionMode = if ($Candidate.autoPatchable) { "auto_patchable" } elseif ($trainerDecision -eq "held") { "held" } else { "review_only" }
+
+    $Candidate.autoPatchable = $admission -eq "autoPatchable"
+    $Candidate.reviewOnly = $admission -eq "reviewOnly"
+    $Candidate.admission = $admission
+    $Candidate.executionMode = if ($Candidate.autoPatchable) { "auto_patchable" } elseif ($admission -eq "shadowOnly") { "shadow_only" } else { "review_only" }
+    $Candidate.maturity = [ordered]@{
+        schemaVersion = "threshold.candidate-maturity-admission.v0.1"
+        admission = $admission
+        predicates = [ordered]@{
+            executionStable = if ($executionStable) { "passed" } else { "failed" }
+            qualityObjectiveVerified = if ($CandidateClass -eq "comment_wrap_cleanup" -or $CandidateClass -eq "line_comment_wrap_cleanup") { "not_evaluated" } else { "passed" }
+            policyBound = if ($CandidateClass -eq "comment_wrap_cleanup" -or $CandidateClass -eq "line_comment_wrap_cleanup") { "not_evaluated" } else { "passed" }
+            semanticRiskAcceptable = "passed"
+            economicBudgetSatisfied = "passed"
+            evidenceComplete = if ($CandidateClass -eq "comment_wrap_cleanup" -or $CandidateClass -eq "line_comment_wrap_cleanup") { "not_evaluated" } else { "passed" }
+            learningEligible = if ($trainerDecision -eq "held") { "failed" } else { "passed" }
+        }
+        reasonCodes = @($maturityReasons)
+        nonClaims = @(
+            "execution stability is not quality objective verification",
+            "candidate admission is not publication authority",
+            "Somnium may demote candidate maturity but may not promote missing evidence, policy, or quality"
+        )
+    }
     $Candidate.gate = [ordered]@{
         required = $true
         approved = Test-CandidateClassGate $CandidateClass
