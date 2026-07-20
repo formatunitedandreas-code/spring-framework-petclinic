@@ -2,7 +2,13 @@
 param(
     [string] $BaseRef = "main",
     [string] $LeasePath = "threshold/leases/current.yaml",
-    [string] $StatePath = "threshold/lease-state/current-run.json"
+    [string] $StatePath = "threshold/lease-state/current-run.json",
+    [switch] $PublicationPreflight,
+    [string] $AuthorityPath = "threshold/runtime/authority/merge-authority.json",
+    [string] $ConsumedAuthorityPath = "threshold/runtime/authority/consumed-authorities.json",
+    [string] $ReviewHead = "",
+    [string] $ReviewDecision = "",
+    [int] $OpenP1P2Count = 0
 )
 
 Set-StrictMode -Version Latest
@@ -143,6 +149,24 @@ function Assert-ReceiptLeaseDigestMatchesReceiptCommit {
     }
 }
 
+function Get-TextSha256 {
+    param([string] $Value)
+
+    $sha = [System.Security.Cryptography.SHA256]::Create()
+    try {
+        $bytes = [System.Text.Encoding]::UTF8.GetBytes($Value)
+        return ([System.BitConverter]::ToString($sha.ComputeHash($bytes)) -replace "-", "").ToLowerInvariant()
+    }
+    finally {
+        $sha.Dispose()
+    }
+}
+
+function Get-FileSha256 {
+    param([string] $Path)
+    return (Get-FileHash -Algorithm SHA256 -LiteralPath $Path).Hash.ToLowerInvariant()
+}
+
 function Assert-ReceiptValidation {
     param([string] $ReceiptPath, [pscustomobject] $Receipt, [string] $ExpectedHead = "")
 
@@ -182,6 +206,114 @@ function Assert-AggregateReceipt {
     }
 }
 
+function Get-ConsumedAuthorityIds {
+    param([string] $Path)
+
+    if (-not (Test-Path $Path)) { return @() }
+    $json = Get-Content $Path -Raw | ConvertFrom-Json
+    if ($json.PSObject.Properties["consumedAuthorityIds"]) {
+        return @($json.consumedAuthorityIds | ForEach-Object { [string]$_ })
+    }
+    if ($json.PSObject.Properties["consumedConsumptionIds"]) {
+        return @($json.consumedConsumptionIds | ForEach-Object { [string]$_ })
+    }
+    return @()
+}
+
+function Get-PolicyDigest {
+    $policyPaths = @(
+        "threshold/policies/file-economy-v0.1.yaml",
+        "threshold/policies/semantic-twin-v0.1.yaml",
+        "threshold/policies/senior-refactoring-admission-v0.1.yaml",
+        "threshold/policies/target-twin-v0.1.yaml"
+    ) | Where-Object { Test-Path $_ }
+    $content = @($policyPaths | Sort-Object | ForEach-Object { "$_`n$(Get-Content $_ -Raw)" }) -join "`n---threshold-policy---`n"
+    return Get-TextSha256 -Value $content
+}
+
+function Get-PreflightSubjectDigest {
+    param([string[]] $ChangedPaths, [string] $Head)
+    return Get-TextSha256 -Value ((@($Head) + @($ChangedPaths | Sort-Object)) -join "`n")
+}
+
+function Assert-OneShotMergeAuthority {
+    param(
+        [string] $Path,
+        [string] $RepositoryRef,
+        [string] $Branch,
+        [string] $SubjectRef,
+        [string] $Head,
+        [string] $WorkorderDigest,
+        [string] $PolicyDigest
+    )
+
+    if (-not (Test-Path $Path)) {
+        throw "stop_authority_missing=one-shot merge authority required for publication preflight"
+    }
+    $authority = Get-Content $Path -Raw | ConvertFrom-Json
+    $consumedIds = @(Get-ConsumedAuthorityIds -Path $ConsumedAuthorityPath)
+    $checks = [ordered]@{
+        schemaVersion = "threshold.one-shot-authority.v0.1"
+        repositoryRef = $RepositoryRef
+        branchRef = $Branch
+        subjectRef = $SubjectRef
+        headSha = $Head
+        workorderDigest = $WorkorderDigest
+        policyDigest = $PolicyDigest
+        action = "merge"
+    }
+    foreach ($name in $checks.Keys) {
+        if ([string]$authority.$name -ne [string]$checks[$name]) {
+            throw "stop_authority_mismatch=$name"
+        }
+    }
+    if ($authority.PSObject.Properties["consumedAt"] -and -not [string]::IsNullOrWhiteSpace([string]$authority.consumedAt)) {
+        throw "stop_authority_consumed"
+    }
+    if ($consumedIds -contains [string]$authority.consumptionId) {
+        throw "stop_authority_consumed"
+    }
+    if ([DateTimeOffset]::Parse([string]$authority.expiresAt) -le [DateTimeOffset]::UtcNow) {
+        throw "stop_authority_expired"
+    }
+}
+
+function Assert-PublicationPreflight {
+    param([string[]] $ChangedPaths)
+
+    $head = (& git rev-parse HEAD).Trim()
+    $branch = (& git branch --show-current).Trim()
+    $remoteUrl = (& git remote get-url origin).Trim()
+    $repositoryRef = if ($remoteUrl -match "github.com[:/](.+?)(\.git)?$") { $Matches[1] -replace "\.git$", "" } else { $remoteUrl }
+    $subjectRef = "pull-request:$branch->$BaseRef"
+    $policyDigest = Get-PolicyDigest
+    $subjectDigest = Get-PreflightSubjectDigest -ChangedPaths $ChangedPaths -Head $head
+
+    if ([string]::IsNullOrWhiteSpace($ReviewHead)) {
+        throw "stop_review_missing=publication preflight requires review on final head"
+    }
+    if ($ReviewHead -ne $head) {
+        throw "stop_review_stale_head"
+    }
+    if ($ReviewDecision -ne "APPROVED") {
+        throw "stop_review_missing=publication preflight requires independent approval"
+    }
+    if ($OpenP1P2Count -gt 0) {
+        throw "stop_open_p1_p2_findings=$OpenP1P2Count"
+    }
+
+    Assert-OneShotMergeAuthority `
+        -Path $AuthorityPath `
+        -RepositoryRef $repositoryRef `
+        -Branch $branch `
+        -SubjectRef $subjectRef `
+        -Head $head `
+        -WorkorderDigest $subjectDigest `
+        -PolicyDigest $policyDigest
+
+    Write-Host "publicationPreflight=passed"
+}
+
 if (-not (Test-Path $LeasePath)) {
     throw "Missing Threshold lease: $LeasePath"
 }
@@ -201,6 +333,10 @@ if ($BaseRef -ne $expectedBaseRef.Replace("origin/", "")) {
 
 $changedPaths = @(git diff --name-only "origin/${BaseRef}...HEAD")
 if ($changedPaths.Count -eq 0) { throw "No changed paths detected for the pull request." }
+
+if ($PublicationPreflight.IsPresent) {
+    Assert-PublicationPreflight -ChangedPaths $changedPaths
+}
 
 $runEvidencePaths = @($changedPaths | Where-Object { $_ -like "threshold/runs/*" })
 Assert-ThresholdSemanticEvidenceFileEconomy -BaseRef "origin/${BaseRef}" -RequireCompleteRunEvidence:($runEvidencePaths.Count -gt 0)

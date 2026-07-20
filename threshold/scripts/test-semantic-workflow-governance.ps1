@@ -67,6 +67,27 @@ if ($prGovernanceText -notmatch "Source commit covered by aggregate Threshold re
 if ($prGovernanceText -notmatch "AllowedValidationResults") {
     throw "pr_governance_validation_status_allowlist_missing"
 }
+if ($prGovernanceText -notmatch "PublicationPreflight") {
+    throw "pr_governance_publication_preflight_missing"
+}
+if ($prGovernanceText -notmatch "stop_authority_missing=one-shot merge authority required") {
+    throw "pr_governance_one_shot_authority_stop_missing"
+}
+
+$publicationPreflightText = Get-Content (Join-Path $PSScriptRoot "test-publication-preflight-fixtures.ps1") -Raw
+foreach ($requiredMarker in @(
+    "missing-authority",
+    "wrong-head-authority",
+    "wrong-branch-authority",
+    "expired-authority",
+    "consumed-authority",
+    "stale-review-head",
+    "open-p1-p2-findings"
+)) {
+    if ($publicationPreflightText -notmatch $requiredMarker) {
+        throw "publication_preflight_fixture_missing=$requiredMarker"
+    }
+}
 
 $completeSliceText = Get-Content (Join-Path $PSScriptRoot "complete-slice.ps1") -Raw
 if ($completeSliceText -notmatch "CompactEvidence") {
