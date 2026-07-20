@@ -42,8 +42,11 @@ foreach ($requiredMarker in @(
     "threshold.candidate-twin-delta-evidence.v0.1",
     "candidate_maturity:comment_cleanup_requires_policy_bound_quality_objective",
     "candidate_maturity:twin_delta_quality_fidelity_failed",
+    "candidate_maturity:policy_not_bound",
+    "candidate_maturity:semantic_fidelity_not_evaluated",
     "execution stability is not quality objective verification",
-    "semantic fidelity passing does not imply quality fidelity passing",
+    "discovery visibility is not semantic fidelity proof",
+    "synthetic target policy evidence must not promote candidate admission",
     "Somnium may demote candidate maturity but may not promote missing evidence, policy, or quality"
 )) {
     if ($discoverText -notmatch [regex]::Escape($requiredMarker)) {
@@ -73,11 +76,33 @@ if ([string]$commentCandidate.admission -ne "reviewOnly") {
 if (-not $commentCandidate.twinDelta -or [string]$commentCandidate.twinDelta.schemaVersion -ne "threshold.candidate-twin-delta-evidence.v0.1") {
     throw "candidate_maturity_twin_delta_missing"
 }
-if ($commentCandidate.twinDelta.semanticFidelity.behaviorPreserved -ne $true) {
-    throw "candidate_maturity_semantic_fidelity_expected_pass"
+if ($commentCandidate.twinDelta.semanticFidelity.behaviorPreserved -ne $false) {
+    throw "candidate_maturity_semantic_fidelity_must_not_be_synthetic_pass"
+}
+if ([string]$commentCandidate.twinDelta.semanticFidelity.evidenceStatus -ne "not_evaluated") {
+    throw "candidate_maturity_semantic_fidelity_status_must_be_not_evaluated"
 }
 if ($commentCandidate.twinDelta.qualityFidelity.canonicalityImproved -ne $false) {
     throw "candidate_maturity_quality_fidelity_expected_fail"
+}
+$repositoryCandidate = $pocket.candidates | Where-Object { [string]$_.candidateClass -eq "repository_readability_cleanup" } | Select-Object -First 1
+if (-not $repositoryCandidate) {
+    throw "candidate_maturity_repository_fixture_missing"
+}
+if ([string]$repositoryCandidate.admission -ne "reviewOnly") {
+    throw "candidate_maturity_repository_fixture_must_remain_reviewOnly_without_core_evidence"
+}
+if ($repositoryCandidate.autoPatchable -ne $false) {
+    throw "candidate_maturity_repository_fixture_must_not_be_autoPatchable_without_core_evidence"
+}
+if ($repositoryCandidate.twinDelta.targetTwin.policyRef) {
+    throw "candidate_maturity_repository_fixture_must_not_synthesize_policy_ref"
+}
+if ([string]$repositoryCandidate.maturity.predicates.policyBound -ne "failed") {
+    throw "candidate_maturity_repository_fixture_policy_must_not_pass_without_policy_ref"
+}
+if ([string]$repositoryCandidate.maturity.predicates.semanticRiskAcceptable -ne "not_evaluated") {
+    throw "candidate_maturity_repository_fixture_semantic_risk_must_not_be_synthetic_pass"
 }
 if (Test-Path $tempPocket) {
     Remove-Item -LiteralPath $tempPocket -Force

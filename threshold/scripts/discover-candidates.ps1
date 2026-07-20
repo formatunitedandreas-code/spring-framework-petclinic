@@ -187,9 +187,9 @@ function New-CandidateTwinDeltaEvidence {
 
     $isCommentCleanup = Test-CommentCleanupClass -CandidateClass $CandidateClass
     $semanticUnitKind = if ($Candidate.ContainsKey("semanticUnitKind")) { [string]$Candidate.semanticUnitKind } elseif ($CandidateClass -eq "line_comment_wrap_cleanup") { "line_comment" } else { "unknown" }
-    $policyRef = if ($isCommentCleanup) { $null } else { "threshold.petclinic.readability-policy.v0.1" }
-    $qualityDefectProven = -not $isCommentCleanup
-    $qualityImprovementProven = -not $isCommentCleanup
+    $policyRef = $null
+    $qualityDefectProven = $false
+    $qualityImprovementProven = $false
 
     return [ordered]@{
         schemaVersion = "threshold.candidate-twin-delta-evidence.v0.1"
@@ -204,7 +204,7 @@ function New-CandidateTwinDeltaEvidence {
         targetTwin = [ordered]@{
             evidenceRef = "petclinic:target-semantic-unit:$($Candidate.candidateId)"
             policyRef = $policyRef
-            canonicalTargetDefined = -not $isCommentCleanup
+            canonicalTargetDefined = $false
             derivedFromUnreviewedPatch = $false
         }
         deltaTwin = [ordered]@{
@@ -215,17 +215,20 @@ function New-CandidateTwinDeltaEvidence {
             expectedCost = if ($isCommentCleanup) { 0.2 } else { 0.2 }
         }
         semanticFidelity = [ordered]@{
-            behaviorPreserved = $true
-            criticalInvariantsPreserved = $true
+            behaviorPreserved = $false
+            criticalInvariantsPreserved = $false
+            evidenceStatus = "not_evaluated"
         }
         qualityFidelity = [ordered]@{
             policyViolationRemoved = $false
-            canonicalityImproved = -not $isCommentCleanup
-            packageConsistencyImproved = -not $isCommentCleanup
+            canonicalityImproved = $false
+            packageConsistencyImproved = $false
+            evidenceStatus = "not_evaluated"
         }
         nonClaims = @(
             "PetClinic twin delta evidence is adapter evidence, not a generic twin engine",
-            "semantic fidelity passing does not imply quality fidelity passing",
+            "discovery visibility is not semantic fidelity proof",
+            "synthetic target policy evidence must not promote candidate admission",
             "target twins derived from unreviewed patches are not training truth"
         )
     }
@@ -244,14 +247,16 @@ function Add-Candidate {
     $Candidate.candidateClass = $CandidateClass
     $executionStable = Test-AutoPatchableCandidate $Candidate $CandidateClass
     $trainerDecision = Get-TrainerDecision -CandidateClass $CandidateClass
-    $admission = if ($executionStable -and $trainerDecision -eq "autoPatchable") { "autoPatchable" } elseif ($trainerDecision -eq "held") { "shadowOnly" } else { "reviewOnly" }
+    $admission = if ($trainerDecision -eq "held") { "shadowOnly" } else { "reviewOnly" }
     $maturityReasons = New-Object System.Collections.Generic.List[string]
 
     $Candidate.twinDelta = New-CandidateTwinDeltaEvidence -Candidate $Candidate -CandidateClass $CandidateClass -ExecutionStable $executionStable
+    $maturityReasons.Add("candidate_maturity:twin_delta_quality_fidelity_failed") | Out-Null
+    $maturityReasons.Add("candidate_maturity:policy_not_bound") | Out-Null
+    $maturityReasons.Add("candidate_maturity:semantic_fidelity_not_evaluated") | Out-Null
 
     if (Test-CommentCleanupClass -CandidateClass $CandidateClass) {
         $admission = "reviewOnly"
-        $maturityReasons.Add("candidate_maturity:twin_delta_quality_fidelity_failed") | Out-Null
         $maturityReasons.Add("candidate_maturity:comment_cleanup_requires_policy_bound_quality_objective") | Out-Null
     }
 
@@ -264,11 +269,11 @@ function Add-Candidate {
         admission = $admission
         predicates = [ordered]@{
             executionStable = if ($executionStable) { "passed" } else { "failed" }
-            qualityObjectiveVerified = if (Test-CommentCleanupClass -CandidateClass $CandidateClass) { "failed" } else { "passed" }
-            policyBound = if (Test-CommentCleanupClass -CandidateClass $CandidateClass) { "failed" } else { "passed" }
-            semanticRiskAcceptable = "passed"
+            qualityObjectiveVerified = "failed"
+            policyBound = "failed"
+            semanticRiskAcceptable = "not_evaluated"
             economicBudgetSatisfied = "passed"
-            evidenceComplete = if (Test-CommentCleanupClass -CandidateClass $CandidateClass) { "failed" } else { "passed" }
+            evidenceComplete = "failed"
             learningEligible = if ($trainerDecision -eq "held") { "failed" } else { "passed" }
         }
         reasonCodes = @($maturityReasons)
