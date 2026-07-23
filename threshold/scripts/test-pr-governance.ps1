@@ -9,6 +9,7 @@ Set-StrictMode -Version Latest
 $ErrorActionPreference = "Stop"
 
 . (Join-Path $PSScriptRoot "lib/lease-policy.ps1")
+. (Join-Path $PSScriptRoot "lib/pr-metadata-envelope.ps1")
 
 function Get-LeaseScalar {
     param([string[]] $Lines, [string] $Name)
@@ -160,6 +161,26 @@ $leasePaths = @($changedPaths | Where-Object { Test-LeasePath $_ })
 $productPaths = @($changedPaths | Where-Object { Test-ProductPath $_ })
 if ($governancePolicyPaths.Count -gt 0 -and $productPaths.Count -gt 0) {
     throw "PR mixes governance policy and product paths; split into separate governed changes."
+}
+
+if ($productPaths.Count -gt 0) {
+    $prBody = $null
+    if (-not [string]::IsNullOrWhiteSpace($env:GITHUB_EVENT_PATH) -and (Test-Path $env:GITHUB_EVENT_PATH)) {
+        $event = Get-Content $env:GITHUB_EVENT_PATH -Raw | ConvertFrom-Json
+        if ($event.PSObject.Properties["pull_request"] -and $event.pull_request.PSObject.Properties["body"]) {
+            $prBody = [string] $event.pull_request.body
+        }
+    }
+    elseif ($null -ne $env:THRESHOLD_PR_BODY) {
+        $prBody = [string] $env:THRESHOLD_PR_BODY
+    }
+
+    if ($null -eq $prBody) {
+        throw "Product PR requires a Threshold PR metadata envelope, but no pull request body was available."
+    }
+
+    $metadataResult = Assert-ThresholdPrMetadataEnvelope -Body $prBody
+    Write-Host "thresholdPrMetadataEnvelopeDigest=$($metadataResult.metadataEnvelopeDigest)"
 }
 
 $requiresMergeAuthority = $governancePolicyPaths.Count -gt 0 -or ($leasePaths.Count -gt 0 -and $productPaths.Count -eq 0)
