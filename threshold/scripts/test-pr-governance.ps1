@@ -163,26 +163,6 @@ if ($governancePolicyPaths.Count -gt 0 -and $productPaths.Count -gt 0) {
     throw "PR mixes governance policy and product paths; split into separate governed changes."
 }
 
-if ($productPaths.Count -gt 0) {
-    $prBody = $null
-    if (-not [string]::IsNullOrWhiteSpace($env:GITHUB_EVENT_PATH) -and (Test-Path $env:GITHUB_EVENT_PATH)) {
-        $event = Get-Content $env:GITHUB_EVENT_PATH -Raw | ConvertFrom-Json
-        if ($event.PSObject.Properties["pull_request"] -and $event.pull_request.PSObject.Properties["body"]) {
-            $prBody = [string] $event.pull_request.body
-        }
-    }
-    elseif ($null -ne $env:THRESHOLD_PR_BODY) {
-        $prBody = [string] $env:THRESHOLD_PR_BODY
-    }
-
-    if ($null -eq $prBody) {
-        throw "Product PR requires a Threshold PR metadata envelope, but no pull request body was available."
-    }
-
-    $metadataResult = Assert-ThresholdPrMetadataEnvelope -Body $prBody
-    Write-Host "thresholdPrMetadataEnvelopeDigest=$($metadataResult.metadataEnvelopeDigest)"
-}
-
 $requiresMergeAuthority = $governancePolicyPaths.Count -gt 0 -or ($leasePaths.Count -gt 0 -and $productPaths.Count -eq 0)
 $mergeAuthoritySatisfied = $true
 if ($requiresMergeAuthority) {
@@ -218,15 +198,24 @@ foreach ($path in $changedPaths) {
 $receiptPaths = @(Get-ChildItem threshold/receipts -Filter *.json -ErrorAction SilentlyContinue)
 if ($receiptPaths.Count -eq 0) { throw "Missing Threshold receipt under threshold/receipts/*.json" }
 
+$receiptEntries = New-Object System.Collections.Generic.List[object]
 $receiptByCommit = @{}
 foreach ($receiptPath in $receiptPaths) {
     $receipt = Get-Content $receiptPath.FullName -Raw | ConvertFrom-Json
     $repoReceiptPath = ConvertTo-RepoPath -Path $receiptPath.FullName
+    $receiptEntry = @{ path = $repoReceiptPath; receipt = $receipt }
+    $receiptEntries.Add($receiptEntry)
     if ($receipt.PSObject.Properties["commitHash"] -and $receipt.commitHash) {
-        $receiptByCommit[[string] $receipt.commitHash] = @{ path = $repoReceiptPath; receipt = $receipt }
+        if (-not $receiptByCommit.ContainsKey([string] $receipt.commitHash)) {
+            $receiptByCommit[[string] $receipt.commitHash] = New-Object System.Collections.Generic.List[object]
+        }
+        $receiptByCommit[[string] $receipt.commitHash].Add($receiptEntry)
     }
     elseif ($receipt.PSObject.Properties["sourceCommit"] -and $receipt.sourceCommit) {
-        $receiptByCommit[[string] $receipt.sourceCommit] = @{ path = $repoReceiptPath; receipt = $receipt }
+        if (-not $receiptByCommit.ContainsKey([string] $receipt.sourceCommit)) {
+            $receiptByCommit[[string] $receipt.sourceCommit] = New-Object System.Collections.Generic.List[object]
+        }
+        $receiptByCommit[[string] $receipt.sourceCommit].Add($receiptEntry)
     }
 }
 
@@ -239,6 +228,7 @@ $prCommits = @(git rev-list --reverse "origin/${BaseRef}..HEAD")
 if ($prCommits.Count -eq 0) { throw "No PR commits detected." }
 
 $sourceCommitCount = 0
+$sourceReceiptEntries = New-Object System.Collections.Generic.List[object]
 foreach ($commit in $prCommits) {
     $commitPaths = @(git diff-tree --no-commit-id --name-only -r $commit)
     if ($commitPaths.Count -eq 0) { continue }
@@ -260,7 +250,22 @@ foreach ($commit in $prCommits) {
         throw "Source commit without corresponding Threshold receipt: $commit"
     }
 
-    $entry = $receiptByCommit[$commit]
+    $entriesForCommit = @($receiptByCommit[$commit].ToArray())
+    $h1bEntriesForCommit = @($entriesForCommit | Where-Object { $_.receipt.PSObject.Properties["candidateClass"] -and [string]$_.receipt.candidateClass -eq "industrial_refactoring_h1b" })
+    if ($entriesForCommit.Count -gt 1) {
+        if ($h1bEntriesForCommit.Count -gt 1) {
+            throw "Multiple industrial_refactoring_h1b receipts found for source commit: $commit"
+        }
+        if ($h1bEntriesForCommit.Count -eq 0) {
+            throw "Multiple competing receipts found for source commit: $commit"
+        }
+    }
+    if ($h1bEntriesForCommit.Count -eq 1) {
+        $entry = $h1bEntriesForCommit[0]
+    }
+    else {
+        $entry = $entriesForCommit[0]
+    }
     $receipt = $entry.receipt
     if (-not $receipt.candidateId -and -not $receipt.batchId) { throw "Receipt is missing candidateId/batchId: $($entry.path)" }
     if (-not $receipt.baseHead) { throw "Receipt is missing baseHead: $($entry.path)" }
@@ -268,10 +273,38 @@ foreach ($commit in $prCommits) {
     if (-not $receipt.nonClaims -or $receipt.nonClaims.Count -eq 0) { throw "Receipt is missing nonClaims: $($entry.path)" }
     Assert-ReceiptLeaseDigestMatchesReceiptCommit -ReceiptPath $entry.path -Receipt $receipt
     Assert-ChangedFilesMatchReceipt -Commit $commit -Receipt $receipt
+    $sourceReceiptEntries.Add($entry)
 }
 
 if ($sourceCommitCount -eq 0 -and $productPaths.Count -gt 0) {
     throw "No source commit detected in PR range."
+}
+
+if ($productPaths.Count -gt 0) {
+    $prBody = $null
+    if (-not [string]::IsNullOrWhiteSpace($env:GITHUB_EVENT_PATH) -and (Test-Path $env:GITHUB_EVENT_PATH)) {
+        $event = Get-Content $env:GITHUB_EVENT_PATH -Raw | ConvertFrom-Json
+        if ($event.PSObject.Properties["pull_request"] -and $event.pull_request.PSObject.Properties["body"]) {
+            $prBody = [string] $event.pull_request.body
+        }
+    }
+    elseif ($null -ne $env:THRESHOLD_PR_BODY) {
+        $prBody = [string] $env:THRESHOLD_PR_BODY
+    }
+
+    if ($null -eq $prBody) {
+        throw "Product PR metadata binding requires pull request body observation, but no body was available."
+    }
+
+    $metadataBinding = Assert-ThresholdProductPrMetadataReceiptBinding `
+        -Body $prBody `
+        -SourceReceiptEntries @($sourceReceiptEntries.ToArray()) `
+        -KnownCandidateClasses @(Get-ThresholdLeaseList -Lines $leaseLines -Name "allowedCandidateTypes") `
+        -ExpectedSourceCommits @($prCommits)
+    Write-Host "thresholdPrH1BMetadataRequired=$($metadataBinding.h1bMetadataRequired.ToString().ToLowerInvariant())"
+    if ($metadataBinding.h1bMetadataRequired) {
+        Write-Host "thresholdPrMetadataEnvelopeDigest=$($metadataBinding.observedMetadataEnvelopeDigest)"
+    }
 }
 
 Write-Host "sourceCommitReceiptCoverage=complete"

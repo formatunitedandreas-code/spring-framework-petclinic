@@ -58,8 +58,18 @@ function Assert-DoesNotThrow {
     Write-Host "passed=$Name"
 }
 
+$validEnvelopeDigest = "69699fe178bd38658463deb35d6621594ead1b5aec377f659968efe0e3f447d5"
+$validEnvelope = Get-ThresholdPrMetadataEnvelope -Body (New-ValidBody)
+
 Assert-DoesNotThrow -Name "valid ascii metadata envelope" -ScriptBlock {
     Assert-ThresholdPrMetadataEnvelope -Body (New-ValidBody)
+}
+
+Assert-DoesNotThrow -Name "golden digest matches fixed expected value" -ScriptBlock {
+    $result = Assert-ThresholdPrMetadataEnvelope -Body (New-ValidBody)
+    if ($result.metadataEnvelopeDigest -ne $validEnvelopeDigest) {
+        throw "Golden metadata digest mismatch. observed=$($result.metadataEnvelopeDigest) expected=$validEnvelopeDigest"
+    }
 }
 
 Assert-Throws -Name "rejects U+001A in authoritative envelope" -ScriptBlock {
@@ -105,6 +115,148 @@ Assert-Throws -Name "rejects field reordering" -ScriptBlock {
 }
 '@
     Assert-ThresholdPrMetadataEnvelope -Body (New-ValidBody -EnvelopeOverride $badEnvelope)
+}
+
+Assert-Throws -Name "rejects numeric strings" -ScriptBlock {
+    $badEnvelope = $validEnvelope.Replace('"before": 16', '"before": "16"', [System.StringComparison]::Ordinal)
+    Assert-ThresholdPrMetadataEnvelope -Body (New-ValidBody -EnvelopeOverride $badEnvelope)
+}
+
+Assert-Throws -Name "rejects boolean numeric values" -ScriptBlock {
+    $badEnvelope = $validEnvelope.Replace('"after": 5', '"after": true', [System.StringComparison]::Ordinal)
+    Assert-ThresholdPrMetadataEnvelope -Body (New-ValidBody -EnvelopeOverride $badEnvelope)
+}
+
+Assert-Throws -Name "rejects null values" -ScriptBlock {
+    $badEnvelope = $validEnvelope.Replace('"targetedTestsPassed": 27', '"targetedTestsPassed": null', [System.StringComparison]::Ordinal)
+    Assert-ThresholdPrMetadataEnvelope -Body (New-ValidBody -EnvelopeOverride $badEnvelope)
+}
+
+Assert-Throws -Name "rejects floating-point values" -ScriptBlock {
+    $badEnvelope = $validEnvelope.Replace('"before": 16', '"before": 16.0', [System.StringComparison]::Ordinal)
+    Assert-ThresholdPrMetadataEnvelope -Body (New-ValidBody -EnvelopeOverride $badEnvelope)
+}
+
+Assert-Throws -Name "rejects scientific notation" -ScriptBlock {
+    $badEnvelope = $validEnvelope.Replace('"fullMavenTestsPassed": 126', '"fullMavenTestsPassed": 1e2', [System.StringComparison]::Ordinal)
+    Assert-ThresholdPrMetadataEnvelope -Body (New-ValidBody -EnvelopeOverride $badEnvelope)
+}
+
+Assert-Throws -Name "rejects negative values" -ScriptBlock {
+    $badEnvelope = $validEnvelope.Replace('"after": 5', '"after": -1', [System.StringComparison]::Ordinal)
+    Assert-ThresholdPrMetadataEnvelope -Body (New-ValidBody -EnvelopeOverride $badEnvelope)
+}
+
+Assert-Throws -Name "rejects duplicate top-level property" -ScriptBlock {
+    $badEnvelope = $validEnvelope.Replace('"candidateClass": "industrial_refactoring_h1b",', '"candidateClass": "industrial_refactoring_h1b",\n  "candidateClass": "industrial_refactoring_h1b",', [System.StringComparison]::Ordinal)
+    Assert-ThresholdPrMetadataEnvelope -Body (New-ValidBody -EnvelopeOverride $badEnvelope)
+}
+
+Assert-Throws -Name "rejects duplicate nested before property" -ScriptBlock {
+    $badEnvelope = $validEnvelope.Replace('"cognitiveComplexity": { "before": 16, "after": 5 }', '"cognitiveComplexity": { "before": 16, "before": 15, "after": 5 }', [System.StringComparison]::Ordinal)
+    Assert-ThresholdPrMetadataEnvelope -Body (New-ValidBody -EnvelopeOverride $badEnvelope)
+}
+
+Assert-Throws -Name "rejects two envelopes" -ScriptBlock {
+    Assert-ThresholdPrMetadataEnvelope -Body "$(New-ValidBody)`n$(New-ValidBody)"
+}
+
+Assert-Throws -Name "rejects additional end marker" -ScriptBlock {
+    Assert-ThresholdPrMetadataEnvelope -Body "$(New-ValidBody)`n-->"
+}
+
+Assert-Throws -Name "rejects nested start marker" -ScriptBlock {
+    $badEnvelope = $validEnvelope.Replace('"candidateClass": "industrial_refactoring_h1b",', '"candidateClass": "industrial_refactoring_h1b",\n<!-- threshold-metadata-envelope:v0.2', [System.StringComparison]::Ordinal)
+    Assert-ThresholdPrMetadataEnvelope -Body (New-ValidBody -EnvelopeOverride $badEnvelope)
+}
+
+function New-ReceiptEntry {
+    param(
+        [string] $SourceCommit = "1111111111111111111111111111111111111111",
+        [string] $CandidateClass = "industrial_refactoring_h1b",
+        [string] $ExpectedDigest = $validEnvelopeDigest,
+        [switch] $OmitDigest
+    )
+
+    $receipt = [ordered]@{
+        sourceCommit = $SourceCommit
+        candidateClass = $CandidateClass
+        changedFiles = @("src/main/java/Example.java")
+    }
+    if (-not $OmitDigest) {
+        $receipt.expectedMetadataEnvelopeDigest = $ExpectedDigest
+    }
+    [pscustomobject]@{
+        path = "threshold/receipts/test-receipt.json"
+        receipt = [pscustomobject]$receipt
+    }
+}
+
+Assert-DoesNotThrow -Name "valid exact H1-B envelope and receipt binding passes" -ScriptBlock {
+    Assert-ThresholdProductPrMetadataReceiptBinding `
+        -Body (New-ValidBody) `
+        -SourceReceiptEntries @((New-ReceiptEntry)) `
+        -KnownCandidateClasses @("comment_wrap_cleanup") `
+        -ExpectedSourceCommits @("1111111111111111111111111111111111111111")
+}
+
+Assert-Throws -Name "digest mismatch fails" -ScriptBlock {
+    Assert-ThresholdProductPrMetadataReceiptBinding `
+        -Body (New-ValidBody) `
+        -SourceReceiptEntries @((New-ReceiptEntry -ExpectedDigest "0000000000000000000000000000000000000000000000000000000000000000")) `
+        -KnownCandidateClasses @("comment_wrap_cleanup") `
+        -ExpectedSourceCommits @("1111111111111111111111111111111111111111")
+}
+
+Assert-Throws -Name "missing expected digest fails" -ScriptBlock {
+    Assert-ThresholdProductPrMetadataReceiptBinding `
+        -Body (New-ValidBody) `
+        -SourceReceiptEntries @((New-ReceiptEntry -OmitDigest)) `
+        -KnownCandidateClasses @("comment_wrap_cleanup") `
+        -ExpectedSourceCommits @("1111111111111111111111111111111111111111")
+}
+
+Assert-Throws -Name "wrong source commit fails" -ScriptBlock {
+    Assert-ThresholdProductPrMetadataReceiptBinding `
+        -Body (New-ValidBody) `
+        -SourceReceiptEntries @((New-ReceiptEntry -SourceCommit "2222222222222222222222222222222222222222")) `
+        -KnownCandidateClasses @("comment_wrap_cleanup") `
+        -ExpectedSourceCommits @("1111111111111111111111111111111111111111")
+}
+
+Assert-DoesNotThrow -Name "wrong candidate class does not invoke H1-B parser" -ScriptBlock {
+    $result = Assert-ThresholdProductPrMetadataReceiptBinding `
+        -Body "No H1-B metadata needed for this known cleanup class." `
+        -SourceReceiptEntries @((New-ReceiptEntry -CandidateClass "comment_wrap_cleanup" -OmitDigest)) `
+        -KnownCandidateClasses @("comment_wrap_cleanup") `
+        -ExpectedSourceCommits @("1111111111111111111111111111111111111111")
+    if ($result.h1bMetadataRequired) {
+        throw "Known non-H1-B candidate class unexpectedly required H1-B metadata."
+    }
+}
+
+Assert-Throws -Name "unknown candidate class fails closed" -ScriptBlock {
+    Assert-ThresholdProductPrMetadataReceiptBinding `
+        -Body "No metadata." `
+        -SourceReceiptEntries @((New-ReceiptEntry -CandidateClass "unknown_candidate" -OmitDigest)) `
+        -KnownCandidateClasses @("comment_wrap_cleanup") `
+        -ExpectedSourceCommits @("1111111111111111111111111111111111111111")
+}
+
+Assert-Throws -Name "multiple H1-B receipts fail" -ScriptBlock {
+    Assert-ThresholdProductPrMetadataReceiptBinding `
+        -Body (New-ValidBody) `
+        -SourceReceiptEntries @((New-ReceiptEntry), (New-ReceiptEntry -ExpectedDigest "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff")) `
+        -KnownCandidateClasses @("comment_wrap_cleanup") `
+        -ExpectedSourceCommits @("1111111111111111111111111111111111111111")
+}
+
+Assert-Throws -Name "conflicting expected digests fail" -ScriptBlock {
+    Assert-ThresholdProductPrMetadataReceiptBinding `
+        -Body (New-ValidBody) `
+        -SourceReceiptEntries @((New-ReceiptEntry), (New-ReceiptEntry -ExpectedDigest "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa")) `
+        -KnownCandidateClasses @("comment_wrap_cleanup") `
+        -ExpectedSourceCommits @("1111111111111111111111111111111111111111")
 }
 
 Write-Host "thresholdPrMetadataEnvelopeTests=passed"
