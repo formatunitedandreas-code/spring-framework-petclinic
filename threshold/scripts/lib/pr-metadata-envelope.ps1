@@ -30,11 +30,10 @@ function Get-ThresholdPrMetadataEnvelope {
     param([Parameter(Mandatory = $true)][AllowEmptyString()][string] $Body)
 
     $startCount = Get-ThresholdSubstringCount -Text $Body -Needle $script:ThresholdPrMetadataEnvelopeStart
-    $endCount = Get-ThresholdSubstringCount -Text $Body -Needle $script:ThresholdPrMetadataEnvelopeEnd
     if ($startCount -eq 0) {
         throw "Missing Threshold PR metadata envelope marker."
     }
-    if ($startCount -ne 1 -or $endCount -ne 1) {
+    if ($startCount -ne 1) {
         throw "Threshold PR metadata envelope must appear exactly once."
     }
 
@@ -219,9 +218,13 @@ function Assert-ThresholdProductPrMetadataReceiptBinding {
     [CmdletBinding()]
     param(
         [AllowEmptyString()] [string] $Body,
-        [Parameter(Mandatory = $true)] [object[]] $SourceReceiptEntries,
+        [Parameter(Mandatory = $true)]
+        [AllowEmptyCollection()]
+        [object[]] $SourceReceiptEntries,
         [Parameter(Mandatory = $true)] [string[]] $KnownCandidateClasses,
-        [Parameter(Mandatory = $true)] [string[]] $ExpectedSourceCommits
+        [Parameter(Mandatory = $true)]
+        [AllowEmptyCollection()]
+        [string[]] $ExpectedSourceCommits
     )
 
     foreach ($expectedSourceCommit in $ExpectedSourceCommits) {

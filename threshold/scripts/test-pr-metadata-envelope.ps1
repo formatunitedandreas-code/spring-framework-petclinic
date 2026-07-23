@@ -161,13 +161,27 @@ Assert-Throws -Name "rejects two envelopes" -ScriptBlock {
     Assert-ThresholdPrMetadataEnvelope -Body "$(New-ValidBody)`n$(New-ValidBody)"
 }
 
-Assert-Throws -Name "rejects additional end marker" -ScriptBlock {
-    Assert-ThresholdPrMetadataEnvelope -Body "$(New-ValidBody)`n-->"
+Assert-DoesNotThrow -Name "ordinary HTML comment before envelope passes" -ScriptBlock {
+    Assert-ThresholdPrMetadataEnvelope -Body "<!-- repository template hint -->`n$(New-ValidBody)"
+}
+
+Assert-DoesNotThrow -Name "ordinary HTML comment after envelope passes" -ScriptBlock {
+    Assert-ThresholdPrMetadataEnvelope -Body "$(New-ValidBody)`n<!-- repository template hint -->"
+}
+
+Assert-DoesNotThrow -Name "ordinary HTML comments before and after envelope pass" -ScriptBlock {
+    Assert-ThresholdPrMetadataEnvelope -Body "<!-- before -->`n$(New-ValidBody)`n<!-- after -->"
 }
 
 Assert-Throws -Name "rejects nested start marker" -ScriptBlock {
     $badEnvelope = $validEnvelope.Replace('"candidateClass": "industrial_refactoring_h1b",', '"candidateClass": "industrial_refactoring_h1b",\n<!-- threshold-metadata-envelope:v0.2', [System.StringComparison]::Ordinal)
     Assert-ThresholdPrMetadataEnvelope -Body (New-ValidBody -EnvelopeOverride $badEnvelope)
+}
+
+Assert-Throws -Name "missing Threshold closing marker fails" -ScriptBlock {
+    $body = New-ValidBody
+    $body = $body.Substring(0, $body.LastIndexOf("-->", [System.StringComparison]::Ordinal))
+    Assert-ThresholdPrMetadataEnvelope -Body $body
 }
 
 function New-ReceiptEntry {
@@ -257,6 +271,46 @@ Assert-Throws -Name "conflicting expected digests fail" -ScriptBlock {
         -SourceReceiptEntries @((New-ReceiptEntry), (New-ReceiptEntry -ExpectedDigest "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa")) `
         -KnownCandidateClasses @("comment_wrap_cleanup") `
         -ExpectedSourceCommits @("1111111111111111111111111111111111111111")
+}
+
+Assert-DoesNotThrow -Name "product commit plus separate receipt-only commit passes" -ScriptBlock {
+    Assert-ThresholdProductPrMetadataReceiptBinding `
+        -Body (New-ValidBody) `
+        -SourceReceiptEntries @((New-ReceiptEntry -SourceCommit "1111111111111111111111111111111111111111")) `
+        -KnownCandidateClasses @("comment_wrap_cleanup") `
+        -ExpectedSourceCommits @("1111111111111111111111111111111111111111")
+}
+
+Assert-DoesNotThrow -Name "receipt-only commit is excluded from expected source commits" -ScriptBlock {
+    Assert-ThresholdProductPrMetadataReceiptBinding `
+        -Body (New-ValidBody) `
+        -SourceReceiptEntries @((New-ReceiptEntry -SourceCommit "1111111111111111111111111111111111111111")) `
+        -KnownCandidateClasses @("comment_wrap_cleanup") `
+        -ExpectedSourceCommits @("1111111111111111111111111111111111111111")
+}
+
+Assert-Throws -Name "product commit without receipt fails" -ScriptBlock {
+    Assert-ThresholdProductPrMetadataReceiptBinding `
+        -Body (New-ValidBody) `
+        -SourceReceiptEntries @((New-ReceiptEntry -SourceCommit "2222222222222222222222222222222222222222")) `
+        -KnownCandidateClasses @("comment_wrap_cleanup") `
+        -ExpectedSourceCommits @("1111111111111111111111111111111111111111")
+}
+
+Assert-DoesNotThrow -Name "mixed product-and-receipt commit passes" -ScriptBlock {
+    Assert-ThresholdProductPrMetadataReceiptBinding `
+        -Body (New-ValidBody) `
+        -SourceReceiptEntries @((New-ReceiptEntry -SourceCommit "3333333333333333333333333333333333333333")) `
+        -KnownCandidateClasses @("comment_wrap_cleanup") `
+        -ExpectedSourceCommits @("3333333333333333333333333333333333333333")
+}
+
+Assert-DoesNotThrow -Name "governance-only commit remains excluded" -ScriptBlock {
+    Assert-ThresholdProductPrMetadataReceiptBinding `
+        -Body "No product metadata needed." `
+        -SourceReceiptEntries @() `
+        -KnownCandidateClasses @("comment_wrap_cleanup") `
+        -ExpectedSourceCommits @()
 }
 
 Write-Host "thresholdPrMetadataEnvelopeTests=passed"

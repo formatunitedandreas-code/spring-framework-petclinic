@@ -228,10 +228,16 @@ $prCommits = @(git rev-list --reverse "origin/${BaseRef}..HEAD")
 if ($prCommits.Count -eq 0) { throw "No PR commits detected." }
 
 $sourceCommitCount = 0
+$productSourceCommits = New-Object System.Collections.Generic.List[string]
 $sourceReceiptEntries = New-Object System.Collections.Generic.List[object]
 foreach ($commit in $prCommits) {
     $commitPaths = @(git diff-tree --no-commit-id --name-only -r $commit)
     if ($commitPaths.Count -eq 0) { continue }
+
+    $commitProductPaths = @($commitPaths | Where-Object { Test-ProductPath -Path $_ })
+    if ($commitProductPaths.Count -gt 0) {
+        $productSourceCommits.Add($commit)
+    }
 
     $governanceOnly = $true
     foreach ($path in $commitPaths) {
@@ -300,7 +306,7 @@ if ($productPaths.Count -gt 0) {
         -Body $prBody `
         -SourceReceiptEntries @($sourceReceiptEntries.ToArray()) `
         -KnownCandidateClasses @(Get-ThresholdLeaseList -Lines $leaseLines -Name "allowedCandidateTypes") `
-        -ExpectedSourceCommits @($prCommits)
+        -ExpectedSourceCommits @($productSourceCommits.ToArray())
     Write-Host "thresholdPrH1BMetadataRequired=$($metadataBinding.h1bMetadataRequired.ToString().ToLowerInvariant())"
     if ($metadataBinding.h1bMetadataRequired) {
         Write-Host "thresholdPrMetadataEnvelopeDigest=$($metadataBinding.observedMetadataEnvelopeDigest)"
