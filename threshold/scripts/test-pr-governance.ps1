@@ -298,10 +298,6 @@ if ($productPaths.Count -gt 0) {
         $prBody = [string] $env:THRESHOLD_PR_BODY
     }
 
-    if ($null -eq $prBody) {
-        throw "Product PR metadata binding requires pull request body observation, but no body was available."
-    }
-
     $metadataBinding = Assert-ThresholdProductPrMetadataReceiptBinding `
         -Body $prBody `
         -SourceReceiptEntries @($sourceReceiptEntries.ToArray()) `

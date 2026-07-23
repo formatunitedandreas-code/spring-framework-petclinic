@@ -249,10 +249,94 @@ Assert-DoesNotThrow -Name "wrong candidate class does not invoke H1-B parser" -S
     }
 }
 
+Assert-DoesNotThrow -Name "known non-H1B receipt with null body passes" -ScriptBlock {
+    $result = Assert-ThresholdProductPrMetadataReceiptBinding `
+        -Body $null `
+        -SourceReceiptEntries @((New-ReceiptEntry -CandidateClass "comment_wrap_cleanup" -OmitDigest)) `
+        -KnownCandidateClasses @("comment_wrap_cleanup") `
+        -ExpectedSourceCommits @("1111111111111111111111111111111111111111")
+    if ($result.h1bMetadataRequired) {
+        throw "Known non-H1-B candidate class unexpectedly required H1-B metadata."
+    }
+}
+
+Assert-DoesNotThrow -Name "known non-H1B receipt with empty body passes" -ScriptBlock {
+    $result = Assert-ThresholdProductPrMetadataReceiptBinding `
+        -Body "" `
+        -SourceReceiptEntries @((New-ReceiptEntry -CandidateClass "comment_wrap_cleanup" -OmitDigest)) `
+        -KnownCandidateClasses @("comment_wrap_cleanup") `
+        -ExpectedSourceCommits @("1111111111111111111111111111111111111111")
+    if ($result.h1bMetadataRequired) {
+        throw "Known non-H1-B candidate class unexpectedly required H1-B metadata."
+    }
+}
+
+Assert-DoesNotThrow -Name "known non-H1B local governance without PR event passes" -ScriptBlock {
+    $result = Assert-ThresholdProductPrMetadataReceiptBinding `
+        -Body $null `
+        -SourceReceiptEntries @((New-ReceiptEntry -CandidateClass "comment_wrap_cleanup" -OmitDigest)) `
+        -KnownCandidateClasses @("comment_wrap_cleanup") `
+        -ExpectedSourceCommits @("1111111111111111111111111111111111111111")
+    if ($result.h1bMetadataRequired) {
+        throw "Local non-H1-B governance unexpectedly required PR body metadata."
+    }
+}
+
+Assert-Throws -Name "H1-B receipt with null body fails" -ScriptBlock {
+    Assert-ThresholdProductPrMetadataReceiptBinding `
+        -Body $null `
+        -SourceReceiptEntries @((New-ReceiptEntry)) `
+        -KnownCandidateClasses @("comment_wrap_cleanup") `
+        -ExpectedSourceCommits @("1111111111111111111111111111111111111111")
+}
+
+Assert-Throws -Name "H1-B receipt with empty body fails" -ScriptBlock {
+    Assert-ThresholdProductPrMetadataReceiptBinding `
+        -Body "" `
+        -SourceReceiptEntries @((New-ReceiptEntry)) `
+        -KnownCandidateClasses @("comment_wrap_cleanup") `
+        -ExpectedSourceCommits @("1111111111111111111111111111111111111111")
+}
+
 Assert-Throws -Name "unknown candidate class fails closed" -ScriptBlock {
     Assert-ThresholdProductPrMetadataReceiptBinding `
         -Body "No metadata." `
         -SourceReceiptEntries @((New-ReceiptEntry -CandidateClass "unknown_candidate" -OmitDigest)) `
+        -KnownCandidateClasses @("comment_wrap_cleanup") `
+        -ExpectedSourceCommits @("1111111111111111111111111111111111111111")
+}
+
+Assert-Throws -Name "unknown candidate class with null body fails closed" -ScriptBlock {
+    Assert-ThresholdProductPrMetadataReceiptBinding `
+        -Body $null `
+        -SourceReceiptEntries @((New-ReceiptEntry -CandidateClass "unknown_candidate" -OmitDigest)) `
+        -KnownCandidateClasses @("comment_wrap_cleanup") `
+        -ExpectedSourceCommits @("1111111111111111111111111111111111111111")
+}
+
+Assert-Throws -Name "unknown candidate class with empty body fails closed" -ScriptBlock {
+    Assert-ThresholdProductPrMetadataReceiptBinding `
+        -Body "" `
+        -SourceReceiptEntries @((New-ReceiptEntry -CandidateClass "unknown_candidate" -OmitDigest)) `
+        -KnownCandidateClasses @("comment_wrap_cleanup") `
+        -ExpectedSourceCommits @("1111111111111111111111111111111111111111")
+}
+
+Assert-DoesNotThrow -Name "H1-B receipt with valid body and matching digest passes" -ScriptBlock {
+    $result = Assert-ThresholdProductPrMetadataReceiptBinding `
+        -Body (New-ValidBody) `
+        -SourceReceiptEntries @((New-ReceiptEntry)) `
+        -KnownCandidateClasses @("comment_wrap_cleanup") `
+        -ExpectedSourceCommits @("1111111111111111111111111111111111111111")
+    if (-not $result.h1bMetadataRequired -or $result.observedMetadataEnvelopeDigest -ne $validEnvelopeDigest) {
+        throw "H1-B metadata binding did not report the expected digest."
+    }
+}
+
+Assert-Throws -Name "H1-B receipt with body digest mismatch fails" -ScriptBlock {
+    Assert-ThresholdProductPrMetadataReceiptBinding `
+        -Body (New-ValidBody) `
+        -SourceReceiptEntries @((New-ReceiptEntry -ExpectedDigest "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb")) `
         -KnownCandidateClasses @("comment_wrap_cleanup") `
         -ExpectedSourceCommits @("1111111111111111111111111111111111111111")
 }

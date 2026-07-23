@@ -217,7 +217,9 @@ function Get-ThresholdReceiptSourceCommit {
 function Assert-ThresholdProductPrMetadataReceiptBinding {
     [CmdletBinding()]
     param(
-        [AllowEmptyString()] [string] $Body,
+        [AllowNull()]
+        [AllowEmptyString()]
+        [string] $Body,
         [Parameter(Mandatory = $true)]
         [AllowEmptyCollection()]
         [object[]] $SourceReceiptEntries,
@@ -269,6 +271,9 @@ function Assert-ThresholdProductPrMetadataReceiptBinding {
     if (-not $h1bReceipt.PSObject.Properties["expectedMetadataEnvelopeDigest"] -or
         [string]::IsNullOrWhiteSpace([string]$h1bReceipt.expectedMetadataEnvelopeDigest)) {
         throw "H1-B receipt is missing expectedMetadataEnvelopeDigest."
+    }
+    if ([string]::IsNullOrEmpty($Body)) {
+        throw "H1-B product PR metadata binding requires pull request body observation."
     }
 
     $metadataResult = Assert-ThresholdPrMetadataEnvelope -Body $Body
