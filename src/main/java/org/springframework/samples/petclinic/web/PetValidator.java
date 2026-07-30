@@ -81,6 +81,4 @@ public class PetValidator implements Validator {
     public boolean supports(Class<?> clazz) {
         return Pet.class.isAssignableFrom(clazz);
     }
-
-
 }
