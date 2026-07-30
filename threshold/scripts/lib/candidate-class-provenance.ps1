@@ -50,11 +50,13 @@ function Test-ThresholdBlankLinePackageImportDiff {
 function Test-ThresholdMethodSpacingDiff {
     param([string[]] $DiffLines)
 
-    $blankDelta = @($DiffLines | Where-Object { $_ -eq "-" -or $_ -eq "+" }).Count
+    $contentLines = Get-ThresholdDiffContentLines -DiffLines $DiffLines
+    $deltaLines = @($contentLines | Where-Object { $_ -match '^[+-]' })
+    $blankDelta = @($deltaLines | Where-Object { $_ -eq "-" -or $_ -eq "+" }).Count
     if ($blankDelta -ne 1) { return $false }
-    $hasClosingBrace = @($DiffLines | Where-Object { $_ -match '^[ +\-]\s*\}\s*$' }).Count -gt 0
-    $hasMethodOrAnnotation = @($DiffLines | Where-Object { $_ -match '^[ +\-]\s*(?:@|public\b|private\b|protected\b)' }).Count -gt 0
-    return $hasClosingBrace -and $hasMethodOrAnnotation
+    $hasClosingBrace = @($contentLines | Where-Object { $_ -match '^[ +\-]\s*\}\s*$' }).Count -gt 0
+    $hasMethodOrAnnotation = @($contentLines | Where-Object { $_ -match '^[ +\-]\s*(?:@|public\b|private\b|protected\b)' }).Count -gt 0
+    return $deltaLines.Count -eq $blankDelta -and $hasClosingBrace -and $hasMethodOrAnnotation
 }
 
 function Get-ThresholdDiffContentLines {
@@ -133,12 +135,65 @@ function Test-ThresholdSplitStringConstantNormalizationDiff {
         ($removedStartMatch.Groups["value"].Value + $removedEndMatch.Groups["value"].Value) -eq $addedMatch.Groups["value"].Value
 }
 
+function Split-ThresholdTopLevelCommaArguments {
+    param([string] $Text)
+
+    $parts = New-Object System.Collections.Generic.List[string]
+    $start = 0
+    $depth = 0
+    $inString = $false
+    $escaped = $false
+
+    for ($i = 0; $i -lt $Text.Length; $i++) {
+        $char = $Text[$i]
+        if ($inString) {
+            if ($escaped) {
+                $escaped = $false
+                continue
+            }
+            if ($char -eq '\') {
+                $escaped = $true
+                continue
+            }
+            if ($char -eq '"') {
+                $inString = $false
+            }
+            continue
+        }
+
+        if ($char -eq '"') {
+            $inString = $true
+            continue
+        }
+        if ($char -eq '(' -or $char -eq '{' -or $char -eq '[') {
+            $depth++
+            continue
+        }
+        if ($char -eq ')' -or $char -eq '}' -or $char -eq ']') {
+            if ($depth -gt 0) { $depth-- }
+            continue
+        }
+        if ($char -eq ',' -and $depth -eq 0) {
+            $parts.Add($Text.Substring($start, $i - $start).Trim())
+            $start = $i + 1
+        }
+    }
+
+    $parts.Add($Text.Substring($start).Trim())
+    return @($parts.ToArray() | Where-Object { -not [string]::IsNullOrWhiteSpace($_) })
+}
+
+function ConvertTo-ThresholdNormalizedAnnotationArgument {
+    param([string] $Text)
+    return ([regex]::Replace($Text.Trim().TrimEnd(","), '\s+', ' '))
+}
+
 function Test-ThresholdAnnotationAttributeWrapDiff {
     param([string[]] $DiffLines)
 
     $contentLines = Get-ThresholdDiffContentLines -DiffLines $DiffLines
-    $removed = @($contentLines | Where-Object { $_ -match '^-\s*@[A-Za-z][A-Za-z0-9_.]*\(.+\)\s*$' })
-    $addedOpen = @($contentLines | Where-Object { $_ -match '^\+\s*@[A-Za-z][A-Za-z0-9_.]*\(\s*$' })
+    $removed = @($contentLines | Where-Object { $_ -match '^-\s*@(?<name>[A-Za-z][A-Za-z0-9_.]*)\((?<args>.+)\)\s*$' })
+    $addedOpen = @($contentLines | Where-Object { $_ -match '^\+\s*@(?<name>[A-Za-z][A-Za-z0-9_.]*)\(\s*$' })
     $addedArgs = @($contentLines | Where-Object { $_ -match '^\+\s+[A-Za-z_][A-Za-z0-9_]*\s*=.+,?\s*$' })
     $addedClose = @($contentLines | Where-Object { $_ -match '^\+\s*\)\s*$' })
     $nonAnnotationDelta = @($contentLines | Where-Object {
@@ -147,7 +202,22 @@ function Test-ThresholdAnnotationAttributeWrapDiff {
         $_ -notmatch '^[+-]\s+[A-Za-z_][A-Za-z0-9_]*\s*=.+,?\s*$' -and
         $_ -notmatch '^[+-]\s*\)\s*$'
     })
-    return $removed.Count -eq 1 -and $addedOpen.Count -eq 1 -and $addedArgs.Count -ge 2 -and $addedClose.Count -eq 1 -and $nonAnnotationDelta.Count -eq 0
+    if ($removed.Count -ne 1 -or $addedOpen.Count -ne 1 -or $addedArgs.Count -lt 2 -or $addedClose.Count -ne 1 -or $nonAnnotationDelta.Count -ne 0) {
+        return $false
+    }
+
+    $removedMatch = [regex]::Match($removed[0], '^-\s*@(?<name>[A-Za-z][A-Za-z0-9_.]*)\((?<args>.+)\)\s*$')
+    $addedOpenMatch = [regex]::Match($addedOpen[0], '^\+\s*@(?<name>[A-Za-z][A-Za-z0-9_.]*)\(\s*$')
+    if ($removedMatch.Groups["name"].Value -ne $addedOpenMatch.Groups["name"].Value) {
+        return $false
+    }
+    $removedArgs = @(Split-ThresholdTopLevelCommaArguments -Text $removedMatch.Groups["args"].Value | ForEach-Object {
+        ConvertTo-ThresholdNormalizedAnnotationArgument -Text $_
+    })
+    $addedNormalizedArgs = @($addedArgs | ForEach-Object {
+        ConvertTo-ThresholdNormalizedAnnotationArgument -Text ($_.Substring(1))
+    })
+    return ($removedArgs -join "`n") -eq ($addedNormalizedArgs -join "`n")
 }
 
 function Test-ThresholdBootstrapInvocationWrapDiff {
@@ -374,6 +444,9 @@ function Assert-ThresholdCandidateClassProvenance {
     $candidateId = Get-ThresholdJsonProperty $Receipt "candidateId" $null
     $baseHead = Get-ThresholdJsonProperty $Receipt "baseHead" $null
     $commitHash = Get-ThresholdJsonProperty $Receipt "commitHash" $null
+    if ([string]::IsNullOrWhiteSpace([string]$commitHash)) {
+        $commitHash = Get-ThresholdJsonProperty $Receipt "sourceCommit" $null
+    }
     if (-not [string]::IsNullOrWhiteSpace([string]$candidateId) -and
         -not [string]::IsNullOrWhiteSpace([string]$baseHead) -and
         -not [string]::IsNullOrWhiteSpace([string]$commitHash)) {
@@ -410,6 +483,9 @@ function Assert-ThresholdCandidateClassProvenance {
         )) {
             Assert-ThresholdProvenanceFieldMatches -Observed $provenance -Expected $expected -Field $field -ReceiptPath $ReceiptPath
         }
+    }
+    elseif (-not [string]::IsNullOrWhiteSpace([string]$candidateId)) {
+        throw "candidateClassProvenance cannot be recomputed without candidateId, baseHead, and commitHash/sourceCommit receipt=$ReceiptPath"
     }
 }
 

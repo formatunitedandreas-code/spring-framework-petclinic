@@ -131,7 +131,7 @@ try {
         "import java.util.Locale;",
         "",
         "class PetTypeFormatter {",
-        "    String print(Locale locale) {",
+        "    public String print(Locale locale) {",
         "        return locale.toLanguageTag();",
         "    }",
         "",
@@ -213,6 +213,15 @@ try {
         Write-Host "passed=stale provenance digest is recomputed and rejected"
     }
 
+    $sourceCommitReceipt = [pscustomobject]@{
+        candidateId = "canary-method-spacing-valid"
+        baseHead = $methodBase
+        sourceCommit = $methodCommit
+        candidateClassProvenance = $validProvenance
+    }
+    Assert-ThresholdCandidateClassProvenance -Receipt $sourceCommitReceipt -ReceiptPath "source-commit-receipt.json" -CandidatePocketPath $methodPocketPath
+    Write-Host "passed=sourceCommit provenance is recomputed and admitted"
+
     $commentDiff = @(
         "diff --git a/src/main/java/org/example/Foo.java b/src/main/java/org/example/Foo.java",
         "index 1111111..2222222 100644",
@@ -260,12 +269,30 @@ try {
     )
     Assert-False -Condition (Test-ThresholdBlankLinePackageImportDiff -DiffLines $compoundImportSpacingDiff) -Name "import spacing rejects compound nonblank deltas"
 
+    $compoundMethodSpacingDiff = @(
+        "     }",
+        "+",
+        "     public String parse(String text) {",
+        "-        return text;",
+        "+        return text.trim();"
+    )
+    Assert-False -Condition (Test-ThresholdMethodSpacingDiff -DiffLines $compoundMethodSpacingDiff) -Name "method spacing rejects compound nonblank deltas"
+
     $changedLiteralDiff = @(
         "-    private static final String OWNER_QUERY = `"foo bar`";",
         "+    private static final String OWNER_QUERY = `"different `" +",
         "+        `"value`";"
     )
     Assert-False -Condition (Test-ThresholdStringConstantWrapDiff -DiffLines $changedLiteralDiff) -Name "string constant wrap rejects changed literal value"
+
+    $changedAnnotationDiff = @(
+        "-    @RequestMapping(value = `"/owners`", method = RequestMethod.GET)",
+        "+    @RequestMapping(",
+        "+        value = `"/pets`",",
+        "+        method = RequestMethod.GET",
+        "+    )"
+    )
+    Assert-False -Condition (Test-ThresholdAnnotationAttributeWrapDiff -DiffLines $changedAnnotationDiff) -Name "annotation attribute wrap rejects changed argument values"
 
     Assert-True -Condition (Test-ThresholdCandidateClassHasIndependentDiffClassifier -CandidateClass "annotation_attribute_wrap_cleanup") -Name "annotation auto patch class has independent classifier"
     Assert-True -Condition (Test-ThresholdCandidateClassHasIndependentDiffClassifier -CandidateClass "string_constant_wrap_cleanup") -Name "string constant auto patch class has independent classifier"
