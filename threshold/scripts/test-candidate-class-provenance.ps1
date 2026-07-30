@@ -194,6 +194,7 @@ try {
         -ReceiptCandidateClass "method_spacing_normalization" `
         -LearningProjectionClass "method_spacing_normalization" `
         -BaseHead $methodSourceBase `
+        -PrBaseHead $methodSourceBase `
         -CommitHash $methodCommit `
         -CandidatePocketPath $methodPocketPath `
         -DiscoveryEvidenceRoot "discovery-evidence" `
@@ -203,6 +204,9 @@ try {
     Assert-True -Condition ([bool]$validProvenance.candidatePathMatched) -Name "method spacing observed diff path matches candidate snapshot"
     Assert-True -Condition ([bool]$validProvenance.candidateMemberMatched) -Name "method spacing observed hunk matches candidate member"
     Assert-True -Condition ([bool]$validProvenance.immutableDiscoveryEvidencePresent) -Name "immutable discovery evidence is present"
+    Assert-True -Condition ([bool]$validProvenance.prBaseHeadPresent) -Name "PR base head is present"
+    Assert-True -Condition ([bool]$validProvenance.prBaseHeadMatched) -Name "PR base head is independently bound"
+    Assert-False -Condition ([bool]$validProvenance.discoveryEvidenceChangedInsideProductPr) -Name "pre-existing discovery evidence is unchanged inside product PR"
     Assert-True -Condition ([string]::IsNullOrWhiteSpace([string]$validProvenance.discoveryEvidence)) -Name "receipt provenance does not embed discovery evidence"
     Assert-False -Condition ([bool]$validProvenance.fallbackToMutableCurrentPocket) -Name "mutable current pocket fallback is disabled"
     Assert-False -Condition ([bool]$validProvenance.fallbackToReceiptEmbeddedSnapshot) -Name "receipt embedded snapshot fallback is disabled"
@@ -215,8 +219,48 @@ try {
         commitHash = $methodCommit
         candidateClassProvenance = $validProvenance
     }
-    Assert-ThresholdCandidateClassProvenance -Receipt $validReceipt -ReceiptPath "valid-receipt.json" -CandidatePocketPath $methodPocketPath
+    Assert-ThresholdCandidateClassProvenance -Receipt $validReceipt -ReceiptPath "valid-receipt.json" -CandidatePocketPath $methodPocketPath -PrBaseHead $methodSourceBase
     Write-Host "passed=positive provenance receipt is admitted"
+    Write-Host "passed=evidence_preexists_on_pr_base"
+
+    $missingPrBaseProvenance = New-ThresholdCandidateClassProvenance `
+        -CandidateId "canary-method-spacing-valid" `
+        -GrantedCandidateClass "method_spacing_normalization" `
+        -ExecutorCandidateClass "method_spacing_normalization" `
+        -ReceiptCandidateClass "method_spacing_normalization" `
+        -LearningProjectionClass "method_spacing_normalization" `
+        -BaseHead $methodSourceBase `
+        -CommitHash $methodCommit `
+        -CandidatePocketPath $methodPocketPath `
+        -DiscoveryEvidenceRoot "discovery-evidence" `
+        -DiscoveryEvidencePath $methodDiscoveryEvidencePath
+    Assert-False -Condition ([bool]$missingPrBaseProvenance.prBaseHeadPresent) -Name "missing PR base head is visible"
+    Assert-False -Condition ([bool]$missingPrBaseProvenance.candidateClassProvenanceMatched) -Name "missing PR base head rejects provenance"
+    Write-Host "passed=pr_base_missing"
+
+    $forgedPrBaseReceipt = $validReceipt | ConvertTo-Json -Depth 12 | ConvertFrom-Json
+    $forgedPrBaseReceipt.candidateClassProvenance.prBaseHead = $methodBase
+    try {
+        Assert-ThresholdCandidateClassProvenance -Receipt $forgedPrBaseReceipt -ReceiptPath "forged-pr-base-receipt.json" -CandidatePocketPath $methodPocketPath -PrBaseHead $methodSourceBase
+        throw "Expected forged PR base assertion failure did not occur."
+    }
+    catch {
+        if ($_.Exception.Message -notmatch "prBaseHead claim mismatch|recompute mismatch") {
+            throw
+        }
+        Write-Host "passed=receipt_claims_forged_pr_base"
+    }
+
+    try {
+        Assert-ThresholdCandidateClassProvenance -Receipt $validReceipt -ReceiptPath "swapped-pr-base-receipt.json" -CandidatePocketPath $methodPocketPath -PrBaseHead $methodCommit
+        throw "Expected swapped PR/source base assertion failure did not occur."
+    }
+    catch {
+        if ($_.Exception.Message -notmatch "prBaseHead is not ancestor of source baseHead|receipt prBaseHead claim mismatch") {
+            throw
+        }
+        Write-Host "passed=source_base_and_pr_base_swapped"
+    }
 
     $wrongSpacingActionCandidate = [ordered]@{
         candidateId = "canary-method-spacing-valid"
@@ -245,7 +289,7 @@ try {
     $receiptClassTamper = $validReceipt | ConvertTo-Json -Depth 10 | ConvertFrom-Json
     $receiptClassTamper.candidateClass = "import_spacing_normalization"
     try {
-        Assert-ThresholdCandidateClassProvenance -Receipt $receiptClassTamper -ReceiptPath "receipt-class-tamper.json" -CandidatePocketPath $methodPocketPath
+        Assert-ThresholdCandidateClassProvenance -Receipt $receiptClassTamper -ReceiptPath "receipt-class-tamper.json" -CandidatePocketPath $methodPocketPath -PrBaseHead $methodSourceBase
         throw "Expected top-level candidate class mismatch assertion failure did not occur."
     }
     catch {
@@ -265,7 +309,7 @@ try {
     $missingEvidenceReceipt = $validReceipt | ConvertTo-Json -Depth 12 | ConvertFrom-Json
     $missingEvidenceReceipt.candidateClassProvenance.discoveryEvidencePath = "missing-discovery-evidence.json"
     try {
-        Assert-ThresholdCandidateClassProvenance -Receipt $missingEvidenceReceipt -ReceiptPath "missing-discovery-evidence.json" -CandidatePocketPath $methodPocketPath
+        Assert-ThresholdCandidateClassProvenance -Receipt $missingEvidenceReceipt -ReceiptPath "missing-discovery-evidence.json" -CandidatePocketPath $methodPocketPath -PrBaseHead $methodSourceBase
         throw "Expected missing immutable discovery evidence assertion failure did not occur."
     }
     catch {
@@ -274,13 +318,13 @@ try {
         }
         Write-Host "passed=missing immutable discovery evidence rejects embedded snapshot fallback"
     }
-    Assert-ThresholdCandidateClassProvenance -Receipt $validReceipt -ReceiptPath "immutable-discovery-evidence.json" -CandidatePocketPath $stalePocketPath
+    Assert-ThresholdCandidateClassProvenance -Receipt $validReceipt -ReceiptPath "immutable-discovery-evidence.json" -CandidatePocketPath $stalePocketPath -PrBaseHead $methodSourceBase
     Write-Host "passed=valid immutable discovery evidence admits even when mutable pocket no longer contains candidate"
 
     $embeddedDiscoveryReceipt = $validReceipt | ConvertTo-Json -Depth 12 | ConvertFrom-Json
     $embeddedDiscoveryReceipt.candidateClassProvenance.discoveryEvidence = Get-Content -LiteralPath $validProvenance.discoveryEvidencePath -Raw | ConvertFrom-Json
     try {
-        Assert-ThresholdCandidateClassProvenance -Receipt $embeddedDiscoveryReceipt -ReceiptPath "embedded-discovery-evidence.json" -CandidatePocketPath $methodPocketPath
+        Assert-ThresholdCandidateClassProvenance -Receipt $embeddedDiscoveryReceipt -ReceiptPath "embedded-discovery-evidence.json" -CandidatePocketPath $methodPocketPath -PrBaseHead $methodSourceBase
         throw "Expected embedded discovery evidence assertion failure did not occur."
     }
     catch {
@@ -293,7 +337,7 @@ try {
     $snapshotDigestTamper = $validReceipt | ConvertTo-Json -Depth 10 | ConvertFrom-Json
     $snapshotDigestTamper.candidateClassProvenance.executionCandidateSnapshot.member = "line-99"
     try {
-        Assert-ThresholdCandidateClassProvenance -Receipt $snapshotDigestTamper -ReceiptPath "snapshot-digest-tamper.json" -CandidatePocketPath $methodPocketPath
+        Assert-ThresholdCandidateClassProvenance -Receipt $snapshotDigestTamper -ReceiptPath "snapshot-digest-tamper.json" -CandidatePocketPath $methodPocketPath -PrBaseHead $methodSourceBase
         throw "Expected receipt-bound snapshot digest assertion failure did not occur."
     }
     catch {
@@ -306,7 +350,7 @@ try {
     $discoveryDigestTamper = $validReceipt | ConvertTo-Json -Depth 12 | ConvertFrom-Json
     $discoveryDigestTamper.candidateClassProvenance.discoveryEvidenceDigest = "tampered"
     try {
-        Assert-ThresholdCandidateClassProvenance -Receipt $discoveryDigestTamper -ReceiptPath "discovery-digest-tamper.json" -CandidatePocketPath $methodPocketPath
+        Assert-ThresholdCandidateClassProvenance -Receipt $discoveryDigestTamper -ReceiptPath "discovery-digest-tamper.json" -CandidatePocketPath $methodPocketPath -PrBaseHead $methodSourceBase
         throw "Expected discovery evidence digest assertion failure did not occur."
     }
     catch {
@@ -323,7 +367,7 @@ try {
     $selfAnchoredReceipt.candidateClassProvenance.executionCandidateDigest = Get-ThresholdCandidateSnapshotDigest -CandidateSnapshot $selfAnchoredReceipt.candidateClassProvenance.executionCandidateSnapshot
     $selfAnchoredReceipt.candidateClassProvenance.discoveryEvidencePath = "missing-invented-discovery-evidence.json"
     try {
-        Assert-ThresholdCandidateClassProvenance -Receipt $selfAnchoredReceipt -ReceiptPath "self-anchored-receipt.json" -CandidatePocketPath $stalePocketPath
+        Assert-ThresholdCandidateClassProvenance -Receipt $selfAnchoredReceipt -ReceiptPath "self-anchored-receipt.json" -CandidatePocketPath $stalePocketPath -PrBaseHead $methodSourceBase
         throw "Expected self-anchored receipt assertion failure did not occur."
     }
     catch {
@@ -336,7 +380,7 @@ try {
     $staleReceipt = $validReceipt | ConvertTo-Json -Depth 8 | ConvertFrom-Json
     $staleReceipt.candidateClassProvenance.provenanceDigest = "stale"
     try {
-        Assert-ThresholdCandidateClassProvenance -Receipt $staleReceipt -ReceiptPath "stale-receipt.json" -CandidatePocketPath $methodPocketPath
+        Assert-ThresholdCandidateClassProvenance -Receipt $staleReceipt -ReceiptPath "stale-receipt.json" -CandidatePocketPath $methodPocketPath -PrBaseHead $methodSourceBase
         throw "Expected stale provenance digest assertion failure did not occur."
     }
     catch {
@@ -353,7 +397,7 @@ try {
         sourceCommit = $methodCommit
         candidateClassProvenance = $validProvenance
     }
-    Assert-ThresholdCandidateClassProvenance -Receipt $sourceCommitReceipt -ReceiptPath "source-commit-receipt.json" -CandidatePocketPath $methodPocketPath
+    Assert-ThresholdCandidateClassProvenance -Receipt $sourceCommitReceipt -ReceiptPath "source-commit-receipt.json" -CandidatePocketPath $methodPocketPath -PrBaseHead $methodSourceBase
     Write-Host "passed=sourceCommit provenance is recomputed and admitted"
 
     $otherJavaPath = "src/main/java/org/example/OtherFormatter.java"
@@ -432,7 +476,7 @@ try {
     $ancestorBaseReceipt = $validReceipt | ConvertTo-Json -Depth 10 | ConvertFrom-Json
     $ancestorBaseReceipt.baseHead = $baseHead
     try {
-        Assert-ThresholdCandidateClassProvenance -Receipt $ancestorBaseReceipt -ReceiptPath "ancestor-base-receipt.json" -CandidatePocketPath $methodPocketPath
+        Assert-ThresholdCandidateClassProvenance -Receipt $ancestorBaseReceipt -ReceiptPath "ancestor-base-receipt.json" -CandidatePocketPath $methodPocketPath -PrBaseHead $methodSourceBase
         throw "Expected baseHead parent assertion failure did not occur."
     }
     catch {
@@ -460,11 +504,16 @@ try {
         -ReceiptCandidateClass "method_spacing_normalization" `
         -LearningProjectionClass "method_spacing_normalization" `
         -BaseHead $methodCommit `
+        -PrBaseHead $methodSourceBase `
         -CommitHash $lateEvidenceCommit `
         -CandidatePocketPath $methodPocketPath `
         -DiscoveryEvidencePath $lateEvidencePath
     Assert-True -Condition ([bool]$lateEvidenceProvenance.discoveryEvidenceCreatedByCurrentProductPr) -Name "late discovery evidence is detected as current PR-created"
+    Assert-True -Condition ([bool]$lateEvidenceProvenance.discoveryEvidenceChangedInsideProductPr) -Name "late discovery evidence is detected as PR-created"
     Assert-False -Condition ([bool]$lateEvidenceProvenance.discoveryEvidenceTrustRootVerified) -Name "late discovery evidence does not verify trust root"
+    Assert-False -Condition ([bool]$lateEvidenceProvenance.candidateClassProvenanceMatched) -Name "evidence added inside product PR rejects provenance"
+    Write-Host "passed=evidence_added_inside_product_pr"
+    Write-Host "passed=evidence_commit_is_source_parent_but_not_pr_base_ancestor"
     $lateEvidenceReceipt = [pscustomobject]@{
         candidateId = "canary-method-spacing-valid"
         candidateClass = "method_spacing_normalization"
@@ -473,11 +522,11 @@ try {
         candidateClassProvenance = $lateEvidenceProvenance
     }
     try {
-        Assert-ThresholdCandidateClassProvenance -Receipt $lateEvidenceReceipt -ReceiptPath "late-discovery-evidence.json" -CandidatePocketPath $methodPocketPath
+        Assert-ThresholdCandidateClassProvenance -Receipt $lateEvidenceReceipt -ReceiptPath "late-discovery-evidence.json" -CandidatePocketPath $methodPocketPath -PrBaseHead $methodSourceBase
         throw "Expected late discovery evidence assertion failure did not occur."
     }
     catch {
-        if ($_.Exception.Message -notmatch "added or modified by current product commit|candidateClassProvenanceMatched=false") {
+        if ($_.Exception.Message -notmatch "PR baseHead|added or modified inside current product PR|candidateClassProvenanceMatched=false") {
             throw
         }
         Write-Host "passed=PR-added discovery evidence is rejected"
@@ -498,14 +547,15 @@ try {
     $modifiedEvidenceReceipt.commitHash = $modifiedEvidenceCommit
     $modifiedEvidenceReceipt.candidateClassProvenance.discoveryEvidenceDigest = $validEvidenceForModify.discoveryEvidenceDigest
     try {
-        Assert-ThresholdCandidateClassProvenance -Receipt $modifiedEvidenceReceipt -ReceiptPath "modified-discovery-evidence.json" -CandidatePocketPath $methodPocketPath
+        Assert-ThresholdCandidateClassProvenance -Receipt $modifiedEvidenceReceipt -ReceiptPath "modified-discovery-evidence.json" -CandidatePocketPath $methodPocketPath -PrBaseHead $methodSourceBase
         throw "Expected modified discovery evidence assertion failure did not occur."
     }
     catch {
-        if ($_.Exception.Message -notmatch "added or modified by current product commit") {
+        if ($_.Exception.Message -notmatch "added or modified inside current product PR|modified after PR baseHead|candidateClassProvenanceMatched=false") {
             throw
         }
         Write-Host "passed=PR-modified referenced discovery evidence is rejected"
+        Write-Host "passed=evidence_modified_after_pr_base"
     }
 
     $insertPath = "src/main/java/org/example/InsertionBoundary.java"

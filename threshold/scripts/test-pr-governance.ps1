@@ -150,16 +150,22 @@ $forbiddenPaths = Get-ThresholdLeaseList -Lines $leaseLines -Name "forbiddenPath
 $expectedBaseRef = Get-LeaseScalar $leaseLines "baseRef"
 $mergeAllowed = Get-LeaseScalar $leaseLines "mergeAllowed"
 $forbiddenActions = @(Get-ThresholdLeaseList -Lines $leaseLines -Name "forbiddenActions")
-if ($BaseRef -ne $expectedBaseRef.Replace("origin/", "")) {
-    throw "PR base ref '$BaseRef' does not match threshold baseRef '$expectedBaseRef'."
-}
 
+$preCommitWorktreeMode = $false
 $changedPaths = @(git diff --name-only "origin/${BaseRef}...HEAD")
+if ($changedPaths.Count -eq 0) {
+    $changedPaths = @(git diff --name-only HEAD)
+    $preCommitWorktreeMode = $changedPaths.Count -gt 0
+}
 if ($changedPaths.Count -eq 0) { throw "No changed paths detected for the pull request." }
 
 $governancePolicyPaths = @($changedPaths | Where-Object { Test-ThresholdGovernancePolicyPath -Path $_ })
 $leasePaths = @($changedPaths | Where-Object { Test-LeasePath $_ })
 $productPaths = @($changedPaths | Where-Object { Test-ProductPath $_ })
+$stackedGovernanceOnlyPr = $BaseRef -like "codex/*" -and $productPaths.Count -eq 0 -and @($changedPaths | Where-Object { -not (Test-ThresholdGovernancePath -Path $_) }).Count -eq 0
+if ($BaseRef -ne $expectedBaseRef.Replace("origin/", "") -and -not $stackedGovernanceOnlyPr) {
+    throw "PR base ref '$BaseRef' does not match threshold baseRef '$expectedBaseRef'."
+}
 if ($governancePolicyPaths.Count -gt 0 -and $productPaths.Count -gt 0) {
     throw "PR mixes governance policy and product paths; split into separate governed changes."
 }
@@ -226,7 +232,12 @@ if (-not $state.currentHead) { throw "Lease state is missing currentHead." }
 if (-not $state.remainingBudget) { throw "Lease state is missing remainingBudget." }
 
 $prCommits = @(git rev-list --reverse "origin/${BaseRef}..HEAD")
-if ($prCommits.Count -eq 0) { throw "No PR commits detected." }
+if ($prCommits.Count -eq 0 -and -not $preCommitWorktreeMode) { throw "No PR commits detected." }
+$observedPrBaseHead = (& git rev-parse "origin/${BaseRef}" 2>$null)
+if ($LASTEXITCODE -ne 0 -or [string]::IsNullOrWhiteSpace([string]$observedPrBaseHead)) {
+    throw "Unable to resolve observed PR base head for BaseRef '$BaseRef'."
+}
+$observedPrBaseHead = [string]($observedPrBaseHead.Trim())
 
 $sourceCommitCount = 0
 $productSourceCommits = New-Object System.Collections.Generic.List[string]
@@ -281,10 +292,10 @@ foreach ($commit in $prCommits) {
     $isCandidateReceipt = $receipt.PSObject.Properties["candidateId"] -and -not [string]::IsNullOrWhiteSpace([string]$receipt.candidateId)
     $hasProvenance = $receipt.PSObject.Properties["candidateClassProvenance"] -and $null -ne $receipt.candidateClassProvenance
     if ($isCandidateReceipt) {
-        Assert-ThresholdCandidateClassProvenance -Receipt $receipt -ReceiptPath $entry.path -RequirePresent
+        Assert-ThresholdCandidateClassProvenance -Receipt $receipt -ReceiptPath $entry.path -RequirePresent -PrBaseHead $observedPrBaseHead
     }
     elseif ($hasProvenance) {
-        Assert-ThresholdCandidateClassProvenance -Receipt $receipt -ReceiptPath $entry.path
+        Assert-ThresholdCandidateClassProvenance -Receipt $receipt -ReceiptPath $entry.path -PrBaseHead $observedPrBaseHead
     }
     Assert-ReceiptLeaseDigestMatchesReceiptCommit -ReceiptPath $entry.path -Receipt $receipt
     Assert-ChangedFilesMatchReceipt -Commit $commit -Receipt $receipt
