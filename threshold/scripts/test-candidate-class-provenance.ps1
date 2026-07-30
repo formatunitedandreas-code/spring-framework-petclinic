@@ -190,6 +190,7 @@ try {
         -CandidatePocketPath $methodPocketPath
 
     Assert-True -Condition ($validProvenance.independentlyObservedDiffClass -eq "method_spacing_normalization") -Name "method spacing independently classified"
+    Assert-True -Condition ([bool]$validProvenance.candidatePathMatched) -Name "method spacing observed diff path matches candidate snapshot"
     Assert-True -Condition ([bool]$validProvenance.candidateClassProvenanceMatched) -Name "matching method spacing provenance is admitted"
     $validReceipt = [pscustomobject]@{
         candidateId = "canary-method-spacing-valid"
@@ -259,6 +260,51 @@ try {
     }
     Assert-ThresholdCandidateClassProvenance -Receipt $sourceCommitReceipt -ReceiptPath "source-commit-receipt.json" -CandidatePocketPath $methodPocketPath
     Write-Host "passed=sourceCommit provenance is recomputed and admitted"
+
+    $otherJavaPath = "src/main/java/org/example/OtherFormatter.java"
+    Write-CanaryFile -Path $otherJavaPath -Lines @(
+        "package org.example;",
+        "class OtherFormatter {",
+        "    public String print(String text) {",
+        "        return text;",
+        "    }",
+        "",
+        "    public String parse(String text) {",
+        "        return text;",
+        "    }",
+        "}"
+    )
+    & git add .
+    & git commit -m "Add second formatter canary" | Out-Null
+    if ($LASTEXITCODE -ne 0) { throw "second formatter base commit failed" }
+    $otherBase = (& git rev-parse HEAD).Trim()
+    Write-CanaryFile -Path $otherJavaPath -Lines @(
+        "package org.example;",
+        "class OtherFormatter {",
+        "    public String print(String text) {",
+        "        return text;",
+        "    }",
+        "    public String parse(String text) {",
+        "        return text;",
+        "    }",
+        "}"
+    )
+    & git add .
+    & git commit -m "Collapse second formatter spacing" | Out-Null
+    if ($LASTEXITCODE -ne 0) { throw "second formatter mutation commit failed" }
+    $otherCommit = (& git rev-parse HEAD).Trim()
+    $wrongPathProvenance = New-ThresholdCandidateClassProvenance `
+        -CandidateId "canary-method-spacing-valid" `
+        -GrantedCandidateClass "method_spacing_normalization" `
+        -ExecutorCandidateClass "method_spacing_normalization" `
+        -ReceiptCandidateClass "method_spacing_normalization" `
+        -LearningProjectionClass "method_spacing_normalization" `
+        -BaseHead $otherBase `
+        -CommitHash $otherCommit `
+        -CandidateSnapshot $methodPocket.candidates[0]
+    Assert-True -Condition ($wrongPathProvenance.independentlyObservedDiffClass -eq "method_spacing_normalization") -Name "foreign-path method spacing is independently classified"
+    Assert-False -Condition ([bool]$wrongPathProvenance.candidatePathMatched) -Name "observed diff path must match candidate snapshot file"
+    Assert-False -Condition ([bool]$wrongPathProvenance.candidateClassProvenanceMatched) -Name "candidate provenance rejects class match on wrong file"
 
     $ancestorBaseReceipt = $validReceipt | ConvertTo-Json -Depth 10 | ConvertFrom-Json
     $ancestorBaseReceipt.baseHead = $baseHead
@@ -360,6 +406,12 @@ try {
         "+        return text.trim();"
     )
     Assert-False -Condition (Test-ThresholdMethodSpacingDiff -DiffLines $compoundMethodSpacingDiff) -Name "method spacing rejects compound nonblank deltas"
+
+    $leadingTabDiff = @(
+        "-`treturn text;",
+        "+    return text;"
+    )
+    Assert-True -Condition (Test-ThresholdLeadingTabIndentationDiff -DiffLines $leadingTabDiff) -Name "leading tab indentation classifier expands tabs on Windows PowerShell"
 
     $changedLiteralDiff = @(
         "-    private static final String OWNER_QUERY = `"foo bar`";",

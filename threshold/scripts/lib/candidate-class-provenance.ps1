@@ -330,7 +330,7 @@ function Test-ThresholdLeadingTabIndentationDiff {
     })
     if ($nonIndentDelta.Count -ne 0) { return $false }
     for ($i = 0; $i -lt $removed.Count; $i++) {
-        $normalizedRemoved = ($removed[$i].Substring(1) -replace "^\t+", { param($m) return " " * (4 * $m.Value.Length) })
+        $normalizedRemoved = [regex]::Replace($removed[$i].Substring(1), "^\t+", { param($m) return " " * (4 * $m.Value.Length) })
         $normalizedAdded = $added[$i].Substring(1)
         if ($normalizedRemoved -ne $normalizedAdded) { return $false }
     }
@@ -356,7 +356,7 @@ function Test-ThresholdCandidateClassHasIndependentDiffClassifier {
     return [string]$CandidateClass -in @(Get-ThresholdIndependentlyClassifiedCandidateClasses)
 }
 
-function Get-ThresholdIndependentlyObservedDiffClass {
+function Get-ThresholdIndependentlyObservedDiffProductPath {
     param(
         [Parameter(Mandatory = $true)]
         [string] $BaseHead,
@@ -367,10 +367,25 @@ function Get-ThresholdIndependentlyObservedDiffClass {
     $paths = @(& git diff --name-only "$BaseHead..$CommitHash" | Where-Object { -not [string]::IsNullOrWhiteSpace($_) })
     $productPaths = @($paths | Where-Object { $_ -like "src/main/java/*.java" -or $_ -like "src/main/java/**/*.java" })
     if ($productPaths.Count -ne 1 -or $paths.Count -ne 1) {
+        return ""
+    }
+    return ConvertTo-ThresholdRepoPath -Path ([string]$productPaths[0])
+}
+
+function Get-ThresholdIndependentlyObservedDiffClass {
+    param(
+        [Parameter(Mandatory = $true)]
+        [string] $BaseHead,
+        [Parameter(Mandatory = $true)]
+        [string] $CommitHash
+    )
+
+    $productPath = Get-ThresholdIndependentlyObservedDiffProductPath -BaseHead $BaseHead -CommitHash $CommitHash
+    if ([string]::IsNullOrWhiteSpace($productPath)) {
         return "compound_or_governance_diff"
     }
 
-    $diffLines = @(& git diff --unified=3 "$BaseHead..$CommitHash" -- $productPaths[0])
+    $diffLines = @(& git diff --unified=3 "$BaseHead..$CommitHash" -- $productPath)
     if (Test-ThresholdBlankLinePackageImportDiff -DiffLines $diffLines) {
         return "import_spacing_normalization"
     }
@@ -467,6 +482,9 @@ function New-ThresholdCandidateClassProvenance {
         $discoveryRuleId = "static-heuristic-scan:$discoveredCandidateClass"
     }
     $observedDiffClass = Get-ThresholdIndependentlyObservedDiffClass -BaseHead $BaseHead -CommitHash $CommitHash
+    $observedDiffPath = Get-ThresholdIndependentlyObservedDiffProductPath -BaseHead $BaseHead -CommitHash $CommitHash
+    $candidateFile = ConvertTo-ThresholdRepoPath -Path ([string](Get-ThresholdJsonProperty $executionCandidateSnapshot "file" ""))
+    $candidatePathMatched = -not [string]::IsNullOrWhiteSpace($candidateFile) -and [string]$candidateFile -eq [string]$observedDiffPath
     $chain = @(
         $discoveredCandidateClass,
         $GrantedCandidateClass,
@@ -475,7 +493,7 @@ function New-ThresholdCandidateClassProvenance {
         $ReceiptCandidateClass,
         $LearningProjectionClass
     )
-    $matched = -not [string]::IsNullOrWhiteSpace($discoveredCandidateClass)
+    $matched = -not [string]::IsNullOrWhiteSpace($discoveredCandidateClass) -and $candidatePathMatched
     foreach ($value in $chain) {
         if ([string]::IsNullOrWhiteSpace([string]$value) -or [string]$value -ne [string]$GrantedCandidateClass) {
             $matched = $false
@@ -507,6 +525,8 @@ function New-ThresholdCandidateClassProvenance {
         grantedCandidateClass = $GrantedCandidateClass
         executorCandidateClass = $ExecutorCandidateClass
         independentlyObservedDiffClass = $observedDiffClass
+        independentlyObservedDiffPath = $observedDiffPath
+        candidatePathMatched = [bool]$candidatePathMatched
         receiptCandidateClass = $ReceiptCandidateClass
         learningProjectionClass = $LearningProjectionClass
         candidateClassProvenanceMatched = [bool]$matched
