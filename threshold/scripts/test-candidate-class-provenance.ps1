@@ -193,12 +193,36 @@ try {
     Assert-True -Condition ([bool]$validProvenance.candidateClassProvenanceMatched) -Name "matching method spacing provenance is admitted"
     $validReceipt = [pscustomobject]@{
         candidateId = "canary-method-spacing-valid"
+        candidateClass = "method_spacing_normalization"
         baseHead = $methodBase
         commitHash = $methodCommit
         candidateClassProvenance = $validProvenance
     }
     Assert-ThresholdCandidateClassProvenance -Receipt $validReceipt -ReceiptPath "valid-receipt.json" -CandidatePocketPath $methodPocketPath
     Write-Host "passed=positive provenance receipt is admitted"
+
+    $receiptClassTamper = $validReceipt | ConvertTo-Json -Depth 10 | ConvertFrom-Json
+    $receiptClassTamper.candidateClass = "import_spacing_normalization"
+    try {
+        Assert-ThresholdCandidateClassProvenance -Receipt $receiptClassTamper -ReceiptPath "receipt-class-tamper.json" -CandidatePocketPath $methodPocketPath
+        throw "Expected top-level candidate class mismatch assertion failure did not occur."
+    }
+    catch {
+        if ($_.Exception.Message -notmatch "receiptCandidateClass") {
+            throw
+        }
+        Write-Host "passed=top-level receipt candidate class is bound to provenance recompute"
+    }
+
+    $stalePocket = [ordered]@{
+        schemaVersion = "threshold.petclinic.candidate-pocket.v0.2"
+        generatedFromHead = $methodBase
+        candidates = @()
+    }
+    $stalePocketPath = "stale-pocket.json"
+    $stalePocket | ConvertTo-Json -Depth 6 | Set-Content $stalePocketPath
+    Assert-ThresholdCandidateClassProvenance -Receipt $validReceipt -ReceiptPath "receipt-bound-pocket.json" -CandidatePocketPath $stalePocketPath
+    Write-Host "passed=receipt-bound execution pocket supports provenance recompute"
 
     $staleReceipt = $validReceipt | ConvertTo-Json -Depth 8 | ConvertFrom-Json
     $staleReceipt.candidateClassProvenance.provenanceDigest = "stale"
@@ -252,6 +276,15 @@ try {
         "+    )"
     )
     Assert-True -Condition (Test-ThresholdAnnotationAttributeWrapDiff -DiffLines $annotationDiff) -Name "annotation attribute wrap independently classified"
+
+    $bootstrapDiff = @(
+        "-        ApplicationBootstrap.start(`"petclinic`", `"web`");",
+        "+        ApplicationBootstrap.start(",
+        "+            `"petclinic`",",
+        "+            `"web`"",
+        "+        );"
+    )
+    Assert-True -Condition (Test-ThresholdBootstrapInvocationWrapDiff -DiffLines $bootstrapDiff) -Name "bootstrap invocation wrap accepts executor closing line"
 
     $stringConstantDiff = @(
         "-    private static final String OWNER_QUERY = `"select owner from Owner owner where owner.lastName like :lastName`";",
