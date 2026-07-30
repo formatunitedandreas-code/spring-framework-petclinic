@@ -11,6 +11,8 @@ param(
 Set-StrictMode -Version Latest
 $ErrorActionPreference = "Stop"
 
+. (Join-Path $PSScriptRoot "lib/candidate-class-provenance.ps1")
+
 function Get-LeaseScalar {
     param([string[]] $Lines, [string] $Name)
     $match = $Lines | Where-Object { $_ -match "^\s*$([regex]::Escape($Name)):\s*(.+?)\s*$" } | Select-Object -First 1
@@ -537,12 +539,13 @@ foreach ($file in $sourceFiles) {
     elseif ($path -like "*/model/*") { $layerScore = 6 }
     elseif ($path -like "*/web/*") { $layerScore = 5 }
     elseif ($path -like "*/util/*") { $layerScore = 5 }
+    $javaTextBlockLineState = Get-ThresholdJavaTextBlockLineState -Lines $lines
 
     # Heuristic 0: normalize a small contiguous block of leading tab indentation.
     $tabBlockStart = $null
     $tabBlockLength = 0
     for ($i = 0; $i -lt $lines.Count; $i++) {
-        if ($lines[$i] -match "^\t+\S") {
+        if ($lines[$i] -match "^\t+\S" -and -not $javaTextBlockLineState.ContainsKey($i + 1)) {
             if ($null -eq $tabBlockStart) {
                 $tabBlockStart = $i
             }
@@ -844,6 +847,7 @@ foreach ($file in $sourceFiles) {
                     score = 30 + 30 + 20 + 10 + $layerScore
                     file = $path
                     member = $member
+                    spacingAction = "insert_blank_line"
                     expectedDiffSummary = "Insert a blank line between adjacent methods '$($currentMethod.Name)' and '$($nextMethod.Name)'."
                     estimatedChangedLines = 1
                     tieBreak = [ordered]@{ layerScore = $layerScore; path = $path; member = "$($currentMethod.Name)-$($nextMethod.Name)" }

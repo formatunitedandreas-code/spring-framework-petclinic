@@ -173,6 +173,7 @@ try {
                 candidateClass = "method_spacing_normalization"
                 file = $javaPath
                 member = "line-9"
+                spacingAction = "collapse_extra_blank_line"
             }
         )
     }
@@ -187,12 +188,18 @@ try {
         -LearningProjectionClass "method_spacing_normalization" `
         -BaseHead $methodBase `
         -CommitHash $methodCommit `
-        -CandidatePocketPath $methodPocketPath
+        -CandidatePocketPath $methodPocketPath `
+        -DiscoveryEvidenceRoot "discovery-evidence" `
+        -MaterializeDiscoveryEvidence
 
     Assert-True -Condition ($validProvenance.independentlyObservedDiffClass -eq "method_spacing_normalization") -Name "method spacing independently classified"
     Assert-True -Condition ([bool]$validProvenance.candidatePathMatched) -Name "method spacing observed diff path matches candidate snapshot"
     Assert-True -Condition ([bool]$validProvenance.candidateMemberMatched) -Name "method spacing observed hunk matches candidate member"
     Assert-True -Condition ([bool]$validProvenance.immutableDiscoveryEvidencePresent) -Name "immutable discovery evidence is present"
+    Assert-True -Condition ([string]::IsNullOrWhiteSpace([string]$validProvenance.discoveryEvidence)) -Name "receipt provenance does not embed discovery evidence"
+    Assert-False -Condition ([bool]$validProvenance.fallbackToMutableCurrentPocket) -Name "mutable current pocket fallback is disabled"
+    Assert-False -Condition ([bool]$validProvenance.fallbackToReceiptEmbeddedSnapshot) -Name "receipt embedded snapshot fallback is disabled"
+    Assert-False -Condition ([bool]$validProvenance.fallbackToReceiptSuppliedBooleans) -Name "receipt supplied boolean fallback is disabled"
     Assert-True -Condition ([bool]$validProvenance.candidateClassProvenanceMatched) -Name "matching method spacing provenance is admitted"
     $validReceipt = [pscustomobject]@{
         candidateId = "canary-method-spacing-valid"
@@ -203,6 +210,7 @@ try {
     }
     Assert-ThresholdCandidateClassProvenance -Receipt $validReceipt -ReceiptPath "valid-receipt.json" -CandidatePocketPath $methodPocketPath
     Write-Host "passed=positive provenance receipt is admitted"
+    Assert-True -Condition (Test-ThresholdCandidateClassProvenancePositiveLearningEligible -Receipt $validReceipt) -Name "positive learning requires immutable discovery evidence"
 
     $receiptClassTamper = $validReceipt | ConvertTo-Json -Depth 10 | ConvertFrom-Json
     $receiptClassTamper.candidateClass = "import_spacing_normalization"
@@ -224,18 +232,33 @@ try {
     }
     $stalePocketPath = "stale-pocket.json"
     $stalePocket | ConvertTo-Json -Depth 6 | Set-Content $stalePocketPath
+    $missingEvidenceReceipt = $validReceipt | ConvertTo-Json -Depth 12 | ConvertFrom-Json
+    $missingEvidenceReceipt.candidateClassProvenance.discoveryEvidencePath = "missing-discovery-evidence.json"
     try {
-        Assert-ThresholdCandidateClassProvenance -Receipt $validReceipt -ReceiptPath "receipt-bound-pocket.json" -CandidatePocketPath $stalePocketPath
+        Assert-ThresholdCandidateClassProvenance -Receipt $missingEvidenceReceipt -ReceiptPath "missing-discovery-evidence.json" -CandidatePocketPath $methodPocketPath
         throw "Expected missing immutable discovery evidence assertion failure did not occur."
     }
     catch {
-        if ($_.Exception.Message -notmatch "immutable discovery evidence missing") {
+        if ($_.Exception.Message -notmatch "discovery evidence artifact missing") {
             throw
         }
         Write-Host "passed=missing immutable discovery evidence rejects embedded snapshot fallback"
     }
-    Assert-ThresholdCandidateClassProvenance -Receipt $validReceipt -ReceiptPath "immutable-discovery-evidence.json" -CandidatePocketPath $methodPocketPath
-    Write-Host "passed=valid immutable discovery evidence admits receipt-bound execution snapshot"
+    Assert-ThresholdCandidateClassProvenance -Receipt $validReceipt -ReceiptPath "immutable-discovery-evidence.json" -CandidatePocketPath $stalePocketPath
+    Write-Host "passed=valid immutable discovery evidence admits even when mutable pocket no longer contains candidate"
+
+    $embeddedDiscoveryReceipt = $validReceipt | ConvertTo-Json -Depth 12 | ConvertFrom-Json
+    $embeddedDiscoveryReceipt.candidateClassProvenance.discoveryEvidence = Get-Content -LiteralPath $validProvenance.discoveryEvidencePath -Raw | ConvertFrom-Json
+    try {
+        Assert-ThresholdCandidateClassProvenance -Receipt $embeddedDiscoveryReceipt -ReceiptPath "embedded-discovery-evidence.json" -CandidatePocketPath $methodPocketPath
+        throw "Expected embedded discovery evidence assertion failure did not occur."
+    }
+    catch {
+        if ($_.Exception.Message -notmatch "external immutable artifact") {
+            throw
+        }
+        Write-Host "passed=receipt-embedded discovery evidence cannot self-anchor provenance"
+    }
 
     $snapshotDigestTamper = $validReceipt | ConvertTo-Json -Depth 10 | ConvertFrom-Json
     $snapshotDigestTamper.candidateClassProvenance.executionCandidateSnapshot.member = "line-99"
@@ -268,12 +291,13 @@ try {
     $selfAnchoredReceipt.candidateClassProvenance.discoveryCandidateId = "invented-method-spacing-candidate"
     $selfAnchoredReceipt.candidateClassProvenance.executionCandidateSnapshot.candidateId = "invented-method-spacing-candidate"
     $selfAnchoredReceipt.candidateClassProvenance.executionCandidateDigest = Get-ThresholdCandidateSnapshotDigest -CandidateSnapshot $selfAnchoredReceipt.candidateClassProvenance.executionCandidateSnapshot
+    $selfAnchoredReceipt.candidateClassProvenance.discoveryEvidencePath = "missing-invented-discovery-evidence.json"
     try {
         Assert-ThresholdCandidateClassProvenance -Receipt $selfAnchoredReceipt -ReceiptPath "self-anchored-receipt.json" -CandidatePocketPath $stalePocketPath
         throw "Expected self-anchored receipt assertion failure did not occur."
     }
     catch {
-        if ($_.Exception.Message -notmatch "immutable discovery evidence missing") {
+        if ($_.Exception.Message -notmatch "discovery evidence artifact missing") {
             throw
         }
         Write-Host "passed=receipt-invented candidate snapshot cannot establish discovery trust"
@@ -346,12 +370,21 @@ try {
     Assert-True -Condition ($wrongPathProvenance.independentlyObservedDiffClass -eq "method_spacing_normalization") -Name "foreign-path method spacing is independently classified"
     Assert-False -Condition ([bool]$wrongPathProvenance.candidatePathMatched) -Name "observed diff path must match candidate snapshot file"
     Assert-False -Condition ([bool]$wrongPathProvenance.candidateClassProvenanceMatched) -Name "candidate provenance rejects class match on wrong file"
+    $wrongPathReceipt = [pscustomobject]@{
+        candidateId = "canary-method-spacing-valid"
+        candidateClass = "method_spacing_normalization"
+        baseHead = $otherBase
+        commitHash = $otherCommit
+        candidateClassProvenance = $wrongPathProvenance
+    }
+    Assert-False -Condition (Test-ThresholdCandidateClassProvenancePositiveLearningEligible -Receipt $wrongPathReceipt) -Name "snapshot-only wrong path is not positive learning evidence"
 
     $wrongMemberCandidate = [ordered]@{
         candidateId = "canary-method-spacing-valid"
         candidateClass = "method_spacing_normalization"
         file = $javaPath
         member = "line-2"
+        spacingAction = "collapse_extra_blank_line"
     }
     $wrongMemberProvenance = New-ThresholdCandidateClassProvenance `
         -CandidateId "canary-method-spacing-valid" `
