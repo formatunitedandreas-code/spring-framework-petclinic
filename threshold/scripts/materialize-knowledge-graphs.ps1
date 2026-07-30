@@ -184,6 +184,7 @@ foreach ($receiptFile in $receiptFiles) {
     $batchClassValue = Get-JsonProperty $receipt "batchClass" ""
     $candidateClass = if (-not [string]::IsNullOrWhiteSpace([string]$candidateClassValue)) { [string]$candidateClassValue } elseif (-not [string]::IsNullOrWhiteSpace([string]$batchClassValue)) { [string]$batchClassValue } else { "unknown" }
     Assert-ThresholdCandidateClassProvenance -Receipt $receipt -ReceiptPath (ConvertTo-RepoRelativePath $receiptFile.FullName)
+    $positiveLearningEligible = Test-ThresholdCandidateClassProvenancePositiveLearningEligible -Receipt $receipt
     if (-not $classStats.ContainsKey($candidateClass)) {
         $classStats[$candidateClass] = [ordered]@{
             receiptCount = 0
@@ -195,18 +196,21 @@ foreach ($receiptFile in $receiptFiles) {
         }
     }
     $stats = $classStats[$candidateClass]
-    $stats.receiptCount += 1
     $validation = Get-JsonProperty $receipt "validation" $null
     $validationResultValue = Get-JsonProperty $validation "result" ""
     $validationResult = if (-not [string]::IsNullOrWhiteSpace([string]$validationResultValue)) { [string]$validationResultValue } else { "UNKNOWN" }
-    if ($validationResult -match "SUCCESS|passed|SKIPPED_BY_LEASE_INVOCATION") { $stats.validationPassCount += 1 } else { $stats.validationFailCount += 1 }
     $semanticValidation = Get-JsonProperty $receipt "semanticValidation" $null
     $semanticResult = Get-JsonProperty $semanticValidation "result" ""
-    if ($semanticResult -eq "passed") { $stats.semanticPassCount += 1 } else { $stats.semanticUnknownCount += 1 }
+    if ($positiveLearningEligible) {
+        $stats.receiptCount += 1
+        if ($validationResult -match "SUCCESS|passed|SKIPPED_BY_LEASE_INVOCATION") { $stats.validationPassCount += 1 } else { $stats.validationFailCount += 1 }
+        if ($semanticResult -eq "passed") { $stats.semanticPassCount += 1 } else { $stats.semanticUnknownCount += 1 }
+    }
 
     $receiptEvidence.Add([ordered]@{
         id = ConvertTo-RepoRelativePath $receiptFile.FullName
         candidateClass = $candidateClass
+        positiveLearningEligible = [bool]$positiveLearningEligible
         sourceCommit = if (-not [string]::IsNullOrWhiteSpace([string](Get-JsonProperty $receipt "commitHash" ""))) { [string](Get-JsonProperty $receipt "commitHash" "") } elseif (-not [string]::IsNullOrWhiteSpace([string](Get-JsonProperty $receipt "sourceCommit" ""))) { [string](Get-JsonProperty $receipt "sourceCommit" "") } else { $null }
         leaseDigest = if (-not [string]::IsNullOrWhiteSpace([string](Get-JsonProperty $receipt "leaseDigest" ""))) { [string](Get-JsonProperty $receipt "leaseDigest" "") } else { $null }
         validationResult = $validationResult
@@ -388,7 +392,8 @@ $fidelityKg["semanticDigest"] = New-SemanticDigest @(
         $evidenceLease = Get-JsonProperty $_ "leaseDigest" ""
         $evidenceValidation = Get-JsonProperty $_ "validationResult" ""
         $evidenceSemantic = Get-JsonProperty $_ "semanticResult" ""
-        "evidence=$evidenceId|$evidenceClass|source=$evidenceSource|lease=$evidenceLease|validation=$evidenceValidation|semantic=$evidenceSemantic"
+        $positiveLearning = Get-JsonProperty $_ "positiveLearningEligible" $false
+        "evidence=$evidenceId|$evidenceClass|source=$evidenceSource|lease=$evidenceLease|validation=$evidenceValidation|semantic=$evidenceSemantic|positiveLearning=$positiveLearning"
     })
     @($findingNodes | ForEach-Object {
         "finding=$($_.id)|$($_.candidateClass)|$($_.severity)|rule=$($_.ruleSuggestion)|canary=$($_.canarySuggestion)"

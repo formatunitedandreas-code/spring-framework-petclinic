@@ -193,10 +193,13 @@ function New-ThresholdCandidateClassProvenance {
 }
 
 function Assert-ThresholdCandidateClassProvenance {
-    param([pscustomobject] $Receipt, [string] $ReceiptPath = "")
+    param([pscustomobject] $Receipt, [string] $ReceiptPath = "", [switch] $RequirePresent)
 
     $provenance = Get-ThresholdJsonProperty $Receipt "candidateClassProvenance" $null
     if ($null -eq $provenance) {
+        if ($RequirePresent.IsPresent) {
+            throw "candidateClassProvenance missing receipt=$ReceiptPath"
+        }
         return
     }
     if ((Get-ThresholdJsonProperty $provenance "candidateClassProvenanceMatched" $false) -ne $true) {
@@ -207,4 +210,22 @@ function Assert-ThresholdCandidateClassProvenance {
             throw "candidateClassProvenance admission field failed: $field receipt=$ReceiptPath"
         }
     }
+}
+
+function Test-ThresholdCandidateClassProvenancePositiveLearningEligible {
+    param([pscustomobject] $Receipt)
+
+    $provenance = Get-ThresholdJsonProperty $Receipt "candidateClassProvenance" $null
+    if ($null -eq $provenance) {
+        return $false
+    }
+    if ((Get-ThresholdJsonProperty $provenance "candidateClassProvenanceMatched" $false) -ne $true) {
+        return $false
+    }
+    foreach ($field in @("kgMaterialization", "trainerMaterialization", "promotionEvidenceContribution")) {
+        if ((Get-ThresholdJsonProperty $provenance $field $false) -ne $true) {
+            return $false
+        }
+    }
+    return $true
 }

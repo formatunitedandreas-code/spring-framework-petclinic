@@ -110,6 +110,21 @@ try {
         Write-Host "passed=negative provenance receipt is rejected"
     }
 
+    $legacyReceipt = [pscustomobject]@{
+        candidateClass = "method_spacing_normalization"
+    }
+    Assert-False -Condition (Test-ThresholdCandidateClassProvenancePositiveLearningEligible -Receipt $legacyReceipt) -Name "legacy receipt without provenance is not positive learning evidence"
+    try {
+        Assert-ThresholdCandidateClassProvenance -Receipt $legacyReceipt -ReceiptPath "legacy-receipt.json" -RequirePresent
+        throw "Expected missing provenance assertion failure did not occur."
+    }
+    catch {
+        if ($_.Exception.Message -notmatch "candidateClassProvenance missing") {
+            throw
+        }
+        Write-Host "passed=current PR receipt without provenance is rejected"
+    }
+
     Write-CanaryFile -Path $javaPath -Lines @(
         "package org.example;",
         "",
