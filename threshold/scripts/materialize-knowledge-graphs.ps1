@@ -105,6 +105,37 @@ function Resolve-ObservedPrBaseHead {
     return ""
 }
 
+function Resolve-ReceiptPrBaseHead {
+    param(
+        [object] $Receipt,
+        [string] $ReceiptPath,
+        [string] $ObservedPrBaseHead,
+        [string] $BaseRef
+    )
+
+    $provenance = Get-JsonProperty $Receipt "candidateClassProvenance" $null
+    if ($null -eq $provenance) {
+        return ""
+    }
+
+    $receiptPrBaseHead = [string](Get-JsonProperty $provenance "prBaseHead" "")
+    if ([string]::IsNullOrWhiteSpace($ObservedPrBaseHead)) {
+        return $receiptPrBaseHead
+    }
+
+    if (-not [string]::IsNullOrWhiteSpace($BaseRef)) {
+        $changedInCurrentPr = @(git diff --name-only "origin/${BaseRef}...HEAD" -- $ReceiptPath 2>$null)
+        if ($LASTEXITCODE -eq 0 -and $changedInCurrentPr.Count -gt 0) {
+            return $ObservedPrBaseHead
+        }
+    }
+
+    if (-not [string]::IsNullOrWhiteSpace($receiptPrBaseHead)) {
+        return $receiptPrBaseHead
+    }
+    return $ObservedPrBaseHead
+}
+
 function ConvertTo-NormalizedJson {
     param([object] $Value)
     return ($Value | ConvertTo-Json -Depth 16).Trim()
@@ -203,7 +234,9 @@ foreach ($receiptFile in $receiptFiles) {
     $candidateClassValue = Get-JsonProperty $receipt "candidateClass" ""
     $batchClassValue = Get-JsonProperty $receipt "batchClass" ""
     $candidateClass = if (-not [string]::IsNullOrWhiteSpace([string]$candidateClassValue)) { [string]$candidateClassValue } elseif (-not [string]::IsNullOrWhiteSpace([string]$batchClassValue)) { [string]$batchClassValue } else { "unknown" }
-    Assert-ThresholdCandidateClassProvenance -Receipt $receipt -ReceiptPath (ConvertTo-RepoRelativePath $receiptFile.FullName) -PrBaseHead $observedPrBaseHead
+    $repoReceiptPath = ConvertTo-RepoRelativePath $receiptFile.FullName
+    $receiptPrBaseHead = Resolve-ReceiptPrBaseHead -Receipt $receipt -ReceiptPath $repoReceiptPath -ObservedPrBaseHead $observedPrBaseHead -BaseRef $BaseRef
+    Assert-ThresholdCandidateClassProvenance -Receipt $receipt -ReceiptPath $repoReceiptPath -PrBaseHead $receiptPrBaseHead
     $positiveLearningEligible = Test-ThresholdCandidateClassProvenancePositiveLearningEligible -Receipt $receipt
     if (-not $classStats.ContainsKey($candidateClass)) {
         $classStats[$candidateClass] = [ordered]@{

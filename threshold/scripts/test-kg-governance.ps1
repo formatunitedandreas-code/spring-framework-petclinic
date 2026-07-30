@@ -8,6 +8,12 @@ Set-StrictMode -Version Latest
 $ErrorActionPreference = "Stop"
 
 $kgScript = Join-Path $PSScriptRoot "materialize-knowledge-graphs.ps1"
+if ([string]::IsNullOrWhiteSpace($BaseRef) -and -not [string]::IsNullOrWhiteSpace($env:GITHUB_BASE_REF)) {
+    $BaseRef = [string]$env:GITHUB_BASE_REF
+}
+if ([string]::IsNullOrWhiteSpace($PrBaseHead) -and -not [string]::IsNullOrWhiteSpace($env:THRESHOLD_PR_BASE_HEAD)) {
+    $PrBaseHead = [string]$env:THRESHOLD_PR_BASE_HEAD
+}
 if (-not [string]::IsNullOrWhiteSpace($PrBaseHead) -and -not [string]::IsNullOrWhiteSpace($BaseRef)) {
     & $kgScript -CheckOnly -PrBaseHead $PrBaseHead -BaseRef $BaseRef
 }

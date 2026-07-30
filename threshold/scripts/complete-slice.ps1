@@ -11,6 +11,8 @@ param(
     [string[]] $AllowedPath = @(),
     [string] $ReceiptRoot = "threshold/receipts",
     [string] $CandidatePocketPath = "threshold/candidate-pocket/current.json",
+    [string] $PrBaseHead = "",
+    [string] $BaseRef = "",
     [switch] $CompactEvidence,
     [switch] $SkipMavenTest
 )
@@ -50,8 +52,41 @@ function Get-SurefireTotals {
     return $totals
 }
 
+function Get-LeaseScalarOrDefault {
+    param([string[]] $Lines, [string] $Name, [string] $DefaultValue = "")
+    $match = $Lines | Where-Object { $_ -match "^\s*$([regex]::Escape($Name)):\s*(.+?)\s*$" } | Select-Object -First 1
+    if (-not $match) { return $DefaultValue }
+    return ($match -replace "^\s*$([regex]::Escape($Name)):\s*", "").Trim()
+}
+
+function Resolve-PrBaseHead {
+    param([string] $PrBaseHead, [string] $BaseRef, [string] $LeasePath)
+    if (-not [string]::IsNullOrWhiteSpace($PrBaseHead)) {
+        return [string]$PrBaseHead
+    }
+    if (-not [string]::IsNullOrWhiteSpace($env:THRESHOLD_PR_BASE_HEAD)) {
+        return [string]$env:THRESHOLD_PR_BASE_HEAD
+    }
+    $effectiveBaseRef = $BaseRef
+    if ([string]::IsNullOrWhiteSpace($effectiveBaseRef)) {
+        $leaseLines = Get-Content $LeasePath
+        $effectiveBaseRef = (Get-LeaseScalarOrDefault -Lines $leaseLines -Name "baseRef").Replace("origin/", "")
+    }
+    if (-not [string]::IsNullOrWhiteSpace($effectiveBaseRef)) {
+        $resolved = (& git rev-parse "origin/${effectiveBaseRef}" 2>$null)
+        if ($LASTEXITCODE -eq 0 -and -not [string]::IsNullOrWhiteSpace([string]$resolved)) {
+            return [string]($resolved.Trim())
+        }
+    }
+    return ""
+}
+
 if (-not (Test-Path $LeasePath)) { throw "Lease file not found: $LeasePath" }
 if (-not (Test-Path $StatePath)) { throw "Lease state file not found: $StatePath. Run threshold/scripts/start-lease.ps1 first." }
+$observedPrBaseHead = Resolve-PrBaseHead -PrBaseHead $PrBaseHead -BaseRef $BaseRef -LeasePath $LeasePath
+if ([string]::IsNullOrWhiteSpace($observedPrBaseHead)) {
+    throw "Unable to resolve independent PR base head for receipt recording."
+}
 
 $state = Get-Content $StatePath -Raw | ConvertFrom-Json
 if ([int]$state.remainingBudget.candidates -le 0) { throw "No candidate budget remains in $StatePath." }
@@ -128,7 +163,7 @@ $validationCommand = if ($SkipMavenTest.IsPresent) { "git diff --check" } else {
     -CandidateId $CandidateId `
     -CandidateClass $CandidateClass `
     -BaseHead $baseHead `
-    -PrBaseHead $baseHead `
+    -PrBaseHead $observedPrBaseHead `
     -CommitHash $sourceCommit `
     -DiffSummary $CommitMessage `
     -ValidationCommand $validationCommand `
@@ -150,6 +185,7 @@ if ($CompactEvidence.IsPresent) {
     Write-Host "candidateId=$CandidateId"
     Write-Host "sourceCommit=$sourceCommit"
     Write-Host "baseHead=$baseHead"
+    Write-Host "prBaseHead=$observedPrBaseHead"
     exit 0
 }
 
@@ -182,4 +218,4 @@ Write-Host "candidateId=$CandidateId"
 Write-Host "sourceCommit=$sourceCommit"
 Write-Host "receiptCommit=$receiptCommit"
 Write-Host "baseHead=$baseHead"
-Write-Host "prBaseHead=$baseHead"
+Write-Host "prBaseHead=$observedPrBaseHead"
