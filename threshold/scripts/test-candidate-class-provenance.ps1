@@ -191,6 +191,7 @@ try {
 
     Assert-True -Condition ($validProvenance.independentlyObservedDiffClass -eq "method_spacing_normalization") -Name "method spacing independently classified"
     Assert-True -Condition ([bool]$validProvenance.candidatePathMatched) -Name "method spacing observed diff path matches candidate snapshot"
+    Assert-True -Condition ([bool]$validProvenance.candidateMemberMatched) -Name "method spacing observed hunk matches candidate member"
     Assert-True -Condition ([bool]$validProvenance.candidateClassProvenanceMatched) -Name "matching method spacing provenance is admitted"
     $validReceipt = [pscustomobject]@{
         candidateId = "canary-method-spacing-valid"
@@ -306,6 +307,25 @@ try {
     Assert-False -Condition ([bool]$wrongPathProvenance.candidatePathMatched) -Name "observed diff path must match candidate snapshot file"
     Assert-False -Condition ([bool]$wrongPathProvenance.candidateClassProvenanceMatched) -Name "candidate provenance rejects class match on wrong file"
 
+    $wrongMemberCandidate = [ordered]@{
+        candidateId = "canary-method-spacing-valid"
+        candidateClass = "method_spacing_normalization"
+        file = $javaPath
+        member = "line-2"
+    }
+    $wrongMemberProvenance = New-ThresholdCandidateClassProvenance `
+        -CandidateId "canary-method-spacing-valid" `
+        -GrantedCandidateClass "method_spacing_normalization" `
+        -ExecutorCandidateClass "method_spacing_normalization" `
+        -ReceiptCandidateClass "method_spacing_normalization" `
+        -LearningProjectionClass "method_spacing_normalization" `
+        -BaseHead $methodBase `
+        -CommitHash $methodCommit `
+        -CandidateSnapshot $wrongMemberCandidate
+    Assert-True -Condition ([bool]$wrongMemberProvenance.candidatePathMatched) -Name "wrong-member method spacing still matches candidate file"
+    Assert-False -Condition ([bool]$wrongMemberProvenance.candidateMemberMatched) -Name "observed diff hunk must match candidate member"
+    Assert-False -Condition ([bool]$wrongMemberProvenance.candidateClassProvenanceMatched) -Name "candidate provenance rejects class match on wrong hunk"
+
     $ancestorBaseReceipt = $validReceipt | ConvertTo-Json -Depth 10 | ConvertFrom-Json
     $ancestorBaseReceipt.baseHead = $baseHead
     try {
@@ -388,6 +408,20 @@ try {
         "+        `"where owner.lastName like :lastName`";"
     )
     Assert-True -Condition (Test-ThresholdStringConstantWrapDiff -DiffLines $stringConstantDiff) -Name "string constant wrap independently classified"
+
+    $splitStringNormalizationDiff = @(
+        "-    private static final String OWNER_QUERY = `"select owner `" + `"from Owner owner`";",
+        "+    private static final String OWNER_QUERY = `"select owner `"",
+        "+        + `"from Owner owner`";"
+    )
+    Assert-True -Condition (Test-ThresholdSplitStringConstantNormalizationDiff -DiffLines $splitStringNormalizationDiff) -Name "split string normalization matches executor output"
+
+    $changedSplitStringNormalizationDiff = @(
+        "-    private static final String OWNER_QUERY = `"select owner `" + `"from Owner owner`";",
+        "+    private static final String OWNER_QUERY = `"select owner `"",
+        "+        + `"from Pet pet`";"
+    )
+    Assert-False -Condition (Test-ThresholdSplitStringConstantNormalizationDiff -DiffLines $changedSplitStringNormalizationDiff) -Name "split string normalization rejects changed continuation value"
 
     $compoundImportSpacingDiff = @(
         " package org.example;",

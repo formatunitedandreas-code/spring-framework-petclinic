@@ -127,22 +127,23 @@ function Test-ThresholdSplitStringConstantNormalizationDiff {
     param([string[]] $DiffLines)
 
     $contentLines = Get-ThresholdDiffContentLines -DiffLines $DiffLines
-    $removedStart = @($contentLines | Where-Object { $_ -match '^-\s*private static final String [A-Z0-9_]+ = "[^"\\]+" \+\s*$' })
-    $removedEnd = @($contentLines | Where-Object { $_ -match '^-\s*"[^"\\]+";\s*$' })
-    $added = @($contentLines | Where-Object { $_ -match '^\+\s*private static final String [A-Z0-9_]+ = "[^"\\]+";\s*$' })
+    $removed = @($contentLines | Where-Object { $_ -match '^-\s*private static final String [A-Z0-9_]+ = "[^"\\]+" \+ "[^"\\]+";\s*$' })
+    $addedStart = @($contentLines | Where-Object { $_ -match '^\+\s*private static final String [A-Z0-9_]+ = "[^"\\]+"\s*$' })
+    $addedContinuation = @($contentLines | Where-Object { $_ -match '^\+\s*\+ "[^"\\]+";\s*$' })
     $nonStringDelta = @($contentLines | Where-Object {
         $_ -match '^[+-]' -and
-        $_ -notmatch '^[+-]\s*private static final String [A-Z0-9_]+ = "[^"\\]+"(?: \+)?;?\s*$' -and
-        $_ -notmatch '^[+-]\s*"[^"\\]+";\s*$'
+        $_ -notmatch '^[+-]\s*private static final String [A-Z0-9_]+ = "[^"\\]+"(?: \+ "[^"\\]+")?;?\s*$' -and
+        $_ -notmatch '^\+\s*\+ "[^"\\]+";\s*$'
     })
-    if ($removedStart.Count -ne 1 -or $removedEnd.Count -ne 1 -or $added.Count -ne 1 -or $nonStringDelta.Count -ne 0) {
+    if ($removed.Count -ne 1 -or $addedStart.Count -ne 1 -or $addedContinuation.Count -ne 1 -or $nonStringDelta.Count -ne 0) {
         return $false
     }
-    $removedStartMatch = [regex]::Match($removedStart[0], '^-\s*private static final String (?<name>[A-Z0-9_]+) = "(?<value>[^"\\]+)" \+\s*$')
-    $removedEndMatch = [regex]::Match($removedEnd[0], '^-\s*"(?<value>[^"\\]+)";\s*$')
-    $addedMatch = [regex]::Match($added[0], '^\+\s*private static final String (?<name>[A-Z0-9_]+) = "(?<value>[^"\\]+)";\s*$')
-    return $removedStartMatch.Groups["name"].Value -eq $addedMatch.Groups["name"].Value -and
-        ($removedStartMatch.Groups["value"].Value + $removedEndMatch.Groups["value"].Value) -eq $addedMatch.Groups["value"].Value
+    $removedMatch = [regex]::Match($removed[0], '^-\s*private static final String (?<name>[A-Z0-9_]+) = "(?<first>[^"\\]+)" \+ "(?<second>[^"\\]+)";\s*$')
+    $addedStartMatch = [regex]::Match($addedStart[0], '^\+\s*private static final String (?<name>[A-Z0-9_]+) = "(?<first>[^"\\]+)"\s*$')
+    $addedContinuationMatch = [regex]::Match($addedContinuation[0], '^\+\s*\+ "(?<second>[^"\\]+)";\s*$')
+    return $removedMatch.Groups["name"].Value -eq $addedStartMatch.Groups["name"].Value -and
+        $removedMatch.Groups["first"].Value -eq $addedStartMatch.Groups["first"].Value -and
+        $removedMatch.Groups["second"].Value -eq $addedContinuationMatch.Groups["second"].Value
 }
 
 function Split-ThresholdTopLevelCommaArguments {
@@ -372,6 +373,36 @@ function Get-ThresholdIndependentlyObservedDiffProductPath {
     return ConvertTo-ThresholdRepoPath -Path ([string]$productPaths[0])
 }
 
+function Test-ThresholdObservedDiffMemberMatchesCandidate {
+    param(
+        [Parameter(Mandatory = $true)]
+        [string] $BaseHead,
+        [Parameter(Mandatory = $true)]
+        [string] $CommitHash,
+        [Parameter(Mandatory = $true)]
+        [string] $ProductPath,
+        [string] $CandidateMember
+    )
+
+    if ([string]::IsNullOrWhiteSpace($CandidateMember) -or $CandidateMember -notmatch '^line-(?<line>\d+)$') {
+        return $true
+    }
+    $candidateLine = [int]$Matches['line']
+    $hunkLines = @(& git diff --unified=0 "$BaseHead..$CommitHash" -- $ProductPath | Where-Object { $_ -match '^@@ ' })
+    if ($hunkLines.Count -eq 0) { return $false }
+    foreach ($hunkLine in $hunkLines) {
+        $match = [regex]::Match($hunkLine, '^@@ -(?<oldStart>\d+)(,(?<oldCount>\d+))? \+(?<newStart>\d+)(,(?<newCount>\d+))? @@')
+        if (-not $match.Success) { continue }
+        $oldStart = [int]$match.Groups['oldStart'].Value
+        $oldCount = if ($match.Groups['oldCount'].Success) { [int]$match.Groups['oldCount'].Value } else { 1 }
+        $oldEnd = if ($oldCount -le 0) { $oldStart } else { $oldStart + $oldCount - 1 }
+        if ($candidateLine -ge $oldStart -and $candidateLine -le $oldEnd) {
+            return $true
+        }
+    }
+    return $false
+}
+
 function Get-ThresholdIndependentlyObservedDiffClass {
     param(
         [Parameter(Mandatory = $true)]
@@ -484,7 +515,9 @@ function New-ThresholdCandidateClassProvenance {
     $observedDiffClass = Get-ThresholdIndependentlyObservedDiffClass -BaseHead $BaseHead -CommitHash $CommitHash
     $observedDiffPath = Get-ThresholdIndependentlyObservedDiffProductPath -BaseHead $BaseHead -CommitHash $CommitHash
     $candidateFile = ConvertTo-ThresholdRepoPath -Path ([string](Get-ThresholdJsonProperty $executionCandidateSnapshot "file" ""))
+    $candidateMember = [string](Get-ThresholdJsonProperty $executionCandidateSnapshot "member" "")
     $candidatePathMatched = -not [string]::IsNullOrWhiteSpace($candidateFile) -and [string]$candidateFile -eq [string]$observedDiffPath
+    $candidateMemberMatched = $candidatePathMatched -and (Test-ThresholdObservedDiffMemberMatchesCandidate -BaseHead $BaseHead -CommitHash $CommitHash -ProductPath $observedDiffPath -CandidateMember $candidateMember)
     $chain = @(
         $discoveredCandidateClass,
         $GrantedCandidateClass,
@@ -493,7 +526,7 @@ function New-ThresholdCandidateClassProvenance {
         $ReceiptCandidateClass,
         $LearningProjectionClass
     )
-    $matched = -not [string]::IsNullOrWhiteSpace($discoveredCandidateClass) -and $candidatePathMatched
+    $matched = -not [string]::IsNullOrWhiteSpace($discoveredCandidateClass) -and $candidatePathMatched -and $candidateMemberMatched
     foreach ($value in $chain) {
         if ([string]::IsNullOrWhiteSpace([string]$value) -or [string]$value -ne [string]$GrantedCandidateClass) {
             $matched = $false
@@ -527,6 +560,7 @@ function New-ThresholdCandidateClassProvenance {
         independentlyObservedDiffClass = $observedDiffClass
         independentlyObservedDiffPath = $observedDiffPath
         candidatePathMatched = [bool]$candidatePathMatched
+        candidateMemberMatched = [bool]$candidateMemberMatched
         receiptCandidateClass = $ReceiptCandidateClass
         learningProjectionClass = $LearningProjectionClass
         candidateClassProvenanceMatched = [bool]$matched
