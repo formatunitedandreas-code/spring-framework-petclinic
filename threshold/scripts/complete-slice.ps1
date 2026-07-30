@@ -128,6 +128,7 @@ $validationCommand = if ($SkipMavenTest.IsPresent) { "git diff --check" } else {
     -CandidateId $CandidateId `
     -CandidateClass $CandidateClass `
     -BaseHead $baseHead `
+    -PrBaseHead $baseHead `
     -CommitHash $sourceCommit `
     -DiffSummary $CommitMessage `
     -ValidationCommand $validationCommand `
@@ -181,3 +182,4 @@ Write-Host "candidateId=$CandidateId"
 Write-Host "sourceCommit=$sourceCommit"
 Write-Host "receiptCommit=$receiptCommit"
 Write-Host "baseHead=$baseHead"
+Write-Host "prBaseHead=$baseHead"

@@ -5,6 +5,7 @@ Set-StrictMode -Version Latest
 $ErrorActionPreference = "Stop"
 
 . (Join-Path $PSScriptRoot "lib/candidate-class-provenance.ps1")
+$thresholdScriptRoot = $PSScriptRoot
 
 function Assert-True {
     param([bool] $Condition, [string] $Name)
@@ -222,6 +223,47 @@ try {
     Assert-ThresholdCandidateClassProvenance -Receipt $validReceipt -ReceiptPath "valid-receipt.json" -CandidatePocketPath $methodPocketPath -PrBaseHead $methodSourceBase
     Write-Host "passed=positive provenance receipt is admitted"
     Write-Host "passed=evidence_preexists_on_pr_base"
+
+    $leasePath = "threshold/leases/current.yaml"
+    $leaseDir = Split-Path $leasePath -Parent
+    if (-not (Test-Path $leaseDir)) { New-Item -ItemType Directory -Path $leaseDir | Out-Null }
+    @(
+        "leaseName: canary-lease",
+        "branch: canary/product-branch",
+        "startHead: $methodSourceBase"
+    ) | Set-Content $leasePath
+    $previousErrorActionPreference = $ErrorActionPreference
+    $ErrorActionPreference = "Continue"
+    $missingPrBaseOutput = @(& powershell.exe -NoProfile -ExecutionPolicy Bypass -File (Join-Path $thresholdScriptRoot "record-receipt.ps1") `
+        -LeasePath $leasePath `
+        -CandidateId "canary-method-spacing-valid" `
+        -CandidateClass "method_spacing_normalization" `
+        -BaseHead $methodSourceBase `
+        -CommitHash $methodCommit `
+        -CandidatePocketPath $methodPocketPath `
+        -DiscoveryEvidencePath $methodDiscoveryEvidencePath `
+        -DryRun 2>&1)
+    $missingPrBaseExitCode = $LASTEXITCODE
+    $ErrorActionPreference = $previousErrorActionPreference
+    if ($missingPrBaseExitCode -eq 0) {
+        throw "Expected record-receipt without PR base to fail."
+    }
+    if (($missingPrBaseOutput -join "`n") -notmatch "candidateClassProvenanceMatched=false") {
+        throw "Unexpected record-receipt without PR base failure: $($missingPrBaseOutput -join ' ')"
+    }
+    Write-Host "passed=normal receipt generation without pr base fails closed"
+    & powershell.exe -NoProfile -ExecutionPolicy Bypass -File (Join-Path $thresholdScriptRoot "record-receipt.ps1") `
+        -LeasePath $leasePath `
+        -CandidateId "canary-method-spacing-valid" `
+        -CandidateClass "method_spacing_normalization" `
+        -BaseHead $methodSourceBase `
+        -PrBaseHead $methodSourceBase `
+        -CommitHash $methodCommit `
+        -CandidatePocketPath $methodPocketPath `
+        -DiscoveryEvidencePath $methodDiscoveryEvidencePath `
+        -DryRun | Out-Null
+    if ($LASTEXITCODE -ne 0) { throw "record-receipt with PR base failed." }
+    Write-Host "passed=normal receipt generation with pr base succeeds"
 
     $missingPrBaseProvenance = New-ThresholdCandidateClassProvenance `
         -CandidateId "canary-method-spacing-valid" `

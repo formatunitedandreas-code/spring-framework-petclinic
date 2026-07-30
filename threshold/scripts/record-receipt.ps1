@@ -6,6 +6,7 @@ param(
     [string] $CandidateId,
     [string] $CandidateClass = "threshold_governance_artifact_update",
     [string] $BaseHead = "",
+    [string] $PrBaseHead = "",
     [string] $CommitHash = "",
     [string[]] $AllowedPath = @(),
     [string] $DiffSummary = "",
@@ -173,6 +174,7 @@ $candidateClassProvenance = New-ThresholdCandidateClassProvenance `
     -ReceiptCandidateClass $CandidateClass `
     -LearningProjectionClass $LearningProjectionClass `
     -BaseHead $BaseHead `
+    -PrBaseHead $PrBaseHead `
     -CommitHash $CommitHash `
     -CandidatePocketPath $CandidatePocketPath `
     -DiscoveryEvidenceRoot $DiscoveryEvidenceRoot `

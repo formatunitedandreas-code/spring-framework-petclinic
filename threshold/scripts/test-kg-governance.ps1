@@ -1,10 +1,25 @@
 [CmdletBinding()]
-param()
+param(
+    [string] $PrBaseHead = "",
+    [string] $BaseRef = ""
+)
 
 Set-StrictMode -Version Latest
 $ErrorActionPreference = "Stop"
 
-& (Join-Path $PSScriptRoot "materialize-knowledge-graphs.ps1") -CheckOnly
+$kgScript = Join-Path $PSScriptRoot "materialize-knowledge-graphs.ps1"
+if (-not [string]::IsNullOrWhiteSpace($PrBaseHead) -and -not [string]::IsNullOrWhiteSpace($BaseRef)) {
+    & $kgScript -CheckOnly -PrBaseHead $PrBaseHead -BaseRef $BaseRef
+}
+elseif (-not [string]::IsNullOrWhiteSpace($PrBaseHead)) {
+    & $kgScript -CheckOnly -PrBaseHead $PrBaseHead
+}
+elseif (-not [string]::IsNullOrWhiteSpace($BaseRef)) {
+    & $kgScript -CheckOnly -BaseRef $BaseRef
+}
+else {
+    & $kgScript -CheckOnly
+}
 
 & (Join-Path $PSScriptRoot "verify-receipt-chain.ps1") -CheckOnly
 
