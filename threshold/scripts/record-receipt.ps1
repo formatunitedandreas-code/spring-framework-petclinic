@@ -17,6 +17,9 @@ param(
     [int] $Skipped = 0,
     [string] $ReceiptMaterialization = "prospective",
     [string] $ReceiptRoot = "threshold/receipts",
+    [string] $CandidatePocketPath = "threshold/candidate-pocket/current.json",
+    [string] $ExecutorCandidateClass = "",
+    [string] $LearningProjectionClass = "",
     [switch] $PerCommitValidationLogAvailable,
     [switch] $BranchFinalValidationPassed,
     [switch] $UpdateState,
@@ -25,6 +28,8 @@ param(
 
 Set-StrictMode -Version Latest
 $ErrorActionPreference = "Stop"
+
+. (Join-Path $PSScriptRoot "lib/candidate-class-provenance.ps1")
 
 function Get-LeaseScalar {
     param([string[]] $Lines, [string] $Name, [string] $Default = "")
@@ -104,6 +109,8 @@ $leaseStartHead = Get-LeaseScalar $leaseLines "startHead"
 if ([string]::IsNullOrWhiteSpace($CommitHash)) { $CommitHash = (& git rev-parse HEAD).Trim() }
 if ([string]::IsNullOrWhiteSpace($BaseHead)) { $BaseHead = Get-CommitParent $CommitHash }
 if ([string]::IsNullOrWhiteSpace($DiffSummary)) { $DiffSummary = ((& git show --format=%s --no-patch $CommitHash) -join " ").Trim() }
+if ([string]::IsNullOrWhiteSpace($ExecutorCandidateClass)) { $ExecutorCandidateClass = $CandidateClass }
+if ([string]::IsNullOrWhiteSpace($LearningProjectionClass)) { $LearningProjectionClass = $CandidateClass }
 $leaseDigest = Get-GitBlobSha256 -Revision "HEAD" -Path (ConvertTo-RepoPath $LeasePath)
 if ([string]::IsNullOrWhiteSpace($leaseDigest)) {
     $leaseDigest = (Get-FileHash -Algorithm SHA256 -LiteralPath $LeasePath).Hash.ToLowerInvariant()
@@ -157,6 +164,19 @@ $nonClaims = @(
     "no public compliance claim"
 )
 
+$candidateClassProvenance = New-ThresholdCandidateClassProvenance `
+    -CandidateId $CandidateId `
+    -GrantedCandidateClass $CandidateClass `
+    -ExecutorCandidateClass $ExecutorCandidateClass `
+    -ReceiptCandidateClass $CandidateClass `
+    -LearningProjectionClass $LearningProjectionClass `
+    -BaseHead $BaseHead `
+    -CommitHash $CommitHash `
+    -CandidatePocketPath $CandidatePocketPath
+if (-not $candidateClassProvenance.candidateClassProvenanceMatched) {
+    throw "candidateClassProvenanceMatched=false candidateId=$CandidateId observedDiffClass=$($candidateClassProvenance.independentlyObservedDiffClass) candidateClass=$CandidateClass"
+}
+
 $receipt = [ordered]@{
     schemaVersion = "threshold.petclinic.slice-receipt.v0.2"
     candidateId = $CandidateId
@@ -173,6 +193,7 @@ $receipt = [ordered]@{
     changedFiles = $changedFiles
     diffSummary = $DiffSummary
     diffStat = [ordered]@{ filesChanged = $changedFiles.Count; insertions = $insertions; deletions = $deletions }
+    candidateClassProvenance = $candidateClassProvenance
     validation = [ordered]@{ diffCheck = "passed"; command = $ValidationCommand; result = $ValidationResult; testsRun = $TestsRun; failures = $Failures; errors = $Errors; skipped = $Skipped }
     nonClaims = $nonClaims
 }

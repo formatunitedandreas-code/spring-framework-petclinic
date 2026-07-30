@@ -1839,7 +1839,8 @@ $completeSliceArgs = @(
     "-CandidateClass", $candidate.candidateClass,
     "-CommitMessage", $commitMessage,
     "-AllowedPath", $candidate.file,
-    "-ReceiptRoot", $ReceiptRoot
+    "-ReceiptRoot", $ReceiptRoot,
+    "-CandidatePocketPath", $executionPocketPath
 )
 if ($CompactEvidence.IsPresent) {
     $completeSliceArgs += "-CompactEvidence"

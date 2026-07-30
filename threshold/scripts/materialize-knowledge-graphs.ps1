@@ -14,6 +14,8 @@ param(
 Set-StrictMode -Version Latest
 $ErrorActionPreference = "Stop"
 
+. (Join-Path $PSScriptRoot "lib/candidate-class-provenance.ps1")
+
 function ConvertTo-RepoPath {
     param([string] $Path)
     return ($Path -replace "\\", "/").Trim()
@@ -181,6 +183,7 @@ foreach ($receiptFile in $receiptFiles) {
     $candidateClassValue = Get-JsonProperty $receipt "candidateClass" ""
     $batchClassValue = Get-JsonProperty $receipt "batchClass" ""
     $candidateClass = if (-not [string]::IsNullOrWhiteSpace([string]$candidateClassValue)) { [string]$candidateClassValue } elseif (-not [string]::IsNullOrWhiteSpace([string]$batchClassValue)) { [string]$batchClassValue } else { "unknown" }
+    Assert-ThresholdCandidateClassProvenance -Receipt $receipt -ReceiptPath (ConvertTo-RepoRelativePath $receiptFile.FullName)
     if (-not $classStats.ContainsKey($candidateClass)) {
         $classStats[$candidateClass] = [ordered]@{
             receiptCount = 0

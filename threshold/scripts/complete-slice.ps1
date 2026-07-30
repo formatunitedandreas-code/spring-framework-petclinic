@@ -10,6 +10,7 @@ param(
     [string] $CommitMessage,
     [string[]] $AllowedPath = @(),
     [string] $ReceiptRoot = "threshold/receipts",
+    [string] $CandidatePocketPath = "threshold/candidate-pocket/current.json",
     [switch] $CompactEvidence,
     [switch] $SkipMavenTest
 )
@@ -112,6 +113,7 @@ $validationCommand = if ($SkipMavenTest.IsPresent) { "git diff --check" } else {
     -Skipped $totals.skipped `
     -ReceiptMaterialization "post-commit" `
     -ReceiptRoot $ReceiptRoot `
+    -CandidatePocketPath $CandidatePocketPath `
     -PerCommitValidationLogAvailable `
     -UpdateState
 if ($LASTEXITCODE -ne 0) { throw "Receipt recording failed for source commit $sourceCommit." }
