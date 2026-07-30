@@ -14,6 +14,7 @@ Set-StrictMode -Version Latest
 $ErrorActionPreference = "Stop"
 
 . (Join-Path $PSScriptRoot "lib/runtime-paths.ps1")
+. (Join-Path $PSScriptRoot "lib/candidate-class-provenance.ps1")
 
 $runtimePaths = Get-ThresholdRuntimePaths
 if ([string]::IsNullOrWhiteSpace($LeasePath)) {
@@ -539,6 +540,10 @@ function Get-NextCandidate {
         $content = Get-Content $path -Raw
         $candidateClass = [string]$candidate.candidateClass
         $applicable = $true
+        if (-not (Test-ThresholdCandidateClassHasIndependentDiffClassifier -CandidateClass $candidateClass)) {
+            Write-Host "candidateSkippedReason=missing_independent_diff_classifier:$($candidate.candidateId)"
+            continue
+        }
 
         switch ($candidateClass) {
             "duplicate_literal_local_constant_extraction" {

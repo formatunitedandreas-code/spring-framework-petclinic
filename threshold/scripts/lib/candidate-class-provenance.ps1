@@ -52,12 +52,21 @@ function Test-ThresholdMethodSpacingDiff {
     return $hasClosingBrace -and $hasMethodOrAnnotation
 }
 
+function Get-ThresholdDiffContentLines {
+    param([string[]] $DiffLines)
+
+    return @($DiffLines | Where-Object {
+        $_ -notmatch '^(diff --git |index |\-\-\- |\+\+\+ |@@ )'
+    })
+}
+
 function Test-ThresholdCommentWrapDiff {
     param([string[]] $DiffLines)
 
-    $removed = @($DiffLines | Where-Object { $_ -match '^-\s*\*\s+\S' })
-    $added = @($DiffLines | Where-Object { $_ -match '^\+\s*\*\s+\S' })
-    $nonCommentDelta = @($DiffLines | Where-Object {
+    $contentLines = Get-ThresholdDiffContentLines -DiffLines $DiffLines
+    $removed = @($contentLines | Where-Object { $_ -match '^-\s*\*\s+\S' })
+    $added = @($contentLines | Where-Object { $_ -match '^\+\s*\*\s+\S' })
+    $nonCommentDelta = @($contentLines | Where-Object {
         ($_ -match '^[+-]' -and $_ -notmatch '^[+-]\s*\*\s+\S')
     })
     return $removed.Count -eq 1 -and $added.Count -eq 2 -and $nonCommentDelta.Count -eq 0
@@ -66,12 +75,114 @@ function Test-ThresholdCommentWrapDiff {
 function Test-ThresholdLineCommentWrapDiff {
     param([string[]] $DiffLines)
 
-    $removed = @($DiffLines | Where-Object { $_ -match '^-\s*//\s+\S' })
-    $added = @($DiffLines | Where-Object { $_ -match '^\+\s*//\s+\S' })
-    $nonCommentDelta = @($DiffLines | Where-Object {
+    $contentLines = Get-ThresholdDiffContentLines -DiffLines $DiffLines
+    $removed = @($contentLines | Where-Object { $_ -match '^-\s*//\s+\S' })
+    $added = @($contentLines | Where-Object { $_ -match '^\+\s*//\s+\S' })
+    $nonCommentDelta = @($contentLines | Where-Object {
         ($_ -match '^[+-]' -and $_ -notmatch '^[+-]\s*//\s+\S')
     })
     return $removed.Count -eq 1 -and $added.Count -eq 2 -and $nonCommentDelta.Count -eq 0
+}
+
+function Test-ThresholdStringConstantWrapDiff {
+    param([string[]] $DiffLines)
+
+    $contentLines = Get-ThresholdDiffContentLines -DiffLines $DiffLines
+    $removed = @($contentLines | Where-Object { $_ -match '^-\s*private static final String [A-Z0-9_]+ = "[^"\\]+";\s*$' })
+    $addedStart = @($contentLines | Where-Object { $_ -match '^\+\s*private static final String [A-Z0-9_]+ = "[^"\\]+" \+\s*$' })
+    $addedEnd = @($contentLines | Where-Object { $_ -match '^\+\s*"[^"\\]+";\s*$' })
+    $nonStringDelta = @($contentLines | Where-Object {
+        $_ -match '^[+-]' -and
+        $_ -notmatch '^[+-]\s*private static final String [A-Z0-9_]+ = "[^"\\]+"(?: \+)?;?\s*$' -and
+        $_ -notmatch '^[+-]\s*"[^"\\]+";\s*$'
+    })
+    return $removed.Count -eq 1 -and $addedStart.Count -eq 1 -and $addedEnd.Count -eq 1 -and $nonStringDelta.Count -eq 0
+}
+
+function Test-ThresholdSplitStringConstantNormalizationDiff {
+    param([string[]] $DiffLines)
+
+    $contentLines = Get-ThresholdDiffContentLines -DiffLines $DiffLines
+    $removedStart = @($contentLines | Where-Object { $_ -match '^-\s*private static final String [A-Z0-9_]+ = "[^"\\]+" \+\s*$' })
+    $removedEnd = @($contentLines | Where-Object { $_ -match '^-\s*"[^"\\]+";\s*$' })
+    $added = @($contentLines | Where-Object { $_ -match '^\+\s*private static final String [A-Z0-9_]+ = "[^"\\]+";\s*$' })
+    $nonStringDelta = @($contentLines | Where-Object {
+        $_ -match '^[+-]' -and
+        $_ -notmatch '^[+-]\s*private static final String [A-Z0-9_]+ = "[^"\\]+"(?: \+)?;?\s*$' -and
+        $_ -notmatch '^[+-]\s*"[^"\\]+";\s*$'
+    })
+    return $removedStart.Count -eq 1 -and $removedEnd.Count -eq 1 -and $added.Count -eq 1 -and $nonStringDelta.Count -eq 0
+}
+
+function Test-ThresholdAnnotationAttributeWrapDiff {
+    param([string[]] $DiffLines)
+
+    $contentLines = Get-ThresholdDiffContentLines -DiffLines $DiffLines
+    $removed = @($contentLines | Where-Object { $_ -match '^-\s*@[A-Za-z][A-Za-z0-9_.]*\(.+\)\s*$' })
+    $addedOpen = @($contentLines | Where-Object { $_ -match '^\+\s*@[A-Za-z][A-Za-z0-9_.]*\(\s*$' })
+    $addedArgs = @($contentLines | Where-Object { $_ -match '^\+\s+[A-Za-z_][A-Za-z0-9_]*\s*=.+,?\s*$' })
+    $addedClose = @($contentLines | Where-Object { $_ -match '^\+\s*\)\s*$' })
+    $nonAnnotationDelta = @($contentLines | Where-Object {
+        $_ -match '^[+-]' -and
+        $_ -notmatch '^[+-]\s*@[A-Za-z][A-Za-z0-9_.]*\(.*\)?\s*$' -and
+        $_ -notmatch '^[+-]\s+[A-Za-z_][A-Za-z0-9_]*\s*=.+,?\s*$' -and
+        $_ -notmatch '^[+-]\s*\)\s*$'
+    })
+    return $removed.Count -eq 1 -and $addedOpen.Count -eq 1 -and $addedArgs.Count -ge 2 -and $addedClose.Count -eq 1 -and $nonAnnotationDelta.Count -eq 0
+}
+
+function Test-ThresholdBootstrapInvocationWrapDiff {
+    param([string[]] $DiffLines)
+
+    $contentLines = Get-ThresholdDiffContentLines -DiffLines $DiffLines
+    $removed = @($contentLines | Where-Object { $_ -match '^-\s*[A-Za-z0-9_.]+\(\s*"[^"\\]+"\s*(,\s*"[^"\\]+"\s*)+\);\s*$' })
+    $addedOpen = @($contentLines | Where-Object { $_ -match '^\+\s*[A-Za-z0-9_.]+\(\s*$' })
+    $addedArgs = @($contentLines | Where-Object { $_ -match '^\+\s+"[^"\\]+"[,]?\s*$' })
+    $addedClose = @($contentLines | Where-Object { $_ -match '^\+\s*\);\s*$' })
+    $nonBootstrapDelta = @($contentLines | Where-Object {
+        $_ -match '^[+-]' -and
+        $_ -notmatch '^[+-]\s*[A-Za-z0-9_.]+\(\s*(?:"[^"\\]+"\s*(?:,\s*"[^"\\]+"\s*)+)?\)?;?\s*$' -and
+        $_ -notmatch '^[+-]\s+"[^"\\]+"[,]?\s*$'
+    })
+    return $removed.Count -eq 1 -and $addedOpen.Count -eq 1 -and $addedArgs.Count -ge 2 -and $addedClose.Count -eq 1 -and $nonBootstrapDelta.Count -eq 0
+}
+
+function Test-ThresholdLeadingTabIndentationDiff {
+    param([string[]] $DiffLines)
+
+    $contentLines = Get-ThresholdDiffContentLines -DiffLines $DiffLines
+    $removed = @($contentLines | Where-Object { $_ -match "^-\t+\S" })
+    $added = @($contentLines | Where-Object { $_ -match '^\+ {4,}\S' })
+    if ($removed.Count -eq 0 -or $removed.Count -ne $added.Count) { return $false }
+    $nonIndentDelta = @($contentLines | Where-Object {
+        $_ -match '^[+-]' -and $_ -notmatch "^-\t+\S" -and $_ -notmatch '^\+ {4,}\S'
+    })
+    if ($nonIndentDelta.Count -ne 0) { return $false }
+    for ($i = 0; $i -lt $removed.Count; $i++) {
+        $normalizedRemoved = ($removed[$i].Substring(1) -replace "^\t+", { param($m) return " " * (4 * $m.Value.Length) })
+        $normalizedAdded = $added[$i].Substring(1)
+        if ($normalizedRemoved -ne $normalizedAdded) { return $false }
+    }
+    return $true
+}
+
+function Get-ThresholdIndependentlyClassifiedCandidateClasses {
+    return @(
+        "annotation_attribute_wrap_cleanup",
+        "application_bootstrap_readability_cleanup",
+        "comment_wrap_cleanup",
+        "import_spacing_normalization",
+        "leading_tab_indentation_cleanup",
+        "line_comment_wrap_cleanup",
+        "method_spacing_normalization",
+        "split_string_constant_normalization",
+        "string_constant_wrap_cleanup"
+    )
+}
+
+function Test-ThresholdCandidateClassHasIndependentDiffClassifier {
+    param([string] $CandidateClass)
+    return [string]$CandidateClass -in @(Get-ThresholdIndependentlyClassifiedCandidateClasses)
 }
 
 function Get-ThresholdIndependentlyObservedDiffClass {
@@ -95,11 +206,26 @@ function Get-ThresholdIndependentlyObservedDiffClass {
     if (Test-ThresholdMethodSpacingDiff -DiffLines $diffLines) {
         return "method_spacing_normalization"
     }
+    if (Test-ThresholdStringConstantWrapDiff -DiffLines $diffLines) {
+        return "string_constant_wrap_cleanup"
+    }
+    if (Test-ThresholdSplitStringConstantNormalizationDiff -DiffLines $diffLines) {
+        return "split_string_constant_normalization"
+    }
     if (Test-ThresholdCommentWrapDiff -DiffLines $diffLines) {
         return "comment_wrap_cleanup"
     }
     if (Test-ThresholdLineCommentWrapDiff -DiffLines $diffLines) {
         return "line_comment_wrap_cleanup"
+    }
+    if (Test-ThresholdBootstrapInvocationWrapDiff -DiffLines $diffLines) {
+        return "application_bootstrap_readability_cleanup"
+    }
+    if (Test-ThresholdAnnotationAttributeWrapDiff -DiffLines $diffLines) {
+        return "annotation_attribute_wrap_cleanup"
+    }
+    if (Test-ThresholdLeadingTabIndentationDiff -DiffLines $diffLines) {
+        return "leading_tab_indentation_cleanup"
     }
     return "unknown"
 }

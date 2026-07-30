@@ -278,7 +278,14 @@ foreach ($commit in $prCommits) {
     if (-not $receipt.baseHead) { throw "Receipt is missing baseHead: $($entry.path)" }
     if (-not $receipt.validation -or -not $receipt.validation.result) { throw "Receipt is missing validation result: $($entry.path)" }
     if (-not $receipt.nonClaims -or $receipt.nonClaims.Count -eq 0) { throw "Receipt is missing nonClaims: $($entry.path)" }
-    Assert-ThresholdCandidateClassProvenance -Receipt $receipt -ReceiptPath $entry.path -RequirePresent
+    $isCandidateReceipt = $receipt.PSObject.Properties["candidateId"] -and -not [string]::IsNullOrWhiteSpace([string]$receipt.candidateId)
+    $hasProvenance = $receipt.PSObject.Properties["candidateClassProvenance"] -and $null -ne $receipt.candidateClassProvenance
+    if ($isCandidateReceipt) {
+        Assert-ThresholdCandidateClassProvenance -Receipt $receipt -ReceiptPath $entry.path -RequirePresent
+    }
+    elseif ($hasProvenance) {
+        Assert-ThresholdCandidateClassProvenance -Receipt $receipt -ReceiptPath $entry.path
+    }
     Assert-ReceiptLeaseDigestMatchesReceiptCommit -ReceiptPath $entry.path -Receipt $receipt
     Assert-ChangedFilesMatchReceipt -Commit $commit -Receipt $receipt
     $sourceReceiptEntries.Add($entry)

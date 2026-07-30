@@ -194,6 +194,55 @@ try {
     Assert-ThresholdCandidateClassProvenance -Receipt ([pscustomobject]@{ candidateClassProvenance = $validProvenance }) -ReceiptPath "valid-receipt.json"
     Write-Host "passed=positive provenance receipt is admitted"
 
+    $commentDiff = @(
+        "diff --git a/src/main/java/org/example/Foo.java b/src/main/java/org/example/Foo.java",
+        "index 1111111..2222222 100644",
+        "--- a/src/main/java/org/example/Foo.java",
+        "+++ b/src/main/java/org/example/Foo.java",
+        "@@ -1,3 +1,4 @@",
+        "-     * This comment line is long enough to require a conservative wrap.",
+        "+     * This comment line is long enough",
+        "+     * to require a conservative wrap."
+    )
+    Assert-True -Condition (Test-ThresholdCommentWrapDiff -DiffLines $commentDiff) -Name "comment wrap ignores git diff headers"
+
+    $lineCommentDiff = @(
+        "diff --git a/src/main/java/org/example/Foo.java b/src/main/java/org/example/Foo.java",
+        "--- a/src/main/java/org/example/Foo.java",
+        "+++ b/src/main/java/org/example/Foo.java",
+        "-        // This line comment is long enough to require wrapping.",
+        "+        // This line comment is long enough",
+        "+        // to require wrapping."
+    )
+    Assert-True -Condition (Test-ThresholdLineCommentWrapDiff -DiffLines $lineCommentDiff) -Name "line comment wrap ignores git diff headers"
+
+    $annotationDiff = @(
+        "-    @RequestMapping(value = `"/owners`", method = RequestMethod.GET)",
+        "+    @RequestMapping(",
+        "+        value = `"/owners`",",
+        "+        method = RequestMethod.GET",
+        "+    )"
+    )
+    Assert-True -Condition (Test-ThresholdAnnotationAttributeWrapDiff -DiffLines $annotationDiff) -Name "annotation attribute wrap independently classified"
+
+    $stringConstantDiff = @(
+        "-    private static final String OWNER_QUERY = `"select owner from Owner owner where owner.lastName like :lastName`";",
+        "+    private static final String OWNER_QUERY = `"select owner from Owner owner `" +",
+        "+        `"where owner.lastName like :lastName`";"
+    )
+    Assert-True -Condition (Test-ThresholdStringConstantWrapDiff -DiffLines $stringConstantDiff) -Name "string constant wrap independently classified"
+
+    Assert-True -Condition (Test-ThresholdCandidateClassHasIndependentDiffClassifier -CandidateClass "annotation_attribute_wrap_cleanup") -Name "annotation auto patch class has independent classifier"
+    Assert-True -Condition (Test-ThresholdCandidateClassHasIndependentDiffClassifier -CandidateClass "string_constant_wrap_cleanup") -Name "string constant auto patch class has independent classifier"
+    Assert-False -Condition (Test-ThresholdCandidateClassHasIndependentDiffClassifier -CandidateClass "repository_readability_cleanup") -Name "unsupported auto patch class is not selected without independent classifier"
+
+    $batchReceipt = [pscustomobject]@{
+        batchId = "batch-canary"
+        sourceCommit = $commitHash
+    }
+    Assert-ThresholdCandidateClassProvenance -Receipt $batchReceipt -ReceiptPath "batch-receipt.json"
+    Assert-False -Condition (Test-ThresholdCandidateClassProvenancePositiveLearningEligible -Receipt $batchReceipt) -Name "batch receipt without provenance remains compatible but not positive learning evidence"
+
     Write-Host "candidateClassProvenanceTests=passed"
 }
 finally {
