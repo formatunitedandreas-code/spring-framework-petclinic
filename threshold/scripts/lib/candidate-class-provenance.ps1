@@ -547,6 +547,11 @@ function Assert-ThresholdCandidateClassProvenance {
         }
         return
     }
+    $candidateId = Get-ThresholdJsonProperty $Receipt "candidateId" $null
+    $batchId = Get-ThresholdJsonProperty $Receipt "batchId" $null
+    if (-not [string]::IsNullOrWhiteSpace([string]$batchId) -and [string]::IsNullOrWhiteSpace([string]$candidateId)) {
+        throw "candidateClassProvenance batch receipt cannot establish positive learning without candidateId receipt=$ReceiptPath batchId=$batchId"
+    }
     if ((Get-ThresholdJsonProperty $provenance "candidateClassProvenanceMatched" $false) -ne $true) {
         throw "candidateClassProvenanceMatched=false receipt=$ReceiptPath observedDiffClass=$($provenance.independentlyObservedDiffClass) receiptCandidateClass=$($provenance.receiptCandidateClass)"
     }
@@ -575,14 +580,26 @@ function Assert-ThresholdCandidateClassProvenance {
 
         $embeddedSnapshot = Get-ThresholdJsonProperty $provenance "executionCandidateSnapshot" $null
         $independentCandidate = Get-ThresholdCandidateFromPocket -CandidatePocketPath $CandidatePocketPath -CandidateId ([string]$candidateId)
+        $candidateForRecompute = $independentCandidate
         if ($null -ne $embeddedSnapshot) {
-            if ($null -eq $independentCandidate) {
-                throw "candidateClassProvenance execution snapshot missing independent discovery receipt=$ReceiptPath candidateId=$candidateId"
-            }
             $embeddedDigest = Get-ThresholdCandidateSnapshotDigest -CandidateSnapshot $embeddedSnapshot
-            $independentDigest = Get-ThresholdCandidateSnapshotDigest -CandidateSnapshot (New-ThresholdCandidateSnapshot -Candidate $independentCandidate)
-            if ($embeddedDigest -ne $independentDigest) {
-                throw "candidateClassProvenance execution snapshot mismatch receipt=$ReceiptPath embeddedDigest=$embeddedDigest independentDigest=$independentDigest"
+            if ([string]$embeddedDigest -ne [string](Get-ThresholdJsonProperty $provenance "executionCandidateDigest" "")) {
+                throw "candidateClassProvenance execution snapshot digest mismatch receipt=$ReceiptPath embeddedDigest=$embeddedDigest provenanceDigest=$($provenance.executionCandidateDigest)"
+            }
+            if ([string](Get-ThresholdJsonProperty $embeddedSnapshot "candidateId" "") -ne [string]$candidateId) {
+                throw "candidateClassProvenance execution snapshot candidateId mismatch receipt=$ReceiptPath candidateId=$candidateId embeddedCandidateId=$($embeddedSnapshot.candidateId)"
+            }
+            if ([string](Get-ThresholdJsonProperty $embeddedSnapshot "candidateClass" "") -ne [string](Get-ThresholdJsonProperty $provenance "discoveredCandidateClass" "")) {
+                throw "candidateClassProvenance execution snapshot candidateClass mismatch receipt=$ReceiptPath embeddedCandidateClass=$($embeddedSnapshot.candidateClass) discoveredCandidateClass=$($provenance.discoveredCandidateClass)"
+            }
+            if ($null -ne $independentCandidate) {
+                $independentDigest = Get-ThresholdCandidateSnapshotDigest -CandidateSnapshot (New-ThresholdCandidateSnapshot -Candidate $independentCandidate)
+                if ($embeddedDigest -ne $independentDigest) {
+                    throw "candidateClassProvenance execution snapshot mismatch receipt=$ReceiptPath embeddedDigest=$embeddedDigest independentDigest=$independentDigest"
+                }
+            }
+            else {
+                $candidateForRecompute = $embeddedSnapshot
             }
         }
 
@@ -595,7 +612,7 @@ function Assert-ThresholdCandidateClassProvenance {
             -BaseHead ([string]$baseHead) `
             -CommitHash ([string]$commitHash) `
             -CandidatePocketPath $CandidatePocketPath `
-            -CandidateSnapshot $independentCandidate
+            -CandidateSnapshot $candidateForRecompute
 
         foreach ($field in @(
             "discoveryObservation",
@@ -632,6 +649,14 @@ function Test-ThresholdCandidateClassProvenancePositiveLearningEligible {
 
     $provenance = Get-ThresholdJsonProperty $Receipt "candidateClassProvenance" $null
     if ($null -eq $provenance) {
+        return $false
+    }
+    $candidateId = Get-ThresholdJsonProperty $Receipt "candidateId" $null
+    $batchId = Get-ThresholdJsonProperty $Receipt "batchId" $null
+    if (-not [string]::IsNullOrWhiteSpace([string]$batchId) -and [string]::IsNullOrWhiteSpace([string]$candidateId)) {
+        return $false
+    }
+    if ([string]::IsNullOrWhiteSpace([string]$candidateId)) {
         return $false
     }
     if ((Get-ThresholdJsonProperty $provenance "candidateClassProvenanceMatched" $false) -ne $true) {

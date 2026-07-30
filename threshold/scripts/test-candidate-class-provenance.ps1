@@ -221,15 +221,20 @@ try {
     }
     $stalePocketPath = "stale-pocket.json"
     $stalePocket | ConvertTo-Json -Depth 6 | Set-Content $stalePocketPath
+    Assert-ThresholdCandidateClassProvenance -Receipt $validReceipt -ReceiptPath "receipt-bound-pocket.json" -CandidatePocketPath $stalePocketPath
+    Write-Host "passed=receipt-bound execution snapshot validates without mutable current pocket"
+
+    $snapshotDigestTamper = $validReceipt | ConvertTo-Json -Depth 10 | ConvertFrom-Json
+    $snapshotDigestTamper.candidateClassProvenance.executionCandidateSnapshot.member = "line-99"
     try {
-        Assert-ThresholdCandidateClassProvenance -Receipt $validReceipt -ReceiptPath "receipt-bound-pocket.json" -CandidatePocketPath $stalePocketPath
-        throw "Expected missing independent discovery assertion failure did not occur."
+        Assert-ThresholdCandidateClassProvenance -Receipt $snapshotDigestTamper -ReceiptPath "snapshot-digest-tamper.json" -CandidatePocketPath $stalePocketPath
+        throw "Expected receipt-bound snapshot digest assertion failure did not occur."
     }
     catch {
-        if ($_.Exception.Message -notmatch "execution snapshot missing independent discovery") {
+        if ($_.Exception.Message -notmatch "execution snapshot digest mismatch") {
             throw
         }
-        Write-Host "passed=receipt-bound execution snapshot requires independent discovery"
+        Write-Host "passed=receipt-bound execution snapshot digest is immutable"
     }
 
     $staleReceipt = $validReceipt | ConvertTo-Json -Depth 8 | ConvertFrom-Json
@@ -391,6 +396,23 @@ try {
     }
     Assert-ThresholdCandidateClassProvenance -Receipt $batchReceipt -ReceiptPath "batch-receipt.json"
     Assert-False -Condition (Test-ThresholdCandidateClassProvenancePositiveLearningEligible -Receipt $batchReceipt) -Name "batch receipt without provenance remains compatible but not positive learning evidence"
+
+    $injectedBatchReceipt = [pscustomobject]@{
+        batchId = "batch-canary"
+        sourceCommit = $methodCommit
+        candidateClassProvenance = $validProvenance
+    }
+    Assert-False -Condition (Test-ThresholdCandidateClassProvenancePositiveLearningEligible -Receipt $injectedBatchReceipt) -Name "batch receipt with injected provenance cannot establish positive learning"
+    try {
+        Assert-ThresholdCandidateClassProvenance -Receipt $injectedBatchReceipt -ReceiptPath "injected-batch-receipt.json"
+        throw "Expected batch provenance assertion failure did not occur."
+    }
+    catch {
+        if ($_.Exception.Message -notmatch "batch receipt cannot establish positive learning without candidateId") {
+            throw
+        }
+        Write-Host "passed=batch receipt provenance requires candidate-bound recompute"
+    }
 
     Write-Host "candidateClassProvenanceTests=passed"
 }
