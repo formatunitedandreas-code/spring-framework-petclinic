@@ -1,0 +1,51 @@
+{
+    "schemaVersion":  "threshold.petclinic.slice-receipt.v0.2",
+    "candidateId":  "d4b-cycle-02-pet-type-formatter-import-spacing",
+    "leaseName":  "owned-autonomous-refactor-branch-wave-v0_automation",
+    "leaseDigest":  "c6c7c7fa8f62449e73d4313b223ee8ea7e2b67df84f87026b02d3abb2fd63558",
+    "branch":  "threshold-governed-refactor-demo-184",
+    "candidateClass":  "method_spacing_normalization",
+    "leaseStartHead":  "2a115d45261436c3c53df5cd69c6962f7ed686f1",
+    "baseHead":  "b2879eaae0e44a559af980940793f7687feff556",
+    "commitHash":  "d7cd0f94e73ba007bc11d656097ab290f63c5e74",
+    "receiptMaterialization":  "post-commit",
+    "perCommitValidationLogAvailable":  true,
+    "branchFinalValidationPassed":  false,
+    "changedFiles":  [
+                         {
+                             "path":  "src/main/java/org/springframework/samples/petclinic/web/PetTypeFormatter.java",
+                             "beforeSha256":  "b4b52c1904683595e02e81243f5a18135611f2ff2f7d2243a693e1b1f1958d28",
+                             "afterSha256":  "abb6cf85f90e04eb9ab8178f2ce6d9ef19522e436b5ecdc75a0405d275dfe068"
+                         }
+                     ],
+    "diffSummary":  "refactor: normalize pet type formatter imports",
+    "diffStat":  {
+                     "filesChanged":  1,
+                     "insertions":  0,
+                     "deletions":  1
+                 },
+    "validation":  {
+                       "diffCheck":  "passed",
+                       "command":  ".\\mvnw.cmd test",
+                       "result":  "BUILD SUCCESS",
+                       "testsRun":  119,
+                       "failures":  0,
+                       "errors":  0,
+                       "skipped":  0
+                   },
+    "nonClaims":  [
+                      "no push in candidate slice",
+                      "no PR update in candidate slice",
+                      "no upstream interaction",
+                      "no pom.xml change",
+                      "no dependency change",
+                      "no src/test change",
+                      "no merge",
+                      "no release",
+                      "no deploy",
+                      "no public readiness claim",
+                      "no public correctness claim",
+                      "no public security claim",
+                      "no public compliance claim"
+                  ]
+}

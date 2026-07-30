@@ -90,11 +90,11 @@
       "id": "fidelity:method_spacing_normalization",
       "candidateClass": "method_spacing_normalization",
       "level": "F4_CI_RECEIPT_STABLE",
-      "receiptCount": 7,
-      "validationPassCount": 7,
+      "receiptCount": 8,
+      "validationPassCount": 8,
       "validationFailCount": 0,
       "semanticPassCount": 0,
-      "semanticUnknownCount": 7,
+      "semanticUnknownCount": 8,
       "reviewFindingCount": 0,
       "validationPassRate": "1"
     },
@@ -408,6 +408,16 @@
       "validationResult": "BUILD SUCCESS",
       "changedFiles": [
         "src/main/java/org/springframework/samples/petclinic/web/PetValidator.java"
+      ]
+    },
+    {
+      "id": "threshold/receipts/d4b-cycle-02-pet-type-formatter-import-spacing-d7cd0f94e73b.json",
+      "candidateClass": "method_spacing_normalization",
+      "sourceCommit": "d7cd0f94e73ba007bc11d656097ab290f63c5e74",
+      "leaseDigest": "c6c7c7fa8f62449e73d4313b223ee8ea7e2b67df84f87026b02d3abb2fd63558",
+      "validationResult": "BUILD SUCCESS",
+      "changedFiles": [
+        "src/main/java/org/springframework/samples/petclinic/web/PetTypeFormatter.java"
       ]
     },
     {
@@ -4509,5 +4519,5 @@
     "F3_VALIDATED_RECEIPT",
     "F4_CI_RECEIPT_STABLE"
   ],
-  "semanticDigest": "106c4924cf3415577d0fb530045beeeed8edeb9fdf3347a77cc7b0c61b9b226c"
+  "semanticDigest": "361513ca269e769f7547fee76d88729661b06f7388b2c475436cf720f1a1ef45"
 }
