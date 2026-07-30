@@ -192,6 +192,7 @@ try {
     Assert-True -Condition ($validProvenance.independentlyObservedDiffClass -eq "method_spacing_normalization") -Name "method spacing independently classified"
     Assert-True -Condition ([bool]$validProvenance.candidatePathMatched) -Name "method spacing observed diff path matches candidate snapshot"
     Assert-True -Condition ([bool]$validProvenance.candidateMemberMatched) -Name "method spacing observed hunk matches candidate member"
+    Assert-True -Condition ([bool]$validProvenance.immutableDiscoveryEvidencePresent) -Name "immutable discovery evidence is present"
     Assert-True -Condition ([bool]$validProvenance.candidateClassProvenanceMatched) -Name "matching method spacing provenance is admitted"
     $validReceipt = [pscustomobject]@{
         candidateId = "canary-method-spacing-valid"
@@ -223,13 +224,23 @@ try {
     }
     $stalePocketPath = "stale-pocket.json"
     $stalePocket | ConvertTo-Json -Depth 6 | Set-Content $stalePocketPath
-    Assert-ThresholdCandidateClassProvenance -Receipt $validReceipt -ReceiptPath "receipt-bound-pocket.json" -CandidatePocketPath $stalePocketPath
-    Write-Host "passed=receipt-bound execution snapshot validates without mutable current pocket"
+    try {
+        Assert-ThresholdCandidateClassProvenance -Receipt $validReceipt -ReceiptPath "receipt-bound-pocket.json" -CandidatePocketPath $stalePocketPath
+        throw "Expected missing immutable discovery evidence assertion failure did not occur."
+    }
+    catch {
+        if ($_.Exception.Message -notmatch "immutable discovery evidence missing") {
+            throw
+        }
+        Write-Host "passed=missing immutable discovery evidence rejects embedded snapshot fallback"
+    }
+    Assert-ThresholdCandidateClassProvenance -Receipt $validReceipt -ReceiptPath "immutable-discovery-evidence.json" -CandidatePocketPath $methodPocketPath
+    Write-Host "passed=valid immutable discovery evidence admits receipt-bound execution snapshot"
 
     $snapshotDigestTamper = $validReceipt | ConvertTo-Json -Depth 10 | ConvertFrom-Json
     $snapshotDigestTamper.candidateClassProvenance.executionCandidateSnapshot.member = "line-99"
     try {
-        Assert-ThresholdCandidateClassProvenance -Receipt $snapshotDigestTamper -ReceiptPath "snapshot-digest-tamper.json" -CandidatePocketPath $stalePocketPath
+        Assert-ThresholdCandidateClassProvenance -Receipt $snapshotDigestTamper -ReceiptPath "snapshot-digest-tamper.json" -CandidatePocketPath $methodPocketPath
         throw "Expected receipt-bound snapshot digest assertion failure did not occur."
     }
     catch {
@@ -237,6 +248,35 @@ try {
             throw
         }
         Write-Host "passed=receipt-bound execution snapshot digest is immutable"
+    }
+
+    $discoveryDigestTamper = $validReceipt | ConvertTo-Json -Depth 12 | ConvertFrom-Json
+    $discoveryDigestTamper.candidateClassProvenance.discoveryEvidenceDigest = "tampered"
+    try {
+        Assert-ThresholdCandidateClassProvenance -Receipt $discoveryDigestTamper -ReceiptPath "discovery-digest-tamper.json" -CandidatePocketPath $methodPocketPath
+        throw "Expected discovery evidence digest assertion failure did not occur."
+    }
+    catch {
+        if ($_.Exception.Message -notmatch "discovery evidence digest mismatch") {
+            throw
+        }
+        Write-Host "passed=discovery evidence digest tampering is rejected"
+    }
+
+    $selfAnchoredReceipt = $validReceipt | ConvertTo-Json -Depth 12 | ConvertFrom-Json
+    $selfAnchoredReceipt.candidateId = "invented-method-spacing-candidate"
+    $selfAnchoredReceipt.candidateClassProvenance.discoveryCandidateId = "invented-method-spacing-candidate"
+    $selfAnchoredReceipt.candidateClassProvenance.executionCandidateSnapshot.candidateId = "invented-method-spacing-candidate"
+    $selfAnchoredReceipt.candidateClassProvenance.executionCandidateDigest = Get-ThresholdCandidateSnapshotDigest -CandidateSnapshot $selfAnchoredReceipt.candidateClassProvenance.executionCandidateSnapshot
+    try {
+        Assert-ThresholdCandidateClassProvenance -Receipt $selfAnchoredReceipt -ReceiptPath "self-anchored-receipt.json" -CandidatePocketPath $stalePocketPath
+        throw "Expected self-anchored receipt assertion failure did not occur."
+    }
+    catch {
+        if ($_.Exception.Message -notmatch "immutable discovery evidence missing") {
+            throw
+        }
+        Write-Host "passed=receipt-invented candidate snapshot cannot establish discovery trust"
     }
 
     $staleReceipt = $validReceipt | ConvertTo-Json -Depth 8 | ConvertFrom-Json

@@ -483,6 +483,77 @@ function Get-ThresholdCandidateSnapshotDigest {
     return Get-ThresholdStringSha256Lower -Text ([string]::Join("`n", $basis))
 }
 
+function Get-ThresholdCandidatePocketDigest {
+    param([string] $CandidatePocketPath)
+    if ([string]::IsNullOrWhiteSpace($CandidatePocketPath) -or -not (Test-Path $CandidatePocketPath)) {
+        return ""
+    }
+    return (Get-FileHash -Algorithm SHA256 -LiteralPath $CandidatePocketPath).Hash.ToLowerInvariant()
+}
+
+function Get-ThresholdDiscoveryRuleDigest {
+    param([string] $DiscoveryRuleId, [string] $CandidateClass)
+    if ([string]::IsNullOrWhiteSpace($DiscoveryRuleId) -or [string]::IsNullOrWhiteSpace($CandidateClass)) {
+        return ""
+    }
+    return Get-ThresholdStringSha256Lower -Text "discoveryRuleId=$DiscoveryRuleId`ncandidateClass=$CandidateClass"
+}
+
+function New-ThresholdCandidateDiscoveryEvidence {
+    param(
+        [Parameter(Mandatory = $true)]
+        [string] $BaseHead,
+        [Parameter(Mandatory = $true)]
+        [string] $CandidateId,
+        [string] $CandidatePocketPath = "threshold/candidate-pocket/current.json",
+        [object] $Candidate = $null
+    )
+
+    $candidate = if ($null -ne $Candidate) { $Candidate } else { Get-ThresholdCandidateFromPocket -CandidatePocketPath $CandidatePocketPath -CandidateId $CandidateId }
+    if ($null -eq $candidate) { return $null }
+
+    $candidateSnapshot = New-ThresholdCandidateSnapshot -Candidate $candidate
+    $candidateSnapshotDigest = Get-ThresholdCandidateSnapshotDigest -CandidateSnapshot $candidateSnapshot
+    $candidateClass = [string](Get-ThresholdJsonProperty $candidateSnapshot "candidateClass" "")
+    $candidatePath = ConvertTo-ThresholdRepoPath -Path ([string](Get-ThresholdJsonProperty $candidateSnapshot "file" ""))
+    $candidateMember = [string](Get-ThresholdJsonProperty $candidateSnapshot "member" "")
+    $discoveryRuleId = "static-heuristic-scan:$candidateClass"
+    $candidatePocketDigest = Get-ThresholdCandidatePocketDigest -CandidatePocketPath $CandidatePocketPath
+    $candidateHunkFingerprint = Get-ThresholdStringSha256Lower -Text "candidatePath=$candidatePath`ncandidateMember=$candidateMember"
+    $basis = @(
+        "repositoryId=formatunitedandreas-code/spring-framework-petclinic",
+        "baseHead=$BaseHead",
+        "discoveryRunId=pocket:$candidatePocketDigest",
+        "discoveryRuleId=$discoveryRuleId",
+        "discoveryRuleDigest=$(Get-ThresholdDiscoveryRuleDigest -DiscoveryRuleId $discoveryRuleId -CandidateClass $candidateClass)",
+        "candidateId=$CandidateId",
+        "candidateClass=$candidateClass",
+        "candidatePath=$candidatePath",
+        "candidateMember=$candidateMember",
+        "candidateHunkFingerprint=$candidateHunkFingerprint",
+        "candidateSnapshotDigest=$candidateSnapshotDigest",
+        "candidatePocketDigest=$candidatePocketDigest"
+    )
+
+    $discoveryEvidenceDigest = Get-ThresholdStringSha256Lower -Text ([string]::Join("`n", $basis))
+    return [ordered]@{
+        schemaVersion = "threshold.petclinic.candidate-discovery-evidence.v0.1"
+        repositoryId = "formatunitedandreas-code/spring-framework-petclinic"
+        baseHead = $BaseHead
+        discoveryRunId = "pocket:$candidatePocketDigest"
+        discoveryRuleId = $discoveryRuleId
+        discoveryRuleDigest = Get-ThresholdDiscoveryRuleDigest -DiscoveryRuleId $discoveryRuleId -CandidateClass $candidateClass
+        candidateId = $CandidateId
+        candidateClass = $candidateClass
+        candidatePath = $candidatePath
+        candidateMember = $candidateMember
+        candidateHunkFingerprint = $candidateHunkFingerprint
+        candidateSnapshotDigest = $candidateSnapshotDigest
+        candidatePocketDigest = $candidatePocketDigest
+        discoveryEvidenceDigest = $discoveryEvidenceDigest
+    }
+}
+
 function New-ThresholdCandidateClassProvenance {
     param(
         [Parameter(Mandatory = $true)]
@@ -504,6 +575,9 @@ function New-ThresholdCandidateClassProvenance {
     )
 
     $candidate = if ($null -ne $CandidateSnapshot) { $CandidateSnapshot } else { Get-ThresholdCandidateFromPocket -CandidatePocketPath $CandidatePocketPath -CandidateId $CandidateId }
+    $discoveryEvidence = if ($null -ne $CandidateSnapshot) { $null } else { New-ThresholdCandidateDiscoveryEvidence -BaseHead $BaseHead -CandidateId $CandidateId -CandidatePocketPath $CandidatePocketPath -Candidate $candidate }
+    $discoveryEvidenceDigest = if ($null -ne $discoveryEvidence) { [string]$discoveryEvidence.discoveryEvidenceDigest } else { "" }
+    $immutableDiscoveryEvidencePresent = -not [string]::IsNullOrWhiteSpace($discoveryEvidenceDigest)
     $executionCandidateSnapshot = New-ThresholdCandidateSnapshot -Candidate $candidate
     $executionCandidateDigest = Get-ThresholdCandidateSnapshotDigest -CandidateSnapshot $executionCandidateSnapshot
     $discoveryRuleId = $null
@@ -526,7 +600,7 @@ function New-ThresholdCandidateClassProvenance {
         $ReceiptCandidateClass,
         $LearningProjectionClass
     )
-    $matched = -not [string]::IsNullOrWhiteSpace($discoveredCandidateClass) -and $candidatePathMatched -and $candidateMemberMatched
+    $matched = $immutableDiscoveryEvidencePresent -and -not [string]::IsNullOrWhiteSpace($discoveredCandidateClass) -and $candidatePathMatched -and $candidateMemberMatched
     foreach ($value in $chain) {
         if ([string]::IsNullOrWhiteSpace([string]$value) -or [string]$value -ne [string]$GrantedCandidateClass) {
             $matched = $false
@@ -544,14 +618,18 @@ function New-ThresholdCandidateClassProvenance {
         "learningProjectionClass=$LearningProjectionClass",
         "baseHead=$BaseHead",
         "commitHash=$CommitHash",
-        "executionCandidateDigest=$executionCandidateDigest"
+        "executionCandidateDigest=$executionCandidateDigest",
+        "discoveryEvidenceDigest=$discoveryEvidenceDigest"
     )
 
     return [ordered]@{
         schemaVersion = "threshold.petclinic.candidate-class-provenance.v0.1"
-        discoveryObservation = if ($candidate) { "receipt-bound-execution-pocket" } else { "missing" }
+        discoveryObservation = if ($immutableDiscoveryEvidencePresent) { "immutable-discovery-evidence" } elseif ($candidate) { "untrusted-execution-snapshot-only" } else { "missing" }
         discoveryRuleId = $discoveryRuleId
         discoveryCandidateId = $CandidateId
+        discoveryEvidence = $discoveryEvidence
+        discoveryEvidenceDigest = $discoveryEvidenceDigest
+        immutableDiscoveryEvidencePresent = [bool]$immutableDiscoveryEvidencePresent
         executionCandidateSnapshot = $executionCandidateSnapshot
         executionCandidateDigest = $executionCandidateDigest
         discoveredCandidateClass = $discoveredCandidateClass
@@ -634,7 +712,23 @@ function Assert-ThresholdCandidateClassProvenance {
 
         $embeddedSnapshot = Get-ThresholdJsonProperty $provenance "executionCandidateSnapshot" $null
         $independentCandidate = Get-ThresholdCandidateFromPocket -CandidatePocketPath $CandidatePocketPath -CandidateId ([string]$candidateId)
-        $candidateForRecompute = $independentCandidate
+        if ($null -eq $independentCandidate) {
+            throw "candidateClassProvenance immutable discovery evidence missing receipt=$ReceiptPath candidateId=$candidateId"
+        }
+        $expectedDiscoveryEvidence = New-ThresholdCandidateDiscoveryEvidence -BaseHead ([string]$baseHead) -CandidateId ([string]$candidateId) -CandidatePocketPath $CandidatePocketPath -Candidate $independentCandidate
+        if ($null -eq $expectedDiscoveryEvidence) {
+            throw "candidateClassProvenance immutable discovery evidence missing receipt=$ReceiptPath candidateId=$candidateId"
+        }
+        if ([string](Get-ThresholdJsonProperty $provenance "discoveryEvidenceDigest" "") -ne [string]$expectedDiscoveryEvidence.discoveryEvidenceDigest) {
+            throw "candidateClassProvenance discovery evidence digest mismatch receipt=$ReceiptPath"
+        }
+        $observedDiscoveryEvidence = Get-ThresholdJsonProperty $provenance "discoveryEvidence" $null
+        if ($null -eq $observedDiscoveryEvidence) {
+            throw "candidateClassProvenance discovery evidence missing receipt=$ReceiptPath"
+        }
+        foreach ($field in @("baseHead", "candidateId", "candidateClass", "candidatePath", "candidateMember", "candidateHunkFingerprint", "candidateSnapshotDigest", "candidatePocketDigest", "discoveryEvidenceDigest")) {
+            Assert-ThresholdProvenanceFieldMatches -Observed $observedDiscoveryEvidence -Expected $expectedDiscoveryEvidence -Field $field -ReceiptPath $ReceiptPath
+        }
         if ($null -ne $embeddedSnapshot) {
             $embeddedDigest = Get-ThresholdCandidateSnapshotDigest -CandidateSnapshot $embeddedSnapshot
             if ([string]$embeddedDigest -ne [string](Get-ThresholdJsonProperty $provenance "executionCandidateDigest" "")) {
@@ -646,14 +740,9 @@ function Assert-ThresholdCandidateClassProvenance {
             if ([string](Get-ThresholdJsonProperty $embeddedSnapshot "candidateClass" "") -ne [string](Get-ThresholdJsonProperty $provenance "discoveredCandidateClass" "")) {
                 throw "candidateClassProvenance execution snapshot candidateClass mismatch receipt=$ReceiptPath embeddedCandidateClass=$($embeddedSnapshot.candidateClass) discoveredCandidateClass=$($provenance.discoveredCandidateClass)"
             }
-            if ($null -ne $independentCandidate) {
-                $independentDigest = Get-ThresholdCandidateSnapshotDigest -CandidateSnapshot (New-ThresholdCandidateSnapshot -Candidate $independentCandidate)
-                if ($embeddedDigest -ne $independentDigest) {
-                    throw "candidateClassProvenance execution snapshot mismatch receipt=$ReceiptPath embeddedDigest=$embeddedDigest independentDigest=$independentDigest"
-                }
-            }
-            else {
-                $candidateForRecompute = $embeddedSnapshot
+            $independentDigest = Get-ThresholdCandidateSnapshotDigest -CandidateSnapshot (New-ThresholdCandidateSnapshot -Candidate $independentCandidate)
+            if ($embeddedDigest -ne $independentDigest) {
+                throw "candidateClassProvenance execution snapshot mismatch receipt=$ReceiptPath embeddedDigest=$embeddedDigest independentDigest=$independentDigest"
             }
         }
 
@@ -665,13 +754,14 @@ function Assert-ThresholdCandidateClassProvenance {
             -LearningProjectionClass ([string](Get-ThresholdJsonProperty $provenance "learningProjectionClass" "")) `
             -BaseHead ([string]$baseHead) `
             -CommitHash ([string]$commitHash) `
-            -CandidatePocketPath $CandidatePocketPath `
-            -CandidateSnapshot $candidateForRecompute
+            -CandidatePocketPath $CandidatePocketPath
 
         foreach ($field in @(
             "discoveryObservation",
             "discoveryRuleId",
             "discoveryCandidateId",
+            "discoveryEvidenceDigest",
+            "immutableDiscoveryEvidencePresent",
             "executionCandidateDigest",
             "discoveredCandidateClass",
             "grantedCandidateClass",
