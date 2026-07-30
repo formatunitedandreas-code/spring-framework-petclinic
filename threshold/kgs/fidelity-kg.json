@@ -90,11 +90,11 @@
       "id": "fidelity:method_spacing_normalization",
       "candidateClass": "method_spacing_normalization",
       "level": "F4_CI_RECEIPT_STABLE",
-      "receiptCount": 6,
-      "validationPassCount": 6,
+      "receiptCount": 7,
+      "validationPassCount": 7,
       "validationFailCount": 0,
       "semanticPassCount": 0,
-      "semanticUnknownCount": 6,
+      "semanticUnknownCount": 7,
       "reviewFindingCount": 0,
       "validationPassRate": "1"
     },
@@ -400,6 +400,16 @@
     }
   ],
   "evidence": [
+    {
+      "id": "threshold/receipts/d4b-cycle-01-pet-validator-spacing-ed3b401845b5.json",
+      "candidateClass": "method_spacing_normalization",
+      "sourceCommit": "ed3b401845b51fcaa7d65cb0576c4640bf15672e",
+      "leaseDigest": "c6c7c7fa8f62449e73d4313b223ee8ea7e2b67df84f87026b02d3abb2fd63558",
+      "validationResult": "BUILD SUCCESS",
+      "changedFiles": [
+        "src/main/java/org/springframework/samples/petclinic/web/PetValidator.java"
+      ]
+    },
     {
       "id": "threshold/receipts/no-candidate-wave-threshold-governed-refactor-demo-109-20260716T191437Z.json",
       "candidateClass": "unknown",
@@ -4499,5 +4509,5 @@
     "F3_VALIDATED_RECEIPT",
     "F4_CI_RECEIPT_STABLE"
   ],
-  "semanticDigest": "c365160b208d6de48b7ea585a206a406a42d8fab038fc05b4ce2bb944ace4e7d"
+  "semanticDigest": "106c4924cf3415577d0fb530045beeeed8edeb9fdf3347a77cc7b0c61b9b226c"
 }
