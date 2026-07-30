@@ -38,13 +38,16 @@ public class VetController {
 
     private static final String MODEL_ATTRIBUTE_VETS = "vets";
     private static final String VIEWS_VET_LIST = "vets/vetList";
+    private static final String VETS_PATH = "/vets";
+    private static final String VETS_JSON_PATH = "/vets.json";
+    private static final String VETS_XML_PATH = "/vets.xml";
     private final ClinicService clinicService;
 
     public VetController(ClinicService clinicService) {
         this.clinicService = clinicService;
     }
 
-    @GetMapping("/vets")
+    @GetMapping(VETS_PATH)
     public String showVetList(Map<String, Object> model) {
         // Here we are returning an object of type
         // 'Vets' rather than a
@@ -59,7 +62,7 @@ public class VetController {
     }
 
     @GetMapping(
-        value = "/vets.json",
+        value = VETS_JSON_PATH,
         produces = MediaType.APPLICATION_JSON_VALUE
     )
     @ResponseBody
@@ -68,7 +71,7 @@ public class VetController {
     }
 
     @GetMapping(
-        value = "/vets.xml",
+        value = VETS_XML_PATH,
         produces = MediaType.APPLICATION_XML_VALUE
     )
     @ResponseBody
