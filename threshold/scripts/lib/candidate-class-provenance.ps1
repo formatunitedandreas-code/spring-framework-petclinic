@@ -76,7 +76,12 @@ function Test-ThresholdCommentWrapDiff {
     $nonCommentDelta = @($contentLines | Where-Object {
         ($_ -match '^[+-]' -and $_ -notmatch '^[+-]\s*\*\s+\S')
     })
-    return $removed.Count -eq 1 -and $added.Count -eq 2 -and $nonCommentDelta.Count -eq 0
+    if ($removed.Count -ne 1 -or $added.Count -ne 2 -or $nonCommentDelta.Count -ne 0) {
+        return $false
+    }
+    $removedText = ConvertTo-ThresholdCollapsedWhitespace ((Get-ThresholdCommentPayload -Line $removed[0] -PrefixPattern '^[+-]\s*\*\s*'))
+    $addedText = ConvertTo-ThresholdCollapsedWhitespace (($added | ForEach-Object { Get-ThresholdCommentPayload -Line $_ -PrefixPattern '^[+-]\s*\*\s*' }) -join " ")
+    return $removedText -eq $addedText
 }
 
 function Test-ThresholdLineCommentWrapDiff {
@@ -88,7 +93,12 @@ function Test-ThresholdLineCommentWrapDiff {
     $nonCommentDelta = @($contentLines | Where-Object {
         ($_ -match '^[+-]' -and $_ -notmatch '^[+-]\s*//\s+\S')
     })
-    return $removed.Count -eq 1 -and $added.Count -eq 2 -and $nonCommentDelta.Count -eq 0
+    if ($removed.Count -ne 1 -or $added.Count -ne 2 -or $nonCommentDelta.Count -ne 0) {
+        return $false
+    }
+    $removedText = ConvertTo-ThresholdCollapsedWhitespace ((Get-ThresholdCommentPayload -Line $removed[0] -PrefixPattern '^[+-]\s*//\s*'))
+    $addedText = ConvertTo-ThresholdCollapsedWhitespace (($added | ForEach-Object { Get-ThresholdCommentPayload -Line $_ -PrefixPattern '^[+-]\s*//\s*' }) -join " ")
+    return $removedText -eq $addedText
 }
 
 function Test-ThresholdStringConstantWrapDiff {
@@ -185,7 +195,66 @@ function Split-ThresholdTopLevelCommaArguments {
 
 function ConvertTo-ThresholdNormalizedAnnotationArgument {
     param([string] $Text)
-    return ([regex]::Replace($Text.Trim().TrimEnd(","), '\s+', ' '))
+    return ConvertTo-ThresholdWhitespaceNormalizedOutsideStringLiteral -Text ($Text.Trim().TrimEnd(","))
+}
+
+function ConvertTo-ThresholdCollapsedWhitespace {
+    param([string] $Text)
+    return ([regex]::Replace($Text.Trim(), '\s+', ' '))
+}
+
+function Get-ThresholdCommentPayload {
+    param([string] $Line, [string] $PrefixPattern)
+    return ([regex]::Replace($Line, $PrefixPattern, "")).Trim()
+}
+
+function ConvertTo-ThresholdWhitespaceNormalizedOutsideStringLiteral {
+    param([string] $Text)
+
+    $builder = [System.Text.StringBuilder]::new()
+    $inString = $false
+    $escaped = $false
+    $pendingSpace = $false
+
+    for ($i = 0; $i -lt $Text.Length; $i++) {
+        $char = $Text[$i]
+        if ($inString) {
+            [void]$builder.Append($char)
+            if ($escaped) {
+                $escaped = $false
+                continue
+            }
+            if ($char -eq '\') {
+                $escaped = $true
+                continue
+            }
+            if ($char -eq '"') {
+                $inString = $false
+            }
+            continue
+        }
+
+        if ($char -eq '"') {
+            if ($pendingSpace -and $builder.Length -gt 0) {
+                [void]$builder.Append(" ")
+            }
+            $pendingSpace = $false
+            $inString = $true
+            [void]$builder.Append($char)
+            continue
+        }
+        if ([char]::IsWhiteSpace($char)) {
+            $pendingSpace = $true
+            continue
+        }
+        if ($pendingSpace -and $builder.Length -gt 0) {
+            [void]$builder.Append(" ")
+        }
+        $pendingSpace = $false
+        [void]$builder.Append($char)
+    }
+
+    return $builder.ToString().Trim()
 }
 
 function Test-ThresholdAnnotationAttributeWrapDiff {
@@ -234,7 +303,19 @@ function Test-ThresholdBootstrapInvocationWrapDiff {
         $_ -notmatch '^[+-]\s+"[^"\\]+"[,]?\s*$' -and
         $_ -notmatch '^\+\s*\);\s*$'
     })
-    return $removed.Count -eq 1 -and $addedOpen.Count -eq 1 -and $addedArgs.Count -ge 2 -and $addedClose.Count -eq 1 -and $nonBootstrapDelta.Count -eq 0
+    if ($removed.Count -ne 1 -or $addedOpen.Count -ne 1 -or $addedArgs.Count -lt 2 -or $addedClose.Count -ne 1 -or $nonBootstrapDelta.Count -ne 0) {
+        return $false
+    }
+    $removedMatch = [regex]::Match($removed[0], '^-\s*(?<invocation>[A-Za-z0-9_.]+)\(\s*(?<args>"[^"\\]+"\s*(,\s*"[^"\\]+"\s*)+)\);\s*$')
+    $addedOpenMatch = [regex]::Match($addedOpen[0], '^\+\s*(?<invocation>[A-Za-z0-9_.]+)\(\s*$')
+    if ($removedMatch.Groups["invocation"].Value -ne $addedOpenMatch.Groups["invocation"].Value) {
+        return $false
+    }
+    $removedArgs = @([regex]::Matches($removedMatch.Groups["args"].Value, '"(?:[^"\\]|\\.)*"') | ForEach-Object { $_.Value })
+    $addedArgValues = @($addedArgs | ForEach-Object {
+        [regex]::Match($_, '^\+\s*(?<arg>"(?:[^"\\]|\\.)*")[,]?\s*$').Groups["arg"].Value
+    })
+    return ($removedArgs -join "`n") -eq ($addedArgValues -join "`n")
 }
 
 function Test-ThresholdLeadingTabIndentationDiff {
@@ -484,6 +565,27 @@ function Assert-ThresholdCandidateClassProvenance {
     if (-not [string]::IsNullOrWhiteSpace([string]$candidateId) -and
         -not [string]::IsNullOrWhiteSpace([string]$baseHead) -and
         -not [string]::IsNullOrWhiteSpace([string]$commitHash)) {
+        $parentHead = (& git rev-parse "$commitHash^1" 2>$null)
+        if ($LASTEXITCODE -ne 0 -or [string]::IsNullOrWhiteSpace([string]$parentHead)) {
+            throw "candidateClassProvenance commit parent unavailable receipt=$ReceiptPath commitHash=$commitHash"
+        }
+        if ([string]$baseHead -ne [string]($parentHead.Trim())) {
+            throw "candidateClassProvenance baseHead mismatch receipt=$ReceiptPath baseHead=$baseHead parentHead=$([string]($parentHead.Trim()))"
+        }
+
+        $embeddedSnapshot = Get-ThresholdJsonProperty $provenance "executionCandidateSnapshot" $null
+        $independentCandidate = Get-ThresholdCandidateFromPocket -CandidatePocketPath $CandidatePocketPath -CandidateId ([string]$candidateId)
+        if ($null -ne $embeddedSnapshot) {
+            if ($null -eq $independentCandidate) {
+                throw "candidateClassProvenance execution snapshot missing independent discovery receipt=$ReceiptPath candidateId=$candidateId"
+            }
+            $embeddedDigest = Get-ThresholdCandidateSnapshotDigest -CandidateSnapshot $embeddedSnapshot
+            $independentDigest = Get-ThresholdCandidateSnapshotDigest -CandidateSnapshot (New-ThresholdCandidateSnapshot -Candidate $independentCandidate)
+            if ($embeddedDigest -ne $independentDigest) {
+                throw "candidateClassProvenance execution snapshot mismatch receipt=$ReceiptPath embeddedDigest=$embeddedDigest independentDigest=$independentDigest"
+            }
+        }
+
         $expected = New-ThresholdCandidateClassProvenance `
             -CandidateId ([string]$candidateId) `
             -GrantedCandidateClass ([string](Get-ThresholdJsonProperty $provenance "grantedCandidateClass" "")) `
@@ -493,7 +595,7 @@ function Assert-ThresholdCandidateClassProvenance {
             -BaseHead ([string]$baseHead) `
             -CommitHash ([string]$commitHash) `
             -CandidatePocketPath $CandidatePocketPath `
-            -CandidateSnapshot (Get-ThresholdJsonProperty $provenance "executionCandidateSnapshot" $null)
+            -CandidateSnapshot $independentCandidate
 
         foreach ($field in @(
             "discoveryObservation",

@@ -221,8 +221,16 @@ try {
     }
     $stalePocketPath = "stale-pocket.json"
     $stalePocket | ConvertTo-Json -Depth 6 | Set-Content $stalePocketPath
-    Assert-ThresholdCandidateClassProvenance -Receipt $validReceipt -ReceiptPath "receipt-bound-pocket.json" -CandidatePocketPath $stalePocketPath
-    Write-Host "passed=receipt-bound execution pocket supports provenance recompute"
+    try {
+        Assert-ThresholdCandidateClassProvenance -Receipt $validReceipt -ReceiptPath "receipt-bound-pocket.json" -CandidatePocketPath $stalePocketPath
+        throw "Expected missing independent discovery assertion failure did not occur."
+    }
+    catch {
+        if ($_.Exception.Message -notmatch "execution snapshot missing independent discovery") {
+            throw
+        }
+        Write-Host "passed=receipt-bound execution snapshot requires independent discovery"
+    }
 
     $staleReceipt = $validReceipt | ConvertTo-Json -Depth 8 | ConvertFrom-Json
     $staleReceipt.candidateClassProvenance.provenanceDigest = "stale"
@@ -239,12 +247,26 @@ try {
 
     $sourceCommitReceipt = [pscustomobject]@{
         candidateId = "canary-method-spacing-valid"
+        candidateClass = "method_spacing_normalization"
         baseHead = $methodBase
         sourceCommit = $methodCommit
         candidateClassProvenance = $validProvenance
     }
     Assert-ThresholdCandidateClassProvenance -Receipt $sourceCommitReceipt -ReceiptPath "source-commit-receipt.json" -CandidatePocketPath $methodPocketPath
     Write-Host "passed=sourceCommit provenance is recomputed and admitted"
+
+    $ancestorBaseReceipt = $validReceipt | ConvertTo-Json -Depth 10 | ConvertFrom-Json
+    $ancestorBaseReceipt.baseHead = $baseHead
+    try {
+        Assert-ThresholdCandidateClassProvenance -Receipt $ancestorBaseReceipt -ReceiptPath "ancestor-base-receipt.json" -CandidatePocketPath $methodPocketPath
+        throw "Expected baseHead parent assertion failure did not occur."
+    }
+    catch {
+        if ($_.Exception.Message -notmatch "baseHead mismatch") {
+            throw
+        }
+        Write-Host "passed=receipt baseHead must equal source commit parent"
+    }
 
     $commentDiff = @(
         "diff --git a/src/main/java/org/example/Foo.java b/src/main/java/org/example/Foo.java",
@@ -268,6 +290,20 @@ try {
     )
     Assert-True -Condition (Test-ThresholdLineCommentWrapDiff -DiffLines $lineCommentDiff) -Name "line comment wrap ignores git diff headers"
 
+    $changedCommentDiff = @(
+        "-     * This comment line is long enough to require a conservative wrap.",
+        "+     * This different line is long enough",
+        "+     * to require a conservative wrap."
+    )
+    Assert-False -Condition (Test-ThresholdCommentWrapDiff -DiffLines $changedCommentDiff) -Name "comment wrap rejects changed text"
+
+    $changedLineCommentDiff = @(
+        "-        // This line comment is long enough to require wrapping.",
+        "+        // This different comment is long enough",
+        "+        // to require wrapping."
+    )
+    Assert-False -Condition (Test-ThresholdLineCommentWrapDiff -DiffLines $changedLineCommentDiff) -Name "line comment wrap rejects changed text"
+
     $annotationDiff = @(
         "-    @RequestMapping(value = `"/owners`", method = RequestMethod.GET)",
         "+    @RequestMapping(",
@@ -285,6 +321,15 @@ try {
         "+        );"
     )
     Assert-True -Condition (Test-ThresholdBootstrapInvocationWrapDiff -DiffLines $bootstrapDiff) -Name "bootstrap invocation wrap accepts executor closing line"
+
+    $changedBootstrapDiff = @(
+        "-        ApplicationBootstrap.start(`"petclinic`", `"web`");",
+        "+        ApplicationBootstrap.stop(",
+        "+            `"other`",",
+        "+            `"api`"",
+        "+        );"
+    )
+    Assert-False -Condition (Test-ThresholdBootstrapInvocationWrapDiff -DiffLines $changedBootstrapDiff) -Name "bootstrap invocation wrap rejects changed invocation or arguments"
 
     $stringConstantDiff = @(
         "-    private static final String OWNER_QUERY = `"select owner from Owner owner where owner.lastName like :lastName`";",
@@ -326,6 +371,15 @@ try {
         "+    )"
     )
     Assert-False -Condition (Test-ThresholdAnnotationAttributeWrapDiff -DiffLines $changedAnnotationDiff) -Name "annotation attribute wrap rejects changed argument values"
+
+    $changedAnnotationWhitespaceLiteralDiff = @(
+        "-    @RequestMapping(value = `"/owners  active`", method = RequestMethod.GET)",
+        "+    @RequestMapping(",
+        "+        value = `"/owners active`",",
+        "+        method = RequestMethod.GET",
+        "+    )"
+    )
+    Assert-False -Condition (Test-ThresholdAnnotationAttributeWrapDiff -DiffLines $changedAnnotationWhitespaceLiteralDiff) -Name "annotation attribute wrap preserves string literal whitespace"
 
     Assert-True -Condition (Test-ThresholdCandidateClassHasIndependentDiffClassifier -CandidateClass "annotation_attribute_wrap_cleanup") -Name "annotation auto patch class has independent classifier"
     Assert-True -Condition (Test-ThresholdCandidateClassHasIndependentDiffClassifier -CandidateClass "string_constant_wrap_cleanup") -Name "string constant auto patch class has independent classifier"
