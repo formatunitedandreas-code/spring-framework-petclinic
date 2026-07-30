@@ -129,6 +129,12 @@ function Resolve-ReceiptPrBaseHead {
             return $ObservedPrBaseHead
         }
     }
+    elseif (-not [string]::IsNullOrWhiteSpace($ObservedPrBaseHead)) {
+        $changedInCurrentPr = @(git diff --name-only "${ObservedPrBaseHead}...HEAD" -- $ReceiptPath 2>$null)
+        if ($LASTEXITCODE -eq 0 -and $changedInCurrentPr.Count -gt 0) {
+            return $ObservedPrBaseHead
+        }
+    }
 
     if (-not [string]::IsNullOrWhiteSpace($receiptPrBaseHead)) {
         return $receiptPrBaseHead

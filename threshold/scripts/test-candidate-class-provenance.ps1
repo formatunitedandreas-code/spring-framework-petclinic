@@ -265,6 +265,15 @@ try {
     if ($LASTEXITCODE -ne 0) { throw "record-receipt with PR base failed." }
     Write-Host "passed=normal receipt generation with pr base succeeds"
 
+    $completeSliceText = Get-Content (Join-Path $thresholdScriptRoot "complete-slice.ps1") -Raw
+    Assert-False -Condition ($completeSliceText -match "Write-ThresholdCandidateDiscoveryEvidence") -Name "complete-slice does not materialize discovery evidence"
+    Assert-False -Condition ($completeSliceText -match "Record Threshold discovery evidence") -Name "complete-slice does not commit discovery evidence"
+    Assert-True -Condition ($completeSliceText -match "Pre-product discovery evidence is required before complete-slice") -Name "complete-slice requires pre-product discovery evidence"
+
+    $kgMaterializationText = Get-Content (Join-Path $thresholdScriptRoot "materialize-knowledge-graphs.ps1") -Raw
+    Assert-True -Condition ($kgMaterializationText -match '\$\{ObservedPrBaseHead\}\.\.\.HEAD') -Name "KG materialization honors supplied PR base without BaseRef"
+    Assert-True -Condition ($kgMaterializationText -match 'return \$ObservedPrBaseHead') -Name "KG materialization distinguishes current PR receipts from historical receipts"
+
     $missingPrBaseProvenance = New-ThresholdCandidateClassProvenance `
         -CandidateId "canary-method-spacing-valid" `
         -GrantedCandidateClass "method_spacing_normalization" `

@@ -119,31 +119,26 @@ if ($SkipMavenTest.IsPresent) { $validateArgs += "-SkipMavenTest" }
 & powershell.exe @validateArgs
 if ($LASTEXITCODE -ne 0) { throw "Threshold slice validation failed." }
 
-$discoverySourceBaseHead = (& git rev-parse HEAD).Trim()
-$discoveryEvidencePath = Get-ThresholdCandidateDiscoveryEvidencePath -DiscoveryEvidenceRoot "threshold/discovery-evidence" -CandidateId $CandidateId -BaseHead $discoverySourceBaseHead
-$discoveryEvidence = New-ThresholdCandidateDiscoveryEvidence -BaseHead $discoverySourceBaseHead -CandidateId $CandidateId -CandidatePocketPath $CandidatePocketPath
+$baseHead = (& git rev-parse HEAD).Trim()
+if ($baseHead -ne $observedPrBaseHead) {
+    throw "Product slice must start from the independently observed PR base head. prBaseHead=$observedPrBaseHead currentHead=$baseHead"
+}
+$discoveryEvidencePath = Get-ThresholdCandidateDiscoveryEvidencePath -DiscoveryEvidenceRoot "threshold/discovery-evidence" -CandidateId $CandidateId -BaseHead $baseHead
+$discoveryEvidence = Get-ThresholdCandidateDiscoveryEvidenceFromPath -Path $discoveryEvidencePath
 if ($null -eq $discoveryEvidence) {
-    throw "Discovery evidence cannot be materialized before source effect for candidateId=$CandidateId"
+    throw "Pre-product discovery evidence is required before complete-slice. path=$discoveryEvidencePath candidateId=$CandidateId prBaseHead=$observedPrBaseHead"
 }
-Write-ThresholdCandidateDiscoveryEvidence -DiscoveryEvidence $discoveryEvidence -Path $discoveryEvidencePath
-& git add -- $discoveryEvidencePath
-if ($LASTEXITCODE -ne 0) { throw "Failed to stage discovery evidence path: $discoveryEvidencePath" }
-$stagedDiscoveryEvidence = @(& git diff --cached --name-only -- $discoveryEvidencePath)
-if (-not $stagedDiscoveryEvidence) {
-    throw "Discovery evidence was not staged before source effect: $discoveryEvidencePath"
+$discoveryEvidenceDigest = Get-ThresholdCandidateDiscoveryEvidenceDigest -DiscoveryEvidence $discoveryEvidence
+if ([string]$discoveryEvidenceDigest -ne [string]$discoveryEvidence.discoveryEvidenceDigest) {
+    throw "Pre-product discovery evidence digest mismatch: $discoveryEvidencePath"
 }
-& git commit -m "Record Threshold discovery evidence for $CandidateId"
-if ($LASTEXITCODE -ne 0) { throw "Discovery evidence commit failed." }
-$discoveryEvidenceCommit = (& git rev-parse HEAD).Trim()
-if (-not (Test-ThresholdCommitIsAncestor -Ancestor $discoveryEvidenceCommit -Descendant $discoveryEvidenceCommit)) {
-    throw "Discovery evidence commit failed ancestor self-check: $discoveryEvidenceCommit"
+if ([string]$discoveryEvidence.candidateId -ne $CandidateId) {
+    throw "Pre-product discovery evidence candidate mismatch: path=$discoveryEvidencePath expected=$CandidateId actual=$($discoveryEvidence.candidateId)"
 }
 $discoveryEvidenceStatus = @(& git status --porcelain -- $discoveryEvidencePath)
 if ($discoveryEvidenceStatus) {
-    throw "Discovery evidence is not clean after pre-source commit: $discoveryEvidencePath"
+    throw "Pre-product discovery evidence is not clean at PR base: $discoveryEvidencePath"
 }
-
-$baseHead = (& git rev-parse HEAD).Trim()
 foreach ($path in $changedPaths) {
     & git add -- $path
     if ($LASTEXITCODE -ne 0) { throw "Failed to stage changed path: $path" }
