@@ -210,6 +210,29 @@ try {
     }
     Assert-ThresholdCandidateClassProvenance -Receipt $validReceipt -ReceiptPath "valid-receipt.json" -CandidatePocketPath $methodPocketPath
     Write-Host "passed=positive provenance receipt is admitted"
+
+    $wrongSpacingActionCandidate = [ordered]@{
+        candidateId = "canary-method-spacing-valid"
+        candidateClass = "method_spacing_normalization"
+        file = $javaPath
+        member = "line-9"
+        spacingAction = "insert_blank_line"
+    }
+    $wrongSpacingActionProvenance = New-ThresholdCandidateClassProvenance `
+        -CandidateId "canary-method-spacing-valid" `
+        -GrantedCandidateClass "method_spacing_normalization" `
+        -ExecutorCandidateClass "method_spacing_normalization" `
+        -ReceiptCandidateClass "method_spacing_normalization" `
+        -LearningProjectionClass "method_spacing_normalization" `
+        -BaseHead $methodBase `
+        -CommitHash $methodCommit `
+        -CandidateSnapshot $wrongSpacingActionCandidate
+    Assert-False -Condition ([bool]$wrongSpacingActionProvenance.candidateExecutionParametersMatched) -Name "method spacing mismatched execution parameter is rejected"
+    Assert-False -Condition ([bool]$wrongSpacingActionProvenance.candidateClassProvenanceMatched) -Name "method spacing wrong execution parameter blocks provenance"
+
+    $methodSnapshotA = New-ThresholdCandidateSnapshot -Candidate $methodPocket.candidates[0]
+    $methodSnapshotB = New-ThresholdCandidateSnapshot -Candidate $wrongSpacingActionCandidate
+    Assert-False -Condition ((Get-ThresholdCandidateSnapshotDigest -CandidateSnapshot $methodSnapshotA) -eq (Get-ThresholdCandidateSnapshotDigest -CandidateSnapshot $methodSnapshotB)) -Name "snapshot digest changes when spacingAction changes"
     Assert-True -Condition (Test-ThresholdCandidateClassProvenancePositiveLearningEligible -Receipt $validReceipt) -Name "positive learning requires immutable discovery evidence"
 
     $receiptClassTamper = $validReceipt | ConvertTo-Json -Depth 10 | ConvertFrom-Json
@@ -519,6 +542,80 @@ try {
         "+    return text;"
     )
     Assert-True -Condition (Test-ThresholdLeadingTabIndentationDiff -DiffLines $leadingTabDiff) -Name "leading tab indentation classifier expands tabs on Windows PowerShell"
+
+    $javaTextBlockLines = @(
+        "class TextBlockCanary {",
+        "    String query = `"`"`"",
+        "`tSELECT *",
+        "`tFROM owners",
+        "    `"`"`";",
+        "`tvoid normalize() {}",
+        "}"
+    )
+    Assert-True -Condition (Test-ThresholdJavaLineIsInsideTextBlock -Lines $javaTextBlockLines -LineNumber 3) -Name "java text block state marks interior tab line"
+    Assert-False -Condition (Test-ThresholdJavaLineIsInsideTextBlock -Lines $javaTextBlockLines -LineNumber 6) -Name "java text block state leaves ordinary tab line outside"
+
+    $textBlockPath = "src/main/java/org/example/TextBlockCanary.java"
+    Write-CanaryFile -Path $textBlockPath -Lines $javaTextBlockLines
+    & git add .
+    & git commit -m "Add text block tab canary" | Out-Null
+    if ($LASTEXITCODE -ne 0) { throw "text block base commit failed" }
+    $textBlockBase = (& git rev-parse HEAD).Trim()
+    Write-CanaryFile -Path $textBlockPath -Lines @(
+        "class TextBlockCanary {",
+        "    String query = `"`"`"",
+        "    SELECT *",
+        "    FROM owners",
+        "    `"`"`";",
+        "`tvoid normalize() {}",
+        "}"
+    )
+    & git add .
+    & git commit -m "Normalize text block tabs only" | Out-Null
+    if ($LASTEXITCODE -ne 0) { throw "text block mutation commit failed" }
+    $textBlockCommit = (& git rev-parse HEAD).Trim()
+    $textBlockDiffLines = @(& git diff --unified=3 "$textBlockBase..$textBlockCommit" -- $textBlockPath)
+    Assert-False -Condition (Test-ThresholdLeadingTabIndentationDiff -DiffLines $textBlockDiffLines -BaseHead $textBlockBase -ProductPath $textBlockPath) -Name "leading tab classifier rejects text block content tabs"
+    Assert-True -Condition ((Get-ThresholdIndependentlyObservedDiffClass -BaseHead $textBlockBase -CommitHash $textBlockCommit) -ne "leading_tab_indentation_cleanup") -Name "text block tab mutation is not independently classified as indentation cleanup"
+
+    Write-CanaryFile -Path $textBlockPath -Lines @(
+        "class TextBlockCanary {",
+        "    String query = `"`"`"",
+        "`tSELECT *",
+        "`tFROM owners",
+        "    `"`"`";",
+        "    void anchor() {}",
+        "`tvoid normalize() {}",
+        "}"
+    )
+    & git add .
+    & git commit -m "Add ordinary tab beside text block canary" | Out-Null
+    if ($LASTEXITCODE -ne 0) { throw "mixed text block base commit failed" }
+    $scriptRoot = Join-Path $originalLocation "threshold/scripts/discover-candidates.ps1"
+    $leasePath = "threshold/leases/current.yaml"
+    Write-CanaryFile -Path $leasePath -Lines @(
+        "leaseName: text-block-canary",
+        "branch: main",
+        "allowedCandidateTypes:",
+        "  - leading_tab_indentation_cleanup"
+    )
+    $gatePath = "threshold/gates/auto-patchable-candidate-classes.json"
+    Write-CanaryFile -Path $gatePath -Lines @(
+        "{",
+        "  `"approvedAutoPatchableCandidateClasses`": [",
+        "    { `"candidateClass`": `"leading_tab_indentation_cleanup`" }",
+        "  ]",
+        "}"
+    )
+    $trainerPath = "threshold/trainer/training-report.json"
+    Write-CanaryFile -Path $trainerPath -Lines @("{ `"decisions`": [] }")
+    & powershell.exe -NoProfile -ExecutionPolicy Bypass -File $scriptRoot -LeasePath $leasePath -PocketPath "threshold/candidate-pocket/current.json" -GatePath $gatePath -TrainerReportPath $trainerPath -SourceRoot "src/main/java" -Limit 10 | Out-Null
+    if ($LASTEXITCODE -ne 0) { throw "discover-candidates text block canary failed" }
+    $discoveredPocket = Get-Content -LiteralPath "threshold/candidate-pocket/current.json" -Raw | ConvertFrom-Json
+    $leadingTabCandidates = @($discoveredPocket.candidates | Where-Object { [string]$_.candidateClass -eq "leading_tab_indentation_cleanup" })
+    Assert-True -Condition ($leadingTabCandidates.Count -eq 1) -Name "discovery finds only the ordinary leading tab candidate beside text block"
+    Assert-True -Condition ([string]$leadingTabCandidates[0].member -eq "line-7") -Name "discovery excludes text block tabs from leading tab candidate"
+    Assert-True -Condition ([int]$leadingTabCandidates[0].lineCount -eq 1) -Name "discovery binds leading tab line count"
 
     $changedLiteralDiff = @(
         "-    private static final String OWNER_QUERY = `"foo bar`";",
