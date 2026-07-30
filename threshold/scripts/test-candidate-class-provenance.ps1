@@ -58,7 +58,7 @@ try {
         "import java.util.Locale;",
         "",
         "class PetTypeFormatter {",
-        "    String print(Locale locale) {",
+        "    public String print(Locale locale) {",
         "        return locale.toLanguageTag();",
         "    }",
         "}"
@@ -191,8 +191,27 @@ try {
 
     Assert-True -Condition ($validProvenance.independentlyObservedDiffClass -eq "method_spacing_normalization") -Name "method spacing independently classified"
     Assert-True -Condition ([bool]$validProvenance.candidateClassProvenanceMatched) -Name "matching method spacing provenance is admitted"
-    Assert-ThresholdCandidateClassProvenance -Receipt ([pscustomobject]@{ candidateClassProvenance = $validProvenance }) -ReceiptPath "valid-receipt.json"
+    $validReceipt = [pscustomobject]@{
+        candidateId = "canary-method-spacing-valid"
+        baseHead = $methodBase
+        commitHash = $methodCommit
+        candidateClassProvenance = $validProvenance
+    }
+    Assert-ThresholdCandidateClassProvenance -Receipt $validReceipt -ReceiptPath "valid-receipt.json" -CandidatePocketPath $methodPocketPath
     Write-Host "passed=positive provenance receipt is admitted"
+
+    $staleReceipt = $validReceipt | ConvertTo-Json -Depth 8 | ConvertFrom-Json
+    $staleReceipt.candidateClassProvenance.provenanceDigest = "stale"
+    try {
+        Assert-ThresholdCandidateClassProvenance -Receipt $staleReceipt -ReceiptPath "stale-receipt.json" -CandidatePocketPath $methodPocketPath
+        throw "Expected stale provenance digest assertion failure did not occur."
+    }
+    catch {
+        if ($_.Exception.Message -notmatch "recompute mismatch") {
+            throw
+        }
+        Write-Host "passed=stale provenance digest is recomputed and rejected"
+    }
 
     $commentDiff = @(
         "diff --git a/src/main/java/org/example/Foo.java b/src/main/java/org/example/Foo.java",
@@ -231,6 +250,22 @@ try {
         "+        `"where owner.lastName like :lastName`";"
     )
     Assert-True -Condition (Test-ThresholdStringConstantWrapDiff -DiffLines $stringConstantDiff) -Name "string constant wrap independently classified"
+
+    $compoundImportSpacingDiff = @(
+        " package org.example;",
+        "-",
+        " import java.util.Locale;",
+        "-        return locale.toString();",
+        "+        return locale.toLanguageTag();"
+    )
+    Assert-False -Condition (Test-ThresholdBlankLinePackageImportDiff -DiffLines $compoundImportSpacingDiff) -Name "import spacing rejects compound nonblank deltas"
+
+    $changedLiteralDiff = @(
+        "-    private static final String OWNER_QUERY = `"foo bar`";",
+        "+    private static final String OWNER_QUERY = `"different `" +",
+        "+        `"value`";"
+    )
+    Assert-False -Condition (Test-ThresholdStringConstantWrapDiff -DiffLines $changedLiteralDiff) -Name "string constant wrap rejects changed literal value"
 
     Assert-True -Condition (Test-ThresholdCandidateClassHasIndependentDiffClassifier -CandidateClass "annotation_attribute_wrap_cleanup") -Name "annotation auto patch class has independent classifier"
     Assert-True -Condition (Test-ThresholdCandidateClassHasIndependentDiffClassifier -CandidateClass "string_constant_wrap_cleanup") -Name "string constant auto patch class has independent classifier"

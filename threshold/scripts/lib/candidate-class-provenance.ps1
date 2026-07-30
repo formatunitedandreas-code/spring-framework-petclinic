@@ -35,11 +35,16 @@ function Get-ThresholdStringSha256Lower {
 function Test-ThresholdBlankLinePackageImportDiff {
     param([string[]] $DiffLines)
 
-    $removedBlank = @($DiffLines | Where-Object { $_ -eq "-" }).Count
-    $addedBlank = @($DiffLines | Where-Object { $_ -eq "+" }).Count
-    $packageContext = @($DiffLines | Where-Object { $_ -match '^[ +\-]package\s+[\w.]+;' }).Count -gt 0
-    $importContext = @($DiffLines | Where-Object { $_ -match '^[ +\-]import\s+[\w.*]+;' }).Count -gt 0
-    return ($removedBlank + $addedBlank) -gt 0 -and $packageContext -and $importContext
+    $contentLines = Get-ThresholdDiffContentLines -DiffLines $DiffLines
+    $deltaLines = @($contentLines | Where-Object { $_ -match '^[+-]' })
+    $removedBlank = @($deltaLines | Where-Object { $_ -eq "-" }).Count
+    $addedBlank = @($deltaLines | Where-Object { $_ -eq "+" }).Count
+    $packageContext = @($contentLines | Where-Object { $_ -match '^[ +\-]package\s+[\w.]+;' }).Count -gt 0
+    $importContext = @($contentLines | Where-Object { $_ -match '^[ +\-]import\s+[\w.*]+;' }).Count -gt 0
+    return ($removedBlank + $addedBlank) -gt 0 -and
+        $deltaLines.Count -eq ($removedBlank + $addedBlank) -and
+        $packageContext -and
+        $importContext
 }
 
 function Test-ThresholdMethodSpacingDiff {
@@ -88,15 +93,22 @@ function Test-ThresholdStringConstantWrapDiff {
     param([string[]] $DiffLines)
 
     $contentLines = Get-ThresholdDiffContentLines -DiffLines $DiffLines
-    $removed = @($contentLines | Where-Object { $_ -match '^-\s*private static final String [A-Z0-9_]+ = "[^"\\]+";\s*$' })
-    $addedStart = @($contentLines | Where-Object { $_ -match '^\+\s*private static final String [A-Z0-9_]+ = "[^"\\]+" \+\s*$' })
-    $addedEnd = @($contentLines | Where-Object { $_ -match '^\+\s*"[^"\\]+";\s*$' })
+    $removed = @($contentLines | Where-Object { $_ -match '^-\s*private static final String (?<name>[A-Z0-9_]+) = "(?<value>[^"\\]+)";\s*$' })
+    $addedStart = @($contentLines | Where-Object { $_ -match '^\+\s*private static final String (?<name>[A-Z0-9_]+) = "(?<value>[^"\\]+)" \+\s*$' })
+    $addedEnd = @($contentLines | Where-Object { $_ -match '^\+\s*"(?<value>[^"\\]+)";\s*$' })
     $nonStringDelta = @($contentLines | Where-Object {
         $_ -match '^[+-]' -and
         $_ -notmatch '^[+-]\s*private static final String [A-Z0-9_]+ = "[^"\\]+"(?: \+)?;?\s*$' -and
         $_ -notmatch '^[+-]\s*"[^"\\]+";\s*$'
     })
-    return $removed.Count -eq 1 -and $addedStart.Count -eq 1 -and $addedEnd.Count -eq 1 -and $nonStringDelta.Count -eq 0
+    if ($removed.Count -ne 1 -or $addedStart.Count -ne 1 -or $addedEnd.Count -ne 1 -or $nonStringDelta.Count -ne 0) {
+        return $false
+    }
+    $removedMatch = [regex]::Match($removed[0], '^-\s*private static final String (?<name>[A-Z0-9_]+) = "(?<value>[^"\\]+)";\s*$')
+    $addedStartMatch = [regex]::Match($addedStart[0], '^\+\s*private static final String (?<name>[A-Z0-9_]+) = "(?<value>[^"\\]+)" \+\s*$')
+    $addedEndMatch = [regex]::Match($addedEnd[0], '^\+\s*"(?<value>[^"\\]+)";\s*$')
+    return $removedMatch.Groups["name"].Value -eq $addedStartMatch.Groups["name"].Value -and
+        $removedMatch.Groups["value"].Value -eq ($addedStartMatch.Groups["value"].Value + $addedEndMatch.Groups["value"].Value)
 }
 
 function Test-ThresholdSplitStringConstantNormalizationDiff {
@@ -111,7 +123,14 @@ function Test-ThresholdSplitStringConstantNormalizationDiff {
         $_ -notmatch '^[+-]\s*private static final String [A-Z0-9_]+ = "[^"\\]+"(?: \+)?;?\s*$' -and
         $_ -notmatch '^[+-]\s*"[^"\\]+";\s*$'
     })
-    return $removedStart.Count -eq 1 -and $removedEnd.Count -eq 1 -and $added.Count -eq 1 -and $nonStringDelta.Count -eq 0
+    if ($removedStart.Count -ne 1 -or $removedEnd.Count -ne 1 -or $added.Count -ne 1 -or $nonStringDelta.Count -ne 0) {
+        return $false
+    }
+    $removedStartMatch = [regex]::Match($removedStart[0], '^-\s*private static final String (?<name>[A-Z0-9_]+) = "(?<value>[^"\\]+)" \+\s*$')
+    $removedEndMatch = [regex]::Match($removedEnd[0], '^-\s*"(?<value>[^"\\]+)";\s*$')
+    $addedMatch = [regex]::Match($added[0], '^\+\s*private static final String (?<name>[A-Z0-9_]+) = "(?<value>[^"\\]+)";\s*$')
+    return $removedStartMatch.Groups["name"].Value -eq $addedMatch.Groups["name"].Value -and
+        ($removedStartMatch.Groups["value"].Value + $removedEndMatch.Groups["value"].Value) -eq $addedMatch.Groups["value"].Value
 }
 
 function Test-ThresholdAnnotationAttributeWrapDiff {
@@ -318,8 +337,23 @@ function New-ThresholdCandidateClassProvenance {
     }
 }
 
+function Assert-ThresholdProvenanceFieldMatches {
+    param([object] $Observed, [object] $Expected, [string] $Field, [string] $ReceiptPath)
+
+    $observedValue = Get-ThresholdJsonProperty $Observed $Field $null
+    $expectedValue = Get-ThresholdJsonProperty $Expected $Field $null
+    if ([string]$observedValue -ne [string]$expectedValue) {
+        throw "candidateClassProvenance recompute mismatch field=$Field receipt=$ReceiptPath observed=$observedValue expected=$expectedValue"
+    }
+}
+
 function Assert-ThresholdCandidateClassProvenance {
-    param([pscustomobject] $Receipt, [string] $ReceiptPath = "", [switch] $RequirePresent)
+    param(
+        [pscustomobject] $Receipt,
+        [string] $ReceiptPath = "",
+        [switch] $RequirePresent,
+        [string] $CandidatePocketPath = "threshold/candidate-pocket/current.json"
+    )
 
     $provenance = Get-ThresholdJsonProperty $Receipt "candidateClassProvenance" $null
     if ($null -eq $provenance) {
@@ -334,6 +368,47 @@ function Assert-ThresholdCandidateClassProvenance {
     foreach ($field in @("productMutationAdmission", "receiptAdmission", "kgMaterialization", "trainerMaterialization", "publicationAdmission", "readyAdmission", "mergeAdmission", "promotionEvidenceContribution")) {
         if ((Get-ThresholdJsonProperty $provenance $field $false) -ne $true) {
             throw "candidateClassProvenance admission field failed: $field receipt=$ReceiptPath"
+        }
+    }
+
+    $candidateId = Get-ThresholdJsonProperty $Receipt "candidateId" $null
+    $baseHead = Get-ThresholdJsonProperty $Receipt "baseHead" $null
+    $commitHash = Get-ThresholdJsonProperty $Receipt "commitHash" $null
+    if (-not [string]::IsNullOrWhiteSpace([string]$candidateId) -and
+        -not [string]::IsNullOrWhiteSpace([string]$baseHead) -and
+        -not [string]::IsNullOrWhiteSpace([string]$commitHash)) {
+        $expected = New-ThresholdCandidateClassProvenance `
+            -CandidateId ([string]$candidateId) `
+            -GrantedCandidateClass ([string](Get-ThresholdJsonProperty $provenance "grantedCandidateClass" "")) `
+            -ExecutorCandidateClass ([string](Get-ThresholdJsonProperty $provenance "executorCandidateClass" "")) `
+            -ReceiptCandidateClass ([string](Get-ThresholdJsonProperty $provenance "receiptCandidateClass" "")) `
+            -LearningProjectionClass ([string](Get-ThresholdJsonProperty $provenance "learningProjectionClass" "")) `
+            -BaseHead ([string]$baseHead) `
+            -CommitHash ([string]$commitHash) `
+            -CandidatePocketPath $CandidatePocketPath
+
+        foreach ($field in @(
+            "discoveryObservation",
+            "discoveryRuleId",
+            "discoveryCandidateId",
+            "discoveredCandidateClass",
+            "grantedCandidateClass",
+            "executorCandidateClass",
+            "independentlyObservedDiffClass",
+            "receiptCandidateClass",
+            "learningProjectionClass",
+            "candidateClassProvenanceMatched",
+            "productMutationAdmission",
+            "receiptAdmission",
+            "kgMaterialization",
+            "trainerMaterialization",
+            "publicationAdmission",
+            "readyAdmission",
+            "mergeAdmission",
+            "promotionEvidenceContribution",
+            "provenanceDigest"
+        )) {
+            Assert-ThresholdProvenanceFieldMatches -Observed $provenance -Expected $expected -Field $field -ReceiptPath $ReceiptPath
         }
     }
 }
