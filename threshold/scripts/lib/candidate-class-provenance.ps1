@@ -471,6 +471,15 @@ function Test-ThresholdObservedDiffMemberMatchesCandidate {
         if (-not $match.Success) { continue }
         $oldStart = [int]$match.Groups['oldStart'].Value
         $oldCount = if ($match.Groups['oldCount'].Success) { [int]$match.Groups['oldCount'].Value } else { 1 }
+        $newStart = [int]$match.Groups['newStart'].Value
+        $newCount = if ($match.Groups['newCount'].Success) { [int]$match.Groups['newCount'].Value } else { 1 }
+        if ($oldCount -eq 0 -and $newCount -gt 0) {
+            $newEnd = $newStart + $newCount - 1
+            if ($candidateLine -ge $newStart -and $candidateLine -le $newEnd) {
+                return $true
+            }
+            continue
+        }
         $oldEnd = if ($oldCount -le 0) { $oldStart } else { $oldStart + $oldCount - 1 }
         if ($candidateLine -ge $oldStart -and $candidateLine -le $oldEnd) {
             return $true
@@ -710,6 +719,59 @@ function Get-ThresholdCandidateDiscoveryEvidenceFromPath {
     return Get-Content -LiteralPath $Path -Raw | ConvertFrom-Json
 }
 
+function Get-ThresholdCandidateDiscoveryEvidenceFromRevision {
+    param([string] $Revision, [string] $Path)
+    if ([string]::IsNullOrWhiteSpace($Revision) -or [string]::IsNullOrWhiteSpace($Path)) {
+        return $null
+    }
+    $repoPath = ConvertTo-ThresholdRepoPath -Path $Path
+    $previousErrorActionPreference = $ErrorActionPreference
+    $ErrorActionPreference = "Continue"
+    & git cat-file -e "$Revision`:$repoPath" 2>$null
+    $exists = $LASTEXITCODE -eq 0
+    $ErrorActionPreference = $previousErrorActionPreference
+    if (-not $exists) {
+        return $null
+    }
+    $text = (& git show "$Revision`:$repoPath" 2>$null) -join "`n"
+    if ($LASTEXITCODE -ne 0 -or [string]::IsNullOrWhiteSpace($text)) {
+        return $null
+    }
+    return $text | ConvertFrom-Json
+}
+
+function Get-ThresholdLastCommitTouchingPath {
+    param([string] $Revision, [string] $Path)
+    if ([string]::IsNullOrWhiteSpace($Revision) -or [string]::IsNullOrWhiteSpace($Path)) {
+        return ""
+    }
+    $repoPath = ConvertTo-ThresholdRepoPath -Path $Path
+    $commit = (& git log -n 1 --format=%H $Revision -- $repoPath 2>$null)
+    if ($LASTEXITCODE -ne 0 -or [string]::IsNullOrWhiteSpace([string]$commit)) {
+        return ""
+    }
+    return [string]($commit.Trim())
+}
+
+function Test-ThresholdCommitIsAncestor {
+    param([string] $Ancestor, [string] $Descendant)
+    if ([string]::IsNullOrWhiteSpace($Ancestor) -or [string]::IsNullOrWhiteSpace($Descendant)) {
+        return $false
+    }
+    & git merge-base --is-ancestor $Ancestor $Descendant 2>$null
+    return $LASTEXITCODE -eq 0
+}
+
+function Test-ThresholdPathChangedInRange {
+    param([string] $BaseHead, [string] $CommitHash, [string] $Path)
+    if ([string]::IsNullOrWhiteSpace($Path)) {
+        return $false
+    }
+    $repoPath = ConvertTo-ThresholdRepoPath -Path $Path
+    $changedPaths = @(& git diff --name-only "$BaseHead..$CommitHash" -- $repoPath 2>$null)
+    return @($changedPaths | Where-Object { (ConvertTo-ThresholdRepoPath -Path $_) -eq $repoPath }).Count -gt 0
+}
+
 function Get-ThresholdCandidateDiscoveryEvidenceDigest {
     param([object] $DiscoveryEvidence)
     if ($null -eq $DiscoveryEvidence) { return "" }
@@ -865,11 +927,29 @@ function New-ThresholdCandidateClassProvenance {
         Write-ThresholdCandidateDiscoveryEvidence -DiscoveryEvidence $discoveryEvidence -Path $DiscoveryEvidencePath
     }
     $discoveryEvidenceDigest = if ($null -ne $discoveryEvidence) { [string]$discoveryEvidence.discoveryEvidenceDigest } else { "" }
+    $discoveryEvidenceCreatedByCurrentProductPr = Test-ThresholdPathChangedInRange -BaseHead $BaseHead -CommitHash $CommitHash -Path $DiscoveryEvidencePath
+    $baseDiscoveryEvidence = Get-ThresholdCandidateDiscoveryEvidenceFromRevision -Revision $BaseHead -Path $DiscoveryEvidencePath
+    $baseDiscoveryEvidenceDigest = if ($null -ne $baseDiscoveryEvidence) { Get-ThresholdCandidateDiscoveryEvidenceDigest -DiscoveryEvidence $baseDiscoveryEvidence } else { "" }
+    $discoveryEvidencePresentInBaseHead = $null -ne $baseDiscoveryEvidence
+    $discoveryEvidenceBaseDigestMatched = $discoveryEvidencePresentInBaseHead -and [string]$baseDiscoveryEvidenceDigest -eq [string]$discoveryEvidenceDigest
+    $discoveryEvidenceCommit = Get-ThresholdLastCommitTouchingPath -Revision $BaseHead -Path $DiscoveryEvidencePath
+    $discoveryEvidenceCommitIsAncestorOfBaseHead = Test-ThresholdCommitIsAncestor -Ancestor $discoveryEvidenceCommit -Descendant $BaseHead
+    $discoveryEvidenceSourceBaseHead = if ($null -ne $discoveryEvidence) { [string](Get-ThresholdJsonProperty $discoveryEvidence "baseHead" "") } else { "" }
+    $discoveryEvidenceSourceBaseHeadIsAncestorOfBaseHead = Test-ThresholdCommitIsAncestor -Ancestor $discoveryEvidenceSourceBaseHead -Descendant $BaseHead
+    $externalDiscoverySignatureVerified = $false
+    $discoveryEvidenceTrustRootVerified = (
+        -not $discoveryEvidenceCreatedByCurrentProductPr -and
+        $discoveryEvidencePresentInBaseHead -and
+        $discoveryEvidenceBaseDigestMatched -and
+        $discoveryEvidenceCommitIsAncestorOfBaseHead -and
+        $discoveryEvidenceSourceBaseHeadIsAncestorOfBaseHead
+    ) -or $externalDiscoverySignatureVerified
     $immutableDiscoveryEvidencePresent = $null -ne $discoveryEvidence -and
         -not [string]::IsNullOrWhiteSpace($discoveryEvidenceDigest) -and
         -not [string]::IsNullOrWhiteSpace($DiscoveryEvidencePath) -and
         (Test-Path $DiscoveryEvidencePath) -and
-        [string](Get-ThresholdCandidateDiscoveryEvidenceDigest -DiscoveryEvidence $discoveryEvidence) -eq [string]$discoveryEvidenceDigest
+        [string](Get-ThresholdCandidateDiscoveryEvidenceDigest -DiscoveryEvidence $discoveryEvidence) -eq [string]$discoveryEvidenceDigest -and
+        $discoveryEvidenceTrustRootVerified
     $executionCandidateSnapshot = New-ThresholdCandidateSnapshot -Candidate $candidate
     $executionCandidateDigest = Get-ThresholdCandidateSnapshotDigest -CandidateSnapshot $executionCandidateSnapshot
     $discoveryRuleId = $null
@@ -914,6 +994,10 @@ function New-ThresholdCandidateClassProvenance {
         "commitHash=$CommitHash",
         "executionCandidateDigest=$executionCandidateDigest",
         "candidateExecutionParametersMatched=$candidateExecutionParametersMatched",
+        "discoveryEvidenceCreatedByCurrentProductPr=$discoveryEvidenceCreatedByCurrentProductPr",
+        "discoveryEvidenceCommit=$discoveryEvidenceCommit",
+        "discoveryEvidenceCommitIsAncestorOfBaseHead=$discoveryEvidenceCommitIsAncestorOfBaseHead",
+        "externalDiscoverySignatureVerified=$externalDiscoverySignatureVerified",
         "discoveryEvidenceDigest=$discoveryEvidenceDigest",
         "discoveryEvidencePath=$DiscoveryEvidencePath"
     )
@@ -926,6 +1010,15 @@ function New-ThresholdCandidateClassProvenance {
         discoveryEvidence = $null
         discoveryEvidencePath = $DiscoveryEvidencePath
         discoveryEvidenceDigest = $discoveryEvidenceDigest
+        discoveryEvidenceCreatedByCurrentProductPr = [bool]$discoveryEvidenceCreatedByCurrentProductPr
+        discoveryEvidencePresentInBaseHead = [bool]$discoveryEvidencePresentInBaseHead
+        discoveryEvidenceBaseDigestMatched = [bool]$discoveryEvidenceBaseDigestMatched
+        discoveryEvidenceCommit = $discoveryEvidenceCommit
+        discoveryEvidenceCommitIsAncestorOfBaseHead = [bool]$discoveryEvidenceCommitIsAncestorOfBaseHead
+        discoveryEvidenceSourceBaseHead = $discoveryEvidenceSourceBaseHead
+        discoveryEvidenceSourceBaseHeadIsAncestorOfBaseHead = [bool]$discoveryEvidenceSourceBaseHeadIsAncestorOfBaseHead
+        externalDiscoverySignatureVerified = [bool]$externalDiscoverySignatureVerified
+        discoveryEvidenceTrustRootVerified = [bool]$discoveryEvidenceTrustRootVerified
         immutableDiscoveryEvidencePresent = [bool]$immutableDiscoveryEvidencePresent
         fallbackToMutableCurrentPocket = $false
         fallbackToReceiptEmbeddedSnapshot = $false
@@ -1031,8 +1124,27 @@ function Assert-ThresholdCandidateClassProvenance {
         if ([string](Get-ThresholdJsonProperty $provenance "discoveryEvidenceDigest" "") -ne [string]$observedDiscoveryEvidenceDigest) {
             throw "candidateClassProvenance discovery evidence digest mismatch receipt=$ReceiptPath"
         }
-        foreach ($field in @("baseHead", "candidateId")) {
-            Assert-ThresholdProvenanceFieldMatches -Observed $observedDiscoveryEvidence -Expected ([pscustomobject]@{ baseHead = $baseHead; candidateId = $candidateId }) -Field $field -ReceiptPath $ReceiptPath
+        if (Test-ThresholdPathChangedInRange -BaseHead ([string]$baseHead) -CommitHash ([string]$commitHash) -Path $discoveryEvidencePath) {
+            throw "candidateClassProvenance discovery evidence was added or modified by current product commit receipt=$ReceiptPath path=$discoveryEvidencePath"
+        }
+        $baseDiscoveryEvidence = Get-ThresholdCandidateDiscoveryEvidenceFromRevision -Revision ([string]$baseHead) -Path $discoveryEvidencePath
+        if ($null -eq $baseDiscoveryEvidence) {
+            throw "candidateClassProvenance discovery evidence must pre-exist in source baseHead receipt=$ReceiptPath path=$discoveryEvidencePath"
+        }
+        $baseDiscoveryEvidenceDigest = Get-ThresholdCandidateDiscoveryEvidenceDigest -DiscoveryEvidence $baseDiscoveryEvidence
+        if ([string]$baseDiscoveryEvidenceDigest -ne [string]$observedDiscoveryEvidenceDigest) {
+            throw "candidateClassProvenance discovery evidence was modified after source baseHead receipt=$ReceiptPath path=$discoveryEvidencePath"
+        }
+        $discoveryEvidenceCommit = Get-ThresholdLastCommitTouchingPath -Revision ([string]$baseHead) -Path $discoveryEvidencePath
+        if (-not (Test-ThresholdCommitIsAncestor -Ancestor $discoveryEvidenceCommit -Descendant ([string]$baseHead))) {
+            throw "candidateClassProvenance discovery evidence commit is not ancestor of source baseHead receipt=$ReceiptPath path=$discoveryEvidencePath"
+        }
+        $discoveryEvidenceSourceBaseHead = [string](Get-ThresholdJsonProperty $observedDiscoveryEvidence "baseHead" "")
+        if (-not (Test-ThresholdCommitIsAncestor -Ancestor $discoveryEvidenceSourceBaseHead -Descendant ([string]$baseHead))) {
+            throw "candidateClassProvenance discovery evidence source baseHead is not ancestor of source baseHead receipt=$ReceiptPath evidenceBaseHead=$discoveryEvidenceSourceBaseHead sourceBaseHead=$baseHead"
+        }
+        foreach ($field in @("candidateId")) {
+            Assert-ThresholdProvenanceFieldMatches -Observed $observedDiscoveryEvidence -Expected ([pscustomobject]@{ candidateId = $candidateId }) -Field $field -ReceiptPath $ReceiptPath
         }
         if ([string](Get-ThresholdJsonProperty $observedDiscoveryEvidence "candidateClass" "") -ne [string](Get-ThresholdJsonProperty $provenance "discoveredCandidateClass" "")) {
             throw "candidateClassProvenance discovery evidence candidateClass mismatch receipt=$ReceiptPath"
@@ -1088,6 +1200,15 @@ function Assert-ThresholdCandidateClassProvenance {
             "discoveryCandidateId",
             "discoveryEvidencePath",
             "discoveryEvidenceDigest",
+            "discoveryEvidenceCreatedByCurrentProductPr",
+            "discoveryEvidencePresentInBaseHead",
+            "discoveryEvidenceBaseDigestMatched",
+            "discoveryEvidenceCommit",
+            "discoveryEvidenceCommitIsAncestorOfBaseHead",
+            "discoveryEvidenceSourceBaseHead",
+            "discoveryEvidenceSourceBaseHeadIsAncestorOfBaseHead",
+            "externalDiscoverySignatureVerified",
+            "discoveryEvidenceTrustRootVerified",
             "immutableDiscoveryEvidencePresent",
             "fallbackToMutableCurrentPocket",
             "fallbackToReceiptEmbeddedSnapshot",

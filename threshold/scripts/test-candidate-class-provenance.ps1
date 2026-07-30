@@ -145,6 +145,29 @@ try {
     if ($LASTEXITCODE -ne 0) { throw "method base commit failed" }
     $methodBase = (& git rev-parse HEAD).Trim()
 
+    $methodPocket = [ordered]@{
+        schemaVersion = "threshold.petclinic.candidate-pocket.v0.2"
+        generatedFromHead = $methodBase
+        candidates = @(
+            [ordered]@{
+                candidateId = "canary-method-spacing-valid"
+                candidateClass = "method_spacing_normalization"
+                file = $javaPath
+                member = "line-9"
+                spacingAction = "collapse_extra_blank_line"
+            }
+        )
+    }
+    $methodPocketPath = "method-pocket.json"
+    $methodPocket | ConvertTo-Json -Depth 6 | Set-Content $methodPocketPath
+    $methodDiscoveryEvidencePath = Get-ThresholdCandidateDiscoveryEvidencePath -DiscoveryEvidenceRoot "discovery-evidence" -CandidateId "canary-method-spacing-valid" -BaseHead $methodBase
+    $methodDiscoveryEvidence = New-ThresholdCandidateDiscoveryEvidence -BaseHead $methodBase -CandidateId "canary-method-spacing-valid" -CandidatePocketPath $methodPocketPath
+    Write-ThresholdCandidateDiscoveryEvidence -DiscoveryEvidence $methodDiscoveryEvidence -Path $methodDiscoveryEvidencePath
+    & git add -- $methodDiscoveryEvidencePath $methodPocketPath
+    & git commit -m "Record method spacing discovery evidence" | Out-Null
+    if ($LASTEXITCODE -ne 0) { throw "method discovery evidence commit failed" }
+    $methodSourceBase = (& git rev-parse HEAD).Trim()
+
     Write-CanaryFile -Path $javaPath -Lines @(
         "package org.example;",
         "",
@@ -164,33 +187,17 @@ try {
     if ($LASTEXITCODE -ne 0) { throw "method spacing commit failed" }
     $methodCommit = (& git rev-parse HEAD).Trim()
 
-    $methodPocket = [ordered]@{
-        schemaVersion = "threshold.petclinic.candidate-pocket.v0.2"
-        generatedFromHead = $methodBase
-        candidates = @(
-            [ordered]@{
-                candidateId = "canary-method-spacing-valid"
-                candidateClass = "method_spacing_normalization"
-                file = $javaPath
-                member = "line-9"
-                spacingAction = "collapse_extra_blank_line"
-            }
-        )
-    }
-    $methodPocketPath = "method-pocket.json"
-    $methodPocket | ConvertTo-Json -Depth 6 | Set-Content $methodPocketPath
-
     $validProvenance = New-ThresholdCandidateClassProvenance `
         -CandidateId "canary-method-spacing-valid" `
         -GrantedCandidateClass "method_spacing_normalization" `
         -ExecutorCandidateClass "method_spacing_normalization" `
         -ReceiptCandidateClass "method_spacing_normalization" `
         -LearningProjectionClass "method_spacing_normalization" `
-        -BaseHead $methodBase `
+        -BaseHead $methodSourceBase `
         -CommitHash $methodCommit `
         -CandidatePocketPath $methodPocketPath `
         -DiscoveryEvidenceRoot "discovery-evidence" `
-        -MaterializeDiscoveryEvidence
+        -DiscoveryEvidencePath $methodDiscoveryEvidencePath
 
     Assert-True -Condition ($validProvenance.independentlyObservedDiffClass -eq "method_spacing_normalization") -Name "method spacing independently classified"
     Assert-True -Condition ([bool]$validProvenance.candidatePathMatched) -Name "method spacing observed diff path matches candidate snapshot"
@@ -204,7 +211,7 @@ try {
     $validReceipt = [pscustomobject]@{
         candidateId = "canary-method-spacing-valid"
         candidateClass = "method_spacing_normalization"
-        baseHead = $methodBase
+        baseHead = $methodSourceBase
         commitHash = $methodCommit
         candidateClassProvenance = $validProvenance
     }
@@ -224,7 +231,7 @@ try {
         -ExecutorCandidateClass "method_spacing_normalization" `
         -ReceiptCandidateClass "method_spacing_normalization" `
         -LearningProjectionClass "method_spacing_normalization" `
-        -BaseHead $methodBase `
+        -BaseHead $methodSourceBase `
         -CommitHash $methodCommit `
         -CandidateSnapshot $wrongSpacingActionCandidate
     Assert-False -Condition ([bool]$wrongSpacingActionProvenance.candidateExecutionParametersMatched) -Name "method spacing mismatched execution parameter is rejected"
@@ -342,7 +349,7 @@ try {
     $sourceCommitReceipt = [pscustomobject]@{
         candidateId = "canary-method-spacing-valid"
         candidateClass = "method_spacing_normalization"
-        baseHead = $methodBase
+        baseHead = $methodSourceBase
         sourceCommit = $methodCommit
         candidateClassProvenance = $validProvenance
     }
@@ -415,7 +422,7 @@ try {
         -ExecutorCandidateClass "method_spacing_normalization" `
         -ReceiptCandidateClass "method_spacing_normalization" `
         -LearningProjectionClass "method_spacing_normalization" `
-        -BaseHead $methodBase `
+        -BaseHead $methodSourceBase `
         -CommitHash $methodCommit `
         -CandidateSnapshot $wrongMemberCandidate
     Assert-True -Condition ([bool]$wrongMemberProvenance.candidatePathMatched) -Name "wrong-member method spacing still matches candidate file"
@@ -434,6 +441,101 @@ try {
         }
         Write-Host "passed=receipt baseHead must equal source commit parent"
     }
+
+    Assert-False -Condition ([bool]$validProvenance.discoveryEvidenceCreatedByCurrentProductPr) -Name "discovery evidence is not created by current product commit"
+    Assert-True -Condition ([bool]$validProvenance.discoveryEvidenceCommitIsAncestorOfBaseHead) -Name "discovery evidence commit is ancestor of source baseHead"
+    Assert-True -Condition ([bool]$validProvenance.discoveryEvidenceTrustRootVerified) -Name "pre-existing discovery evidence trust root is verified"
+
+    $lateEvidencePath = Get-ThresholdCandidateDiscoveryEvidencePath -DiscoveryEvidenceRoot "late-discovery-evidence" -CandidateId "canary-method-spacing-valid" -BaseHead $methodSourceBase
+    $lateEvidence = New-ThresholdCandidateDiscoveryEvidence -BaseHead $methodSourceBase -CandidateId "canary-method-spacing-valid" -CandidatePocketPath $methodPocketPath
+    Write-ThresholdCandidateDiscoveryEvidence -DiscoveryEvidence $lateEvidence -Path $lateEvidencePath
+    & git add -- $lateEvidencePath
+    & git commit -m "Add late discovery evidence canary" | Out-Null
+    if ($LASTEXITCODE -ne 0) { throw "late discovery evidence commit failed" }
+    $lateEvidenceCommit = (& git rev-parse HEAD).Trim()
+    $lateEvidenceProvenance = New-ThresholdCandidateClassProvenance `
+        -CandidateId "canary-method-spacing-valid" `
+        -GrantedCandidateClass "method_spacing_normalization" `
+        -ExecutorCandidateClass "method_spacing_normalization" `
+        -ReceiptCandidateClass "method_spacing_normalization" `
+        -LearningProjectionClass "method_spacing_normalization" `
+        -BaseHead $methodCommit `
+        -CommitHash $lateEvidenceCommit `
+        -CandidatePocketPath $methodPocketPath `
+        -DiscoveryEvidencePath $lateEvidencePath
+    Assert-True -Condition ([bool]$lateEvidenceProvenance.discoveryEvidenceCreatedByCurrentProductPr) -Name "late discovery evidence is detected as current PR-created"
+    Assert-False -Condition ([bool]$lateEvidenceProvenance.discoveryEvidenceTrustRootVerified) -Name "late discovery evidence does not verify trust root"
+    $lateEvidenceReceipt = [pscustomobject]@{
+        candidateId = "canary-method-spacing-valid"
+        candidateClass = "method_spacing_normalization"
+        baseHead = $methodCommit
+        commitHash = $lateEvidenceCommit
+        candidateClassProvenance = $lateEvidenceProvenance
+    }
+    try {
+        Assert-ThresholdCandidateClassProvenance -Receipt $lateEvidenceReceipt -ReceiptPath "late-discovery-evidence.json" -CandidatePocketPath $methodPocketPath
+        throw "Expected late discovery evidence assertion failure did not occur."
+    }
+    catch {
+        if ($_.Exception.Message -notmatch "added or modified by current product commit|candidateClassProvenanceMatched=false") {
+            throw
+        }
+        Write-Host "passed=PR-added discovery evidence is rejected"
+    }
+
+    $beforeEvidenceModify = (& git rev-parse HEAD).Trim()
+    $validEvidenceForModify = Get-Content -LiteralPath $validProvenance.discoveryEvidencePath -Raw | ConvertFrom-Json
+    $validEvidenceForModify.candidateMember = "line-2"
+    $validEvidenceForModify.candidateHunkFingerprint = Get-ThresholdStringSha256Lower -Text "candidatePath=$($validEvidenceForModify.candidatePath)`ncandidateMember=$($validEvidenceForModify.candidateMember)"
+    $validEvidenceForModify.discoveryEvidenceDigest = Get-ThresholdCandidateDiscoveryEvidenceDigest -DiscoveryEvidence $validEvidenceForModify
+    Write-ThresholdCandidateDiscoveryEvidence -DiscoveryEvidence $validEvidenceForModify -Path $validProvenance.discoveryEvidencePath
+    & git add -- $validProvenance.discoveryEvidencePath
+    & git commit -m "Modify referenced discovery evidence canary" | Out-Null
+    if ($LASTEXITCODE -ne 0) { throw "discovery evidence modify commit failed" }
+    $modifiedEvidenceCommit = (& git rev-parse HEAD).Trim()
+    $modifiedEvidenceReceipt = $validReceipt | ConvertTo-Json -Depth 12 | ConvertFrom-Json
+    $modifiedEvidenceReceipt.baseHead = $beforeEvidenceModify
+    $modifiedEvidenceReceipt.commitHash = $modifiedEvidenceCommit
+    $modifiedEvidenceReceipt.candidateClassProvenance.discoveryEvidenceDigest = $validEvidenceForModify.discoveryEvidenceDigest
+    try {
+        Assert-ThresholdCandidateClassProvenance -Receipt $modifiedEvidenceReceipt -ReceiptPath "modified-discovery-evidence.json" -CandidatePocketPath $methodPocketPath
+        throw "Expected modified discovery evidence assertion failure did not occur."
+    }
+    catch {
+        if ($_.Exception.Message -notmatch "added or modified by current product commit") {
+            throw
+        }
+        Write-Host "passed=PR-modified referenced discovery evidence is rejected"
+    }
+
+    $insertPath = "src/main/java/org/example/InsertionBoundary.java"
+    Write-CanaryFile -Path $insertPath -Lines @(
+        "class InsertionBoundary {",
+        "    void first() {",
+        "    }",
+        "    void second() {",
+        "    }",
+        "}"
+    )
+    & git add .
+    & git commit -m "Add insertion boundary canary" | Out-Null
+    if ($LASTEXITCODE -ne 0) { throw "insertion boundary base commit failed" }
+    $insertBase = (& git rev-parse HEAD).Trim()
+    Write-CanaryFile -Path $insertPath -Lines @(
+        "class InsertionBoundary {",
+        "    void first() {",
+        "    }",
+        "",
+        "    void second() {",
+        "    }",
+        "}"
+    )
+    & git add .
+    & git commit -m "Insert blank line at method boundary" | Out-Null
+    if ($LASTEXITCODE -ne 0) { throw "insertion boundary mutation commit failed" }
+    $insertCommit = (& git rev-parse HEAD).Trim()
+    Assert-True -Condition (Test-ThresholdObservedDiffMemberMatchesCandidate -BaseHead $insertBase -CommitHash $insertCommit -ProductPath $insertPath -CandidateMember "line-4") -Name "insert blank line at candidate boundary matches new range"
+    Assert-False -Condition (Test-ThresholdObservedDiffMemberMatchesCandidate -BaseHead $insertBase -CommitHash $insertCommit -ProductPath $insertPath -CandidateMember "line-2") -Name "insert blank line at another method is rejected"
 
     $commentDiff = @(
         "diff --git a/src/main/java/org/example/Foo.java b/src/main/java/org/example/Foo.java",
@@ -591,7 +693,7 @@ try {
     & git add .
     & git commit -m "Add ordinary tab beside text block canary" | Out-Null
     if ($LASTEXITCODE -ne 0) { throw "mixed text block base commit failed" }
-    $scriptRoot = Join-Path $originalLocation "threshold/scripts/discover-candidates.ps1"
+    $scriptRoot = Join-Path $PSScriptRoot "discover-candidates.ps1"
     $leasePath = "threshold/leases/current.yaml"
     Write-CanaryFile -Path $leasePath -Lines @(
         "leaseName: text-block-canary",
@@ -616,6 +718,61 @@ try {
     Assert-True -Condition ($leadingTabCandidates.Count -eq 1) -Name "discovery finds only the ordinary leading tab candidate beside text block"
     Assert-True -Condition ([string]$leadingTabCandidates[0].member -eq "line-7") -Name "discovery excludes text block tabs from leading tab candidate"
     Assert-True -Condition ([int]$leadingTabCandidates[0].lineCount -eq 1) -Name "discovery binds leading tab line count"
+
+    & git add .
+    & git commit -m "Materialize discovery evidence test pocket" | Out-Null
+    if ($LASTEXITCODE -ne 0) { throw "discovery evidence pocket commit failed" }
+    $mixedBase = (& git rev-parse HEAD).Trim()
+    Write-CanaryFile -Path $textBlockPath -Lines @(
+        "class TextBlockCanary {",
+        "    String query = `"`"`"",
+        "`tSELECT *",
+        "`tFROM owners",
+        "    `"`"`";",
+        "    void anchor() {}",
+        "    void normalize() {}",
+        "}"
+    )
+    & git add .
+    & git commit -m "Normalize ordinary leading tab canary" | Out-Null
+    if ($LASTEXITCODE -ne 0) { throw "ordinary leading tab mutation commit failed" }
+    $leadingTabCommit = (& git rev-parse HEAD).Trim()
+    $leadingTabCandidate = [ordered]@{
+        candidateId = "canary-leading-tab-valid"
+        candidateClass = "leading_tab_indentation_cleanup"
+        file = $textBlockPath
+        member = "line-7"
+        lineCount = 1
+    }
+    $leadingTabProvenance = New-ThresholdCandidateClassProvenance `
+        -CandidateId "canary-leading-tab-valid" `
+        -GrantedCandidateClass "leading_tab_indentation_cleanup" `
+        -ExecutorCandidateClass "leading_tab_indentation_cleanup" `
+        -ReceiptCandidateClass "leading_tab_indentation_cleanup" `
+        -LearningProjectionClass "leading_tab_indentation_cleanup" `
+        -BaseHead $mixedBase `
+        -CommitHash $leadingTabCommit `
+        -CandidateSnapshot $leadingTabCandidate
+    Assert-True -Condition ([bool]$leadingTabProvenance.candidateExecutionParametersMatched) -Name "leading tab correct lineCount matches observed diff"
+
+    $wrongLineCountCandidate = [ordered]@{
+        candidateId = "canary-leading-tab-valid"
+        candidateClass = "leading_tab_indentation_cleanup"
+        file = $textBlockPath
+        member = "line-7"
+        lineCount = 2
+    }
+    $wrongLineCountProvenance = New-ThresholdCandidateClassProvenance `
+        -CandidateId "canary-leading-tab-valid" `
+        -GrantedCandidateClass "leading_tab_indentation_cleanup" `
+        -ExecutorCandidateClass "leading_tab_indentation_cleanup" `
+        -ReceiptCandidateClass "leading_tab_indentation_cleanup" `
+        -LearningProjectionClass "leading_tab_indentation_cleanup" `
+        -BaseHead $mixedBase `
+        -CommitHash $leadingTabCommit `
+        -CandidateSnapshot $wrongLineCountCandidate
+    Assert-False -Condition ([bool]$wrongLineCountProvenance.candidateExecutionParametersMatched) -Name "leading tab mismatched lineCount is rejected"
+    Assert-False -Condition ([bool]$wrongLineCountProvenance.candidateClassProvenanceMatched) -Name "leading tab wrong execution parameter blocks provenance"
 
     $changedLiteralDiff = @(
         "-    private static final String OWNER_QUERY = `"foo bar`";",

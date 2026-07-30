@@ -19,6 +19,7 @@ Set-StrictMode -Version Latest
 $ErrorActionPreference = "Stop"
 
 . (Join-Path $PSScriptRoot "lib/runtime-paths.ps1")
+. (Join-Path $PSScriptRoot "lib/candidate-class-provenance.ps1")
 
 $runtimePaths = Get-ThresholdRuntimePaths
 if ([string]::IsNullOrWhiteSpace($LeasePath)) {
@@ -83,6 +84,30 @@ if ($SkipMavenTest.IsPresent) { $validateArgs += "-SkipMavenTest" }
 & powershell.exe @validateArgs
 if ($LASTEXITCODE -ne 0) { throw "Threshold slice validation failed." }
 
+$discoverySourceBaseHead = (& git rev-parse HEAD).Trim()
+$discoveryEvidencePath = Get-ThresholdCandidateDiscoveryEvidencePath -DiscoveryEvidenceRoot "threshold/discovery-evidence" -CandidateId $CandidateId -BaseHead $discoverySourceBaseHead
+$discoveryEvidence = New-ThresholdCandidateDiscoveryEvidence -BaseHead $discoverySourceBaseHead -CandidateId $CandidateId -CandidatePocketPath $CandidatePocketPath
+if ($null -eq $discoveryEvidence) {
+    throw "Discovery evidence cannot be materialized before source effect for candidateId=$CandidateId"
+}
+Write-ThresholdCandidateDiscoveryEvidence -DiscoveryEvidence $discoveryEvidence -Path $discoveryEvidencePath
+& git add -- $discoveryEvidencePath
+if ($LASTEXITCODE -ne 0) { throw "Failed to stage discovery evidence path: $discoveryEvidencePath" }
+$stagedDiscoveryEvidence = @(& git diff --cached --name-only -- $discoveryEvidencePath)
+if (-not $stagedDiscoveryEvidence) {
+    throw "Discovery evidence was not staged before source effect: $discoveryEvidencePath"
+}
+& git commit -m "Record Threshold discovery evidence for $CandidateId"
+if ($LASTEXITCODE -ne 0) { throw "Discovery evidence commit failed." }
+$discoveryEvidenceCommit = (& git rev-parse HEAD).Trim()
+if (-not (Test-ThresholdCommitIsAncestor -Ancestor $discoveryEvidenceCommit -Descendant $discoveryEvidenceCommit)) {
+    throw "Discovery evidence commit failed ancestor self-check: $discoveryEvidenceCommit"
+}
+$discoveryEvidenceStatus = @(& git status --porcelain -- $discoveryEvidencePath)
+if ($discoveryEvidenceStatus) {
+    throw "Discovery evidence is not clean after pre-source commit: $discoveryEvidencePath"
+}
+
 $baseHead = (& git rev-parse HEAD).Trim()
 foreach ($path in $changedPaths) {
     & git add -- $path
@@ -114,6 +139,7 @@ $validationCommand = if ($SkipMavenTest.IsPresent) { "git diff --check" } else {
     -ReceiptMaterialization "post-commit" `
     -ReceiptRoot $ReceiptRoot `
     -CandidatePocketPath $CandidatePocketPath `
+    -DiscoveryEvidencePath $discoveryEvidencePath `
     -PerCommitValidationLogAvailable `
     -UpdateState
 if ($LASTEXITCODE -ne 0) { throw "Receipt recording failed for source commit $sourceCommit." }
@@ -126,8 +152,11 @@ if ($CompactEvidence.IsPresent) {
     exit 0
 }
 
-$trackedReceiptChanges = @(& git diff --name-only | Where-Object { $_ -like "$ReceiptRoot/*" -or $_ -eq $StatePath })
-$untrackedReceiptChanges = @(& git ls-files --others --exclude-standard $ReceiptRoot | Where-Object { $_ -like "$ReceiptRoot/*" })
+$trackedReceiptChanges = @(& git diff --name-only | Where-Object { $_ -like "$ReceiptRoot/*" -or $_ -eq $StatePath -or $_ -like "threshold/discovery-evidence/*" })
+$untrackedReceiptChanges = @(
+    @(& git ls-files --others --exclude-standard $ReceiptRoot | Where-Object { $_ -like "$ReceiptRoot/*" }) +
+    @(& git ls-files --others --exclude-standard "threshold/discovery-evidence" | Where-Object { $_ -like "threshold/discovery-evidence/*" })
+)
 $receiptChanges = @($trackedReceiptChanges + $untrackedReceiptChanges | Select-Object -Unique)
 if (-not $receiptChanges) {
     throw "Receipt recording produced no receipt/state changes."

@@ -19,6 +19,7 @@ param(
     [string] $ReceiptRoot = "threshold/receipts",
     [string] $CandidatePocketPath = "threshold/candidate-pocket/current.json",
     [string] $DiscoveryEvidenceRoot = "threshold/discovery-evidence",
+    [string] $DiscoveryEvidencePath = "",
     [string] $ExecutorCandidateClass = "",
     [string] $LearningProjectionClass = "",
     [switch] $PerCommitValidationLogAvailable,
@@ -175,7 +176,7 @@ $candidateClassProvenance = New-ThresholdCandidateClassProvenance `
     -CommitHash $CommitHash `
     -CandidatePocketPath $CandidatePocketPath `
     -DiscoveryEvidenceRoot $DiscoveryEvidenceRoot `
-    -MaterializeDiscoveryEvidence
+    -DiscoveryEvidencePath $DiscoveryEvidencePath
 if (-not $candidateClassProvenance.candidateClassProvenanceMatched) {
     throw "candidateClassProvenanceMatched=false candidateId=$CandidateId observedDiffClass=$($candidateClassProvenance.independentlyObservedDiffClass) candidateClass=$CandidateClass"
 }
