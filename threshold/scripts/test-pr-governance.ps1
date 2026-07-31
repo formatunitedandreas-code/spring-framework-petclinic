@@ -137,7 +137,7 @@ function Get-ReceiptChangedFiles {
 function Get-ReceiptChangedFileRecords {
     param([pscustomobject] $Receipt)
 
-    return @(
+    $records = @(
         $Receipt.changedFiles | ForEach-Object {
             if ($_ -is [string]) {
                 [pscustomobject]@{
@@ -153,8 +153,23 @@ function Get-ReceiptChangedFileRecords {
                     afterSha256 = if ($null -ne $_.afterSha256) { [string]$_.afterSha256 } else { "" }
                 }
             }
-        } | Where-Object { -not [string]::IsNullOrWhiteSpace($_.path) }
+        }
     )
+    if ($Receipt.PSObject.Properties["candidates"] -and $null -ne $Receipt.candidates) {
+        $records += @(
+            $Receipt.candidates | ForEach-Object {
+                if ($null -ne $_.file) {
+                    [pscustomobject]@{
+                        path = ConvertTo-RepoPath ([string]$_.file)
+                        beforeSha256 = if ($null -ne $_.beforeSha256) { [string]$_.beforeSha256 } else { "" }
+                        afterSha256 = if ($null -ne $_.afterSha256) { [string]$_.afterSha256 } else { "" }
+                    }
+                }
+            }
+        )
+    }
+
+    return @($records | Where-Object { -not [string]::IsNullOrWhiteSpace($_.path) })
 }
 
 function Assert-PromotionSquashCommitCoveredByReceipts {
@@ -172,19 +187,11 @@ function Assert-PromotionSquashCommitCoveredByReceipts {
     }
 
     $coveredProductPaths = New-Object System.Collections.Generic.HashSet[string]
-    $matchingReceiptEntries = New-Object System.Collections.Generic.List[object]
     foreach ($entry in $ReceiptEntries) {
         $entryProductPaths = @(Get-ReceiptChangedFileRecords -Receipt $entry.receipt | Where-Object { Test-ProductPath -Path $_.path })
-        $entryCoversSquashPath = $false
         foreach ($changedFile in $entryProductPaths) {
             $path = [string]$changedFile.path
             [void]$coveredProductPaths.Add($path)
-            if ($actualProductPaths -contains $path) {
-                $entryCoversSquashPath = $true
-            }
-        }
-        if ($entryCoversSquashPath) {
-            $matchingReceiptEntries.Add($entry)
         }
     }
 
@@ -193,6 +200,7 @@ function Assert-PromotionSquashCommitCoveredByReceipts {
         throw "Promotion squash commit is not covered by source receipt changedFiles. commit=$Commit missing=[$($missing -join ', ')]"
     }
 
+    $matchingReceiptEntries = New-Object System.Collections.Generic.List[object]
     foreach ($path in $actualProductPaths) {
         $actualAfterSha256 = (Get-CommitPathBlobSha256 -Commit $Commit -Path $path).ToLowerInvariant()
         $pathMatched = $false
@@ -207,6 +215,9 @@ function Assert-PromotionSquashCommitCoveredByReceipts {
             foreach ($changedFile in $matchingChangedFiles) {
                 if ([string]$changedFile.afterSha256.ToLowerInvariant() -eq $actualAfterSha256) {
                     $pathMatched = $true
+                    if (-not $matchingReceiptEntries.Contains($entry)) {
+                        $matchingReceiptEntries.Add($entry)
+                    }
                     break
                 }
             }
@@ -215,6 +226,9 @@ function Assert-PromotionSquashCommitCoveredByReceipts {
         if (-not $pathMatched) {
             throw "Promotion squash commit content mismatch for receipt-covered path. commit=$Commit path=$path actualAfterSha256=$actualAfterSha256"
         }
+    }
+    if ($matchingReceiptEntries.Count -eq 0) {
+        throw "Promotion squash commit has no content-matching source receipts: $Commit"
     }
 
     Write-Host "promotionSquashReceiptReconciliation=passed"
