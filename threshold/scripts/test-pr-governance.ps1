@@ -108,6 +108,120 @@ function Assert-ChangedFilesMatchReceipt {
     }
 }
 
+function Assert-BatchCandidateDiscoveryEvidenceMatchesPrBase {
+    param(
+        [pscustomobject] $Receipt,
+        [string] $ReceiptPath,
+        [string] $PrBaseHead,
+        [string] $DiscoveryEvidenceRoot = "threshold/discovery-evidence"
+    )
+
+    $batchId = Get-ThresholdJsonProperty $Receipt "batchId" $null
+    if ([string]::IsNullOrWhiteSpace([string]$batchId)) { return }
+
+    $sourceCommit = [string](Get-ThresholdJsonProperty $Receipt "sourceCommit" "")
+    $baseHead = [string](Get-ThresholdJsonProperty $Receipt "baseHead" "")
+    if ([string]::IsNullOrWhiteSpace($sourceCommit)) {
+        $sourceCommit = [string](Get-ThresholdJsonProperty $Receipt "commitHash" "")
+    }
+    if ([string]::IsNullOrWhiteSpace($sourceCommit)) {
+        throw "Batch receipt is missing sourceCommit: $ReceiptPath"
+    }
+    if ([string]::IsNullOrWhiteSpace($baseHead)) {
+        throw "Batch receipt is missing baseHead: $ReceiptPath"
+    }
+    if ([string]::IsNullOrWhiteSpace($PrBaseHead)) {
+        throw "Batch receipt requires independent PR base context: $ReceiptPath"
+    }
+    if (-not (Test-ThresholdCommitIsAncestor -Ancestor $PrBaseHead -Descendant $baseHead)) {
+        throw "Batch receipt PR base is not ancestor of source baseHead receipt=$ReceiptPath prBaseHead=$PrBaseHead sourceBaseHead=$baseHead"
+    }
+
+    $parentHead = (& git rev-parse "$sourceCommit^1" 2>$null)
+    if ($LASTEXITCODE -ne 0 -or [string]::IsNullOrWhiteSpace([string]$parentHead)) {
+        throw "Batch receipt source commit parent unavailable receipt=$ReceiptPath sourceCommit=$sourceCommit"
+    }
+    if ([string]$baseHead -ne [string]($parentHead.Trim())) {
+        throw "Batch receipt baseHead mismatch receipt=$ReceiptPath baseHead=$baseHead parentHead=$([string]($parentHead.Trim()))"
+    }
+
+    $candidates = @(Get-ThresholdJsonProperty $Receipt "candidates" @())
+    if ($candidates.Count -eq 0) {
+        throw "Batch receipt is missing per-candidate entries: $ReceiptPath"
+    }
+
+    $changedPaths = @(git diff-tree --no-commit-id --name-only -r $sourceCommit | ForEach-Object { ConvertTo-RepoPath $_ })
+    foreach ($candidate in $candidates) {
+        $candidateId = [string](Get-ThresholdJsonProperty $candidate "candidateId" "")
+        $candidateClass = [string](Get-ThresholdJsonProperty $candidate "candidateClass" "")
+        $candidatePath = ConvertTo-RepoPath ([string](Get-ThresholdJsonProperty $candidate "file" ""))
+        $candidateMember = [string](Get-ThresholdJsonProperty $candidate "member" "")
+        if ([string]::IsNullOrWhiteSpace($candidateId)) {
+            throw "Batch candidate is missing candidateId receipt=$ReceiptPath"
+        }
+        if ([string]::IsNullOrWhiteSpace($candidateClass)) {
+            throw "Batch candidate is missing candidateClass receipt=$ReceiptPath candidateId=$candidateId"
+        }
+        if ([string]::IsNullOrWhiteSpace($candidatePath)) {
+            throw "Batch candidate is missing file receipt=$ReceiptPath candidateId=$candidateId"
+        }
+        if ($changedPaths -notcontains $candidatePath) {
+            throw "Batch candidate file was not changed by source commit receipt=$ReceiptPath candidateId=$candidateId file=$candidatePath"
+        }
+
+        $binding = Get-ThresholdJsonProperty $candidate "candidateDiscoveryEvidence" $null
+        if ($null -eq $binding) {
+            throw "Batch candidate is missing discovery evidence binding receipt=$ReceiptPath candidateId=$candidateId"
+        }
+        if ((Get-ThresholdJsonProperty $binding "immutableDiscoveryEvidencePresent" $false) -ne $true) {
+            throw "Batch candidate discovery evidence is not immutable receipt=$ReceiptPath candidateId=$candidateId"
+        }
+        $bindingPrBaseHead = [string](Get-ThresholdJsonProperty $binding "prBaseHead" "")
+        if ([string]$bindingPrBaseHead -ne [string]$PrBaseHead) {
+            throw "Batch candidate discovery evidence PR base mismatch receipt=$ReceiptPath candidateId=$candidateId bindingPrBaseHead=$bindingPrBaseHead observedPrBaseHead=$PrBaseHead"
+        }
+        $discoverySourceHead = [string](Get-ThresholdJsonProperty $binding "discoverySourceHead" "")
+        if (-not (Test-ThresholdCommitIsAncestor -Ancestor $discoverySourceHead -Descendant $PrBaseHead)) {
+            throw "Batch candidate discovery source is not ancestor of PR base receipt=$ReceiptPath candidateId=$candidateId discoverySourceHead=$discoverySourceHead prBaseHead=$PrBaseHead"
+        }
+
+        $evidencePath = [string](Get-ThresholdJsonProperty $binding "discoveryEvidencePath" "")
+        if ([string]::IsNullOrWhiteSpace($evidencePath)) {
+            $evidencePath = Get-ThresholdCandidateDiscoveryEvidencePath -DiscoveryEvidenceRoot $DiscoveryEvidenceRoot -CandidateId $candidateId -BaseHead $baseHead
+        }
+        if (Test-ThresholdPathChangedInRange -BaseHead $PrBaseHead -CommitHash $sourceCommit -Path $evidencePath) {
+            throw "Batch candidate discovery evidence was added or modified inside current product PR receipt=$ReceiptPath candidateId=$candidateId path=$evidencePath"
+        }
+
+        $baseDiscoveryEvidence = Get-ThresholdCandidateDiscoveryEvidenceFromRevision -Revision $PrBaseHead -Path $evidencePath
+        if ($null -eq $baseDiscoveryEvidence) {
+            throw "Batch candidate discovery evidence must pre-exist in PR baseHead receipt=$ReceiptPath candidateId=$candidateId path=$evidencePath"
+        }
+        $baseDiscoveryEvidenceDigest = Get-ThresholdCandidateDiscoveryEvidenceDigest -DiscoveryEvidence $baseDiscoveryEvidence
+        if ([string]$baseDiscoveryEvidenceDigest -ne [string](Get-ThresholdJsonProperty $baseDiscoveryEvidence "discoveryEvidenceDigest" "")) {
+            throw "Batch candidate discovery evidence artifact digest mismatch receipt=$ReceiptPath candidateId=$candidateId"
+        }
+        if ([string]$baseDiscoveryEvidenceDigest -ne [string](Get-ThresholdJsonProperty $binding "discoveryEvidenceDigest" "")) {
+            throw "Batch candidate discovery evidence digest mismatch receipt=$ReceiptPath candidateId=$candidateId"
+        }
+        if ([string](Get-ThresholdJsonProperty $baseDiscoveryEvidence "baseHead" "") -ne [string]$discoverySourceHead) {
+            throw "Batch candidate discovery evidence source head mismatch receipt=$ReceiptPath candidateId=$candidateId"
+        }
+        if ([string](Get-ThresholdJsonProperty $baseDiscoveryEvidence "candidateId" "") -ne [string]$candidateId) {
+            throw "Batch candidate discovery evidence candidateId mismatch receipt=$ReceiptPath candidateId=$candidateId"
+        }
+        if ([string](Get-ThresholdJsonProperty $baseDiscoveryEvidence "candidateClass" "") -ne [string]$candidateClass) {
+            throw "Batch candidate discovery evidence candidateClass mismatch receipt=$ReceiptPath candidateId=$candidateId"
+        }
+        if (ConvertTo-RepoPath ([string](Get-ThresholdJsonProperty $baseDiscoveryEvidence "candidatePath" "")) -ne $candidatePath) {
+            throw "Batch candidate discovery evidence candidatePath mismatch receipt=$ReceiptPath candidateId=$candidateId"
+        }
+        if ([string](Get-ThresholdJsonProperty $baseDiscoveryEvidence "candidateMember" "") -ne [string]$candidateMember) {
+            throw "Batch candidate discovery evidence candidateMember mismatch receipt=$ReceiptPath candidateId=$candidateId"
+        }
+    }
+}
+
 function Get-CommitPathBlobSha256 {
     param([string] $Commit, [string] $Path)
 
@@ -335,6 +449,7 @@ foreach ($commit in $prCommits) {
     elseif ($hasProvenance) {
         Assert-ThresholdCandidateClassProvenance -Receipt $receipt -ReceiptPath $entry.path -PrBaseHead $observedPrBaseHead
     }
+    Assert-BatchCandidateDiscoveryEvidenceMatchesPrBase -Receipt $receipt -ReceiptPath $entry.path -PrBaseHead $observedPrBaseHead
     Assert-ReceiptLeaseDigestMatchesReceiptCommit -ReceiptPath $entry.path -Receipt $receipt
     Assert-ChangedFilesMatchReceipt -Commit $commit -Receipt $receipt
     $sourceReceiptEntries.Add($entry)

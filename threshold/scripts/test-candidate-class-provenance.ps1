@@ -340,6 +340,11 @@ try {
     Assert-True -Condition ($runNextBatchText -match "Assert-BatchCandidateHasPreProductDiscoveryEvidence") -Name "run-next-batch requires pre-product evidence for every batched candidate"
     Assert-True -Condition ($runNextBatchText -match "Get-ThresholdCandidateDiscoveryEvidenceFromRevision") -Name "run-next-batch reads batch discovery evidence from PR base"
     Assert-True -Condition ($runNextBatchText -match "candidateDiscoveryEvidence") -Name "run-next-batch records per-candidate discovery evidence binding"
+    Assert-True -Condition ($prGovernanceText -match "Assert-BatchCandidateDiscoveryEvidenceMatchesPrBase") -Name "PR governance validates batch candidate discovery evidence"
+    Assert-True -Condition ($prGovernanceText -match "Batch candidate discovery evidence must pre-exist in PR baseHead") -Name "PR governance rejects forged batch evidence missing from PR base"
+    Assert-True -Condition ($prGovernanceText -match "Batch candidate discovery evidence digest mismatch") -Name "PR governance rejects forged batch evidence digests"
+    Assert-True -Condition ($prGovernanceText -match "Batch candidate file was not changed by source commit") -Name "PR governance reconciles batch candidate path to source diff"
+    Assert-True -Condition ($prGovernanceText -match "Batch candidate discovery evidence candidateMember mismatch") -Name "PR governance reconciles batch candidate member to base evidence"
 
     $missingPrBaseProvenance = New-ThresholdCandidateClassProvenance `
         -CandidateId "canary-method-spacing-valid" `
