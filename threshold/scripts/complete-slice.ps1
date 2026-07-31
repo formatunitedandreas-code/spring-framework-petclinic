@@ -123,7 +123,15 @@ $baseHead = (& git rev-parse HEAD).Trim()
 if (-not (Test-ThresholdCommitIsAncestor -Ancestor $observedPrBaseHead -Descendant $baseHead)) {
     throw "Product slice must descend from the independently observed PR base head. prBaseHead=$observedPrBaseHead currentHead=$baseHead"
 }
-$discoveryEvidencePath = Get-ThresholdCandidateDiscoveryEvidencePath -DiscoveryEvidenceRoot "threshold/discovery-evidence" -CandidateId $CandidateId -BaseHead $observedPrBaseHead
+$candidatePocket = if (Test-Path $CandidatePocketPath) { Get-Content -LiteralPath $CandidatePocketPath -Raw | ConvertFrom-Json } else { $null }
+$discoverySourceHead = if ($null -ne $candidatePocket) { [string](Get-ThresholdJsonProperty $candidatePocket "generatedFromHead" "") } else { "" }
+if ([string]::IsNullOrWhiteSpace($discoverySourceHead)) {
+    $discoverySourceHead = $observedPrBaseHead
+}
+if (-not (Test-ThresholdCommitIsAncestor -Ancestor $discoverySourceHead -Descendant $observedPrBaseHead)) {
+    throw "Discovery evidence source head must be an ancestor of the independently observed PR base head. discoverySourceHead=$discoverySourceHead prBaseHead=$observedPrBaseHead"
+}
+$discoveryEvidencePath = Get-ThresholdCandidateDiscoveryEvidencePath -DiscoveryEvidenceRoot "threshold/discovery-evidence" -CandidateId $CandidateId -BaseHead $discoverySourceHead
 $discoveryEvidence = Get-ThresholdCandidateDiscoveryEvidenceFromPath -Path $discoveryEvidencePath
 if ($null -eq $discoveryEvidence) {
     throw "Pre-product discovery evidence is required before complete-slice. path=$discoveryEvidencePath candidateId=$CandidateId prBaseHead=$observedPrBaseHead"

@@ -270,7 +270,18 @@ try {
     Assert-False -Condition ($completeSliceText -match "Record Threshold discovery evidence") -Name "complete-slice does not commit discovery evidence"
     Assert-True -Condition ($completeSliceText -match "Pre-product discovery evidence is required before complete-slice") -Name "complete-slice requires pre-product discovery evidence"
     Assert-True -Condition ($completeSliceText -match 'Test-ThresholdCommitIsAncestor -Ancestor \$observedPrBaseHead -Descendant \$baseHead') -Name "complete-slice allows later slices to descend from PR base"
-    Assert-True -Condition ($completeSliceText -match 'CandidateId \$CandidateId -BaseHead \$observedPrBaseHead') -Name "complete-slice locates discovery evidence at PR base"
+    Assert-True -Condition ($completeSliceText -match 'generatedFromHead') -Name "complete-slice derives discovery source head from candidate pocket"
+    Assert-True -Condition ($completeSliceText -match 'CandidateId \$CandidateId -BaseHead \$discoverySourceHead') -Name "complete-slice locates discovery evidence at discovery source head"
+
+    $prepareDiscoveryEvidenceText = Get-Content (Join-Path $thresholdScriptRoot "prepare-discovery-evidence.ps1") -Raw
+    Assert-True -Condition ($prepareDiscoveryEvidenceText -match "Write-ThresholdCandidateDiscoveryEvidence") -Name "pre-product producer materializes discovery evidence"
+    Assert-True -Condition ($prepareDiscoveryEvidenceText -match "generatedFromHead") -Name "pre-product producer binds discovery source head"
+    Assert-True -Condition ($prepareDiscoveryEvidenceText -match "Test-ThresholdCommitIsAncestor") -Name "pre-product producer verifies source ancestry"
+
+    $startNextWaveText = Get-Content (Join-Path $thresholdScriptRoot "start-next-wave.ps1") -Raw
+    Assert-True -Condition ($startNextWaveText -match "Invoke-PreProductDiscoveryPreparation") -Name "start-next-wave invokes pre-product discovery preparation"
+    Assert-True -Condition ($startNextWaveText -match "Prepare Threshold wave .* discovery evidence") -Name "start-next-wave commits discovery evidence before product branch"
+    Assert-True -Condition ($startNextWaveText -match "PullRequestBaseBranch") -Name "start-next-wave creates PR against evidence-bearing base branch"
 
     $kgMaterializationText = Get-Content (Join-Path $thresholdScriptRoot "materialize-knowledge-graphs.ps1") -Raw
     Assert-True -Condition ($kgMaterializationText -match '\$\{ObservedPrBaseHead\}\.\.\.HEAD') -Name "KG materialization honors supplied PR base without BaseRef"

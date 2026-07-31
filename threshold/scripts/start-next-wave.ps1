@@ -167,6 +167,40 @@ function Commit-PathsIfNeeded {
     return $true
 }
 
+function Invoke-PreProductDiscoveryPreparation {
+    param(
+        [string] $CandidatePocketPath,
+        [int] $MinScore
+    )
+
+    $output = Invoke-Checked -FilePath "powershell.exe" -ArgumentList @(
+        "-NoProfile",
+        "-ExecutionPolicy",
+        "Bypass",
+        "-File",
+        ".\threshold\scripts\prepare-discovery-evidence.ps1",
+        "-CandidatePocketPath",
+        $CandidatePocketPath,
+        "-MinScore",
+        "$MinScore"
+    ) -FailureMessage "Pre-product discovery evidence preparation failed."
+
+    foreach ($line in $output) {
+        Write-Host $line
+    }
+
+    $evidencePaths = @(
+        $output |
+            Where-Object { [string]$_ -match "^discoveryEvidencePath=" } |
+            ForEach-Object { ([string]$_).Substring("discoveryEvidencePath=".Length) }
+    )
+    if ($evidencePaths.Count -eq 0) {
+        throw "Pre-product discovery evidence preparation produced no evidence artifacts."
+    }
+
+    return $evidencePaths
+}
+
 function Restore-GovernancePaths {
     $paths = @($LeasePath, $StatePath, $PocketPath)
     & git restore -- @paths
@@ -420,7 +454,8 @@ function Invoke-LocalWave {
 
     $startingBranch = (& git branch --show-current).Trim()
     $branch = Get-NextWaveBranchName
-    Invoke-Checked -FilePath "git" -ArgumentList @("switch", "-c", $branch, "$BaseRemote/$BaseBranch") -FailureMessage "Failed to switch to new branch '$branch'."
+    $evidenceBranch = "$branch-discovery-base"
+    Invoke-Checked -FilePath "git" -ArgumentList @("switch", "-c", $evidenceBranch, "$BaseRemote/$BaseBranch") -FailureMessage "Failed to switch to new discovery evidence branch '$evidenceBranch'."
 
     Invoke-Checked -FilePath "powershell.exe" -ArgumentList @(
         "-ExecutionPolicy",
@@ -453,7 +488,7 @@ function Invoke-LocalWave {
     }
     if ($initialAutoPatchableCount -lt $MinAutoPatchableCandidates) {
         Restore-GovernancePaths
-        Restore-PreWaveBranch -PreviousBranch $startingBranch -WaveBranch $branch
+        Restore-PreWaveBranch -PreviousBranch $startingBranch -WaveBranch $evidenceBranch
         Write-Host "ready_no_candidates_on_fresh_wave"
         Write-Host "branch=$branch"
         Write-Host "currentBranch=$((& git branch --show-current).Trim())"
@@ -464,7 +499,11 @@ function Invoke-LocalWave {
     }
 
     $waveNumber = Get-WaveNumberFromBranch -Branch $branch
-    [void](Commit-PathsIfNeeded -Paths $governancePaths -Message "Start Threshold wave $waveNumber candidate pocket")
+    $minScore = Get-LeaseIntScalarOrDefault -Name "minScore" -DefaultValue 70
+    $evidencePaths = Invoke-PreProductDiscoveryPreparation -CandidatePocketPath $PocketPath -MinScore $minScore
+    [void](Commit-PathsIfNeeded -Paths ($governancePaths + $evidencePaths) -Message "Prepare Threshold wave $waveNumber discovery evidence")
+    $evidenceHead = (& git rev-parse HEAD).Trim()
+    Invoke-Checked -FilePath "git" -ArgumentList @("switch", "-c", $branch, $evidenceHead) -FailureMessage "Failed to switch to product branch '$branch'."
 
     while ($true) {
         $batchCompleted = Invoke-BatchIfAvailable
@@ -508,6 +547,9 @@ function Invoke-LocalWave {
 
     return [pscustomobject]@{
         Branch = $branch
+        EvidenceBranch = $evidenceBranch
+        PullRequestBaseBranch = $evidenceBranch
+        EvidenceHead = $evidenceHead
         WaveNumber = $waveNumber
         State = $state
     }
@@ -530,6 +572,7 @@ function Invoke-PullRequestPublish {
     $leaseLines = Read-LeaseLines
     Assert-ThresholdActionAllowed -LeaseLines $leaseLines -LeasePath $LeasePath -Action "pr"
 
+    Invoke-Checked -FilePath "git" -ArgumentList @("push", $BaseRemote, $Wave.EvidenceBranch) -FailureMessage "Failed to push discovery evidence branch '$($Wave.EvidenceBranch)'."
     Invoke-Checked -FilePath "git" -ArgumentList @("push", $BaseRemote, $Wave.Branch) -FailureMessage "Failed to push branch '$($Wave.Branch)'."
 
     if ($SkipPullRequest.IsPresent) {
@@ -548,7 +591,7 @@ function Invoke-PullRequestPublish {
         "--repo",
         $OwnedRepo,
         "--base",
-        $BaseBranch,
+        $Wave.PullRequestBaseBranch,
         "--head",
         $Wave.Branch,
         "--title",
