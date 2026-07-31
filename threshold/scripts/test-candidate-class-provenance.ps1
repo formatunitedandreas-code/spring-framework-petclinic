@@ -269,6 +269,8 @@ try {
     Assert-False -Condition ($completeSliceText -match "Write-ThresholdCandidateDiscoveryEvidence") -Name "complete-slice does not materialize discovery evidence"
     Assert-False -Condition ($completeSliceText -match "Record Threshold discovery evidence") -Name "complete-slice does not commit discovery evidence"
     Assert-True -Condition ($completeSliceText -match "Pre-product discovery evidence is required before complete-slice") -Name "complete-slice requires pre-product discovery evidence"
+    Assert-True -Condition ($completeSliceText -match 'Test-ThresholdCommitIsAncestor -Ancestor \$observedPrBaseHead -Descendant \$baseHead') -Name "complete-slice allows later slices to descend from PR base"
+    Assert-True -Condition ($completeSliceText -match 'CandidateId \$CandidateId -BaseHead \$observedPrBaseHead') -Name "complete-slice locates discovery evidence at PR base"
 
     $kgMaterializationText = Get-Content (Join-Path $thresholdScriptRoot "materialize-knowledge-graphs.ps1") -Raw
     Assert-True -Condition ($kgMaterializationText -match '\$\{ObservedPrBaseHead\}\.\.\.HEAD') -Name "KG materialization honors supplied PR base without BaseRef"

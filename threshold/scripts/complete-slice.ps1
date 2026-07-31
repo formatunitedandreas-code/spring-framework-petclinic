@@ -120,10 +120,10 @@ if ($SkipMavenTest.IsPresent) { $validateArgs += "-SkipMavenTest" }
 if ($LASTEXITCODE -ne 0) { throw "Threshold slice validation failed." }
 
 $baseHead = (& git rev-parse HEAD).Trim()
-if ($baseHead -ne $observedPrBaseHead) {
-    throw "Product slice must start from the independently observed PR base head. prBaseHead=$observedPrBaseHead currentHead=$baseHead"
+if (-not (Test-ThresholdCommitIsAncestor -Ancestor $observedPrBaseHead -Descendant $baseHead)) {
+    throw "Product slice must descend from the independently observed PR base head. prBaseHead=$observedPrBaseHead currentHead=$baseHead"
 }
-$discoveryEvidencePath = Get-ThresholdCandidateDiscoveryEvidencePath -DiscoveryEvidenceRoot "threshold/discovery-evidence" -CandidateId $CandidateId -BaseHead $baseHead
+$discoveryEvidencePath = Get-ThresholdCandidateDiscoveryEvidencePath -DiscoveryEvidenceRoot "threshold/discovery-evidence" -CandidateId $CandidateId -BaseHead $observedPrBaseHead
 $discoveryEvidence = Get-ThresholdCandidateDiscoveryEvidenceFromPath -Path $discoveryEvidencePath
 if ($null -eq $discoveryEvidence) {
     throw "Pre-product discovery evidence is required before complete-slice. path=$discoveryEvidencePath candidateId=$CandidateId prBaseHead=$observedPrBaseHead"
