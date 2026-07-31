@@ -51,6 +51,39 @@ function Test-ProductPath {
     )
 }
 
+function Get-GitRemotes {
+    $remotes = @(& git remote 2>$null | Where-Object { -not [string]::IsNullOrWhiteSpace($_) })
+    if ($LASTEXITCODE -ne 0) { return @() }
+    return @($remotes | ForEach-Object { ([string]$_).Trim() } | Where-Object { $_ -ne "" })
+}
+
+function ConvertTo-PrVisibleBaseRef {
+    param([string] $Ref)
+
+    if ([string]::IsNullOrWhiteSpace($Ref)) { return "" }
+    $trimmedRef = $Ref.Trim()
+    $remotes = @(Get-GitRemotes)
+    if ($trimmedRef -match "^([^/]+)/(.+)$" -and ($remotes -contains $Matches[1])) {
+        return $Matches[2]
+    }
+    return $trimmedRef
+}
+
+function Resolve-BaseRefForGit {
+    param([string] $Ref)
+
+    if ([string]::IsNullOrWhiteSpace($Ref)) { return "" }
+    $trimmedRef = $Ref.Trim()
+    $remotes = @(Get-GitRemotes)
+    if ($trimmedRef -match "^[0-9a-f]{40}$" -or $trimmedRef -like "refs/*") {
+        return $trimmedRef
+    }
+    if ($trimmedRef -match "^([^/]+)/(.+)$" -and ($remotes -contains $Matches[1])) {
+        return $trimmedRef
+    }
+    return "origin/$trimmedRef"
+}
+
 function Assert-ChangedFilesMatchReceipt {
     param([string] $Commit, [pscustomobject] $Receipt)
 
@@ -117,7 +150,7 @@ function Get-CommitPathBlobSha256 {
 function Get-ReceiptCommit {
     param([string] $ReceiptPath)
 
-    $receiptCommits = @(git log --format=%H "origin/${BaseRef}..HEAD" -- $ReceiptPath)
+    $receiptCommits = @(git log --format=%H "$resolvedBaseRefForGit..HEAD" -- $ReceiptPath)
     if ($LASTEXITCODE -ne 0 -or $receiptCommits.Count -eq 0 -or [string]::IsNullOrWhiteSpace($receiptCommits[0])) {
         throw "Could not determine receipt commit for $ReceiptPath."
     }
@@ -150,9 +183,12 @@ $forbiddenPaths = Get-ThresholdLeaseList -Lines $leaseLines -Name "forbiddenPath
 $expectedBaseRef = Get-LeaseScalar $leaseLines "baseRef"
 $mergeAllowed = Get-LeaseScalar $leaseLines "mergeAllowed"
 $forbiddenActions = @(Get-ThresholdLeaseList -Lines $leaseLines -Name "forbiddenActions")
+$resolvedBaseRefForGit = Resolve-BaseRefForGit -Ref $BaseRef
+$prVisibleBaseRef = ConvertTo-PrVisibleBaseRef -Ref $BaseRef
+$expectedPrVisibleBaseRef = ConvertTo-PrVisibleBaseRef -Ref $expectedBaseRef
 
 $preCommitWorktreeMode = $false
-$changedPaths = @(git diff --name-only "origin/${BaseRef}...HEAD")
+$changedPaths = @(git diff --name-only "$resolvedBaseRefForGit...HEAD")
 if ($changedPaths.Count -eq 0) {
     $changedPaths = @(git diff --name-only HEAD)
     $preCommitWorktreeMode = $changedPaths.Count -gt 0
@@ -163,7 +199,7 @@ $governancePolicyPaths = @($changedPaths | Where-Object { Test-ThresholdGovernan
 $leasePaths = @($changedPaths | Where-Object { Test-LeasePath $_ })
 $productPaths = @($changedPaths | Where-Object { Test-ProductPath $_ })
 $stackedGovernanceOnlyPr = $BaseRef -like "codex/*" -and $productPaths.Count -eq 0 -and @($changedPaths | Where-Object { -not (Test-ThresholdGovernancePath -Path $_) }).Count -eq 0
-if ($BaseRef -ne $expectedBaseRef.Replace("origin/", "") -and -not $stackedGovernanceOnlyPr) {
+if ($prVisibleBaseRef -ne $expectedPrVisibleBaseRef -and -not $stackedGovernanceOnlyPr) {
     throw "PR base ref '$BaseRef' does not match threshold baseRef '$expectedBaseRef'."
 }
 if ($governancePolicyPaths.Count -gt 0 -and $productPaths.Count -gt 0) {
@@ -231,9 +267,9 @@ if (-not $state.invocationId) { throw "Lease state is missing invocationId." }
 if (-not $state.currentHead) { throw "Lease state is missing currentHead." }
 if (-not $state.remainingBudget) { throw "Lease state is missing remainingBudget." }
 
-$prCommits = @(git rev-list --reverse "origin/${BaseRef}..HEAD")
+$prCommits = @(git rev-list --reverse "$resolvedBaseRefForGit..HEAD")
 if ($prCommits.Count -eq 0 -and -not $preCommitWorktreeMode) { throw "No PR commits detected." }
-$observedPrBaseHead = (& git rev-parse "origin/${BaseRef}" 2>$null)
+$observedPrBaseHead = (& git rev-parse $resolvedBaseRefForGit 2>$null)
 if ($LASTEXITCODE -ne 0 -or [string]::IsNullOrWhiteSpace([string]$observedPrBaseHead)) {
     throw "Unable to resolve observed PR base head for BaseRef '$BaseRef'."
 }

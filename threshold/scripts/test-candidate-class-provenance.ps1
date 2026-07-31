@@ -274,8 +274,10 @@ try {
     Assert-True -Condition ($completeSliceText -match 'preProductDiscoverySourceHead') -Name "complete-slice prefers stable pre-product discovery source head"
     Assert-True -Condition ($completeSliceText -match 'generatedFromHead') -Name "complete-slice derives discovery source head from candidate pocket"
     Assert-True -Condition ($completeSliceText -match 'CandidateId \$CandidateId -BaseHead \$discoverySourceHead') -Name "complete-slice locates discovery evidence at discovery source head"
-    Assert-True -Condition ($completeSliceText -match '\$refToResolve = \$effectiveBaseRef') -Name "complete-slice resolves supplied PR base ref verbatim"
-    Assert-True -Condition ($completeSliceText -match '\$refToResolve = "origin/\$refToResolve"') -Name "complete-slice prefixes only unqualified PR base branch names"
+    Assert-True -Condition ($completeSliceText -match "Resolve-GitRefWithOriginFallback") -Name "complete-slice uses canonical PR base ref resolver"
+    Assert-True -Condition ($completeSliceText -match '\$remoteQualified = \$remotes -contains \$Matches\[1\]') -Name "complete-slice checks slash ref prefixes against configured git remotes"
+    Assert-True -Condition ($completeSliceText -match '\$candidateRefs\.Add\("origin/\$trimmedRef"\)') -Name "complete-slice preserves origin fallback for slash-containing branch names"
+    Assert-True -Condition ($completeSliceText -match '\$candidateRefs\.Add\(\$trimmedRef\)') -Name "complete-slice resolves remote-qualified PR base refs verbatim"
     Assert-False -Condition ($completeSliceText -match 'origin/\$\{effectiveBaseRef\}') -Name "complete-slice does not force origin onto remote-qualified PR base refs"
 
     $prepareDiscoveryEvidenceText = Get-Content (Join-Path $thresholdScriptRoot "prepare-discovery-evidence.ps1") -Raw
@@ -322,6 +324,12 @@ try {
     $kgMaterializationText = Get-Content (Join-Path $thresholdScriptRoot "materialize-knowledge-graphs.ps1") -Raw
     Assert-True -Condition ($kgMaterializationText -match '\$\{ObservedPrBaseHead\}\.\.\.HEAD') -Name "KG materialization honors supplied PR base without BaseRef"
     Assert-True -Condition ($kgMaterializationText -match 'return \$ObservedPrBaseHead') -Name "KG materialization distinguishes current PR receipts from historical receipts"
+
+    $prGovernanceText = Get-Content (Join-Path $thresholdScriptRoot "test-pr-governance.ps1") -Raw
+    Assert-True -Condition ($prGovernanceText -match "ConvertTo-PrVisibleBaseRef") -Name "PR governance normalizes lease base refs to PR-visible branch refs"
+    Assert-True -Condition ($prGovernanceText -match "Resolve-BaseRefForGit") -Name "PR governance resolves configured base refs through a canonical helper"
+    Assert-True -Condition ($prGovernanceText -match '\$resolvedBaseRefForGit\.\.HEAD') -Name "PR governance uses resolved base refs for commit ranges"
+    Assert-True -Condition ($prGovernanceText -match '\$prVisibleBaseRef -ne \$expectedPrVisibleBaseRef') -Name "PR governance compares PR-visible base refs after remote-prefix normalization"
 
     $missingPrBaseProvenance = New-ThresholdCandidateClassProvenance `
         -CandidateId "canary-method-spacing-valid" `

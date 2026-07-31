@@ -59,6 +59,41 @@ function Get-LeaseScalarOrDefault {
     return ($match -replace "^\s*$([regex]::Escape($Name)):\s*", "").Trim()
 }
 
+function Get-GitRemotes {
+    $remotes = @(& git remote 2>$null | Where-Object { -not [string]::IsNullOrWhiteSpace($_) })
+    if ($LASTEXITCODE -ne 0) { return @() }
+    return @($remotes | ForEach-Object { ([string]$_).Trim() } | Where-Object { $_ -ne "" })
+}
+
+function Resolve-GitRefWithOriginFallback {
+    param([string] $Ref)
+
+    if ([string]::IsNullOrWhiteSpace($Ref)) { return "" }
+    $trimmedRef = $Ref.Trim()
+    $candidateRefs = New-Object System.Collections.Generic.List[string]
+    $remotes = @(Get-GitRemotes)
+    $remoteQualified = $false
+    if ($trimmedRef -match "^([^/]+)/(.+)$") {
+        $remoteQualified = $remotes -contains $Matches[1]
+    }
+
+    if ($trimmedRef -match "^[0-9a-f]{40}$" -or $trimmedRef -like "refs/*" -or $remoteQualified) {
+        $candidateRefs.Add($trimmedRef)
+    }
+    else {
+        $candidateRefs.Add("origin/$trimmedRef")
+        $candidateRefs.Add($trimmedRef)
+    }
+
+    foreach ($candidateRef in @($candidateRefs | Select-Object -Unique)) {
+        $resolved = (& git rev-parse $candidateRef 2>$null)
+        if ($LASTEXITCODE -eq 0 -and -not [string]::IsNullOrWhiteSpace([string]$resolved)) {
+            return [string]($resolved.Trim())
+        }
+    }
+    return ""
+}
+
 function Resolve-PrBaseHead {
     param([string] $PrBaseHead, [string] $BaseRef, [string] $LeasePath)
     if (-not [string]::IsNullOrWhiteSpace($PrBaseHead)) {
@@ -73,14 +108,7 @@ function Resolve-PrBaseHead {
         $effectiveBaseRef = Get-LeaseScalarOrDefault -Lines $leaseLines -Name "baseRef"
     }
     if (-not [string]::IsNullOrWhiteSpace($effectiveBaseRef)) {
-        $refToResolve = $effectiveBaseRef
-        if ($refToResolve -notmatch "^[0-9a-f]{40}$" -and $refToResolve -notmatch "^[^/]+/.+") {
-            $refToResolve = "origin/$refToResolve"
-        }
-        $resolved = (& git rev-parse $refToResolve 2>$null)
-        if ($LASTEXITCODE -eq 0 -and -not [string]::IsNullOrWhiteSpace([string]$resolved)) {
-            return [string]($resolved.Trim())
-        }
+        return Resolve-GitRefWithOriginFallback -Ref $effectiveBaseRef
     }
     return ""
 }
