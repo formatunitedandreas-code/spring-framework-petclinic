@@ -448,15 +448,102 @@ function Assert-RemoteBaseMatchesMergeCommit {
     Write-Host "remoteHead=$remoteBase"
 }
 
-function Assert-GovernedEvidenceBasePromotionRequired {
-    param([pscustomobject] $MergedPullRequest)
+function New-GovernedEvidenceBasePromotionBody {
+    param(
+        [pscustomobject] $Wave,
+        [pscustomobject] $MergedPullRequest
+    )
 
     $mergeCommit = [string]$MergedPullRequest.merge_commit_sha
     if ([string]::IsNullOrWhiteSpace($mergeCommit)) {
         throw "Merged pull request did not report merge_commit_sha for governed evidence-base promotion."
     }
 
-    throw "governed_evidence_base_promotion_required. productMergeCommit=$mergeCommit configuredBase=$BaseRemote/$BaseBranch evidenceBaseMustReachConfiguredBaseThroughReviewedPr=true"
+    return @"
+## Summary
+- promote governed Threshold wave $($Wave.WaveNumber) evidence-base result to $BaseRemote/$BaseBranch
+- preserve the merged product/evidence head as the exact PR review object
+- reconcile configured base only through this separate promotion PR
+
+## Bound Source
+- product pull request: $($MergedPullRequest.url)
+- product/evidence merge commit: `$mergeCommit`
+- evidence base branch: `$($Wave.PullRequestBaseBranch)`
+- configured base: `$BaseRemote/$BaseBranch`
+
+## Non-claims
+- no direct configured-base push
+- no force push
+- no dependency change
+- no release or deploy
+"@
+}
+
+function Invoke-GovernedEvidenceBasePromotion {
+    param(
+        [pscustomobject] $Wave,
+        [pscustomobject] $MergedPullRequest
+    )
+
+    $mergeCommit = [string]$MergedPullRequest.merge_commit_sha
+    if ([string]::IsNullOrWhiteSpace($mergeCommit)) {
+        throw "Merged pull request did not report merge_commit_sha for governed evidence-base promotion."
+    }
+
+    Invoke-Checked -FilePath "git" -ArgumentList @("fetch", $BaseRemote) -FailureMessage "Failed to refresh $BaseRemote before governed evidence-base promotion."
+
+    & git merge-base --is-ancestor "$BaseRemote/$BaseBranch" $mergeCommit
+    if ($LASTEXITCODE -ne 0) {
+        throw "governed_evidence_base_promotion_not_descendant_of_configured_base. configuredBase=$BaseRemote/$BaseBranch productMergeCommit=$mergeCommit"
+    }
+
+    $safeBaseBranch = ($BaseBranch -replace "[^A-Za-z0-9._-]", "-")
+    $promotionBranch = "$($Wave.EvidenceBranch)-promote-to-$safeBaseBranch"
+    Invoke-Checked -FilePath "git" -ArgumentList @("branch", "-f", $promotionBranch, $mergeCommit) -FailureMessage "Failed to create governed evidence-base promotion branch '$promotionBranch'."
+    Invoke-Checked -FilePath "git" -ArgumentList @("push", $BaseRemote, "$promotionBranch`:refs/heads/$promotionBranch") -FailureMessage "Failed to push governed evidence-base promotion branch '$promotionBranch'."
+
+    $promotionTitle = "Promote Threshold wave $($Wave.WaveNumber) evidence base"
+    $promotionBody = New-GovernedEvidenceBasePromotionBody -Wave $Wave -MergedPullRequest $MergedPullRequest
+    $promotionPrOutput = Invoke-Checked -FilePath "gh" -ArgumentList @(
+        "pr",
+        "create",
+        "--repo",
+        $OwnedRepo,
+        "--base",
+        $BaseBranch,
+        "--head",
+        $promotionBranch,
+        "--title",
+        $promotionTitle,
+        "--body",
+        $promotionBody
+    ) -FailureMessage "Failed to create governed evidence-base promotion pull request."
+
+    $promotionPrUrl = ($promotionPrOutput | Select-Object -Last 1).Trim()
+    $promotionPrMatch = [regex]::Match($promotionPrUrl, "/pull/(?<number>\d+)$")
+    if (-not $promotionPrMatch.Success) {
+        throw "Could not parse governed evidence-base promotion pull request number from '$promotionPrUrl'."
+    }
+    $promotionPr = [pscustomobject]@{
+        Number = [int]$promotionPrMatch.Groups["number"].Value
+        Url = $promotionPrUrl
+        Title = $promotionTitle
+        Branch = $promotionBranch
+        Head = $mergeCommit
+    }
+
+    [void](@(Invoke-PullRequestVerification -PullRequest $promotionPr) | Select-Object -Last 1)
+    $mergedPromotionPr = @(Invoke-AuthorizedMerge -Wave ([pscustomobject]@{
+        Branch = $promotionBranch
+        PullRequestBaseBranch = $BaseBranch
+        EvidenceBranch = $Wave.EvidenceBranch
+        WaveNumber = $Wave.WaveNumber
+    }) -PullRequest $promotionPr) | Select-Object -Last 1
+
+    Assert-RemoteBaseMatchesMergeCommit -MergedPullRequest $mergedPromotionPr -ExpectedBaseBranch $BaseBranch
+    Write-Host "governedEvidenceBasePromotion=merged"
+    Write-Host "governedEvidenceBasePromotionPr=$($promotionPr.Url)"
+    return $mergedPromotionPr
 }
 
 function Assert-PullRequestBaseHasThresholdGovernanceTrigger {
@@ -735,7 +822,7 @@ non-claims: no upstream interaction, no release, no deploy, no public readiness/
 
     Assert-RemoteBaseMatchesMergeCommit -MergedPullRequest $mergedPullRequest -ExpectedBaseBranch $Wave.PullRequestBaseBranch
     if ($Wave.PullRequestBaseBranch -ne $BaseBranch) {
-        Assert-GovernedEvidenceBasePromotionRequired -MergedPullRequest $mergedPullRequest
+        [void](@(Invoke-GovernedEvidenceBasePromotion -Wave $Wave -MergedPullRequest $mergedPullRequest) | Select-Object -Last 1)
     }
     return $mergedPullRequest
 }
