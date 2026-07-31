@@ -6,6 +6,7 @@ $ErrorActionPreference = "Stop"
 
 . (Join-Path $PSScriptRoot "lib/candidate-class-provenance.ps1")
 $thresholdScriptRoot = $PSScriptRoot
+$repoRoot = Split-Path (Split-Path $thresholdScriptRoot -Parent) -Parent
 
 function Assert-True {
     param([bool] $Condition, [string] $Name)
@@ -285,8 +286,20 @@ try {
     Assert-True -Condition ($startNextWaveText -match "preProductDiscoveryEvidencePolicy") -Name "start-next-wave documents pocket evidence-source policy"
     Assert-True -Condition ($startNextWaveText -match "Prepare Threshold wave .* discovery evidence") -Name "start-next-wave commits discovery evidence before product branch"
     Assert-True -Condition ($startNextWaveText -match "PullRequestBaseBranch") -Name "start-next-wave creates PR against evidence-bearing base branch"
+    Assert-True -Condition ($startNextWaveText -match '"-BranchName",\s*\$branch') -Name "start-next-wave binds lease to product branch before slice execution"
+    Assert-True -Condition ($startNextWaveText -match "midWaveScopeExpansionBlocked=true") -Name "start-next-wave blocks mid-wave scope expansion after product branch start"
+    Assert-False -Condition ($startNextWaveText -match 'Try-ExpandScopeForCandidateShortage -Reason "mid_wave_candidate_shortage"') -Name "start-next-wave does not create discovery evidence inside the product PR for mid-wave scope expansion"
+    Assert-True -Condition ($startNextWaveText -match "Assert-PullRequestBaseHasThresholdGovernanceTrigger") -Name "start-next-wave fails closed when PR base lacks Threshold governance trigger"
+    Assert-True -Condition ($startNextWaveText -match "threshold-governed-refactor-demo-.*-discovery-base") -Name "start-next-wave recognizes generated evidence bases covered by workflow trigger"
     Assert-True -Condition ($startNextWaveText -match '\"-PrBaseHead\"') -Name "start-next-wave passes evidence-bearing PR base to run-next-slice"
     Assert-True -Condition ($startNextWaveText -match "ExpectedBaseBranch") -Name "start-next-wave reconciles the actual PR base branch after merge"
+
+    $startLeaseText = Get-Content (Join-Path $thresholdScriptRoot "start-lease.ps1") -Raw
+    Assert-True -Condition ($startLeaseText -match '\[string\] \$BranchName = ""') -Name "start-lease supports explicit product branch binding"
+    Assert-True -Condition ($startLeaseText -match '\$branch = if \(\[string\]::IsNullOrWhiteSpace\(\$BranchName\)\)') -Name "start-lease defaults to observed branch only when no branch binding is supplied"
+
+    $thresholdGovernanceWorkflowText = Get-Content (Join-Path $repoRoot ".github/workflows/threshold-governance.yml") -Raw
+    Assert-True -Condition ($thresholdGovernanceWorkflowText -match "threshold-governed-refactor-demo-\*-discovery-base") -Name "Threshold governance workflow runs for evidence-bearing PR base branches"
 
     $runNextSliceText = Get-Content (Join-Path $thresholdScriptRoot "run-next-slice.ps1") -Raw
     Assert-True -Condition ($runNextSliceText -match 'preProductDiscoverySourceHead') -Name "run-next-slice uses stable pre-product discovery source head"

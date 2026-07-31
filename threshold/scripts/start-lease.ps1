@@ -9,6 +9,7 @@ param(
     [int] $MaxFilesPerCandidate = 1,
     [int] $MaxChangedLinesPerCandidate = 80,
     [int] $MaxRepairAttemptsPerCandidate = 1,
+    [string] $BranchName = "",
     [switch] $DraftPrAllowed
 )
 
@@ -20,7 +21,8 @@ function ConvertTo-RepoPath {
     return ($Path -replace "\\", "/").Trim()
 }
 
-$branch = (& git branch --show-current).Trim()
+$observedBranch = (& git branch --show-current).Trim()
+$branch = if ([string]::IsNullOrWhiteSpace($BranchName)) { $observedBranch } else { $BranchName }
 if ([string]::IsNullOrWhiteSpace($branch)) {
     throw "Unable to determine current git branch."
 }

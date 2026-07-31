@@ -438,6 +438,19 @@ function Assert-RemoteBaseMatchesMergeCommit {
     Write-Host "remoteHead=$remoteBase"
 }
 
+function Assert-PullRequestBaseHasThresholdGovernanceTrigger {
+    param([string] $PullRequestBaseBranch)
+
+    if ($PullRequestBaseBranch -eq $BaseBranch) {
+        return
+    }
+    if ($PullRequestBaseBranch -match "^threshold-governed-refactor-demo-\d+-discovery-base$") {
+        return
+    }
+
+    throw "Pull request base '$PullRequestBaseBranch' is not covered by the Threshold governance workflow trigger."
+}
+
 function New-PullRequestBody {
     param(
         [int] $WaveNumber,
@@ -497,6 +510,8 @@ function Invoke-LocalWave {
         "$MaxChangedLinesPerCandidate",
         "-MaxRepairAttemptsPerCandidate",
         "$MaxRepairAttemptsPerCandidate",
+        "-BranchName",
+        $branch,
         "-DraftPrAllowed"
     ) -FailureMessage "Failed to start lease."
 
@@ -551,12 +566,9 @@ function Invoke-LocalWave {
             $autoPatchableCandidateCount = Get-AutoPatchableCandidateCount -Path $PocketPath
             if ($state.remainingBudget.candidates -gt 0 -and
                 $state.remainingBudget.commits -gt 0 -and
-                $autoPatchableCandidateCount -lt $MinAutoPatchableCandidates -and
-                (Try-ExpandScopeForCandidateShortage -Reason "mid_wave_candidate_shortage")) {
-                Update-CandidatePocket
-                Set-PreProductDiscoverySourceHead -CandidatePocketPath $PocketPath -DiscoverySourceHead $discoverySourceHead
-                [void](Commit-PathsIfNeeded -Paths $governancePaths -Message "Expand Threshold wave $waveNumber scope")
-                continue
+                $autoPatchableCandidateCount -lt $MinAutoPatchableCandidates) {
+                Write-Host "midWaveScopeExpansionBlocked=true"
+                Write-Host "midWaveScopeExpansionPolicy=scope expansion after product branch start would create discovery evidence inside the product PR"
             }
             break
         }
@@ -579,6 +591,7 @@ function Invoke-LocalWave {
         Branch = $branch
         EvidenceBranch = $evidenceBranch
         PullRequestBaseBranch = $evidenceBranch
+        PullRequestBaseGovernanceTriggered = $true
         EvidenceHead = $evidenceHead
         WaveNumber = $waveNumber
         State = $state
@@ -615,6 +628,7 @@ function Invoke-PullRequestPublish {
 
     $prTitle = "Refactor PetClinic autonomous wave $($Wave.WaveNumber)"
     $prBody = New-PullRequestBody -WaveNumber $Wave.WaveNumber -State $Wave.State
+    Assert-PullRequestBaseHasThresholdGovernanceTrigger -PullRequestBaseBranch $Wave.PullRequestBaseBranch
     $prCreateOutput = Invoke-Checked -FilePath "gh" -ArgumentList @(
         "pr",
         "create",
