@@ -274,6 +274,9 @@ try {
     Assert-True -Condition ($completeSliceText -match 'preProductDiscoverySourceHead') -Name "complete-slice prefers stable pre-product discovery source head"
     Assert-True -Condition ($completeSliceText -match 'generatedFromHead') -Name "complete-slice derives discovery source head from candidate pocket"
     Assert-True -Condition ($completeSliceText -match 'CandidateId \$CandidateId -BaseHead \$discoverySourceHead') -Name "complete-slice locates discovery evidence at discovery source head"
+    Assert-True -Condition ($completeSliceText -match '\$refToResolve = \$effectiveBaseRef') -Name "complete-slice resolves supplied PR base ref verbatim"
+    Assert-True -Condition ($completeSliceText -match '\$refToResolve = "origin/\$refToResolve"') -Name "complete-slice prefixes only unqualified PR base branch names"
+    Assert-False -Condition ($completeSliceText -match 'origin/\$\{effectiveBaseRef\}') -Name "complete-slice does not force origin onto remote-qualified PR base refs"
 
     $prepareDiscoveryEvidenceText = Get-Content (Join-Path $thresholdScriptRoot "prepare-discovery-evidence.ps1") -Raw
     Assert-True -Condition ($prepareDiscoveryEvidenceText -match "Write-ThresholdCandidateDiscoveryEvidence") -Name "pre-product producer materializes discovery evidence"

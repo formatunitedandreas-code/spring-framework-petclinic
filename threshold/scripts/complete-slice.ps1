@@ -70,10 +70,14 @@ function Resolve-PrBaseHead {
     $effectiveBaseRef = $BaseRef
     if ([string]::IsNullOrWhiteSpace($effectiveBaseRef)) {
         $leaseLines = Get-Content $LeasePath
-        $effectiveBaseRef = (Get-LeaseScalarOrDefault -Lines $leaseLines -Name "baseRef").Replace("origin/", "")
+        $effectiveBaseRef = Get-LeaseScalarOrDefault -Lines $leaseLines -Name "baseRef"
     }
     if (-not [string]::IsNullOrWhiteSpace($effectiveBaseRef)) {
-        $resolved = (& git rev-parse "origin/${effectiveBaseRef}" 2>$null)
+        $refToResolve = $effectiveBaseRef
+        if ($refToResolve -notmatch "^[0-9a-f]{40}$" -and $refToResolve -notmatch "^[^/]+/.+") {
+            $refToResolve = "origin/$refToResolve"
+        }
+        $resolved = (& git rev-parse $refToResolve 2>$null)
         if ($LASTEXITCODE -eq 0 -and -not [string]::IsNullOrWhiteSpace([string]$resolved)) {
             return [string]($resolved.Trim())
         }
