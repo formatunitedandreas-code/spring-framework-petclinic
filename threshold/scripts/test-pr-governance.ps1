@@ -58,12 +58,14 @@ function Get-GitRemotes {
 }
 
 function ConvertTo-PrVisibleBaseRef {
-    param([string] $Ref)
+    param([string] $Ref, [string] $ObservedPrBaseRef = "")
 
     if ([string]::IsNullOrWhiteSpace($Ref)) { return "" }
     $trimmedRef = $Ref.Trim()
-    $remotes = @(Get-GitRemotes)
-    if ($trimmedRef -match "^([^/]+)/(.+)$" -and ($remotes -contains $Matches[1])) {
+    if (-not [string]::IsNullOrWhiteSpace($ObservedPrBaseRef) -and $trimmedRef.EndsWith("/$ObservedPrBaseRef")) {
+        return $ObservedPrBaseRef
+    }
+    if ($trimmedRef -match "^(origin)/(.+)$") {
         return $Matches[2]
     }
     return $trimmedRef
@@ -185,7 +187,7 @@ $mergeAllowed = Get-LeaseScalar $leaseLines "mergeAllowed"
 $forbiddenActions = @(Get-ThresholdLeaseList -Lines $leaseLines -Name "forbiddenActions")
 $resolvedBaseRefForGit = Resolve-BaseRefForGit -Ref $BaseRef
 $prVisibleBaseRef = ConvertTo-PrVisibleBaseRef -Ref $BaseRef
-$expectedPrVisibleBaseRef = ConvertTo-PrVisibleBaseRef -Ref $expectedBaseRef
+$expectedPrVisibleBaseRef = ConvertTo-PrVisibleBaseRef -Ref $expectedBaseRef -ObservedPrBaseRef $prVisibleBaseRef
 
 $preCommitWorktreeMode = $false
 $changedPaths = @(git diff --name-only "$resolvedBaseRefForGit...HEAD")

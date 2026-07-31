@@ -7,11 +7,17 @@ param(
     [int] $MaxSlicesPerBatch = 3,
     [int] $MaxFilesPerBatch = 3,
     [int] $MaxChangedLinesPerBatch = 120,
+    [string] $CandidatePocketPath = "",
+    [string] $PrBaseHead = "",
+    [string] $DiscoveryEvidenceRoot = "threshold/discovery-evidence",
+    [switch] $RequirePreProductDiscoveryEvidence,
     [switch] $SkipMavenTest
 )
 
 Set-StrictMode -Version Latest
 $ErrorActionPreference = "Stop"
+
+. (Join-Path $PSScriptRoot "lib/candidate-class-provenance.ps1")
 
 function ConvertTo-RepoPath {
     param([string] $Path)
@@ -229,6 +235,17 @@ function Invoke-DiscoveryCanary {
 }
 
 function New-CandidatePocket {
+    if (-not [string]::IsNullOrWhiteSpace($CandidatePocketPath)) {
+        if (-not (Test-Path $CandidatePocketPath)) {
+            throw "Prepared candidate pocket not found for batch execution: $CandidatePocketPath"
+        }
+        return $CandidatePocketPath
+    }
+
+    if ($RequirePreProductDiscoveryEvidence.IsPresent) {
+        throw "Batch execution requires a prepared candidate pocket when pre-product discovery evidence is required."
+    }
+
     $head = (& git rev-parse HEAD).Trim()
     $path = Join-Path ([System.IO.Path]::GetTempPath()) "threshold-batch-candidate-pocket-$head.json"
     if (Test-Path $path) { Remove-Item -LiteralPath $path -Force }
@@ -289,6 +306,64 @@ function Get-BatchCandidates {
     }
 
     return $selected
+}
+
+function Assert-BatchCandidateHasPreProductDiscoveryEvidence {
+    param(
+        [pscustomobject] $Candidate,
+        [string] $PocketPath,
+        [string] $ObservedPrBaseHead
+    )
+
+    if (-not $RequirePreProductDiscoveryEvidence.IsPresent) {
+        return [ordered]@{}
+    }
+    if ([string]::IsNullOrWhiteSpace($ObservedPrBaseHead)) {
+        throw "Batch execution requires PrBaseHead when pre-product discovery evidence is required."
+    }
+
+    $pocket = Get-Content $PocketPath -Raw | ConvertFrom-Json
+    $discoverySourceHead = [string](Get-ThresholdJsonProperty $pocket "preProductDiscoverySourceHead" "")
+    if ([string]::IsNullOrWhiteSpace($discoverySourceHead)) {
+        $discoverySourceHead = [string](Get-ThresholdJsonProperty $pocket "generatedFromHead" "")
+    }
+    if ([string]::IsNullOrWhiteSpace($discoverySourceHead)) {
+        throw "Prepared candidate pocket is missing discovery source head for batch execution."
+    }
+    if (-not (Test-ThresholdCommitIsAncestor -Ancestor $discoverySourceHead -Descendant $ObservedPrBaseHead)) {
+        throw "Batch discovery source head is not an ancestor of PR base head. source=$discoverySourceHead prBase=$ObservedPrBaseHead"
+    }
+
+    $candidateId = [string]$Candidate.candidateId
+    $evidencePath = Get-ThresholdCandidateDiscoveryEvidencePath -DiscoveryEvidenceRoot $DiscoveryEvidenceRoot -CandidateId $candidateId -BaseHead $discoverySourceHead
+    $evidenceAtPrBase = Get-ThresholdCandidateDiscoveryEvidenceFromRevision -Revision $ObservedPrBaseHead -Path $evidencePath
+    if ($null -eq $evidenceAtPrBase) {
+        throw "Pre-product discovery evidence is required before batch execution. candidateId=$candidateId path=$evidencePath prBase=$ObservedPrBaseHead"
+    }
+    $evidenceDigest = Get-ThresholdCandidateDiscoveryEvidenceDigest -DiscoveryEvidence $evidenceAtPrBase
+    if ([string]$evidenceDigest -ne [string](Get-ThresholdJsonProperty $evidenceAtPrBase "discoveryEvidenceDigest" "")) {
+        throw "Pre-product discovery evidence digest mismatch before batch execution. candidateId=$candidateId path=$evidencePath"
+    }
+
+    foreach ($field in @("candidateId", "candidateClass")) {
+        if ([string](Get-ThresholdJsonProperty $evidenceAtPrBase $field "") -ne [string](Get-ThresholdJsonProperty $Candidate $field "")) {
+            throw "Pre-product discovery evidence candidate $field mismatch before batch execution. candidateId=$candidateId path=$evidencePath"
+        }
+    }
+    if ([string](Get-ThresholdJsonProperty $evidenceAtPrBase "candidatePath" "") -ne [string](ConvertTo-RepoPath $Candidate.file)) {
+        throw "Pre-product discovery evidence candidatePath mismatch before batch execution. candidateId=$candidateId path=$evidencePath"
+    }
+    if ([string](Get-ThresholdJsonProperty $evidenceAtPrBase "candidateMember" "") -ne [string]$Candidate.member) {
+        throw "Pre-product discovery evidence candidateMember mismatch before batch execution. candidateId=$candidateId path=$evidencePath"
+    }
+
+    return [ordered]@{
+        discoveryEvidencePath = ConvertTo-RepoPath $evidencePath
+        discoveryEvidenceDigest = $evidenceDigest
+        discoverySourceHead = $discoverySourceHead
+        prBaseHead = $ObservedPrBaseHead
+        immutableDiscoveryEvidencePresent = $true
+    }
 }
 
 function Get-ChangedLineCount {
@@ -355,6 +430,8 @@ try {
             throw "Batch executor does not support candidate class '$candidateClass'."
         }
 
+        $candidateDiscoveryEvidence = Assert-BatchCandidateHasPreProductDiscoveryEvidence -Candidate $candidate -PocketPath $pocketPath -ObservedPrBaseHead $PrBaseHead
+
         $path = ConvertTo-RepoPath $candidate.file
         $beforeHash = Get-FileSha256 -Path $path
         Apply-CommentWrapCleanup -Candidate $candidate
@@ -373,6 +450,7 @@ try {
             expectedDiffSummary = [string]$candidate.expectedDiffSummary
             gateApproved = $true
             executionMode = "batched_auto_patchable"
+            candidateDiscoveryEvidence = $candidateDiscoveryEvidence
         }) | Out-Null
     }
 

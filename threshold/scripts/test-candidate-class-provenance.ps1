@@ -300,6 +300,8 @@ try {
     Assert-True -Condition ($startNextWaveText -match '\$SupportedGovernanceBranchPrefix = "threshold-governed-refactor-demo-"') -Name "start-next-wave binds supported branch prefix to governance workflow trigger"
     Assert-True -Condition ($startNextWaveText -match "threshold-governed-refactor-demo-.*-discovery-base") -Name "start-next-wave recognizes generated evidence bases covered by workflow trigger"
     Assert-True -Condition ($startNextWaveText -match '\"-PrBaseHead\"') -Name "start-next-wave passes evidence-bearing PR base to run-next-slice"
+    Assert-True -Condition ($startNextWaveText -match '\"-CandidatePocketPath\",\s*\$PocketPath') -Name "start-next-wave passes prepared candidate pocket to run-next-batch"
+    Assert-True -Condition ($startNextWaveText -match '\"-RequirePreProductDiscoveryEvidence\"') -Name "start-next-wave requires pre-product discovery evidence for batch execution"
     Assert-True -Condition ($startNextWaveText -match "ExpectedBaseBranch") -Name "start-next-wave reconciles the actual PR base branch after merge"
     Assert-True -Condition ($startNextWaveText -match "Promote-MergedWaveToConfiguredBase") -Name "start-next-wave promotes merged evidence-base PR to configured base branch"
     Assert-True -Condition ($startNextWaveText -match "configured_base_promotion_not_fast_forward") -Name "start-next-wave blocks non-fast-forward configured base promotion"
@@ -328,8 +330,16 @@ try {
     $prGovernanceText = Get-Content (Join-Path $thresholdScriptRoot "test-pr-governance.ps1") -Raw
     Assert-True -Condition ($prGovernanceText -match "ConvertTo-PrVisibleBaseRef") -Name "PR governance normalizes lease base refs to PR-visible branch refs"
     Assert-True -Condition ($prGovernanceText -match "Resolve-BaseRefForGit") -Name "PR governance resolves configured base refs through a canonical helper"
+    Assert-True -Condition ($prGovernanceText -match 'ObservedPrBaseRef') -Name "PR governance strips configured remote aliases without relying on CI remotes"
     Assert-True -Condition ($prGovernanceText -match '\$resolvedBaseRefForGit\.\.HEAD') -Name "PR governance uses resolved base refs for commit ranges"
     Assert-True -Condition ($prGovernanceText -match '\$prVisibleBaseRef -ne \$expectedPrVisibleBaseRef') -Name "PR governance compares PR-visible base refs after remote-prefix normalization"
+
+    $runNextBatchText = Get-Content (Join-Path $thresholdScriptRoot "run-next-batch.ps1") -Raw
+    Assert-True -Condition ($runNextBatchText -match '\[string\] \$CandidatePocketPath = ""') -Name "run-next-batch accepts a prepared candidate pocket"
+    Assert-True -Condition ($runNextBatchText -match '\[string\] \$PrBaseHead = ""') -Name "run-next-batch accepts an observed PR base head"
+    Assert-True -Condition ($runNextBatchText -match "Assert-BatchCandidateHasPreProductDiscoveryEvidence") -Name "run-next-batch requires pre-product evidence for every batched candidate"
+    Assert-True -Condition ($runNextBatchText -match "Get-ThresholdCandidateDiscoveryEvidenceFromRevision") -Name "run-next-batch reads batch discovery evidence from PR base"
+    Assert-True -Condition ($runNextBatchText -match "candidateDiscoveryEvidence") -Name "run-next-batch records per-candidate discovery evidence binding"
 
     $missingPrBaseProvenance = New-ThresholdCandidateClassProvenance `
         -CandidateId "canary-method-spacing-valid" `

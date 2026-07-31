@@ -355,7 +355,12 @@ function Invoke-BatchIfAvailable {
         "-ExecutionPolicy",
         "Bypass",
         "-File",
-        ".\threshold\scripts\run-next-batch.ps1"
+        ".\threshold\scripts\run-next-batch.ps1",
+        "-CandidatePocketPath",
+        $PocketPath,
+        "-PrBaseHead",
+        $script:CurrentWaveEvidenceHead,
+        "-RequirePreProductDiscoveryEvidence"
     ) -FailureMessage "run-next-batch failed."
 
     foreach ($line in $output) {
@@ -586,6 +591,7 @@ function Invoke-LocalWave {
     $evidencePaths = Invoke-PreProductDiscoveryPreparation -CandidatePocketPath $PocketPath -MinScore $minScore
     [void](Commit-PathsIfNeeded -Paths ($governancePaths + $evidencePaths) -Message "Prepare Threshold wave $waveNumber discovery evidence")
     $evidenceHead = (& git rev-parse HEAD).Trim()
+    $script:CurrentWaveEvidenceHead = $evidenceHead
     Invoke-Checked -FilePath "git" -ArgumentList @("switch", "-c", $branch, $evidenceHead) -FailureMessage "Failed to switch to product branch '$branch'."
 
     while ($true) {
