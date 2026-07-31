@@ -322,6 +322,8 @@ try {
     Assert-True -Condition ($runNextSliceText -match 'preProductDiscoverySourceHead') -Name "run-next-slice uses stable pre-product discovery source head"
     Assert-True -Condition ($runNextSliceText -match 'Test-ThresholdCommitIsAncestor -Ancestor \$evidenceSourceHead -Descendant \$head') -Name "run-next-slice keeps execution pocket aligned with prepared evidence"
     Assert-True -Condition ($runNextSliceText -match '\"-PrBaseHead\", \$PrBaseHead') -Name "run-next-slice forwards observed PR base to complete-slice"
+    Assert-True -Condition ($runNextSliceText -match 'ProcessedCandidateIds') -Name "run-next-slice filters already processed immutable candidate IDs"
+    Assert-True -Condition ($runNextSliceText -match 'candidateSkippedReason=already_processed') -Name "run-next-slice reports already processed candidate suppression"
 
     $kgMaterializationText = Get-Content (Join-Path $thresholdScriptRoot "materialize-knowledge-graphs.ps1") -Raw
     Assert-True -Condition ($kgMaterializationText -match '\$\{ObservedPrBaseHead\}\.\.\.HEAD') -Name "KG materialization honors supplied PR base without BaseRef"
@@ -340,6 +342,10 @@ try {
     Assert-True -Condition ($runNextBatchText -match "Assert-BatchCandidateHasPreProductDiscoveryEvidence") -Name "run-next-batch requires pre-product evidence for every batched candidate"
     Assert-True -Condition ($runNextBatchText -match "Get-ThresholdCandidateDiscoveryEvidenceFromRevision") -Name "run-next-batch reads batch discovery evidence from PR base"
     Assert-True -Condition ($runNextBatchText -match "candidateDiscoveryEvidence") -Name "run-next-batch records per-candidate discovery evidence binding"
+    Assert-True -Condition ($runNextBatchText -match 'ProcessedCandidateIds') -Name "run-next-batch excludes already processed candidate IDs"
+    Assert-True -Condition ($runNextBatchText -match 'processedCandidateIds') -Name "run-next-batch records processed candidate IDs in lease state"
+    Assert-True -Condition ((Get-Content (Join-Path $thresholdScriptRoot "record-receipt.ps1") -Raw) -match 'processedCandidateIds') -Name "record-receipt records processed candidate IDs"
+    Assert-True -Condition ((Get-Content (Join-Path $thresholdScriptRoot "start-lease.ps1") -Raw) -match 'processedCandidateIds = @\(\)') -Name "start-lease initializes processed candidate IDs"
     Assert-True -Condition ($prGovernanceText -match "Assert-BatchCandidateDiscoveryEvidenceMatchesPrBase") -Name "PR governance validates batch candidate discovery evidence"
     Assert-True -Condition ($prGovernanceText -match "Batch candidate discovery evidence must pre-exist in PR baseHead") -Name "PR governance rejects forged batch evidence missing from PR base"
     Assert-True -Condition ($prGovernanceText -match "Batch candidate discovery evidence digest mismatch") -Name "PR governance rejects forged batch evidence digests"

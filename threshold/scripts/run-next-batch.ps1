@@ -266,7 +266,8 @@ function New-CandidatePocket {
 function Get-BatchCandidates {
     param(
         [string] $PocketPath,
-        [string[]] $ApprovedBatchClasses
+        [string[]] $ApprovedBatchClasses,
+        [string[]] $ProcessedCandidateIds = @()
     )
 
     $pocket = Get-Content $PocketPath -Raw | ConvertFrom-Json
@@ -275,6 +276,7 @@ function Get-BatchCandidates {
             Where-Object {
                 [int]$_.score -ge $MinScore -and
                 $_.autoPatchable -eq $true -and
+                ($ProcessedCandidateIds -notcontains [string]$_.candidateId) -and
                 $ApprovedBatchClasses -contains [string]$_.candidateClass
             }
     )
@@ -409,7 +411,11 @@ if (-not $approvedBatchClasses) {
 }
 Invoke-DiscoveryCanary
 $pocketPath = New-CandidatePocket
-$candidates = @(Get-BatchCandidates -PocketPath $pocketPath -ApprovedBatchClasses $approvedBatchClasses)
+$processedCandidateIds = @()
+if ($state.PSObject.Properties.Name -contains "processedCandidateIds") {
+    $processedCandidateIds = @($state.processedCandidateIds | ForEach-Object { [string]$_ } | Where-Object { -not [string]::IsNullOrWhiteSpace($_) })
+}
+$candidates = @(Get-BatchCandidates -PocketPath $pocketPath -ApprovedBatchClasses $approvedBatchClasses -ProcessedCandidateIds $processedCandidateIds)
 if (-not $candidates -or $candidates.Count -eq 0) {
     exit 0
 }
@@ -526,6 +532,13 @@ try {
     $state.currentHead = $sourceCommit
     $state.currentSourceHead = $sourceCommit
     $state.candidatesProcessed = [int]$state.candidatesProcessed + $candidateReceipts.Count
+    foreach ($candidateReceipt in $candidateReceipts) {
+        $processedId = [string]$candidateReceipt.candidateId
+        if (-not [string]::IsNullOrWhiteSpace($processedId) -and $processedCandidateIds -notcontains $processedId) {
+            $processedCandidateIds += $processedId
+        }
+    }
+    $state | Add-Member -NotePropertyName "processedCandidateIds" -NotePropertyValue @($processedCandidateIds) -Force
     $state.commitsCreated = [int]$state.commitsCreated + 1
     $state.remainingBudget.candidates = $remainingCandidates
     $state.remainingBudget.commits = $remainingCommits

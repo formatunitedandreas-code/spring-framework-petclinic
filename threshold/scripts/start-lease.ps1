@@ -163,6 +163,7 @@ $state = [ordered]@{
     currentHead = $head
     currentSourceHead = $head
     candidatesProcessed = 0
+    processedCandidateIds = @()
     commitsCreated = 0
     remainingBudget = [ordered]@{
         candidates = $MaxCandidatesThisRun
