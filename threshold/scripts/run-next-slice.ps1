@@ -4,6 +4,7 @@ param(
     [string] $StatePath = "",
     [string] $PocketPath = "",
     [string] $GatePath = "",
+    [string] $PrBaseHead = "",
     [int] $MinScore = 70,
     [string] $ReceiptRoot = "threshold/receipts",
     [switch] $CompactEvidence,
@@ -489,7 +490,10 @@ function Resolve-ExecutionPocket {
     $executionPocketPath = $PocketPath
     if (Test-Path $PocketPath) {
         $pocket = Get-Content $PocketPath -Raw | ConvertFrom-Json
-        if ($pocket.generatedFromHead -eq $head -and @($pocket.candidates).Count -gt 0) {
+        $generatedFromHead = [string](Get-ThresholdJsonProperty $pocket "generatedFromHead" "")
+        if (-not [string]::IsNullOrWhiteSpace($generatedFromHead) -and
+            (Test-ThresholdCommitIsAncestor -Ancestor $generatedFromHead -Descendant $head) -and
+            @($pocket.candidates).Count -gt 0) {
             return $executionPocketPath
         }
     }
@@ -1847,6 +1851,9 @@ $completeSliceArgs = @(
     "-ReceiptRoot", $ReceiptRoot,
     "-CandidatePocketPath", $executionPocketPath
 )
+if (-not [string]::IsNullOrWhiteSpace($PrBaseHead)) {
+    $completeSliceArgs += @("-PrBaseHead", $PrBaseHead)
+}
 if ($CompactEvidence.IsPresent) {
     $completeSliceArgs += "-CompactEvidence"
 }

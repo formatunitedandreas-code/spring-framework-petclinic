@@ -389,7 +389,10 @@ function Assert-ReadyForMerge {
 }
 
 function Assert-RemoteBaseMatchesMergeCommit {
-    param([pscustomobject] $MergedPullRequest)
+    param(
+        [pscustomobject] $MergedPullRequest,
+        [string] $ExpectedBaseBranch = $BaseBranch
+    )
 
     $mergeCommit = [string]$MergedPullRequest.merge_commit_sha
     if ([string]::IsNullOrWhiteSpace($mergeCommit)) {
@@ -403,16 +406,16 @@ function Assert-RemoteBaseMatchesMergeCommit {
 
     $remoteBase = (Invoke-Checked -FilePath "git" -ArgumentList @(
         "rev-parse",
-        "$BaseRemote/$BaseBranch"
-    ) -FailureMessage "Failed to resolve $BaseRemote/$BaseBranch after merge.") -join "`n"
+        "$BaseRemote/$ExpectedBaseBranch"
+    ) -FailureMessage "Failed to resolve $BaseRemote/$ExpectedBaseBranch after merge.") -join "`n"
     $remoteBase = $remoteBase.Trim()
 
     if ($remoteBase -ne $mergeCommit) {
-        throw "origin_main_stale_after_merge. expected=$mergeCommit actual=$remoteBase"
+        throw "remote_base_stale_after_merge. base=$BaseRemote/$ExpectedBaseBranch expected=$mergeCommit actual=$remoteBase"
     }
 
     Write-Host "postMergeRemoteRefresh=passed"
-    Write-Host "remoteBase=$BaseRemote/$BaseBranch"
+    Write-Host "remoteBase=$BaseRemote/$ExpectedBaseBranch"
     Write-Host "remoteHead=$remoteBase"
 }
 
@@ -513,6 +516,8 @@ function Invoke-LocalWave {
                 "Bypass",
                 "-File",
                 ".\threshold\scripts\run-next-slice.ps1",
+                "-PrBaseHead",
+                $evidenceHead,
                 "-MinScore",
                 "$(Get-LeaseIntScalarOrDefault -Name "minScore" -DefaultValue 70)"
             ) -FailureMessage "run-next-slice failed."
@@ -666,7 +671,7 @@ non-claims: no upstream interaction, no release, no deploy, no public readiness/
         throw "Pull request #$($PullRequest.Number) did not reach merged state."
     }
 
-    Assert-RemoteBaseMatchesMergeCommit -MergedPullRequest $mergedPullRequest
+    Assert-RemoteBaseMatchesMergeCommit -MergedPullRequest $mergedPullRequest -ExpectedBaseBranch $Wave.PullRequestBaseBranch
     return $mergedPullRequest
 }
 

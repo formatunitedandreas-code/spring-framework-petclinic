@@ -282,6 +282,12 @@ try {
     Assert-True -Condition ($startNextWaveText -match "Invoke-PreProductDiscoveryPreparation") -Name "start-next-wave invokes pre-product discovery preparation"
     Assert-True -Condition ($startNextWaveText -match "Prepare Threshold wave .* discovery evidence") -Name "start-next-wave commits discovery evidence before product branch"
     Assert-True -Condition ($startNextWaveText -match "PullRequestBaseBranch") -Name "start-next-wave creates PR against evidence-bearing base branch"
+    Assert-True -Condition ($startNextWaveText -match '\"-PrBaseHead\"') -Name "start-next-wave passes evidence-bearing PR base to run-next-slice"
+    Assert-True -Condition ($startNextWaveText -match "ExpectedBaseBranch") -Name "start-next-wave reconciles the actual PR base branch after merge"
+
+    $runNextSliceText = Get-Content (Join-Path $thresholdScriptRoot "run-next-slice.ps1") -Raw
+    Assert-True -Condition ($runNextSliceText -match 'Test-ThresholdCommitIsAncestor -Ancestor \$generatedFromHead -Descendant \$head') -Name "run-next-slice keeps execution pocket aligned with prepared evidence"
+    Assert-True -Condition ($runNextSliceText -match '\"-PrBaseHead\", \$PrBaseHead') -Name "run-next-slice forwards observed PR base to complete-slice"
 
     $kgMaterializationText = Get-Content (Join-Path $thresholdScriptRoot "materialize-knowledge-graphs.ps1") -Raw
     Assert-True -Condition ($kgMaterializationText -match '\$\{ObservedPrBaseHead\}\.\.\.HEAD') -Name "KG materialization honors supplied PR base without BaseRef"
