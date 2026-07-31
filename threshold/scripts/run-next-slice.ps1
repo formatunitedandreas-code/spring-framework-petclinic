@@ -542,6 +542,11 @@ function Get-NextCandidate {
             Write-Host "candidateSkippedReason=already_processed:$candidateId"
             continue
         }
+        $candidateMember = if ($candidate.PSObject.Properties["member"]) { [string]$candidate.member } else { "" }
+        if ($ProcessedCandidateIds.Count -gt 0 -and $candidateMember.StartsWith("line-")) {
+            Write-Host "candidateSkippedReason=line_rebinding_required_after_prior_line_mutation:$candidateId"
+            continue
+        }
         if (-not $candidate.file) { continue }
         $path = ConvertTo-RepoPath $candidate.file
         if (-not (Test-Path $path)) {

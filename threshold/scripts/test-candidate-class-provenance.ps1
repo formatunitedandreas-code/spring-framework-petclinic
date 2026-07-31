@@ -317,6 +317,7 @@ try {
     Assert-True -Condition ($startLeaseText -match '\[string\] \$BaseRef = "origin/main"') -Name "start-lease supports explicit PR base binding"
     Assert-True -Condition ($startLeaseText -match '\$branch = if \(\[string\]::IsNullOrWhiteSpace\(\$BranchName\)\)') -Name "start-lease defaults to observed branch only when no branch binding is supplied"
     Assert-True -Condition ($startLeaseText -match 'baseRef: \$BaseRef') -Name "start-lease records supplied PR base ref"
+    Assert-True -Condition ($startLeaseText -match 'threshold/discovery-evidence/\*\.json') -Name "start-lease allowlist admits discovery evidence artifacts"
 
     $thresholdGovernanceWorkflowText = Get-Content (Join-Path $repoRoot ".github/workflows/threshold-governance.yml") -Raw
     Assert-True -Condition ($thresholdGovernanceWorkflowText -match "threshold-governed-refactor-demo-\*-discovery-base") -Name "Threshold governance workflow runs for evidence-bearing PR base branches"
@@ -327,6 +328,7 @@ try {
     Assert-True -Condition ($runNextSliceText -match '\"-PrBaseHead\", \$PrBaseHead') -Name "run-next-slice forwards observed PR base to complete-slice"
     Assert-True -Condition ($runNextSliceText -match 'ProcessedCandidateIds') -Name "run-next-slice filters already processed immutable candidate IDs"
     Assert-True -Condition ($runNextSliceText -match 'candidateSkippedReason=already_processed') -Name "run-next-slice reports already processed candidate suppression"
+    Assert-True -Condition ($runNextSliceText -match 'line_rebinding_required_after_prior_line_mutation') -Name "run-next-slice fail-closes remaining line candidates after prior line mutation"
 
     $kgMaterializationText = Get-Content (Join-Path $thresholdScriptRoot "materialize-knowledge-graphs.ps1") -Raw
     Assert-True -Condition ($kgMaterializationText -match '\$\{ObservedPrBaseHead\}\.\.\.HEAD') -Name "KG materialization honors supplied PR base without BaseRef"
@@ -338,6 +340,10 @@ try {
     Assert-True -Condition ($prGovernanceText -match 'ObservedPrBaseRef') -Name "PR governance strips configured remote aliases without relying on CI remotes"
     Assert-True -Condition ($prGovernanceText -match '\$resolvedBaseRefForGit\.\.HEAD') -Name "PR governance uses resolved base refs for commit ranges"
     Assert-True -Condition ($prGovernanceText -match '\$prVisibleBaseRef -ne \$expectedPrVisibleBaseRef') -Name "PR governance compares PR-visible base refs after remote-prefix normalization"
+    Assert-True -Condition ($prGovernanceText -match 'governedEvidenceBasePromotionPr') -Name "PR governance recognizes governed evidence-base promotion PRs"
+    Assert-True -Condition ($prGovernanceText -match 'evidenceReceiptPrBaseHead') -Name "PR governance validates receipts against the evidence-bearing PR base during promotion"
+    Assert-True -Condition ($prGovernanceText -match 'Governed evidence-base promotion does not descend from configured PR base') -Name "PR governance verifies promotion evidence base descends from configured base"
+    Assert-True -Condition ((Get-Content (Join-Path $thresholdScriptRoot "lib/lease-policy.ps1") -Raw) -match 'threshold/discovery-evidence/\*') -Name "lease policy classifies discovery evidence as governance evidence"
 
     $runNextBatchText = Get-Content (Join-Path $thresholdScriptRoot "run-next-batch.ps1") -Raw
     Assert-True -Condition ($runNextBatchText -match '\[string\] \$CandidatePocketPath = ""') -Name "run-next-batch accepts a prepared candidate pocket"

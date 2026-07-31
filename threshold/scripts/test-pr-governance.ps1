@@ -312,10 +312,15 @@ if ($changedPaths.Count -eq 0) {
 if ($changedPaths.Count -eq 0) { throw "No changed paths detected for the pull request." }
 
 $governancePolicyPaths = @($changedPaths | Where-Object { Test-ThresholdGovernancePolicyPath -Path $_ })
+$governanceEvidencePaths = @($changedPaths | Where-Object { Test-ThresholdGovernanceEvidencePath -Path $_ })
 $leasePaths = @($changedPaths | Where-Object { Test-LeasePath $_ })
 $productPaths = @($changedPaths | Where-Object { Test-ProductPath $_ })
 $stackedGovernanceOnlyPr = $BaseRef -like "codex/*" -and $productPaths.Count -eq 0 -and @($changedPaths | Where-Object { -not (Test-ThresholdGovernancePath -Path $_) }).Count -eq 0
-if ($prVisibleBaseRef -ne $expectedPrVisibleBaseRef -and -not $stackedGovernanceOnlyPr) {
+$governedEvidenceBasePromotionPr = $prVisibleBaseRef -ne $expectedPrVisibleBaseRef -and
+    $expectedPrVisibleBaseRef -match "^threshold-governed-refactor-demo-\d+-discovery-base$" -and
+    $productPaths.Count -gt 0 -and
+    $governanceEvidencePaths.Count -gt 0
+if ($prVisibleBaseRef -ne $expectedPrVisibleBaseRef -and -not $stackedGovernanceOnlyPr -and -not $governedEvidenceBasePromotionPr) {
     throw "PR base ref '$BaseRef' does not match threshold baseRef '$expectedBaseRef'."
 }
 if ($governancePolicyPaths.Count -gt 0 -and $productPaths.Count -gt 0) {
@@ -390,6 +395,25 @@ if ($LASTEXITCODE -ne 0 -or [string]::IsNullOrWhiteSpace([string]$observedPrBase
     throw "Unable to resolve observed PR base head for BaseRef '$BaseRef'."
 }
 $observedPrBaseHead = [string]($observedPrBaseHead.Trim())
+$effectiveReceiptPrBaseHead = $observedPrBaseHead
+if ($governedEvidenceBasePromotionPr) {
+    $resolvedExpectedBaseRefForGit = Resolve-BaseRefForGit -Ref $expectedBaseRef
+    $evidenceBaseHead = (& git rev-parse $resolvedExpectedBaseRefForGit 2>$null)
+    if ($LASTEXITCODE -ne 0 -or [string]::IsNullOrWhiteSpace([string]$evidenceBaseHead)) {
+        throw "Unable to resolve evidence-base head for governed promotion '$expectedBaseRef'."
+    }
+    $evidenceBaseHead = [string]($evidenceBaseHead.Trim())
+    if (-not (Test-ThresholdCommitIsAncestor -Ancestor $observedPrBaseHead -Descendant $evidenceBaseHead)) {
+        throw "Governed evidence-base promotion does not descend from configured PR base. configuredBase=$BaseRef configuredBaseHead=$observedPrBaseHead evidenceBase=$expectedBaseRef evidenceBaseHead=$evidenceBaseHead"
+    }
+    if (-not (Test-ThresholdCommitIsAncestor -Ancestor $evidenceBaseHead -Descendant "HEAD")) {
+        throw "Governed evidence-base promotion head does not include the reviewed evidence base. evidenceBase=$expectedBaseRef evidenceBaseHead=$evidenceBaseHead"
+    }
+    $effectiveReceiptPrBaseHead = $evidenceBaseHead
+    Write-Host "governedEvidenceBasePromotionPr=true"
+    Write-Host "configuredPrBaseHead=$observedPrBaseHead"
+    Write-Host "evidenceReceiptPrBaseHead=$effectiveReceiptPrBaseHead"
+}
 
 $sourceCommitCount = 0
 $productSourceCommits = New-Object System.Collections.Generic.List[string]
@@ -444,12 +468,12 @@ foreach ($commit in $prCommits) {
     $isCandidateReceipt = $receipt.PSObject.Properties["candidateId"] -and -not [string]::IsNullOrWhiteSpace([string]$receipt.candidateId)
     $hasProvenance = $receipt.PSObject.Properties["candidateClassProvenance"] -and $null -ne $receipt.candidateClassProvenance
     if ($isCandidateReceipt) {
-        Assert-ThresholdCandidateClassProvenance -Receipt $receipt -ReceiptPath $entry.path -RequirePresent -PrBaseHead $observedPrBaseHead
+        Assert-ThresholdCandidateClassProvenance -Receipt $receipt -ReceiptPath $entry.path -RequirePresent -PrBaseHead $effectiveReceiptPrBaseHead
     }
     elseif ($hasProvenance) {
-        Assert-ThresholdCandidateClassProvenance -Receipt $receipt -ReceiptPath $entry.path -PrBaseHead $observedPrBaseHead
+        Assert-ThresholdCandidateClassProvenance -Receipt $receipt -ReceiptPath $entry.path -PrBaseHead $effectiveReceiptPrBaseHead
     }
-    Assert-BatchCandidateDiscoveryEvidenceMatchesPrBase -Receipt $receipt -ReceiptPath $entry.path -PrBaseHead $observedPrBaseHead
+    Assert-BatchCandidateDiscoveryEvidenceMatchesPrBase -Receipt $receipt -ReceiptPath $entry.path -PrBaseHead $effectiveReceiptPrBaseHead
     Assert-ReceiptLeaseDigestMatchesReceiptCommit -ReceiptPath $entry.path -Receipt $receipt
     Assert-ChangedFilesMatchReceipt -Commit $commit -Receipt $receipt
     $sourceReceiptEntries.Add($entry)
