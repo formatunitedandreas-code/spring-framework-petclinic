@@ -149,9 +149,18 @@ function Assert-PromotionSquashCommitCoveredByReceipts {
     }
 
     $coveredProductPaths = New-Object System.Collections.Generic.HashSet[string]
+    $matchingReceiptEntries = New-Object System.Collections.Generic.List[object]
     foreach ($entry in $ReceiptEntries) {
-        foreach ($path in @(Get-ReceiptChangedFiles -Receipt $entry.receipt | Where-Object { Test-ProductPath -Path $_ })) {
+        $entryProductPaths = @(Get-ReceiptChangedFiles -Receipt $entry.receipt | Where-Object { Test-ProductPath -Path $_ })
+        $entryCoversSquashPath = $false
+        foreach ($path in $entryProductPaths) {
             [void]$coveredProductPaths.Add($path)
+            if ($actualProductPaths -contains $path) {
+                $entryCoversSquashPath = $true
+            }
+        }
+        if ($entryCoversSquashPath) {
+            $matchingReceiptEntries.Add($entry)
         }
     }
 
@@ -162,6 +171,7 @@ function Assert-PromotionSquashCommitCoveredByReceipts {
 
     Write-Host "promotionSquashReceiptReconciliation=passed"
     Write-Host "promotionSquashCommit=$Commit"
+    return @($matchingReceiptEntries.ToArray())
 }
 
 function Assert-BatchCandidateDiscoveryEvidenceMatchesPrBase {
@@ -499,7 +509,10 @@ foreach ($commit in $prCommits) {
     $sourceCommitCount += 1
     if (-not $receiptByCommit.ContainsKey($commit)) {
         if ($governedEvidenceBasePromotionPr) {
-            Assert-PromotionSquashCommitCoveredByReceipts -Commit $commit -ReceiptEntries @($receiptEntries.ToArray())
+            $promotionReceiptEntries = @(Assert-PromotionSquashCommitCoveredByReceipts -Commit $commit -ReceiptEntries @($receiptEntries.ToArray()))
+            foreach ($promotionReceiptEntry in $promotionReceiptEntries) {
+                $sourceReceiptEntries.Add($promotionReceiptEntry)
+            }
             continue
         }
         else {
@@ -558,11 +571,20 @@ if ($productPaths.Count -gt 0) {
         $prBody = [string] $env:THRESHOLD_PR_BODY
     }
 
+    $expectedMetadataSourceCommits = @($productSourceCommits.ToArray())
+    if ($governedEvidenceBasePromotionPr) {
+        $expectedMetadataSourceCommits = @(
+            $sourceReceiptEntries.ToArray() |
+                ForEach-Object { Get-ThresholdReceiptSourceCommit -Receipt $_.receipt } |
+                Where-Object { -not [string]::IsNullOrWhiteSpace($_) } |
+                Sort-Object -Unique
+        )
+    }
     $metadataBinding = Assert-ThresholdProductPrMetadataReceiptBinding `
         -Body $prBody `
         -SourceReceiptEntries @($sourceReceiptEntries.ToArray()) `
         -KnownCandidateClasses @(Get-ThresholdLeaseList -Lines $leaseLines -Name "allowedCandidateTypes") `
-        -ExpectedSourceCommits @($productSourceCommits.ToArray())
+        -ExpectedSourceCommits @($expectedMetadataSourceCommits)
     Write-Host "thresholdPrH1BMetadataRequired=$($metadataBinding.h1bMetadataRequired.ToString().ToLowerInvariant())"
     if ($metadataBinding.h1bMetadataRequired) {
         Write-Host "thresholdPrMetadataEnvelopeDigest=$($metadataBinding.observedMetadataEnvelopeDigest)"

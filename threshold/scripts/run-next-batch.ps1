@@ -294,6 +294,12 @@ function Get-BatchCandidates {
     foreach ($candidate in $sameClass) {
         $path = ConvertTo-RepoPath $candidate.file
         if (-not (Test-Path $path)) { continue }
+        $candidateId = [string]$candidate.candidateId
+        $candidateMember = if ($candidate.PSObject.Properties["member"]) { [string]$candidate.member } else { "" }
+        if ($ProcessedCandidateIds.Count -gt 0 -and $candidateMember.StartsWith("line-")) {
+            Write-Host "candidateSkippedReason=line_rebinding_required_after_prior_line_mutation:$candidateId"
+            continue
+        }
         if ([string]$candidate.candidateClass -eq "comment_wrap_cleanup" -and
             -not (Test-CommentWrapCandidateApplies -Candidate $candidate)) {
             Write-Host "skippedStaleCandidate=$($candidate.candidateId)"
