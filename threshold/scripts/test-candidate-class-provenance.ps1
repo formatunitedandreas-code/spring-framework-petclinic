@@ -291,6 +291,8 @@ try {
     Assert-True -Condition ($startNextWaveText -match "midWaveScopeExpansionBlocked=true") -Name "start-next-wave blocks mid-wave scope expansion after product branch start"
     Assert-False -Condition ($startNextWaveText -match 'Try-ExpandScopeForCandidateShortage -Reason "mid_wave_candidate_shortage"') -Name "start-next-wave does not create discovery evidence inside the product PR for mid-wave scope expansion"
     Assert-True -Condition ($startNextWaveText -match "Assert-PullRequestBaseHasThresholdGovernanceTrigger") -Name "start-next-wave fails closed when PR base lacks Threshold governance trigger"
+    Assert-True -Condition ($startNextWaveText -match "unsupported_branch_prefix_for_threshold_governance") -Name "start-next-wave rejects unsupported branch prefixes before publication"
+    Assert-True -Condition ($startNextWaveText -match '\$SupportedGovernanceBranchPrefix = "threshold-governed-refactor-demo-"') -Name "start-next-wave binds supported branch prefix to governance workflow trigger"
     Assert-True -Condition ($startNextWaveText -match "threshold-governed-refactor-demo-.*-discovery-base") -Name "start-next-wave recognizes generated evidence bases covered by workflow trigger"
     Assert-True -Condition ($startNextWaveText -match '\"-PrBaseHead\"') -Name "start-next-wave passes evidence-bearing PR base to run-next-slice"
     Assert-True -Condition ($startNextWaveText -match "ExpectedBaseBranch") -Name "start-next-wave reconciles the actual PR base branch after merge"

@@ -37,6 +37,11 @@ $ErrorActionPreference = "Stop"
 . (Join-Path $PSScriptRoot "lib/runtime-paths.ps1")
 . (Join-Path $PSScriptRoot "lib/lease-policy.ps1")
 
+$SupportedGovernanceBranchPrefix = "threshold-governed-refactor-demo-"
+if ($BranchPrefix -ne $SupportedGovernanceBranchPrefix) {
+    throw "unsupported_branch_prefix_for_threshold_governance. branchPrefix=$BranchPrefix supportedPrefix=$SupportedGovernanceBranchPrefix"
+}
+
 $runtimePaths = Get-ThresholdRuntimePaths
 if ([string]::IsNullOrWhiteSpace($LeasePath)) {
     $LeasePath = $runtimePaths.LeasePath
