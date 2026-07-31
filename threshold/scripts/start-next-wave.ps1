@@ -438,6 +438,42 @@ function Assert-RemoteBaseMatchesMergeCommit {
     Write-Host "remoteHead=$remoteBase"
 }
 
+function Promote-MergedWaveToConfiguredBase {
+    param([pscustomobject] $MergedPullRequest)
+
+    $mergeCommit = [string]$MergedPullRequest.merge_commit_sha
+    if ([string]::IsNullOrWhiteSpace($mergeCommit)) {
+        throw "Merged pull request did not report merge_commit_sha for base promotion."
+    }
+
+    Invoke-Checked -FilePath "git" -ArgumentList @(
+        "fetch",
+        $BaseRemote
+    ) -FailureMessage "Failed to refresh $BaseRemote before base promotion."
+
+    $remoteConfiguredBase = (Invoke-Checked -FilePath "git" -ArgumentList @(
+        "rev-parse",
+        "$BaseRemote/$BaseBranch"
+    ) -FailureMessage "Failed to resolve $BaseRemote/$BaseBranch before base promotion.") -join "`n"
+    $remoteConfiguredBase = $remoteConfiguredBase.Trim()
+
+    $isFastForward = Test-ThresholdCommitIsAncestor -Ancestor $remoteConfiguredBase -Descendant $mergeCommit
+    if (-not $isFastForward) {
+        throw "configured_base_promotion_not_fast_forward. base=$BaseRemote/$BaseBranch current=$remoteConfiguredBase target=$mergeCommit"
+    }
+
+    Invoke-Checked -FilePath "git" -ArgumentList @(
+        "push",
+        $BaseRemote,
+        "$($mergeCommit):refs/heads/$BaseBranch"
+    ) -FailureMessage "Failed to promote merged wave to $BaseRemote/$BaseBranch."
+
+    Assert-RemoteBaseMatchesMergeCommit -MergedPullRequest $MergedPullRequest -ExpectedBaseBranch $BaseBranch
+    Write-Host "configuredBasePromotion=passed"
+    Write-Host "configuredBase=$BaseRemote/$BaseBranch"
+    Write-Host "configuredBaseHead=$mergeCommit"
+}
+
 function Assert-PullRequestBaseHasThresholdGovernanceTrigger {
     param([string] $PullRequestBaseBranch)
 
@@ -578,9 +614,8 @@ function Invoke-LocalWave {
             break
         }
 
-        Update-CandidatePocket
-        Set-PreProductDiscoverySourceHead -CandidatePocketPath $PocketPath -DiscoverySourceHead $discoverySourceHead
-        [void](Commit-PathsIfNeeded -Paths @($PocketPath) -Message "Record Threshold wave $waveNumber updated candidate pocket")
+        Write-Host "candidatePocketRefreshBlocked=true"
+        Write-Host "candidatePocketRefreshPolicy=product slices must consume the pre-product evidence-bearing candidate pocket"
     }
 
     Update-CandidatePocket
@@ -713,6 +748,9 @@ non-claims: no upstream interaction, no release, no deploy, no public readiness/
     }
 
     Assert-RemoteBaseMatchesMergeCommit -MergedPullRequest $mergedPullRequest -ExpectedBaseBranch $Wave.PullRequestBaseBranch
+    if ($Wave.PullRequestBaseBranch -ne $BaseBranch) {
+        Promote-MergedWaveToConfiguredBase -MergedPullRequest $mergedPullRequest
+    }
     return $mergedPullRequest
 }
 

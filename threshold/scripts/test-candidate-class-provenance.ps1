@@ -294,6 +294,11 @@ try {
     Assert-True -Condition ($startNextWaveText -match "threshold-governed-refactor-demo-.*-discovery-base") -Name "start-next-wave recognizes generated evidence bases covered by workflow trigger"
     Assert-True -Condition ($startNextWaveText -match '\"-PrBaseHead\"') -Name "start-next-wave passes evidence-bearing PR base to run-next-slice"
     Assert-True -Condition ($startNextWaveText -match "ExpectedBaseBranch") -Name "start-next-wave reconciles the actual PR base branch after merge"
+    Assert-True -Condition ($startNextWaveText -match "Promote-MergedWaveToConfiguredBase") -Name "start-next-wave promotes merged evidence-base PR to configured base branch"
+    Assert-True -Condition ($startNextWaveText -match "configured_base_promotion_not_fast_forward") -Name "start-next-wave blocks non-fast-forward configured base promotion"
+    Assert-True -Condition ($startNextWaveText -match '\$\(\$mergeCommit\):refs/heads/\$BaseBranch') -Name "start-next-wave uses normal refspec push for configured base promotion"
+    Assert-True -Condition ($startNextWaveText -match "candidatePocketRefreshBlocked=true") -Name "start-next-wave blocks product-branch candidate pocket refresh"
+    Assert-True -Condition ($startNextWaveText -match "pre-product evidence-bearing candidate pocket") -Name "start-next-wave documents stable prepared candidate pocket policy"
 
     $startLeaseText = Get-Content (Join-Path $thresholdScriptRoot "start-lease.ps1") -Raw
     Assert-True -Condition ($startLeaseText -match '\[string\] \$BranchName = ""') -Name "start-lease supports explicit product branch binding"
