@@ -10,6 +10,7 @@ param(
     [int] $MaxChangedLinesPerCandidate = 80,
     [int] $MaxRepairAttemptsPerCandidate = 1,
     [string] $BranchName = "",
+    [string] $BaseRef = "origin/main",
     [switch] $DraftPrAllowed
 )
 
@@ -48,7 +49,7 @@ leaseName: $LeaseName
 repository: $((Get-Location).Path)
 branch: $branch
 baseRemote: origin
-baseRef: origin/main
+baseRef: $BaseRef
 startHead: $head
 headPolicy: descendantOfStartHead
 scopeExpansionTier: 0

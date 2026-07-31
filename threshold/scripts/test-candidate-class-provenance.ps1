@@ -287,6 +287,7 @@ try {
     Assert-True -Condition ($startNextWaveText -match "Prepare Threshold wave .* discovery evidence") -Name "start-next-wave commits discovery evidence before product branch"
     Assert-True -Condition ($startNextWaveText -match "PullRequestBaseBranch") -Name "start-next-wave creates PR against evidence-bearing base branch"
     Assert-True -Condition ($startNextWaveText -match '"-BranchName",\s*\$branch') -Name "start-next-wave binds lease to product branch before slice execution"
+    Assert-True -Condition ($startNextWaveText -match '"-BaseRef",\s*"\$BaseRemote/\$evidenceBranch"') -Name "start-next-wave binds lease baseRef to evidence-bearing PR base"
     Assert-True -Condition ($startNextWaveText -match "midWaveScopeExpansionBlocked=true") -Name "start-next-wave blocks mid-wave scope expansion after product branch start"
     Assert-False -Condition ($startNextWaveText -match 'Try-ExpandScopeForCandidateShortage -Reason "mid_wave_candidate_shortage"') -Name "start-next-wave does not create discovery evidence inside the product PR for mid-wave scope expansion"
     Assert-True -Condition ($startNextWaveText -match "Assert-PullRequestBaseHasThresholdGovernanceTrigger") -Name "start-next-wave fails closed when PR base lacks Threshold governance trigger"
@@ -296,7 +297,9 @@ try {
 
     $startLeaseText = Get-Content (Join-Path $thresholdScriptRoot "start-lease.ps1") -Raw
     Assert-True -Condition ($startLeaseText -match '\[string\] \$BranchName = ""') -Name "start-lease supports explicit product branch binding"
+    Assert-True -Condition ($startLeaseText -match '\[string\] \$BaseRef = "origin/main"') -Name "start-lease supports explicit PR base binding"
     Assert-True -Condition ($startLeaseText -match '\$branch = if \(\[string\]::IsNullOrWhiteSpace\(\$BranchName\)\)') -Name "start-lease defaults to observed branch only when no branch binding is supplied"
+    Assert-True -Condition ($startLeaseText -match 'baseRef: \$BaseRef') -Name "start-lease records supplied PR base ref"
 
     $thresholdGovernanceWorkflowText = Get-Content (Join-Path $repoRoot ".github/workflows/threshold-governance.yml") -Raw
     Assert-True -Condition ($thresholdGovernanceWorkflowText -match "threshold-governed-refactor-demo-\*-discovery-base") -Name "Threshold governance workflow runs for evidence-bearing PR base branches"

@@ -512,6 +512,8 @@ function Invoke-LocalWave {
         "$MaxRepairAttemptsPerCandidate",
         "-BranchName",
         $branch,
+        "-BaseRef",
+        "$BaseRemote/$evidenceBranch",
         "-DraftPrAllowed"
     ) -FailureMessage "Failed to start lease."
 
