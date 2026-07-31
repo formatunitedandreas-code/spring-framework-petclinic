@@ -491,8 +491,10 @@ function Resolve-ExecutionPocket {
     if (Test-Path $PocketPath) {
         $pocket = Get-Content $PocketPath -Raw | ConvertFrom-Json
         $generatedFromHead = [string](Get-ThresholdJsonProperty $pocket "generatedFromHead" "")
-        if (-not [string]::IsNullOrWhiteSpace($generatedFromHead) -and
-            (Test-ThresholdCommitIsAncestor -Ancestor $generatedFromHead -Descendant $head) -and
+        $preProductDiscoverySourceHead = [string](Get-ThresholdJsonProperty $pocket "preProductDiscoverySourceHead" "")
+        $evidenceSourceHead = if (-not [string]::IsNullOrWhiteSpace($preProductDiscoverySourceHead)) { $preProductDiscoverySourceHead } else { $generatedFromHead }
+        if (-not [string]::IsNullOrWhiteSpace($evidenceSourceHead) -and
+            (Test-ThresholdCommitIsAncestor -Ancestor $evidenceSourceHead -Descendant $head) -and
             @($pocket.candidates).Count -gt 0) {
             return $executionPocketPath
         }

@@ -124,7 +124,10 @@ if (-not (Test-ThresholdCommitIsAncestor -Ancestor $observedPrBaseHead -Descenda
     throw "Product slice must descend from the independently observed PR base head. prBaseHead=$observedPrBaseHead currentHead=$baseHead"
 }
 $candidatePocket = if (Test-Path $CandidatePocketPath) { Get-Content -LiteralPath $CandidatePocketPath -Raw | ConvertFrom-Json } else { $null }
-$discoverySourceHead = if ($null -ne $candidatePocket) { [string](Get-ThresholdJsonProperty $candidatePocket "generatedFromHead" "") } else { "" }
+$discoverySourceHead = if ($null -ne $candidatePocket) { [string](Get-ThresholdJsonProperty $candidatePocket "preProductDiscoverySourceHead" "") } else { "" }
+if ([string]::IsNullOrWhiteSpace($discoverySourceHead) -and $null -ne $candidatePocket) {
+    $discoverySourceHead = [string](Get-ThresholdJsonProperty $candidatePocket "generatedFromHead" "")
+}
 if ([string]::IsNullOrWhiteSpace($discoverySourceHead)) {
     $discoverySourceHead = $observedPrBaseHead
 }

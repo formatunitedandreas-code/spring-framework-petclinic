@@ -244,6 +244,25 @@ function Update-CandidatePocket {
     ) -FailureMessage "Candidate discovery failed."
 }
 
+function Set-PreProductDiscoverySourceHead {
+    param(
+        [string] $CandidatePocketPath,
+        [string] $DiscoverySourceHead
+    )
+
+    if ([string]::IsNullOrWhiteSpace($DiscoverySourceHead)) {
+        throw "Discovery source head is required for pre-product evidence binding."
+    }
+    if (-not (Test-Path $CandidatePocketPath)) {
+        throw "Candidate pocket not found for pre-product evidence binding: $CandidatePocketPath"
+    }
+
+    $pocket = Read-JsonFile -Path $CandidatePocketPath
+    Set-JsonProperty -Object $pocket -Name "preProductDiscoverySourceHead" -Value $DiscoverySourceHead
+    Set-JsonProperty -Object $pocket -Name "preProductDiscoveryEvidencePolicy" -Value "CandidateDiscoveryEvidence is materialized from this source head before product slice commits and remains the lookup key across later pocket refreshes."
+    $pocket | ConvertTo-Json -Depth 12 | Set-Content $CandidatePocketPath
+}
+
 function Get-AutoPatchableCandidateCount {
     param([string] $Path)
     $pocket = Read-JsonFile -Path $Path
@@ -459,6 +478,7 @@ function Invoke-LocalWave {
     $branch = Get-NextWaveBranchName
     $evidenceBranch = "$branch-discovery-base"
     Invoke-Checked -FilePath "git" -ArgumentList @("switch", "-c", $evidenceBranch, "$BaseRemote/$BaseBranch") -FailureMessage "Failed to switch to new discovery evidence branch '$evidenceBranch'."
+    $discoverySourceHead = (& git rev-parse HEAD).Trim()
 
     Invoke-Checked -FilePath "powershell.exe" -ArgumentList @(
         "-ExecutionPolicy",
@@ -481,12 +501,14 @@ function Invoke-LocalWave {
     ) -FailureMessage "Failed to start lease."
 
     Update-CandidatePocket
+    Set-PreProductDiscoverySourceHead -CandidatePocketPath $PocketPath -DiscoverySourceHead $discoverySourceHead
     $initialAutoPatchableCount = Get-AutoPatchableCandidateCount -Path $PocketPath
     while ($initialAutoPatchableCount -lt $MinAutoPatchableCandidates) {
         if (-not (Try-ExpandScopeForCandidateShortage -Reason "fresh_wave_candidate_shortage")) {
             break
         }
         Update-CandidatePocket
+        Set-PreProductDiscoverySourceHead -CandidatePocketPath $PocketPath -DiscoverySourceHead $discoverySourceHead
         $initialAutoPatchableCount = Get-AutoPatchableCandidateCount -Path $PocketPath
     }
     if ($initialAutoPatchableCount -lt $MinAutoPatchableCandidates) {
@@ -532,6 +554,7 @@ function Invoke-LocalWave {
                 $autoPatchableCandidateCount -lt $MinAutoPatchableCandidates -and
                 (Try-ExpandScopeForCandidateShortage -Reason "mid_wave_candidate_shortage")) {
                 Update-CandidatePocket
+                Set-PreProductDiscoverySourceHead -CandidatePocketPath $PocketPath -DiscoverySourceHead $discoverySourceHead
                 [void](Commit-PathsIfNeeded -Paths $governancePaths -Message "Expand Threshold wave $waveNumber scope")
                 continue
             }
@@ -542,10 +565,12 @@ function Invoke-LocalWave {
         }
 
         Update-CandidatePocket
+        Set-PreProductDiscoverySourceHead -CandidatePocketPath $PocketPath -DiscoverySourceHead $discoverySourceHead
         [void](Commit-PathsIfNeeded -Paths @($PocketPath) -Message "Record Threshold wave $waveNumber updated candidate pocket")
     }
 
     Update-CandidatePocket
+    Set-PreProductDiscoverySourceHead -CandidatePocketPath $PocketPath -DiscoverySourceHead $discoverySourceHead
     Mark-TerminalEvidenceSourceHead
     $state = Read-JsonFile -Path $StatePath
     [void](Commit-PathsIfNeeded -Paths $governancePaths -Message "Record Threshold wave $waveNumber terminal state")
