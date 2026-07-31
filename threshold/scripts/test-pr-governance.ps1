@@ -71,6 +71,17 @@ function ConvertTo-PrVisibleBaseRef {
     return $trimmedRef
 }
 
+function ConvertTo-RemoteIndependentLeaseBaseRef {
+    param([string] $Ref)
+
+    if ([string]::IsNullOrWhiteSpace($Ref)) { return "" }
+    $trimmedRef = $Ref.Trim()
+    if ($trimmedRef -match "^([^/]+)/(?<branch>threshold-governed-refactor-demo-\d+-discovery-base)$") {
+        return $Matches["branch"]
+    }
+    return (ConvertTo-PrVisibleBaseRef -Ref $trimmedRef)
+}
+
 function Resolve-BaseRefForGit {
     param([string] $Ref)
 
@@ -106,6 +117,51 @@ function Assert-ChangedFilesMatchReceipt {
     if (($actual -join "`n") -ne ($claimed -join "`n")) {
         throw "Receipt changedFiles mismatch for $Commit. actual=[$($actual -join ', ')] claimed=[$($claimed -join ', ')]"
     }
+}
+
+function Get-ReceiptChangedFiles {
+    param([pscustomobject] $Receipt)
+
+    return @(
+        $Receipt.changedFiles | ForEach-Object {
+            if ($_ -is [string]) {
+                ConvertTo-RepoPath $_
+            }
+            elseif ($null -ne $_.path) {
+                ConvertTo-RepoPath ([string]$_.path)
+            }
+        } | Where-Object { -not [string]::IsNullOrWhiteSpace($_) } | Sort-Object -Unique
+    )
+}
+
+function Assert-PromotionSquashCommitCoveredByReceipts {
+    param(
+        [string] $Commit,
+        [object[]] $ReceiptEntries
+    )
+
+    $actualProductPaths = @(git diff-tree --no-commit-id --name-only -r $Commit | Where-Object { Test-ProductPath -Path $_ } | ForEach-Object { ConvertTo-RepoPath $_ } | Sort-Object -Unique)
+    if ($actualProductPaths.Count -eq 0) {
+        return
+    }
+    if ($ReceiptEntries.Count -eq 0) {
+        throw "Promotion squash commit has product changes but no source receipts: $Commit"
+    }
+
+    $coveredProductPaths = New-Object System.Collections.Generic.HashSet[string]
+    foreach ($entry in $ReceiptEntries) {
+        foreach ($path in @(Get-ReceiptChangedFiles -Receipt $entry.receipt | Where-Object { Test-ProductPath -Path $_ })) {
+            [void]$coveredProductPaths.Add($path)
+        }
+    }
+
+    $missing = @($actualProductPaths | Where-Object { -not $coveredProductPaths.Contains($_) })
+    if ($missing.Count -gt 0) {
+        throw "Promotion squash commit is not covered by source receipt changedFiles. commit=$Commit missing=[$($missing -join ', ')]"
+    }
+
+    Write-Host "promotionSquashReceiptReconciliation=passed"
+    Write-Host "promotionSquashCommit=$Commit"
 }
 
 function Assert-BatchCandidateDiscoveryEvidenceMatchesPrBase {
@@ -302,6 +358,7 @@ $forbiddenActions = @(Get-ThresholdLeaseList -Lines $leaseLines -Name "forbidden
 $resolvedBaseRefForGit = Resolve-BaseRefForGit -Ref $BaseRef
 $prVisibleBaseRef = ConvertTo-PrVisibleBaseRef -Ref $BaseRef
 $expectedPrVisibleBaseRef = ConvertTo-PrVisibleBaseRef -Ref $expectedBaseRef -ObservedPrBaseRef $prVisibleBaseRef
+$remoteIndependentExpectedBaseRef = ConvertTo-RemoteIndependentLeaseBaseRef -Ref $expectedBaseRef
 
 $preCommitWorktreeMode = $false
 $changedPaths = @(git diff --name-only "$resolvedBaseRefForGit...HEAD")
@@ -317,7 +374,7 @@ $leasePaths = @($changedPaths | Where-Object { Test-LeasePath $_ })
 $productPaths = @($changedPaths | Where-Object { Test-ProductPath $_ })
 $stackedGovernanceOnlyPr = $BaseRef -like "codex/*" -and $productPaths.Count -eq 0 -and @($changedPaths | Where-Object { -not (Test-ThresholdGovernancePath -Path $_) }).Count -eq 0
 $governedEvidenceBasePromotionPr = $prVisibleBaseRef -ne $expectedPrVisibleBaseRef -and
-    $expectedPrVisibleBaseRef -match "^threshold-governed-refactor-demo-\d+-discovery-base$" -and
+    $remoteIndependentExpectedBaseRef -match "^threshold-governed-refactor-demo-\d+-discovery-base$" -and
     $productPaths.Count -gt 0 -and
     $governanceEvidencePaths.Count -gt 0
 if ($prVisibleBaseRef -ne $expectedPrVisibleBaseRef -and -not $stackedGovernanceOnlyPr -and -not $governedEvidenceBasePromotionPr) {
@@ -441,7 +498,13 @@ foreach ($commit in $prCommits) {
 
     $sourceCommitCount += 1
     if (-not $receiptByCommit.ContainsKey($commit)) {
-        throw "Source commit without corresponding Threshold receipt: $commit"
+        if ($governedEvidenceBasePromotionPr) {
+            Assert-PromotionSquashCommitCoveredByReceipts -Commit $commit -ReceiptEntries @($receiptEntries.ToArray())
+            continue
+        }
+        else {
+            throw "Source commit without corresponding Threshold receipt: $commit"
+        }
     }
 
     $entriesForCommit = @($receiptByCommit[$commit].ToArray())

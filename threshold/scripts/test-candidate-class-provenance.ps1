@@ -336,6 +336,7 @@ try {
 
     $prGovernanceText = Get-Content (Join-Path $thresholdScriptRoot "test-pr-governance.ps1") -Raw
     Assert-True -Condition ($prGovernanceText -match "ConvertTo-PrVisibleBaseRef") -Name "PR governance normalizes lease base refs to PR-visible branch refs"
+    Assert-True -Condition ($prGovernanceText -match "ConvertTo-RemoteIndependentLeaseBaseRef") -Name "PR governance normalizes promotion lease bases independently of CI remotes"
     Assert-True -Condition ($prGovernanceText -match "Resolve-BaseRefForGit") -Name "PR governance resolves configured base refs through a canonical helper"
     Assert-True -Condition ($prGovernanceText -match 'ObservedPrBaseRef') -Name "PR governance strips configured remote aliases without relying on CI remotes"
     Assert-True -Condition ($prGovernanceText -match '\$resolvedBaseRefForGit\.\.HEAD') -Name "PR governance uses resolved base refs for commit ranges"
@@ -343,6 +344,9 @@ try {
     Assert-True -Condition ($prGovernanceText -match 'governedEvidenceBasePromotionPr') -Name "PR governance recognizes governed evidence-base promotion PRs"
     Assert-True -Condition ($prGovernanceText -match 'evidenceReceiptPrBaseHead') -Name "PR governance validates receipts against the evidence-bearing PR base during promotion"
     Assert-True -Condition ($prGovernanceText -match 'Governed evidence-base promotion does not descend from configured PR base') -Name "PR governance verifies promotion evidence base descends from configured base"
+    Assert-True -Condition ($prGovernanceText -match 'Assert-PromotionSquashCommitCoveredByReceipts') -Name "PR governance reconciles promotion squash commits to source receipts"
+    Assert-True -Condition ($prGovernanceText -match 'promotionSquashReceiptReconciliation=passed') -Name "PR governance reports promotion squash receipt reconciliation"
+    Assert-True -Condition ($prGovernanceText -match 'Promotion squash commit is not covered by source receipt changedFiles') -Name "PR governance rejects uncovered promotion squash product paths"
     Assert-True -Condition ((Get-Content (Join-Path $thresholdScriptRoot "lib/lease-policy.ps1") -Raw) -match 'threshold/discovery-evidence/\*') -Name "lease policy classifies discovery evidence as governance evidence"
 
     $runNextBatchText = Get-Content (Join-Path $thresholdScriptRoot "run-next-batch.ps1") -Raw
