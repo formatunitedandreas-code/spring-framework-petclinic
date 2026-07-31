@@ -347,7 +347,10 @@ try {
     Assert-True -Condition ($prGovernanceText -match 'Assert-PromotionSquashCommitCoveredByReceipts') -Name "PR governance reconciles promotion squash commits to source receipts"
     Assert-True -Condition ($prGovernanceText -match 'promotionReceiptEntries') -Name "PR governance carries promotion receipt entries into metadata validation"
     Assert-True -Condition ($prGovernanceText -match 'expectedMetadataSourceCommits') -Name "PR governance validates promotion metadata against pre-squash source commits"
+    Assert-True -Condition ($prGovernanceText -match 'Get-CommitPathBlobSha256 -Commit \$Commit -Path \$path') -Name "PR governance validates promoted product content hashes"
+    Assert-True -Condition ($prGovernanceText -match 'Promotion squash commit content mismatch') -Name "PR governance rejects tampered promotion content on receipt-covered paths"
     Assert-True -Condition ($prGovernanceText -match 'promotionSquashReceiptReconciliation=passed') -Name "PR governance reports promotion squash receipt reconciliation"
+    Assert-True -Condition ($prGovernanceText -match 'promotionSquashContentReconciliation=passed') -Name "PR governance reports promotion squash content reconciliation"
     Assert-True -Condition ($prGovernanceText -match 'Promotion squash commit is not covered by source receipt changedFiles') -Name "PR governance rejects uncovered promotion squash product paths"
     Assert-True -Condition ((Get-Content (Join-Path $thresholdScriptRoot "lib/lease-policy.ps1") -Raw) -match 'threshold/discovery-evidence/\*') -Name "lease policy classifies discovery evidence as governance evidence"
 
