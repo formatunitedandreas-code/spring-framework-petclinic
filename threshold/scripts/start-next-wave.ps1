@@ -448,40 +448,15 @@ function Assert-RemoteBaseMatchesMergeCommit {
     Write-Host "remoteHead=$remoteBase"
 }
 
-function Promote-MergedWaveToConfiguredBase {
+function Assert-GovernedEvidenceBasePromotionRequired {
     param([pscustomobject] $MergedPullRequest)
 
     $mergeCommit = [string]$MergedPullRequest.merge_commit_sha
     if ([string]::IsNullOrWhiteSpace($mergeCommit)) {
-        throw "Merged pull request did not report merge_commit_sha for base promotion."
+        throw "Merged pull request did not report merge_commit_sha for governed evidence-base promotion."
     }
 
-    Invoke-Checked -FilePath "git" -ArgumentList @(
-        "fetch",
-        $BaseRemote
-    ) -FailureMessage "Failed to refresh $BaseRemote before base promotion."
-
-    $remoteConfiguredBase = (Invoke-Checked -FilePath "git" -ArgumentList @(
-        "rev-parse",
-        "$BaseRemote/$BaseBranch"
-    ) -FailureMessage "Failed to resolve $BaseRemote/$BaseBranch before base promotion.") -join "`n"
-    $remoteConfiguredBase = $remoteConfiguredBase.Trim()
-
-    $isFastForward = Test-ThresholdCommitIsAncestor -Ancestor $remoteConfiguredBase -Descendant $mergeCommit
-    if (-not $isFastForward) {
-        throw "configured_base_promotion_not_fast_forward. base=$BaseRemote/$BaseBranch current=$remoteConfiguredBase target=$mergeCommit"
-    }
-
-    Invoke-Checked -FilePath "git" -ArgumentList @(
-        "push",
-        $BaseRemote,
-        "$($mergeCommit):refs/heads/$BaseBranch"
-    ) -FailureMessage "Failed to promote merged wave to $BaseRemote/$BaseBranch."
-
-    Assert-RemoteBaseMatchesMergeCommit -MergedPullRequest $MergedPullRequest -ExpectedBaseBranch $BaseBranch
-    Write-Host "configuredBasePromotion=passed"
-    Write-Host "configuredBase=$BaseRemote/$BaseBranch"
-    Write-Host "configuredBaseHead=$mergeCommit"
+    throw "governed_evidence_base_promotion_required. productMergeCommit=$mergeCommit configuredBase=$BaseRemote/$BaseBranch evidenceBaseMustReachConfiguredBaseThroughReviewedPr=true"
 }
 
 function Assert-PullRequestBaseHasThresholdGovernanceTrigger {
@@ -760,7 +735,7 @@ non-claims: no upstream interaction, no release, no deploy, no public readiness/
 
     Assert-RemoteBaseMatchesMergeCommit -MergedPullRequest $mergedPullRequest -ExpectedBaseBranch $Wave.PullRequestBaseBranch
     if ($Wave.PullRequestBaseBranch -ne $BaseBranch) {
-        Promote-MergedWaveToConfiguredBase -MergedPullRequest $mergedPullRequest
+        Assert-GovernedEvidenceBasePromotionRequired -MergedPullRequest $mergedPullRequest
     }
     return $mergedPullRequest
 }

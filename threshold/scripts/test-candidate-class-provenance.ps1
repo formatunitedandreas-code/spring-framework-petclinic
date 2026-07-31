@@ -303,9 +303,9 @@ try {
     Assert-True -Condition ($startNextWaveText -match '\"-CandidatePocketPath\",\s*\$PocketPath') -Name "start-next-wave passes prepared candidate pocket to run-next-batch"
     Assert-True -Condition ($startNextWaveText -match '\"-RequirePreProductDiscoveryEvidence\"') -Name "start-next-wave requires pre-product discovery evidence for batch execution"
     Assert-True -Condition ($startNextWaveText -match "ExpectedBaseBranch") -Name "start-next-wave reconciles the actual PR base branch after merge"
-    Assert-True -Condition ($startNextWaveText -match "Promote-MergedWaveToConfiguredBase") -Name "start-next-wave promotes merged evidence-base PR to configured base branch"
-    Assert-True -Condition ($startNextWaveText -match "configured_base_promotion_not_fast_forward") -Name "start-next-wave blocks non-fast-forward configured base promotion"
-    Assert-True -Condition ($startNextWaveText -match '\$\(\$mergeCommit\):refs/heads/\$BaseBranch') -Name "start-next-wave uses normal refspec push for configured base promotion"
+    Assert-True -Condition ($startNextWaveText -match "Assert-GovernedEvidenceBasePromotionRequired") -Name "start-next-wave requires governed PR before evidence-base promotion"
+    Assert-True -Condition ($startNextWaveText -match "governed_evidence_base_promotion_required") -Name "start-next-wave blocks direct configured base promotion"
+    Assert-False -Condition ($startNextWaveText -match '\$\(\$mergeCommit\):refs/heads/\$BaseBranch') -Name "start-next-wave does not push evidence-base merge commits directly to configured base"
     Assert-True -Condition ($startNextWaveText -match "candidatePocketRefreshBlocked=true") -Name "start-next-wave blocks product-branch candidate pocket refresh"
     Assert-True -Condition ($startNextWaveText -match "pre-product evidence-bearing candidate pocket") -Name "start-next-wave documents stable prepared candidate pocket policy"
 
