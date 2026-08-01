@@ -395,6 +395,12 @@ try {
     Assert-True -Condition ($runNextBatchText -match "Assert-BatchCandidateHasPreProductDiscoveryEvidence") -Name "run-next-batch requires pre-product evidence for every batched candidate"
     Assert-True -Condition ($runNextBatchText -match "Get-ThresholdCandidateDiscoveryEvidenceFromRevision") -Name "run-next-batch reads batch discovery evidence from PR base"
     Assert-True -Condition ($runNextBatchText -match "candidateDiscoveryEvidence") -Name "run-next-batch records per-candidate discovery evidence binding"
+    Assert-True -Condition ($runNextBatchText -match "Batch execution requires a prepared candidate pocket with pre-product discovery evidence before mutation") -Name "run-next-batch fails before mutation without prepared evidence"
+    Assert-True -Condition ($runNextBatchText -match "Batch execution requires PrBaseHead with pre-product discovery evidence before mutation") -Name "run-next-batch fails before mutation without PR base"
+    Assert-True -Condition ($runNextBatchText -match "batchPreProductDiscoveryEvidencePolicy=all batch executions require prepared discovery evidence before file mutation") -Name "run-next-batch documents mandatory batch evidence policy"
+    Assert-True -Condition ($runNextBatchText -match '\$candidateDiscoveryEvidenceById') -Name "run-next-batch prevalidates discovery evidence before file mutation"
+    Assert-False -Condition ($runNextBatchText -match 'return \[ordered\]@\{\}') -Name "run-next-batch never emits empty candidate discovery evidence"
+    Assert-False -Condition ($runNextBatchText -match 'if \(-not \$RequirePreProductDiscoveryEvidence\.IsPresent\)') -Name "run-next-batch has no optional evidence bypass"
     $scopeDrainText = Get-Content (Join-Path $thresholdScriptRoot "run-until-scope-exhausted.ps1") -Raw
     Assert-True -Condition ($scopeDrainText -match "Invoke-PreProductDiscoveryPreparation") -Name "scope-drain prepares pre-product discovery evidence before slices"
     Assert-True -Condition ($scopeDrainText -match 'git check-ignore') -Name "scope-drain does not stage ignored runtime paths"

@@ -242,25 +242,7 @@ function New-CandidatePocket {
         return $CandidatePocketPath
     }
 
-    if ($RequirePreProductDiscoveryEvidence.IsPresent) {
-        throw "Batch execution requires a prepared candidate pocket when pre-product discovery evidence is required."
-    }
-
-    $head = (& git rev-parse HEAD).Trim()
-    $path = Join-Path ([System.IO.Path]::GetTempPath()) "threshold-batch-candidate-pocket-$head.json"
-    if (Test-Path $path) { Remove-Item -LiteralPath $path -Force }
-
-    $discoveryOutput = @(& powershell.exe -NoProfile -ExecutionPolicy Bypass -File "threshold/scripts/discover-candidates.ps1" `
-        -LeasePath $LeasePath `
-        -GatePath $GatePath `
-        -PocketPath $path `
-        -Limit 100)
-    if ($LASTEXITCODE -ne 0) { throw "Candidate discovery failed." }
-    foreach ($line in $discoveryOutput) {
-        Write-Host $line
-    }
-    if (-not (Test-Path $path)) { throw "Candidate discovery produced no pocket." }
-    return $path
+    throw "Batch execution requires a prepared candidate pocket with pre-product discovery evidence before mutation."
 }
 
 function Get-BatchCandidates {
@@ -323,11 +305,8 @@ function Assert-BatchCandidateHasPreProductDiscoveryEvidence {
         [string] $ObservedPrBaseHead
     )
 
-    if (-not $RequirePreProductDiscoveryEvidence.IsPresent) {
-        return [ordered]@{}
-    }
     if ([string]::IsNullOrWhiteSpace($ObservedPrBaseHead)) {
-        throw "Batch execution requires PrBaseHead when pre-product discovery evidence is required."
+        throw "Batch execution requires PrBaseHead with pre-product discovery evidence before mutation."
     }
 
     $pocket = Get-Content $PocketPath -Raw | ConvertFrom-Json
@@ -416,6 +395,8 @@ if (-not $approvedBatchClasses) {
     exit 0
 }
 Invoke-DiscoveryCanary
+Write-Host "batchPreProductDiscoveryEvidenceRequired=true"
+Write-Host "batchPreProductDiscoveryEvidencePolicy=all batch executions require prepared discovery evidence before file mutation"
 $pocketPath = New-CandidatePocket
 $processedCandidateIds = @()
 if ($state.PSObject.Properties.Name -contains "processedCandidateIds") {
@@ -431,18 +412,34 @@ if ($candidates.Count -gt $allowedCandidateBudget) {
     $candidates = @($candidates | Select-Object -First $allowedCandidateBudget)
 }
 
+$candidateDiscoveryEvidenceById = @{}
+foreach ($candidate in $candidates) {
+    $candidateId = [string]$candidate.candidateId
+    if ([string]::IsNullOrWhiteSpace($candidateId)) {
+        throw "Batch candidate is missing candidateId before mutation."
+    }
+    if ($candidateDiscoveryEvidenceById.ContainsKey($candidateId)) {
+        throw "Duplicate batch candidateId before mutation: $candidateId"
+    }
+    $candidateDiscoveryEvidenceById[$candidateId] = Assert-BatchCandidateHasPreProductDiscoveryEvidence `
+        -Candidate $candidate `
+        -PocketPath $pocketPath `
+        -ObservedPrBaseHead $PrBaseHead
+}
+
 $baseHead = (& git rev-parse HEAD).Trim()
 $batchId = "threshold-batch-$($baseHead.Substring(0, 12))-$((Get-Date).ToUniversalTime().ToString("yyyyMMddTHHmmssZ"))"
 $candidateReceipts = New-Object System.Collections.Generic.List[object]
 
 try {
     foreach ($candidate in $candidates) {
+        $candidateId = [string]$candidate.candidateId
         $candidateClass = [string]$candidate.candidateClass
         if ($candidateClass -ne "comment_wrap_cleanup") {
             throw "Batch executor does not support candidate class '$candidateClass'."
         }
 
-        $candidateDiscoveryEvidence = Assert-BatchCandidateHasPreProductDiscoveryEvidence -Candidate $candidate -PocketPath $pocketPath -ObservedPrBaseHead $PrBaseHead
+        $candidateDiscoveryEvidence = $candidateDiscoveryEvidenceById[$candidateId]
 
         $path = ConvertTo-RepoPath $candidate.file
         $beforeHash = Get-FileSha256 -Path $path
@@ -453,7 +450,7 @@ try {
         }
 
         $candidateReceipts.Add([ordered]@{
-            candidateId = [string]$candidate.candidateId
+            candidateId = $candidateId
             candidateClass = $candidateClass
             file = $path
             member = [string]$candidate.member
