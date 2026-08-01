@@ -59,6 +59,41 @@ function Get-LeaseScalarOrDefault {
     return ($match -replace "^\s*$([regex]::Escape($Name)):\s*", "").Trim()
 }
 
+function Get-GitRemotes {
+    $remotes = @(& git remote 2>$null | Where-Object { -not [string]::IsNullOrWhiteSpace($_) })
+    if ($LASTEXITCODE -ne 0) { return @() }
+    return @($remotes | ForEach-Object { ([string]$_).Trim() } | Where-Object { $_ -ne "" })
+}
+
+function Resolve-GitRefWithOriginFallback {
+    param([string] $Ref)
+
+    if ([string]::IsNullOrWhiteSpace($Ref)) { return "" }
+    $trimmedRef = $Ref.Trim()
+    $candidateRefs = New-Object System.Collections.Generic.List[string]
+    $remotes = @(Get-GitRemotes)
+    $remoteQualified = $false
+    if ($trimmedRef -match "^([^/]+)/(.+)$") {
+        $remoteQualified = $remotes -contains $Matches[1]
+    }
+
+    if ($trimmedRef -match "^[0-9a-f]{40}$" -or $trimmedRef -like "refs/*" -or $remoteQualified) {
+        $candidateRefs.Add($trimmedRef)
+    }
+    else {
+        $candidateRefs.Add("origin/$trimmedRef")
+        $candidateRefs.Add($trimmedRef)
+    }
+
+    foreach ($candidateRef in @($candidateRefs | Select-Object -Unique)) {
+        $resolved = (& git rev-parse $candidateRef 2>$null)
+        if ($LASTEXITCODE -eq 0 -and -not [string]::IsNullOrWhiteSpace([string]$resolved)) {
+            return [string]($resolved.Trim())
+        }
+    }
+    return ""
+}
+
 function Resolve-PrBaseHead {
     param([string] $PrBaseHead, [string] $BaseRef, [string] $LeasePath)
     if (-not [string]::IsNullOrWhiteSpace($PrBaseHead)) {
@@ -70,13 +105,10 @@ function Resolve-PrBaseHead {
     $effectiveBaseRef = $BaseRef
     if ([string]::IsNullOrWhiteSpace($effectiveBaseRef)) {
         $leaseLines = Get-Content $LeasePath
-        $effectiveBaseRef = (Get-LeaseScalarOrDefault -Lines $leaseLines -Name "baseRef").Replace("origin/", "")
+        $effectiveBaseRef = Get-LeaseScalarOrDefault -Lines $leaseLines -Name "baseRef"
     }
     if (-not [string]::IsNullOrWhiteSpace($effectiveBaseRef)) {
-        $resolved = (& git rev-parse "origin/${effectiveBaseRef}" 2>$null)
-        if ($LASTEXITCODE -eq 0 -and -not [string]::IsNullOrWhiteSpace([string]$resolved)) {
-            return [string]($resolved.Trim())
-        }
+        return Resolve-GitRefWithOriginFallback -Ref $effectiveBaseRef
     }
     return ""
 }
@@ -123,7 +155,18 @@ $baseHead = (& git rev-parse HEAD).Trim()
 if (-not (Test-ThresholdCommitIsAncestor -Ancestor $observedPrBaseHead -Descendant $baseHead)) {
     throw "Product slice must descend from the independently observed PR base head. prBaseHead=$observedPrBaseHead currentHead=$baseHead"
 }
-$discoveryEvidencePath = Get-ThresholdCandidateDiscoveryEvidencePath -DiscoveryEvidenceRoot "threshold/discovery-evidence" -CandidateId $CandidateId -BaseHead $observedPrBaseHead
+$candidatePocket = if (Test-Path $CandidatePocketPath) { Get-Content -LiteralPath $CandidatePocketPath -Raw | ConvertFrom-Json } else { $null }
+$discoverySourceHead = if ($null -ne $candidatePocket) { [string](Get-ThresholdJsonProperty $candidatePocket "preProductDiscoverySourceHead" "") } else { "" }
+if ([string]::IsNullOrWhiteSpace($discoverySourceHead) -and $null -ne $candidatePocket) {
+    $discoverySourceHead = [string](Get-ThresholdJsonProperty $candidatePocket "generatedFromHead" "")
+}
+if ([string]::IsNullOrWhiteSpace($discoverySourceHead)) {
+    $discoverySourceHead = $observedPrBaseHead
+}
+if (-not (Test-ThresholdCommitIsAncestor -Ancestor $discoverySourceHead -Descendant $observedPrBaseHead)) {
+    throw "Discovery evidence source head must be an ancestor of the independently observed PR base head. discoverySourceHead=$discoverySourceHead prBaseHead=$observedPrBaseHead"
+}
+$discoveryEvidencePath = Get-ThresholdCandidateDiscoveryEvidencePath -DiscoveryEvidenceRoot "threshold/discovery-evidence" -CandidateId $CandidateId -BaseHead $discoverySourceHead
 $discoveryEvidence = Get-ThresholdCandidateDiscoveryEvidenceFromPath -Path $discoveryEvidencePath
 if ($null -eq $discoveryEvidence) {
     throw "Pre-product discovery evidence is required before complete-slice. path=$discoveryEvidencePath candidateId=$CandidateId prBaseHead=$observedPrBaseHead"

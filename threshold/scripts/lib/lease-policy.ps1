@@ -145,6 +145,7 @@ function Test-ThresholdGovernanceEvidencePath {
         $normalized -like "threshold/lease-state/*" -or
         $normalized -like "threshold/receipts/*" -or
         $normalized -like "threshold/attestations/*" -or
+        $normalized -like "threshold/discovery-evidence/*" -or
         $normalized -like "threshold/discovery-canaries/*" -or
         $normalized -like "threshold/kgs/*" -or
         $normalized -like "threshold/runs/*" -or
