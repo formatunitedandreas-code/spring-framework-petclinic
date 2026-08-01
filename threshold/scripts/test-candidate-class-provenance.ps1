@@ -331,8 +331,11 @@ try {
     Assert-True -Condition ($runNextSliceText -match 'line_rebinding_required_after_prior_line_mutation') -Name "run-next-slice fail-closes remaining line candidates after prior line mutation"
 
     $kgMaterializationText = Get-Content (Join-Path $thresholdScriptRoot "materialize-knowledge-graphs.ps1") -Raw
+    $leasePolicyText = Get-Content (Join-Path $thresholdScriptRoot "lib/lease-policy.ps1") -Raw
     Assert-True -Condition ($kgMaterializationText -match '\$\{ObservedPrBaseHead\}\.\.\.HEAD') -Name "KG materialization honors supplied PR base without BaseRef"
-    Assert-True -Condition ($kgMaterializationText -match 'return \$ObservedPrBaseHead') -Name "KG materialization distinguishes current PR receipts from historical receipts"
+    Assert-True -Condition ($kgMaterializationText -match 'receiptChangedInCurrentPr') -Name "KG materialization distinguishes current PR receipts from historical receipts"
+    Assert-True -Condition ($kgMaterializationText -match 'Resolve-ThresholdReceiptPrBaseHead') -Name "KG materialization validates current receipt provenance against receipt trust root"
+    Assert-False -Condition ($kgMaterializationText -match 'return \$ObservedPrBaseHead') -Name "KG materialization does not rebind receipt provenance to observed promotion base"
 
     $prGovernanceText = Get-Content (Join-Path $thresholdScriptRoot "test-pr-governance.ps1") -Raw
     Assert-True -Condition ($prGovernanceText -match "ConvertTo-PrVisibleBaseRef") -Name "PR governance normalizes lease base refs to PR-visible branch refs"
@@ -367,13 +370,13 @@ try {
     Assert-False -Condition ($prGovernanceText -match 'Ancestor \$receiptParentHead -Descendant \$effectiveReceiptPrBaseHead') -Name "PR governance does not require source parent ancestry toward promotion evidence head"
     Assert-True -Condition ($prGovernanceText -match 'Ancestor \$receiptPrBaseHead -Descendant \$receiptParentHead') -Name "PR governance validates receipt prBaseHead against source base"
     Assert-True -Condition ($prGovernanceText -match 'Promotion receipt immutable prBaseHead is not ancestor of source base') -Name "PR governance rejects receipt source base outside immutable PR base"
-    Assert-True -Condition ($prGovernanceText -match 'function Resolve-ReceiptPrBaseHead') -Name "PR governance resolves canonical receipt PR base through one helper"
-    Assert-True -Condition ($prGovernanceText -match 'Get-ThresholdJsonProperty \$provenance "prBaseHead"') -Name "PR governance reads single receipt PR base from candidateClassProvenance"
-    Assert-True -Condition ($prGovernanceText -match 'Get-ThresholdJsonProperty \$binding "prBaseHead"') -Name "PR governance reads batch receipt PR base from candidate discovery evidence"
-    Assert-True -Condition ($prGovernanceText -match 'multiple conflicting canonical prBaseHead bindings') -Name "PR governance rejects batch receipts with differing PR bases"
-    Assert-True -Condition ($prGovernanceText -match 'only non-canonical top-level prBaseHead') -Name "PR governance rejects top-level-only PR base claims"
-    Assert-True -Condition ($prGovernanceText -match 'canonical prBaseHead is malformed') -Name "PR governance rejects malformed canonical PR base heads"
-    Assert-True -Condition ($prGovernanceText -match '\$receiptPrBaseHead = Resolve-ReceiptPrBaseHead') -Name "PR governance validates promotion against canonical nested receipt PR base"
+    Assert-True -Condition ($leasePolicyText -match 'function Resolve-ThresholdReceiptPrBaseHead') -Name "shared governance library resolves canonical receipt PR base through one helper"
+    Assert-True -Condition ($leasePolicyText -match 'Get-ThresholdReceiptJsonProperty -Object \$provenance -Name "prBaseHead"') -Name "shared resolver reads single receipt PR base from candidateClassProvenance"
+    Assert-True -Condition ($leasePolicyText -match 'Get-ThresholdReceiptJsonProperty -Object \$binding -Name "prBaseHead"') -Name "shared resolver reads batch receipt PR base from candidate discovery evidence"
+    Assert-True -Condition ($leasePolicyText -match 'multiple conflicting canonical prBaseHead bindings') -Name "shared resolver rejects batch receipts with differing PR bases"
+    Assert-True -Condition ($leasePolicyText -match 'only non-canonical top-level prBaseHead') -Name "shared resolver rejects top-level-only PR base claims"
+    Assert-True -Condition ($leasePolicyText -match 'canonical prBaseHead is malformed') -Name "shared resolver rejects malformed canonical PR base heads"
+    Assert-True -Condition ($prGovernanceText -match '\$receiptPrBaseHead = Resolve-ThresholdReceiptPrBaseHead') -Name "PR governance validates promotion against shared canonical receipt PR base"
     Assert-False -Condition ($prGovernanceText -match 'Get-ThresholdJsonProperty \$receipt "prBaseHead" ""\)\s*[\r\n]+\s*if \(\[string\]::IsNullOrWhiteSpace\(\$receiptClaimedPrBaseHead\)') -Name "PR governance does not require top-level prBaseHead during promotion"
     Assert-True -Condition ($prGovernanceText -match 'Ancestor \$receiptPrBaseHead -Descendant \$effectiveReceiptPrBaseHead') -Name "PR governance separately checks receipt prBaseHead reaches promotion evidence head"
     Assert-True -Condition ($prGovernanceText -match 'receiptPrBaseHead') -Name "PR governance preserves immutable receipt PR base during promotion validation"
@@ -384,7 +387,7 @@ try {
     Assert-True -Condition ($prGovernanceText -match '\$isPromotionReconciledCommit') -Name "PR governance separates promotion reconciliation validation mode"
     Assert-True -Condition ($prGovernanceText -match 'foreach \(\$entry in \$entriesToValidate\)') -Name "PR governance validates every reconciled promotion receipt"
     Assert-True -Condition ($prGovernanceText -match '\$changedFilesCommit = if \(\$isPromotionReconciledCommit\)') -Name "PR governance validates promotion changed files against source receipts"
-    Assert-True -Condition ((Get-Content (Join-Path $thresholdScriptRoot "lib/lease-policy.ps1") -Raw) -match 'threshold/discovery-evidence/\*') -Name "lease policy classifies discovery evidence as governance evidence"
+    Assert-True -Condition ($leasePolicyText -match 'threshold/discovery-evidence/\*') -Name "lease policy classifies discovery evidence as governance evidence"
 
     $runNextBatchText = Get-Content (Join-Path $thresholdScriptRoot "run-next-batch.ps1") -Raw
     Assert-True -Condition ($runNextBatchText -match '\[string\] \$CandidatePocketPath = ""') -Name "run-next-batch accepts a prepared candidate pocket"
