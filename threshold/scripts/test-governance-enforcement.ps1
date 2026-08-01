@@ -146,6 +146,11 @@ try {
     }
     Write-Host "passed=governance path classification"
 
+    & powershell.exe -NoProfile -ExecutionPolicy Bypass -File (Join-Path $PSScriptRoot "test-candidate-class-provenance.ps1")
+    if ($LASTEXITCODE -ne 0) {
+        throw "Candidate-class provenance canary failed."
+    }
+
     Write-Host "thresholdGovernanceEnforcement=passed"
 }
 finally {

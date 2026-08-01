@@ -4,6 +4,7 @@ param(
     [string] $StatePath = "",
     [string] $PocketPath = "",
     [string] $GatePath = "",
+    [string] $PrBaseHead = "",
     [int] $MinScore = 70,
     [string] $ReceiptRoot = "threshold/receipts",
     [switch] $CompactEvidence,
@@ -14,6 +15,7 @@ Set-StrictMode -Version Latest
 $ErrorActionPreference = "Stop"
 
 . (Join-Path $PSScriptRoot "lib/runtime-paths.ps1")
+. (Join-Path $PSScriptRoot "lib/candidate-class-provenance.ps1")
 
 $runtimePaths = Get-ThresholdRuntimePaths
 if ([string]::IsNullOrWhiteSpace($LeasePath)) {
@@ -488,7 +490,12 @@ function Resolve-ExecutionPocket {
     $executionPocketPath = $PocketPath
     if (Test-Path $PocketPath) {
         $pocket = Get-Content $PocketPath -Raw | ConvertFrom-Json
-        if ($pocket.generatedFromHead -eq $head -and @($pocket.candidates).Count -gt 0) {
+        $generatedFromHead = [string](Get-ThresholdJsonProperty $pocket "generatedFromHead" "")
+        $preProductDiscoverySourceHead = [string](Get-ThresholdJsonProperty $pocket "preProductDiscoverySourceHead" "")
+        $evidenceSourceHead = if (-not [string]::IsNullOrWhiteSpace($preProductDiscoverySourceHead)) { $preProductDiscoverySourceHead } else { $generatedFromHead }
+        if (-not [string]::IsNullOrWhiteSpace($evidenceSourceHead) -and
+            (Test-ThresholdCommitIsAncestor -Ancestor $evidenceSourceHead -Descendant $head) -and
+            @($pocket.candidates).Count -gt 0) {
             return $executionPocketPath
         }
     }
@@ -507,7 +514,8 @@ function Resolve-ExecutionPocket {
 function Get-NextCandidate {
     param(
         [string] $PocketPath,
-        [int] $MinScore
+        [int] $MinScore,
+        [string[]] $ProcessedCandidateIds = @()
     )
 
     if (-not (Test-Path $PocketPath)) {
@@ -527,10 +535,37 @@ function Get-NextCandidate {
         return $null
     }
 
+    $processedCandidatePaths = New-Object System.Collections.Generic.HashSet[string]
+    foreach ($processedCandidate in $allCandidates) {
+        $processedCandidateId = [string]$processedCandidate.candidateId
+        if ($ProcessedCandidateIds -notcontains $processedCandidateId) {
+            continue
+        }
+        if ($processedCandidate.PSObject.Properties["file"] -and $processedCandidate.file) {
+            [void]$processedCandidatePaths.Add((ConvertTo-RepoPath $processedCandidate.file))
+        }
+    }
+
     $applicableCandidates = New-Object System.Collections.Generic.List[object]
     foreach ($candidate in $allCandidates) {
+        $candidateId = [string]$candidate.candidateId
+        if ($ProcessedCandidateIds -contains $candidateId) {
+            Write-Host "candidateSkippedReason=already_processed:$candidateId"
+            continue
+        }
         if (-not $candidate.file) { continue }
         $path = ConvertTo-RepoPath $candidate.file
+        $candidateMember = if ($candidate.PSObject.Properties["member"]) { [string]$candidate.member } else { "" }
+        if ($ProcessedCandidateIds.Count -gt 0 -and $candidateMember.StartsWith("line-")) {
+            if ($processedCandidatePaths.Count -eq 0) {
+                Write-Host "candidateSkippedReason=line_rebinding_required_after_prior_line_mutation_unknown_scope:$candidateId"
+                continue
+            }
+            if ($processedCandidatePaths.Contains($path)) {
+                Write-Host "candidateSkippedReason=line_rebinding_required_after_prior_line_mutation:$candidateId"
+                continue
+            }
+        }
         if (-not (Test-Path $path)) {
             Write-Host "candidateSkippedReason=missing_file:$($candidate.candidateId)"
             continue
@@ -539,6 +574,10 @@ function Get-NextCandidate {
         $content = Get-Content $path -Raw
         $candidateClass = [string]$candidate.candidateClass
         $applicable = $true
+        if (-not (Test-ThresholdCandidateClassHasIndependentDiffClassifier -CandidateClass $candidateClass)) {
+            Write-Host "candidateSkippedReason=missing_independent_diff_classifier:$($candidate.candidateId)"
+            continue
+        }
 
         switch ($candidateClass) {
             "duplicate_literal_local_constant_extraction" {
@@ -1740,7 +1779,11 @@ if ([int]$state.remainingBudget.candidates -le 0 -or [int]$state.remainingBudget
 Invoke-DiscoveryCanary -LeasePath $LeasePath -GatePath $GatePath
 $executionPocketPath = Resolve-ExecutionPocket -PocketPath $PocketPath -LeasePath $LeasePath -GatePath $GatePath
 
-$candidate = Get-NextCandidate -PocketPath $executionPocketPath -MinScore $MinScore
+$processedCandidateIds = @()
+if ($state.PSObject.Properties.Name -contains "processedCandidateIds") {
+    $processedCandidateIds = @($state.processedCandidateIds | ForEach-Object { [string]$_ } | Where-Object { -not [string]::IsNullOrWhiteSpace($_) })
+}
+$candidate = Get-NextCandidate -PocketPath $executionPocketPath -MinScore $MinScore -ProcessedCandidateIds $processedCandidateIds
 if (-not $candidate) {
     Set-LeaseTerminalState -StatePath $StatePath -TerminalState "ready_no_candidates_verified" -Reason "no applicable autoPatchable candidates after discovery canary passed"
     exit 0
@@ -1839,8 +1882,12 @@ $completeSliceArgs = @(
     "-CandidateClass", $candidate.candidateClass,
     "-CommitMessage", $commitMessage,
     "-AllowedPath", $candidate.file,
-    "-ReceiptRoot", $ReceiptRoot
+    "-ReceiptRoot", $ReceiptRoot,
+    "-CandidatePocketPath", $executionPocketPath
 )
+if (-not [string]::IsNullOrWhiteSpace($PrBaseHead)) {
+    $completeSliceArgs += @("-PrBaseHead", $PrBaseHead)
+}
 if ($CompactEvidence.IsPresent) {
     $completeSliceArgs += "-CompactEvidence"
 }

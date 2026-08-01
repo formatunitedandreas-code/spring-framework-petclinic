@@ -1,212 +1,212 @@
 {
-  "schemaVersion": "threshold.petclinic.capability-trainer-report.v0.1",
-  "generatedAt": "deterministic-from-current-repo-state",
-  "policy": {
-    "missingKgMeansStop": true,
-    "reviewFindingMeansNoAutoPatch": true,
-    "fidelityDrivesExecutionMode": true,
-    "immutableReceiptChainRequired": true,
-    "semanticValidationRequired": true
-  },
-  "decisions": [
-    {
-      "candidateClass": "annotation_attribute_wrap_cleanup",
-      "fidelityLevel": "F3_VALIDATED_RECEIPT",
-      "decision": "autoPatchable",
-      "reason": "decision derived from lease, gate, discovery, executor, receipt history, semantic evidence, and review findings"
-    },
-    {
-      "candidateClass": "application_bootstrap_readability_cleanup",
-      "fidelityLevel": "F3_VALIDATED_RECEIPT",
-      "decision": "autoPatchable",
-      "reason": "decision derived from lease, gate, discovery, executor, receipt history, semantic evidence, and review findings"
-    },
-    {
-      "candidateClass": "comment_wrap_cleanup",
-      "fidelityLevel": "F1_REVIEW_REQUIRED",
-      "decision": "reviewOnly",
-      "reason": "decision derived from lease, gate, discovery, executor, receipt history, semantic evidence, and review findings"
-    },
-    {
-      "candidateClass": "duplicate_literal_local_constant_extraction",
-      "fidelityLevel": "F4_CI_RECEIPT_STABLE",
-      "decision": "autoPatchable",
-      "reason": "decision derived from lease, gate, discovery, executor, receipt history, semantic evidence, and review findings"
-    },
-    {
-      "candidateClass": "leading_tab_indentation_cleanup",
-      "fidelityLevel": "F4_CI_RECEIPT_STABLE",
-      "decision": "autoPatchable",
-      "reason": "decision derived from lease, gate, discovery, executor, receipt history, semantic evidence, and review findings"
-    },
-    {
-      "candidateClass": "line_comment_wrap_cleanup",
-      "fidelityLevel": "F4_CI_RECEIPT_STABLE",
-      "decision": "autoPatchable",
-      "reason": "decision derived from lease, gate, discovery, executor, receipt history, semantic evidence, and review findings"
-    },
-    {
-      "candidateClass": "method_signature_wrap_cleanup",
-      "fidelityLevel": "F4_CI_RECEIPT_STABLE",
-      "decision": "autoPatchable",
-      "reason": "decision derived from lease, gate, discovery, executor, receipt history, semantic evidence, and review findings"
-    },
-    {
-      "candidateClass": "method_spacing_normalization",
-      "fidelityLevel": "F4_CI_RECEIPT_STABLE",
-      "decision": "autoPatchable",
-      "reason": "decision derived from lease, gate, discovery, executor, receipt history, semantic evidence, and review findings"
-    },
-    {
-      "candidateClass": "model_readability_cleanup",
-      "fidelityLevel": "F4_CI_RECEIPT_STABLE",
-      "decision": "autoPatchable",
-      "reason": "decision derived from lease, gate, discovery, executor, receipt history, semantic evidence, and review findings"
-    },
-    {
-      "candidateClass": "owner_search_adapter_contract_baseline",
-      "fidelityLevel": "F1_REVIEW_REQUIRED",
-      "decision": "reviewOnly",
-      "reason": "decision derived from lease, gate, discovery, executor, receipt history, semantic evidence, and review findings"
-    },
-    {
-      "candidateClass": "owner_search_architecture_rules",
-      "fidelityLevel": "F1_REVIEW_REQUIRED",
-      "decision": "reviewOnly",
-      "reason": "decision derived from lease, gate, discovery, executor, receipt history, semantic evidence, and review findings"
-    },
-    {
-      "candidateClass": "owner_search_before_after_readout",
-      "fidelityLevel": "F1_REVIEW_REQUIRED",
-      "decision": "reviewOnly",
-      "reason": "decision derived from lease, gate, discovery, executor, receipt history, semantic evidence, and review findings"
-    },
-    {
-      "candidateClass": "owner_search_behavior_baseline",
-      "fidelityLevel": "F1_REVIEW_REQUIRED",
-      "decision": "reviewOnly",
-      "reason": "decision derived from lease, gate, discovery, executor, receipt history, semantic evidence, and review findings"
-    },
-    {
-      "candidateClass": "owner_search_compatibility_path",
-      "fidelityLevel": "F1_REVIEW_REQUIRED",
-      "decision": "reviewOnly",
-      "reason": "decision derived from lease, gate, discovery, executor, receipt history, semantic evidence, and review findings"
-    },
-    {
-      "candidateClass": "owner_search_controller_migration",
-      "fidelityLevel": "F1_REVIEW_REQUIRED",
-      "decision": "reviewOnly",
-      "reason": "decision derived from lease, gate, discovery, executor, receipt history, semantic evidence, and review findings"
-    },
-    {
-      "candidateClass": "owner_search_explicit_fetch_plans",
-      "fidelityLevel": "F1_REVIEW_REQUIRED",
-      "decision": "reviewOnly",
-      "reason": "decision derived from lease, gate, discovery, executor, receipt history, semantic evidence, and review findings"
-    },
-    {
-      "candidateClass": "owner_search_full_validation_matrix",
-      "fidelityLevel": "F1_REVIEW_REQUIRED",
-      "decision": "reviewOnly",
-      "reason": "decision derived from lease, gate, discovery, executor, receipt history, semantic evidence, and review findings"
-    },
-    {
-      "candidateClass": "owner_search_jdbc_adapter",
-      "fidelityLevel": "F1_REVIEW_REQUIRED",
-      "decision": "reviewOnly",
-      "reason": "decision derived from lease, gate, discovery, executor, receipt history, semantic evidence, and review findings"
-    },
-    {
-      "candidateClass": "owner_search_jpa_adapter",
-      "fidelityLevel": "F1_REVIEW_REQUIRED",
-      "decision": "reviewOnly",
-      "reason": "decision derived from lease, gate, discovery, executor, receipt history, semantic evidence, and review findings"
-    },
-    {
-      "candidateClass": "owner_search_query_measurement_baseline",
-      "fidelityLevel": "F1_REVIEW_REQUIRED",
-      "decision": "reviewOnly",
-      "reason": "decision derived from lease, gate, discovery, executor, receipt history, semantic evidence, and review findings"
-    },
-    {
-      "candidateClass": "owner_search_spring_data_jpa_adapter",
-      "fidelityLevel": "F1_REVIEW_REQUIRED",
-      "decision": "reviewOnly",
-      "reason": "decision derived from lease, gate, discovery, executor, receipt history, semantic evidence, and review findings"
-    },
-    {
-      "candidateClass": "private_helper_extraction_for_readability",
-      "fidelityLevel": "F0_UNOBSERVED",
-      "decision": "held",
-      "reason": "decision derived from lease, gate, discovery, executor, receipt history, semantic evidence, and review findings"
-    },
-    {
-      "candidateClass": "redundant private helper inline cleanup",
-      "fidelityLevel": "F0_UNOBSERVED",
-      "decision": "held",
-      "reason": "decision derived from lease, gate, discovery, executor, receipt history, semantic evidence, and review findings"
-    },
-    {
-      "candidateClass": "redundant_local_variable_simplification",
-      "fidelityLevel": "F3_VALIDATED_RECEIPT",
-      "decision": "autoPatchable",
-      "reason": "decision derived from lease, gate, discovery, executor, receipt history, semantic evidence, and review findings"
-    },
-    {
-      "candidateClass": "repository_readability_cleanup",
-      "fidelityLevel": "F4_CI_RECEIPT_STABLE",
-      "decision": "autoPatchable",
-      "reason": "decision derived from lease, gate, discovery, executor, receipt history, semantic evidence, and review findings"
-    },
-    {
-      "candidateClass": "split_string_constant_normalization",
-      "fidelityLevel": "F4_CI_RECEIPT_STABLE",
-      "decision": "autoPatchable",
-      "reason": "decision derived from lease, gate, discovery, executor, receipt history, semantic evidence, and review findings"
-    },
-    {
-      "candidateClass": "spring_data_query_concat_wrap_cleanup",
-      "fidelityLevel": "F4_CI_RECEIPT_STABLE",
-      "decision": "autoPatchable",
-      "reason": "decision derived from lease, gate, discovery, executor, receipt history, semantic evidence, and review findings"
-    },
-    {
-      "candidateClass": "spring_data_query_wrap_cleanup",
-      "fidelityLevel": "F4_CI_RECEIPT_STABLE",
-      "decision": "autoPatchable",
-      "reason": "decision derived from lease, gate, discovery, executor, receipt history, semantic evidence, and review findings"
-    },
-    {
-      "candidateClass": "string_constant_wrap_cleanup",
-      "fidelityLevel": "F2_GATED_EXECUTOR",
-      "decision": "autoPatchable",
-      "reason": "decision derived from lease, gate, discovery, executor, receipt history, semantic evidence, and review findings"
-    },
-    {
-      "candidateClass": "threshold_enforcement",
-      "fidelityLevel": "F1_REVIEW_REQUIRED",
-      "decision": "reviewOnly",
-      "reason": "decision derived from lease, gate, discovery, executor, receipt history, semantic evidence, and review findings"
-    },
-    {
-      "candidateClass": "threshold_governance_artifact_update",
-      "fidelityLevel": "F0_UNOBSERVED",
-      "decision": "held",
-      "reason": "decision derived from lease, gate, discovery, executor, receipt history, semantic evidence, and review findings"
-    },
-    {
-      "candidateClass": "unknown",
-      "fidelityLevel": "F1_REVIEW_REQUIRED",
-      "decision": "reviewOnly",
-      "reason": "decision derived from lease, gate, discovery, executor, receipt history, semantic evidence, and review findings"
-    },
-    {
-      "candidateClass": "utility_readability_cleanup",
-      "fidelityLevel": "F4_CI_RECEIPT_STABLE",
-      "decision": "autoPatchable",
-      "reason": "decision derived from lease, gate, discovery, executor, receipt history, semantic evidence, and review findings"
-    }
-  ],
-  "semanticDigest": "aa3f4d622621039126c053c2edf027af7d61d47ed491cd383797e75ed81d7b25"
+    "schemaVersion":  "threshold.petclinic.capability-trainer-report.v0.1",
+    "generatedAt":  "deterministic-from-current-repo-state",
+    "policy":  {
+                   "missingKgMeansStop":  true,
+                   "reviewFindingMeansNoAutoPatch":  true,
+                   "fidelityDrivesExecutionMode":  true,
+                   "immutableReceiptChainRequired":  true,
+                   "semanticValidationRequired":  true
+               },
+    "decisions":  [
+                      {
+                          "candidateClass":  "annotation_attribute_wrap_cleanup",
+                          "fidelityLevel":  "F2_GATED_EXECUTOR",
+                          "decision":  "autoPatchable",
+                          "reason":  "decision derived from lease, gate, discovery, executor, receipt history, semantic evidence, and review findings"
+                      },
+                      {
+                          "candidateClass":  "application_bootstrap_readability_cleanup",
+                          "fidelityLevel":  "F2_GATED_EXECUTOR",
+                          "decision":  "reviewOnly",
+                          "reason":  "decision derived from lease, gate, discovery, executor, receipt history, semantic evidence, and review findings"
+                      },
+                      {
+                          "candidateClass":  "comment_wrap_cleanup",
+                          "fidelityLevel":  "F2_GATED_EXECUTOR",
+                          "decision":  "reviewOnly",
+                          "reason":  "decision derived from lease, gate, discovery, executor, receipt history, semantic evidence, and review findings"
+                      },
+                      {
+                          "candidateClass":  "duplicate_literal_local_constant_extraction",
+                          "fidelityLevel":  "F2_GATED_EXECUTOR",
+                          "decision":  "reviewOnly",
+                          "reason":  "decision derived from lease, gate, discovery, executor, receipt history, semantic evidence, and review findings"
+                      },
+                      {
+                          "candidateClass":  "leading_tab_indentation_cleanup",
+                          "fidelityLevel":  "F2_GATED_EXECUTOR",
+                          "decision":  "reviewOnly",
+                          "reason":  "decision derived from lease, gate, discovery, executor, receipt history, semantic evidence, and review findings"
+                      },
+                      {
+                          "candidateClass":  "line_comment_wrap_cleanup",
+                          "fidelityLevel":  "F2_GATED_EXECUTOR",
+                          "decision":  "reviewOnly",
+                          "reason":  "decision derived from lease, gate, discovery, executor, receipt history, semantic evidence, and review findings"
+                      },
+                      {
+                          "candidateClass":  "method_signature_wrap_cleanup",
+                          "fidelityLevel":  "F2_GATED_EXECUTOR",
+                          "decision":  "reviewOnly",
+                          "reason":  "decision derived from lease, gate, discovery, executor, receipt history, semantic evidence, and review findings"
+                      },
+                      {
+                          "candidateClass":  "method_spacing_normalization",
+                          "fidelityLevel":  "F2_GATED_EXECUTOR",
+                          "decision":  "reviewOnly",
+                          "reason":  "decision derived from lease, gate, discovery, executor, receipt history, semantic evidence, and review findings"
+                      },
+                      {
+                          "candidateClass":  "model_readability_cleanup",
+                          "fidelityLevel":  "F2_GATED_EXECUTOR",
+                          "decision":  "reviewOnly",
+                          "reason":  "decision derived from lease, gate, discovery, executor, receipt history, semantic evidence, and review findings"
+                      },
+                      {
+                          "candidateClass":  "owner_search_adapter_contract_baseline",
+                          "fidelityLevel":  "F0_UNOBSERVED",
+                          "decision":  "held",
+                          "reason":  "decision derived from lease, gate, discovery, executor, receipt history, semantic evidence, and review findings"
+                      },
+                      {
+                          "candidateClass":  "owner_search_architecture_rules",
+                          "fidelityLevel":  "F0_UNOBSERVED",
+                          "decision":  "held",
+                          "reason":  "decision derived from lease, gate, discovery, executor, receipt history, semantic evidence, and review findings"
+                      },
+                      {
+                          "candidateClass":  "owner_search_before_after_readout",
+                          "fidelityLevel":  "F0_UNOBSERVED",
+                          "decision":  "held",
+                          "reason":  "decision derived from lease, gate, discovery, executor, receipt history, semantic evidence, and review findings"
+                      },
+                      {
+                          "candidateClass":  "owner_search_behavior_baseline",
+                          "fidelityLevel":  "F0_UNOBSERVED",
+                          "decision":  "held",
+                          "reason":  "decision derived from lease, gate, discovery, executor, receipt history, semantic evidence, and review findings"
+                      },
+                      {
+                          "candidateClass":  "owner_search_compatibility_path",
+                          "fidelityLevel":  "F0_UNOBSERVED",
+                          "decision":  "held",
+                          "reason":  "decision derived from lease, gate, discovery, executor, receipt history, semantic evidence, and review findings"
+                      },
+                      {
+                          "candidateClass":  "owner_search_controller_migration",
+                          "fidelityLevel":  "F0_UNOBSERVED",
+                          "decision":  "held",
+                          "reason":  "decision derived from lease, gate, discovery, executor, receipt history, semantic evidence, and review findings"
+                      },
+                      {
+                          "candidateClass":  "owner_search_explicit_fetch_plans",
+                          "fidelityLevel":  "F0_UNOBSERVED",
+                          "decision":  "held",
+                          "reason":  "decision derived from lease, gate, discovery, executor, receipt history, semantic evidence, and review findings"
+                      },
+                      {
+                          "candidateClass":  "owner_search_full_validation_matrix",
+                          "fidelityLevel":  "F0_UNOBSERVED",
+                          "decision":  "held",
+                          "reason":  "decision derived from lease, gate, discovery, executor, receipt history, semantic evidence, and review findings"
+                      },
+                      {
+                          "candidateClass":  "owner_search_jdbc_adapter",
+                          "fidelityLevel":  "F0_UNOBSERVED",
+                          "decision":  "held",
+                          "reason":  "decision derived from lease, gate, discovery, executor, receipt history, semantic evidence, and review findings"
+                      },
+                      {
+                          "candidateClass":  "owner_search_jpa_adapter",
+                          "fidelityLevel":  "F0_UNOBSERVED",
+                          "decision":  "held",
+                          "reason":  "decision derived from lease, gate, discovery, executor, receipt history, semantic evidence, and review findings"
+                      },
+                      {
+                          "candidateClass":  "owner_search_query_measurement_baseline",
+                          "fidelityLevel":  "F0_UNOBSERVED",
+                          "decision":  "held",
+                          "reason":  "decision derived from lease, gate, discovery, executor, receipt history, semantic evidence, and review findings"
+                      },
+                      {
+                          "candidateClass":  "owner_search_spring_data_jpa_adapter",
+                          "fidelityLevel":  "F0_UNOBSERVED",
+                          "decision":  "held",
+                          "reason":  "decision derived from lease, gate, discovery, executor, receipt history, semantic evidence, and review findings"
+                      },
+                      {
+                          "candidateClass":  "private_helper_extraction_for_readability",
+                          "fidelityLevel":  "F0_UNOBSERVED",
+                          "decision":  "held",
+                          "reason":  "decision derived from lease, gate, discovery, executor, receipt history, semantic evidence, and review findings"
+                      },
+                      {
+                          "candidateClass":  "redundant private helper inline cleanup",
+                          "fidelityLevel":  "F0_UNOBSERVED",
+                          "decision":  "held",
+                          "reason":  "decision derived from lease, gate, discovery, executor, receipt history, semantic evidence, and review findings"
+                      },
+                      {
+                          "candidateClass":  "redundant_local_variable_simplification",
+                          "fidelityLevel":  "F2_GATED_EXECUTOR",
+                          "decision":  "reviewOnly",
+                          "reason":  "decision derived from lease, gate, discovery, executor, receipt history, semantic evidence, and review findings"
+                      },
+                      {
+                          "candidateClass":  "repository_readability_cleanup",
+                          "fidelityLevel":  "F2_GATED_EXECUTOR",
+                          "decision":  "reviewOnly",
+                          "reason":  "decision derived from lease, gate, discovery, executor, receipt history, semantic evidence, and review findings"
+                      },
+                      {
+                          "candidateClass":  "split_string_constant_normalization",
+                          "fidelityLevel":  "F2_GATED_EXECUTOR",
+                          "decision":  "reviewOnly",
+                          "reason":  "decision derived from lease, gate, discovery, executor, receipt history, semantic evidence, and review findings"
+                      },
+                      {
+                          "candidateClass":  "spring_data_query_concat_wrap_cleanup",
+                          "fidelityLevel":  "F2_GATED_EXECUTOR",
+                          "decision":  "reviewOnly",
+                          "reason":  "decision derived from lease, gate, discovery, executor, receipt history, semantic evidence, and review findings"
+                      },
+                      {
+                          "candidateClass":  "spring_data_query_wrap_cleanup",
+                          "fidelityLevel":  "F2_GATED_EXECUTOR",
+                          "decision":  "reviewOnly",
+                          "reason":  "decision derived from lease, gate, discovery, executor, receipt history, semantic evidence, and review findings"
+                      },
+                      {
+                          "candidateClass":  "string_constant_wrap_cleanup",
+                          "fidelityLevel":  "F2_GATED_EXECUTOR",
+                          "decision":  "autoPatchable",
+                          "reason":  "decision derived from lease, gate, discovery, executor, receipt history, semantic evidence, and review findings"
+                      },
+                      {
+                          "candidateClass":  "threshold_enforcement",
+                          "fidelityLevel":  "F0_UNOBSERVED",
+                          "decision":  "held",
+                          "reason":  "decision derived from lease, gate, discovery, executor, receipt history, semantic evidence, and review findings"
+                      },
+                      {
+                          "candidateClass":  "threshold_governance_artifact_update",
+                          "fidelityLevel":  "F0_UNOBSERVED",
+                          "decision":  "held",
+                          "reason":  "decision derived from lease, gate, discovery, executor, receipt history, semantic evidence, and review findings"
+                      },
+                      {
+                          "candidateClass":  "unknown",
+                          "fidelityLevel":  "F0_UNOBSERVED",
+                          "decision":  "held",
+                          "reason":  "decision derived from lease, gate, discovery, executor, receipt history, semantic evidence, and review findings"
+                      },
+                      {
+                          "candidateClass":  "utility_readability_cleanup",
+                          "fidelityLevel":  "F2_GATED_EXECUTOR",
+                          "decision":  "reviewOnly",
+                          "reason":  "decision derived from lease, gate, discovery, executor, receipt history, semantic evidence, and review findings"
+                      }
+                  ],
+    "semanticDigest":  "2fd28e5286ed859e428cdf71e1acbf55c808e7795cf87dc2c2a41de291ab76d7"
 }
