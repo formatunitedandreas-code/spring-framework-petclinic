@@ -473,6 +473,70 @@ function Assert-PromotionSquashCommitCoveredByReceipts {
     return @($currentWaveReceiptEntries.ToArray())
 }
 
+function Test-ThresholdCanonicalCommitSha {
+    param([string] $Value)
+
+    return -not [string]::IsNullOrWhiteSpace($Value) -and $Value -match "^[0-9a-f]{40}$"
+}
+
+function Resolve-ReceiptPrBaseHead {
+    param(
+        [pscustomobject] $Receipt,
+        [string] $ReceiptPath
+    )
+
+    $canonicalPrBaseHeads = New-Object System.Collections.Generic.List[string]
+
+    $provenance = Get-ThresholdJsonProperty $Receipt "candidateClassProvenance" $null
+    if ($null -ne $provenance) {
+        $singleReceiptPrBaseHead = [string](Get-ThresholdJsonProperty $provenance "prBaseHead" "")
+        if ([string]::IsNullOrWhiteSpace($singleReceiptPrBaseHead)) {
+            throw "Receipt candidateClassProvenance is missing canonical prBaseHead receipt=$ReceiptPath"
+        }
+        $canonicalPrBaseHeads.Add($singleReceiptPrBaseHead)
+    }
+
+    $candidates = @(Get-ThresholdJsonProperty $Receipt "candidates" @())
+    if ($candidates.Count -gt 0) {
+        foreach ($candidate in $candidates) {
+            $candidateId = [string](Get-ThresholdJsonProperty $candidate "candidateId" "")
+            $binding = Get-ThresholdJsonProperty $candidate "candidateDiscoveryEvidence" $null
+            if ($null -eq $binding) {
+                throw "Batch candidate is missing canonical discovery evidence PR base binding receipt=$ReceiptPath candidateId=$candidateId"
+            }
+            $candidatePrBaseHead = [string](Get-ThresholdJsonProperty $binding "prBaseHead" "")
+            if ([string]::IsNullOrWhiteSpace($candidatePrBaseHead)) {
+                throw "Batch candidate discovery evidence is missing canonical prBaseHead receipt=$ReceiptPath candidateId=$candidateId"
+            }
+            $canonicalPrBaseHeads.Add($candidatePrBaseHead)
+        }
+    }
+
+    $uniquePrBaseHeads = @($canonicalPrBaseHeads.ToArray() | Sort-Object -Unique)
+    if ($uniquePrBaseHeads.Count -eq 0) {
+        $topLevelPrBaseHead = [string](Get-ThresholdJsonProperty $Receipt "prBaseHead" "")
+        if (-not [string]::IsNullOrWhiteSpace($topLevelPrBaseHead)) {
+            throw "Receipt contains only non-canonical top-level prBaseHead without nested provenance binding receipt=$ReceiptPath"
+        }
+        throw "Receipt is missing canonical nested prBaseHead binding receipt=$ReceiptPath"
+    }
+    if ($uniquePrBaseHeads.Count -gt 1) {
+        throw "Receipt has multiple conflicting canonical prBaseHead bindings receipt=$ReceiptPath prBaseHeads=[$($uniquePrBaseHeads -join ', ')]"
+    }
+
+    $resolvedPrBaseHead = [string]$uniquePrBaseHeads[0]
+    if (-not (Test-ThresholdCanonicalCommitSha -Value $resolvedPrBaseHead)) {
+        throw "Receipt canonical prBaseHead is malformed receipt=$ReceiptPath prBaseHead=$resolvedPrBaseHead"
+    }
+
+    $topLevelClaim = [string](Get-ThresholdJsonProperty $Receipt "prBaseHead" "")
+    if (-not [string]::IsNullOrWhiteSpace($topLevelClaim) -and [string]$topLevelClaim -ne [string]$resolvedPrBaseHead) {
+        throw "Receipt top-level prBaseHead conflicts with canonical nested binding receipt=$ReceiptPath topLevelPrBaseHead=$topLevelClaim canonicalPrBaseHead=$resolvedPrBaseHead"
+    }
+
+    return $resolvedPrBaseHead
+}
+
 function Assert-BatchCandidateDiscoveryEvidenceMatchesPrBase {
     param(
         [pscustomobject] $Receipt,
@@ -861,11 +925,7 @@ foreach ($commit in $prCommits) {
         $receiptPrBaseHead = $effectiveReceiptPrBaseHead
         $sourceBaseHead = ""
         if ($isPromotionReconciledCommit) {
-            $receiptClaimedPrBaseHead = [string](Get-ThresholdJsonProperty $receipt "prBaseHead" "")
-            if ([string]::IsNullOrWhiteSpace($receiptClaimedPrBaseHead)) {
-                throw "Promotion receipt is missing immutable prBaseHead claim receipt=$($entry.path)"
-            }
-            $receiptPrBaseHead = $receiptClaimedPrBaseHead
+            $receiptPrBaseHead = Resolve-ReceiptPrBaseHead -Receipt $receipt -ReceiptPath $entry.path
             $receiptParentHead = (& git rev-parse "$receiptSourceCommit^1" 2>$null)
             if ($LASTEXITCODE -ne 0 -or [string]::IsNullOrWhiteSpace([string]$receiptParentHead)) {
                 throw "Promotion receipt source parent unavailable receipt=$($entry.path) sourceCommit=$receiptSourceCommit"
