@@ -121,6 +121,7 @@ $tempMissingTrainerExpectedPath = Join-Path ([System.IO.Path]::GetTempPath()) "t
 $tempExtraTrainerExpectedPath = Join-Path ([System.IO.Path]::GetTempPath()) "threshold-discovery-canary-extra-trainer-expected-$head.json"
 $tempExtraExecutionModeExpectedPath = Join-Path ([System.IO.Path]::GetTempPath()) "threshold-discovery-canary-extra-execution-mode-expected-$head.json"
 $tempWrongExecutionModeExpectedPath = Join-Path ([System.IO.Path]::GetTempPath()) "threshold-discovery-canary-wrong-execution-mode-expected-$head.json"
+$tempWrongTrainerExpectedPath = Join-Path ([System.IO.Path]::GetTempPath()) "threshold-discovery-canary-wrong-trainer-expected-$head.json"
 if (-not $SkipInternalRegressions.IsPresent) {
     foreach ($repoOwnedPath in @($defaultLeasePath, $defaultGatePath, $defaultTrainerReportPath, $defaultExpectedPath)) {
         if (-not (Test-Path $repoOwnedPath)) {
@@ -142,6 +143,7 @@ if (-not $SkipInternalRegressions.IsPresent) {
     if (Test-Path $tempExtraTrainerExpectedPath) { Remove-Item -LiteralPath $tempExtraTrainerExpectedPath -Force }
     if (Test-Path $tempExtraExecutionModeExpectedPath) { Remove-Item -LiteralPath $tempExtraExecutionModeExpectedPath -Force }
     if (Test-Path $tempWrongExecutionModeExpectedPath) { Remove-Item -LiteralPath $tempWrongExecutionModeExpectedPath -Force }
+    if (Test-Path $tempWrongTrainerExpectedPath) { Remove-Item -LiteralPath $tempWrongTrainerExpectedPath -Force }
     $alternateTrainerReport = Get-Content $defaultTrainerReportPath -Raw | ConvertFrom-Json
     $alternateDecision = @(
         $alternateTrainerReport.decisions |
@@ -350,6 +352,44 @@ if (-not $SkipInternalRegressions.IsPresent) {
     }
     $global:LASTEXITCODE = 0
     Write-Host "executionModeMismatchCountedOnce=true"
+
+    $wrongTrainerExpected = [ordered]@{
+        schemaVersion = "threshold.petclinic.discovery-canary.v0.1"
+        fixtureRoot = [string]$defaultExpected.fixtureRoot
+        requiredDiscoverableCandidateClasses = @("comment_wrap_cleanup")
+        expectedExecutionModes = [ordered]@{
+            comment_wrap_cleanup = "review_only"
+        }
+        expectedTrainerDecisions = [ordered]@{
+            comment_wrap_cleanup = "autoPatchable"
+        }
+        nonClaims = @("wrong trainer-decision count negative fixture")
+    }
+    $wrongTrainerExpected | ConvertTo-Json -Depth 8 | Set-Content $tempWrongTrainerExpectedPath
+    $wrongTrainerOutput = @(
+        & powershell.exe -NoProfile -ExecutionPolicy Bypass -File $PSCommandPath `
+            -LeasePath $defaultLeasePath `
+            -GatePath $defaultGatePath `
+            -TrainerReportPath $defaultTrainerReportPath `
+            -ExpectedPath $tempWrongTrainerExpectedPath `
+            -SkipInternalRegressions |
+            ForEach-Object { [string]$_ }
+    )
+    if ($LASTEXITCODE -eq 0) {
+        throw "Discovery canary wrong trainer-decision regression unexpectedly passed."
+    }
+    $wrongTrainerMismatchLines = @(
+        $wrongTrainerOutput |
+            Where-Object { $_ -like "trainerDecisionMismatch=comment_wrap_cleanup *" }
+    )
+    if ($wrongTrainerMismatchLines.Count -ne 1) {
+        throw "Discovery canary wrong trainer-decision regression expected one mismatch line but observed $($wrongTrainerMismatchLines.Count)."
+    }
+    foreach ($line in $wrongTrainerOutput) {
+        Write-Host $line
+    }
+    $global:LASTEXITCODE = 0
+    Write-Host "trainerDecisionMismatchCountedOnce=true"
 }
 
 $visibleClasses = @(
@@ -432,6 +472,9 @@ foreach ($property in @($expected.expectedExecutionModes.PSObject.Properties)) {
 foreach ($property in @($expected.expectedTrainerDecisions.PSObject.Properties)) {
     $candidateClass = [string]$property.Name
     $expectedTrainerDecision = [string]$property.Value
+    if ($requiredClassNames -contains $candidateClass) {
+        continue
+    }
     if ($visibleClasses -notcontains $candidateClass) {
         throw "Discovery canary expectation declared expectedTrainerDecisions entry for undiscovered class '$candidateClass'."
     }
@@ -477,6 +520,9 @@ if (Test-Path $tempExtraExecutionModeExpectedPath) {
 if (Test-Path $tempWrongExecutionModeExpectedPath) {
     Remove-Item -LiteralPath $tempWrongExecutionModeExpectedPath -Force
 }
+if (Test-Path $tempWrongTrainerExpectedPath) {
+    Remove-Item -LiteralPath $tempWrongTrainerExpectedPath -Force
+}
 
 $discoveryVisibilityMatched = ($missingRequiredCandidateClassCount -eq 0)
 $executionModeMatched = ($executionModeMismatchCount -eq 0)
@@ -500,6 +546,7 @@ Write-Host "trainerExpectationCoverageRequired=true"
 Write-Host "declaredTrainerExpectationCoverageRequired=true"
 Write-Host "declaredExecutionModeExpectationCoverageRequired=true"
 Write-Host "executionModeMismatchCountedOnce=true"
+Write-Host "trainerDecisionMismatchCountedOnce=true"
 Write-Host "missingRequiredCandidateClassCount=$missingRequiredCandidateClassCount"
 Write-Host "executionModeMismatchCount=$executionModeMismatchCount"
 Write-Host "trainerDecisionMismatchCount=$trainerDecisionMismatchCount"
