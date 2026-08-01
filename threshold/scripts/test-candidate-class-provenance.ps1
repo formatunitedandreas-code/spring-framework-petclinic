@@ -355,6 +355,11 @@ try {
     Assert-True -Condition ($prGovernanceText -match 'promotionSquashReceiptReconciliation=passed') -Name "PR governance reports promotion squash receipt reconciliation"
     Assert-True -Condition ($prGovernanceText -match 'promotionSquashContentReconciliation=passed') -Name "PR governance reports promotion squash content reconciliation"
     Assert-True -Condition ($prGovernanceText -match 'Promotion squash commit is not covered by source receipt changedFiles') -Name "PR governance rejects uncovered promotion squash product paths"
+    Assert-True -Condition ($prGovernanceText -match '\$actualProductPaths') -Name "PR governance inventories all batch source product paths"
+    Assert-True -Condition ($prGovernanceText -match 'product changes without candidate coverage') -Name "PR governance rejects batch source paths without candidate coverage"
+    Assert-True -Condition ($prGovernanceText -match '\$isPromotionReconciledCommit') -Name "PR governance separates promotion reconciliation validation mode"
+    Assert-True -Condition ($prGovernanceText -match 'foreach \(\$entry in \$entriesToValidate\)') -Name "PR governance validates every reconciled promotion receipt"
+    Assert-True -Condition ($prGovernanceText -match '\$changedFilesCommit = if \(\$isPromotionReconciledCommit\)') -Name "PR governance validates promotion changed files against source receipts"
     Assert-True -Condition ((Get-Content (Join-Path $thresholdScriptRoot "lib/lease-policy.ps1") -Raw) -match 'threshold/discovery-evidence/\*') -Name "lease policy classifies discovery evidence as governance evidence"
 
     $runNextBatchText = Get-Content (Join-Path $thresholdScriptRoot "run-next-batch.ps1") -Raw

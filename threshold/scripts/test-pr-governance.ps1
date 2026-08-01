@@ -216,6 +216,8 @@ function Assert-BatchCandidateMutationsMatchSourceCommit {
         throw "Batch receipt is missing per-candidate entries: $ReceiptPath"
     }
 
+    $actualProductPaths = @($changedPaths | Where-Object { Test-ProductPath -Path $_ } | Sort-Object -Unique)
+    $candidateProductPaths = New-Object System.Collections.Generic.HashSet[string]
     foreach ($candidate in $candidates) {
         $candidateId = [string](Get-ThresholdJsonProperty $candidate "candidateId" "")
         $candidateClass = [string](Get-ThresholdJsonProperty $candidate "candidateClass" "")
@@ -233,6 +235,9 @@ function Assert-BatchCandidateMutationsMatchSourceCommit {
         }
         if ($changedPaths -notcontains $candidatePath) {
             throw "Batch candidate file was not changed by source commit receipt=$ReceiptPath candidateId=$candidateId file=$candidatePath"
+        }
+        if (Test-ProductPath -Path $candidatePath) {
+            [void]$candidateProductPaths.Add($candidatePath)
         }
         if ([string]::IsNullOrWhiteSpace($beforeSha256) -or [string]::IsNullOrWhiteSpace($afterSha256)) {
             throw "Batch candidate is missing beforeSha256/afterSha256 receipt=$ReceiptPath candidateId=$candidateId file=$candidatePath"
@@ -259,6 +264,11 @@ function Assert-BatchCandidateMutationsMatchSourceCommit {
         if (-not (Test-ThresholdCandidateExecutionParametersMatchObservedDiff -CandidateClass $candidateClass -ExecutionParameters $executionParameters -BaseHead $parentHead -CommitHash $SourceCommit -ProductPath $candidatePath)) {
             throw "Batch candidate execution parameters mismatch receipt=$ReceiptPath candidateId=$candidateId file=$candidatePath"
         }
+    }
+
+    $uncoveredProductPaths = @($actualProductPaths | Where-Object { -not $candidateProductPaths.Contains($_) })
+    if ($uncoveredProductPaths.Count -gt 0) {
+        throw "Batch source commit has product changes without candidate coverage receipt=$ReceiptPath sourceCommit=$SourceCommit missing=[$($uncoveredProductPaths -join ', ')]"
     }
 }
 
@@ -661,12 +671,14 @@ foreach ($commit in $prCommits) {
 
     $sourceCommitCount += 1
     $entriesForCommit = @()
+    $isPromotionReconciledCommit = $false
     if (-not $receiptByCommit.ContainsKey($commit)) {
         if ($governedEvidenceBasePromotionPr) {
             $promotionReceiptEntries = @(Assert-PromotionSquashCommitCoveredByReceipts -Commit $commit -ReceiptEntries @($receiptEntries.ToArray()))
             foreach ($promotionReceiptEntry in $promotionReceiptEntries) {
                 $entriesForCommit += $promotionReceiptEntry
             }
+            $isPromotionReconciledCommit = $true
         }
         else {
             throw "Source commit without corresponding Threshold receipt: $commit"
@@ -676,43 +688,53 @@ foreach ($commit in $prCommits) {
         $entriesForCommit = @($receiptByCommit[$commit].ToArray())
     }
 
-    $h1bEntriesForCommit = @($entriesForCommit | Where-Object { $_.receipt.PSObject.Properties["candidateClass"] -and [string]$_.receipt.candidateClass -eq "industrial_refactoring_h1b" })
-    if ($entriesForCommit.Count -gt 1) {
-        if ($h1bEntriesForCommit.Count -gt 1) {
-            throw "Multiple industrial_refactoring_h1b receipts found for source commit: $commit"
-        }
-        if ($h1bEntriesForCommit.Count -eq 0) {
-            throw "Multiple competing receipts found for source commit: $commit"
-        }
-    }
-    if ($h1bEntriesForCommit.Count -eq 1) {
-        $entry = $h1bEntriesForCommit[0]
+    $entriesToValidate = @()
+    if ($isPromotionReconciledCommit) {
+        $entriesToValidate = @($entriesForCommit)
     }
     else {
-        $entry = $entriesForCommit[0]
+        $h1bEntriesForCommit = @($entriesForCommit | Where-Object { $_.receipt.PSObject.Properties["candidateClass"] -and [string]$_.receipt.candidateClass -eq "industrial_refactoring_h1b" })
+        if ($entriesForCommit.Count -gt 1) {
+            if ($h1bEntriesForCommit.Count -gt 1) {
+                throw "Multiple industrial_refactoring_h1b receipts found for source commit: $commit"
+            }
+            if ($h1bEntriesForCommit.Count -eq 0) {
+                throw "Multiple competing receipts found for source commit: $commit"
+            }
+        }
+        if ($h1bEntriesForCommit.Count -eq 1) {
+            $entriesToValidate = @($h1bEntriesForCommit[0])
+        }
+        else {
+            $entriesToValidate = @($entriesForCommit[0])
+        }
     }
-    $receipt = $entry.receipt
-    if (-not $receipt.candidateId -and -not $receipt.batchId) { throw "Receipt is missing candidateId/batchId: $($entry.path)" }
-    if (-not $receipt.baseHead) { throw "Receipt is missing baseHead: $($entry.path)" }
-    if (-not $receipt.validation -or -not $receipt.validation.result) { throw "Receipt is missing validation result: $($entry.path)" }
-    if (-not $receipt.nonClaims -or $receipt.nonClaims.Count -eq 0) { throw "Receipt is missing nonClaims: $($entry.path)" }
-    $isCandidateReceipt = $receipt.PSObject.Properties["candidateId"] -and -not [string]::IsNullOrWhiteSpace([string]$receipt.candidateId)
-    $hasProvenance = $receipt.PSObject.Properties["candidateClassProvenance"] -and $null -ne $receipt.candidateClassProvenance
-    if ($isCandidateReceipt) {
-        Assert-ThresholdCandidateClassProvenance -Receipt $receipt -ReceiptPath $entry.path -RequirePresent -PrBaseHead $effectiveReceiptPrBaseHead
+
+    foreach ($entry in $entriesToValidate) {
+        $receipt = $entry.receipt
+        if (-not $receipt.candidateId -and -not $receipt.batchId) { throw "Receipt is missing candidateId/batchId: $($entry.path)" }
+        if (-not $receipt.baseHead) { throw "Receipt is missing baseHead: $($entry.path)" }
+        if (-not $receipt.validation -or -not $receipt.validation.result) { throw "Receipt is missing validation result: $($entry.path)" }
+        if (-not $receipt.nonClaims -or $receipt.nonClaims.Count -eq 0) { throw "Receipt is missing nonClaims: $($entry.path)" }
+        $isCandidateReceipt = $receipt.PSObject.Properties["candidateId"] -and -not [string]::IsNullOrWhiteSpace([string]$receipt.candidateId)
+        $hasProvenance = $receipt.PSObject.Properties["candidateClassProvenance"] -and $null -ne $receipt.candidateClassProvenance
+        if ($isCandidateReceipt) {
+            Assert-ThresholdCandidateClassProvenance -Receipt $receipt -ReceiptPath $entry.path -RequirePresent -PrBaseHead $effectiveReceiptPrBaseHead
+        }
+        elseif ($hasProvenance) {
+            Assert-ThresholdCandidateClassProvenance -Receipt $receipt -ReceiptPath $entry.path -PrBaseHead $effectiveReceiptPrBaseHead
+        }
+        Assert-BatchCandidateDiscoveryEvidenceMatchesPrBase -Receipt $receipt -ReceiptPath $entry.path -PrBaseHead $effectiveReceiptPrBaseHead
+        $receiptSourceCommit = Get-ThresholdReceiptSourceCommit -Receipt $receipt
+        if ([string]::IsNullOrWhiteSpace([string]$receiptSourceCommit)) {
+            $receiptSourceCommit = $commit
+        }
+        Assert-BatchCandidateMutationsMatchSourceCommit -Receipt $receipt -ReceiptPath $entry.path -SourceCommit ([string]$receiptSourceCommit)
+        Assert-ReceiptLeaseDigestMatchesReceiptCommit -ReceiptPath $entry.path -Receipt $receipt
+        $changedFilesCommit = if ($isPromotionReconciledCommit) { [string]$receiptSourceCommit } else { [string]$commit }
+        Assert-ChangedFilesMatchReceipt -Commit $changedFilesCommit -Receipt $receipt
+        $sourceReceiptEntries.Add($entry)
     }
-    elseif ($hasProvenance) {
-        Assert-ThresholdCandidateClassProvenance -Receipt $receipt -ReceiptPath $entry.path -PrBaseHead $effectiveReceiptPrBaseHead
-    }
-    Assert-BatchCandidateDiscoveryEvidenceMatchesPrBase -Receipt $receipt -ReceiptPath $entry.path -PrBaseHead $effectiveReceiptPrBaseHead
-    $receiptSourceCommit = Get-ThresholdReceiptSourceCommit -Receipt $receipt
-    if ([string]::IsNullOrWhiteSpace([string]$receiptSourceCommit)) {
-        $receiptSourceCommit = $commit
-    }
-    Assert-BatchCandidateMutationsMatchSourceCommit -Receipt $receipt -ReceiptPath $entry.path -SourceCommit ([string]$receiptSourceCommit)
-    Assert-ReceiptLeaseDigestMatchesReceiptCommit -ReceiptPath $entry.path -Receipt $receipt
-    Assert-ChangedFilesMatchReceipt -Commit $commit -Receipt $receipt
-    $sourceReceiptEntries.Add($entry)
 }
 
 if ($sourceCommitCount -eq 0 -and $productPaths.Count -gt 0) {
