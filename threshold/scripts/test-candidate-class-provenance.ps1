@@ -328,7 +328,8 @@ try {
     Assert-True -Condition ($runNextSliceText -match '\"-PrBaseHead\", \$PrBaseHead') -Name "run-next-slice forwards observed PR base to complete-slice"
     Assert-True -Condition ($runNextSliceText -match 'ProcessedCandidateIds') -Name "run-next-slice filters already processed immutable candidate IDs"
     Assert-True -Condition ($runNextSliceText -match 'candidateSkippedReason=already_processed') -Name "run-next-slice reports already processed candidate suppression"
-    Assert-True -Condition ($runNextSliceText -match 'line_rebinding_required_after_prior_line_mutation') -Name "run-next-slice fail-closes remaining line candidates after prior line mutation"
+    Assert-True -Condition ($runNextSliceText -match 'processedCandidatePaths\.Contains\(\$path\)') -Name "run-next-slice only rebinding-skips line candidates on already processed paths"
+    Assert-True -Condition ($runNextSliceText -match 'line_rebinding_required_after_prior_line_mutation_unknown_scope') -Name "run-next-slice fail-closes line rebinding when processed candidate path is unknown"
 
     $kgMaterializationText = Get-Content (Join-Path $thresholdScriptRoot "materialize-knowledge-graphs.ps1") -Raw
     $leasePolicyText = Get-Content (Join-Path $thresholdScriptRoot "lib/lease-policy.ps1") -Raw
@@ -422,7 +423,8 @@ try {
     Assert-False -Condition ($scopeDrainText -match "Record Threshold scope drain segment .* updated candidate pocket") -Name "scope-drain does not refresh discovery identity between segment slices"
     Assert-True -Condition ($startNextWaveText -match 'return \$promotionMergedPullRequest') -Name "start-next-wave reports configured-base promotion merge result"
     Assert-True -Condition ($runNextBatchText -match 'ProcessedCandidateIds') -Name "run-next-batch excludes already processed candidate IDs"
-    Assert-True -Condition ($runNextBatchText -match 'line_rebinding_required_after_prior_line_mutation') -Name "run-next-batch fail-closes remaining line candidates after prior line mutation"
+    Assert-True -Condition ($runNextBatchText -match 'processedCandidatePaths\.Contains\(\$path\)') -Name "run-next-batch only rebinding-skips line candidates on already processed paths"
+    Assert-True -Condition ($runNextBatchText -match 'line_rebinding_required_after_prior_line_mutation_unknown_scope') -Name "run-next-batch fail-closes line rebinding when processed candidate path is unknown"
     Assert-True -Condition ($runNextBatchText -match 'processedCandidateIds') -Name "run-next-batch records processed candidate IDs in lease state"
     Assert-True -Condition ((Get-Content (Join-Path $thresholdScriptRoot "record-receipt.ps1") -Raw) -match 'processedCandidateIds') -Name "record-receipt records processed candidate IDs"
     Assert-True -Condition ((Get-Content (Join-Path $thresholdScriptRoot "start-lease.ps1") -Raw) -match 'processedCandidateIds = @\(\)') -Name "start-lease initializes processed candidate IDs"

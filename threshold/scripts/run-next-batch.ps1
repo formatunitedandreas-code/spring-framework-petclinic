@@ -272,6 +272,16 @@ function Get-BatchCandidates {
     $sameClass = @($eligible | Where-Object { [string]$_.candidateClass -eq $firstClass })
     $selected = @()
     $selectedFiles = @()
+    $processedCandidatePaths = New-Object System.Collections.Generic.HashSet[string]
+    foreach ($candidate in @($pocket.candidates)) {
+        $candidateId = [string]$candidate.candidateId
+        if ($ProcessedCandidateIds -notcontains $candidateId) {
+            continue
+        }
+        if ($candidate.PSObject.Properties["file"] -and $candidate.file) {
+            [void]$processedCandidatePaths.Add((ConvertTo-RepoPath $candidate.file))
+        }
+    }
 
     foreach ($candidate in $sameClass) {
         $path = ConvertTo-RepoPath $candidate.file
@@ -279,8 +289,14 @@ function Get-BatchCandidates {
         $candidateId = [string]$candidate.candidateId
         $candidateMember = if ($candidate.PSObject.Properties["member"]) { [string]$candidate.member } else { "" }
         if ($ProcessedCandidateIds.Count -gt 0 -and $candidateMember.StartsWith("line-")) {
-            Write-Host "candidateSkippedReason=line_rebinding_required_after_prior_line_mutation:$candidateId"
-            continue
+            if ($processedCandidatePaths.Count -eq 0) {
+                Write-Host "candidateSkippedReason=line_rebinding_required_after_prior_line_mutation_unknown_scope:$candidateId"
+                continue
+            }
+            if ($processedCandidatePaths.Contains($path)) {
+                Write-Host "candidateSkippedReason=line_rebinding_required_after_prior_line_mutation:$candidateId"
+                continue
+            }
         }
         if ([string]$candidate.candidateClass -eq "comment_wrap_cleanup" -and
             -not (Test-CommentWrapCandidateApplies -Candidate $candidate)) {

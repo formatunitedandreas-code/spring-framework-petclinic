@@ -535,6 +535,17 @@ function Get-NextCandidate {
         return $null
     }
 
+    $processedCandidatePaths = New-Object System.Collections.Generic.HashSet[string]
+    foreach ($processedCandidate in $allCandidates) {
+        $processedCandidateId = [string]$processedCandidate.candidateId
+        if ($ProcessedCandidateIds -notcontains $processedCandidateId) {
+            continue
+        }
+        if ($processedCandidate.PSObject.Properties["file"] -and $processedCandidate.file) {
+            [void]$processedCandidatePaths.Add((ConvertTo-RepoPath $processedCandidate.file))
+        }
+    }
+
     $applicableCandidates = New-Object System.Collections.Generic.List[object]
     foreach ($candidate in $allCandidates) {
         $candidateId = [string]$candidate.candidateId
@@ -542,13 +553,19 @@ function Get-NextCandidate {
             Write-Host "candidateSkippedReason=already_processed:$candidateId"
             continue
         }
-        $candidateMember = if ($candidate.PSObject.Properties["member"]) { [string]$candidate.member } else { "" }
-        if ($ProcessedCandidateIds.Count -gt 0 -and $candidateMember.StartsWith("line-")) {
-            Write-Host "candidateSkippedReason=line_rebinding_required_after_prior_line_mutation:$candidateId"
-            continue
-        }
         if (-not $candidate.file) { continue }
         $path = ConvertTo-RepoPath $candidate.file
+        $candidateMember = if ($candidate.PSObject.Properties["member"]) { [string]$candidate.member } else { "" }
+        if ($ProcessedCandidateIds.Count -gt 0 -and $candidateMember.StartsWith("line-")) {
+            if ($processedCandidatePaths.Count -eq 0) {
+                Write-Host "candidateSkippedReason=line_rebinding_required_after_prior_line_mutation_unknown_scope:$candidateId"
+                continue
+            }
+            if ($processedCandidatePaths.Contains($path)) {
+                Write-Host "candidateSkippedReason=line_rebinding_required_after_prior_line_mutation:$candidateId"
+                continue
+            }
+        }
         if (-not (Test-Path $path)) {
             Write-Host "candidateSkippedReason=missing_file:$($candidate.candidateId)"
             continue
