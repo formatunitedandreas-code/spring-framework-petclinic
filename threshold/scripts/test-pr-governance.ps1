@@ -195,6 +195,42 @@ function Get-ObservedCandidateDiffClassForPath {
     return "unknown"
 }
 
+function Test-ThresholdRepeatedCommentWrapDiff {
+    param([string[]] $DiffLines)
+
+    $contentLines = Get-ThresholdDiffContentLines -DiffLines $DiffLines
+    $removed = @($contentLines | Where-Object { $_ -match '^-\s*\*\s+\S' })
+    $added = @($contentLines | Where-Object { $_ -match '^\+\s*\*\s+\S' })
+    $nonCommentDelta = @($contentLines | Where-Object {
+        ($_ -match '^[+-]' -and $_ -notmatch '^[+-]\s*\*\s+\S')
+    })
+    if ($removed.Count -lt 1 -or $added.Count -ne ($removed.Count * 2) -or $nonCommentDelta.Count -ne 0) {
+        return $false
+    }
+    $removedText = ConvertTo-ThresholdCollapsedWhitespace (($removed | ForEach-Object {
+        Get-ThresholdCommentPayload -Line $_ -PrefixPattern '^[+-]\s*\*\s*'
+    }) -join " ")
+    $addedText = ConvertTo-ThresholdCollapsedWhitespace (($added | ForEach-Object {
+        Get-ThresholdCommentPayload -Line $_ -PrefixPattern '^[+-]\s*\*\s*'
+    }) -join " ")
+    return $removedText -eq $addedText
+}
+
+function Get-ObservedBatchCandidateDiffClassForPath {
+    param(
+        [Parameter(Mandatory = $true)]
+        [string] $BaseHead,
+        [Parameter(Mandatory = $true)]
+        [string] $CommitHash,
+        [Parameter(Mandatory = $true)]
+        [string] $ProductPath
+    )
+
+    $diffLines = @(& git diff --unified=3 "$BaseHead..$CommitHash" -- $ProductPath)
+    if (Test-ThresholdRepeatedCommentWrapDiff -DiffLines $diffLines) { return "comment_wrap_cleanup" }
+    return (Get-ObservedCandidateDiffClassForPath -BaseHead $BaseHead -CommitHash $CommitHash -ProductPath $ProductPath)
+}
+
 function Assert-BatchCandidateMutationsMatchSourceCommit {
     param(
         [pscustomobject] $Receipt,
@@ -276,7 +312,7 @@ function Assert-BatchCandidateMutationsMatchSourceCommit {
         }
 
         $candidateClass = [string](Get-ThresholdJsonProperty $firstCandidate "candidateClass" "")
-        $observedClass = Get-ObservedCandidateDiffClassForPath -BaseHead $parentHead -CommitHash $SourceCommit -ProductPath $candidatePath
+        $observedClass = Get-ObservedBatchCandidateDiffClassForPath -BaseHead $parentHead -CommitHash $SourceCommit -ProductPath $candidatePath
         if ([string]$observedClass -ne [string]$candidateClass) {
             throw "Batch candidate observed diff class mismatch receipt=$ReceiptPath file=$candidatePath candidateClass=$candidateClass observedDiffClass=$observedClass"
         }
@@ -755,17 +791,32 @@ foreach ($commit in $prCommits) {
         if (-not $receipt.nonClaims -or $receipt.nonClaims.Count -eq 0) { throw "Receipt is missing nonClaims: $($entry.path)" }
         $isCandidateReceipt = $receipt.PSObject.Properties["candidateId"] -and -not [string]::IsNullOrWhiteSpace([string]$receipt.candidateId)
         $hasProvenance = $receipt.PSObject.Properties["candidateClassProvenance"] -and $null -ne $receipt.candidateClassProvenance
-        if ($isCandidateReceipt) {
-            Assert-ThresholdCandidateClassProvenance -Receipt $receipt -ReceiptPath $entry.path -RequirePresent -PrBaseHead $effectiveReceiptPrBaseHead
-        }
-        elseif ($hasProvenance) {
-            Assert-ThresholdCandidateClassProvenance -Receipt $receipt -ReceiptPath $entry.path -PrBaseHead $effectiveReceiptPrBaseHead
-        }
-        Assert-BatchCandidateDiscoveryEvidenceMatchesPrBase -Receipt $receipt -ReceiptPath $entry.path -PrBaseHead $effectiveReceiptPrBaseHead
         $receiptSourceCommit = Get-ThresholdReceiptSourceCommit -Receipt $receipt
         if ([string]::IsNullOrWhiteSpace([string]$receiptSourceCommit)) {
             $receiptSourceCommit = $commit
         }
+        $receiptValidationPrBaseHead = $effectiveReceiptPrBaseHead
+        if ($isPromotionReconciledCommit) {
+            $receiptParentHead = (& git rev-parse "$receiptSourceCommit^1" 2>$null)
+            if ($LASTEXITCODE -ne 0 -or [string]::IsNullOrWhiteSpace([string]$receiptParentHead)) {
+                throw "Promotion receipt source parent unavailable receipt=$($entry.path) sourceCommit=$receiptSourceCommit"
+            }
+            $receiptParentHead = ([string]$receiptParentHead).Trim()
+            if ([string]$receipt.baseHead -ne [string]$receiptParentHead) {
+                throw "Promotion receipt baseHead mismatch receipt=$($entry.path) baseHead=$($receipt.baseHead) parentHead=$receiptParentHead"
+            }
+            if (-not (Test-ThresholdCommitIsAncestor -Ancestor $receiptParentHead -Descendant $effectiveReceiptPrBaseHead)) {
+                throw "Promotion receipt pre-merge base is not ancestor of evidence promotion base receipt=$($entry.path) preMergeBase=$receiptParentHead evidenceBase=$effectiveReceiptPrBaseHead"
+            }
+            $receiptValidationPrBaseHead = $receiptParentHead
+        }
+        if ($isCandidateReceipt) {
+            Assert-ThresholdCandidateClassProvenance -Receipt $receipt -ReceiptPath $entry.path -RequirePresent -PrBaseHead $receiptValidationPrBaseHead
+        }
+        elseif ($hasProvenance) {
+            Assert-ThresholdCandidateClassProvenance -Receipt $receipt -ReceiptPath $entry.path -PrBaseHead $receiptValidationPrBaseHead
+        }
+        Assert-BatchCandidateDiscoveryEvidenceMatchesPrBase -Receipt $receipt -ReceiptPath $entry.path -PrBaseHead $receiptValidationPrBaseHead
         Assert-BatchCandidateMutationsMatchSourceCommit -Receipt $receipt -ReceiptPath $entry.path -SourceCommit ([string]$receiptSourceCommit)
         Assert-ReceiptLeaseDigestMatchesReceiptCommit -ReceiptPath $entry.path -Receipt $receipt
         $changedFilesCommit = if ($isPromotionReconciledCommit) { [string]$receiptSourceCommit } else { [string]$commit }
