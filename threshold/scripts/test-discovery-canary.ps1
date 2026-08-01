@@ -71,6 +71,9 @@ if ($requiredDiscoverableClasses.Count -eq 0 -and $legacyRequiredAutoPatchableCl
     Add-JsonProperty -Object $expected -Name "expectedExecutionModes" -Value ([pscustomobject]$expectedExecutionModes)
     Add-JsonProperty -Object $expected -Name "expectedTrainerDecisions" -Value ([pscustomobject]$expectedTrainerDecisions)
 }
+if ($requiredDiscoverableClasses.Count -eq 0) {
+    throw "Discovery canary expectation must declare requiredDiscoverableCandidateClasses or legacy requiredAutoPatchableCandidateClasses."
+}
 $fixtureRoot = ConvertTo-RepoPath ([string]$expected.fixtureRoot)
 if (-not (Test-Path $fixtureRoot)) {
     throw "Discovery canary fixture root not found: $fixtureRoot"
@@ -112,6 +115,7 @@ $tempTrainerReport = Join-Path ([System.IO.Path]::GetTempPath()) "threshold-disc
 $tempTrainerPocket = Join-Path ([System.IO.Path]::GetTempPath()) "threshold-discovery-canary-trainer-pocket-$head.json"
 $tempLegacyExpectedPath = Join-Path ([System.IO.Path]::GetTempPath()) "threshold-discovery-canary-legacy-expected-$head.json"
 $tempLegacyTrainerPath = Join-Path ([System.IO.Path]::GetTempPath()) "threshold-discovery-canary-legacy-trainer-$head.json"
+$tempMissingClassesExpectedPath = Join-Path ([System.IO.Path]::GetTempPath()) "threshold-discovery-canary-missing-classes-expected-$head.json"
 if (-not $SkipInternalRegressions.IsPresent) {
     foreach ($repoOwnedPath in @($defaultLeasePath, $defaultGatePath, $defaultTrainerReportPath, $defaultExpectedPath)) {
         if (-not (Test-Path $repoOwnedPath)) {
@@ -128,6 +132,7 @@ if (-not $SkipInternalRegressions.IsPresent) {
     if (Test-Path $tempTrainerPocket) { Remove-Item -LiteralPath $tempTrainerPocket -Force }
     if (Test-Path $tempLegacyExpectedPath) { Remove-Item -LiteralPath $tempLegacyExpectedPath -Force }
     if (Test-Path $tempLegacyTrainerPath) { Remove-Item -LiteralPath $tempLegacyTrainerPath -Force }
+    if (Test-Path $tempMissingClassesExpectedPath) { Remove-Item -LiteralPath $tempMissingClassesExpectedPath -Force }
     $alternateTrainerReport = Get-Content $defaultTrainerReportPath -Raw | ConvertFrom-Json
     $alternateDecision = @(
         $alternateTrainerReport.decisions |
@@ -202,6 +207,27 @@ if (-not $SkipInternalRegressions.IsPresent) {
     if ($LASTEXITCODE -ne 0) {
         throw "Discovery canary legacy expectation fallback regression failed."
     }
+
+    $missingClassesExpected = [ordered]@{
+        schemaVersion = "threshold.petclinic.discovery-canary.v0.1"
+        fixtureRoot = [string]$defaultExpected.fixtureRoot
+        expectedTrainerDecisions = [ordered]@{
+            annotation_attribute_wrap_cleanup = "autoPatchable"
+        }
+        nonClaims = @("missing discoverable classes negative fixture")
+    }
+    $missingClassesExpected | ConvertTo-Json -Depth 8 | Set-Content $tempMissingClassesExpectedPath
+    & powershell.exe -NoProfile -ExecutionPolicy Bypass -File $PSCommandPath `
+        -LeasePath $defaultLeasePath `
+        -GatePath $defaultGatePath `
+        -TrainerReportPath $defaultTrainerReportPath `
+        -ExpectedPath $tempMissingClassesExpectedPath `
+        -SkipInternalRegressions
+    if ($LASTEXITCODE -eq 0) {
+        throw "Discovery canary missing discoverable-class expectation regression unexpectedly passed."
+    }
+    $global:LASTEXITCODE = 0
+    Write-Host "missingDiscoverableExpectationRejected=true"
 }
 
 $visibleClasses = @(
@@ -277,6 +303,9 @@ if (Test-Path $tempLegacyExpectedPath) {
 }
 if (Test-Path $tempLegacyTrainerPath) {
     Remove-Item -LiteralPath $tempLegacyTrainerPath -Force
+}
+if (Test-Path $tempMissingClassesExpectedPath) {
+    Remove-Item -LiteralPath $tempMissingClassesExpectedPath -Force
 }
 
 $discoveryVisibilityMatched = ($missingRequiredCandidateClassCount -eq 0)
