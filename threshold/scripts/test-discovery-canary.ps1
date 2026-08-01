@@ -35,7 +35,8 @@ function Get-JsonProperty {
 function Get-ExpectedMapValue {
     param([object] $Map, [string] $Name)
     if ($null -eq $Map) { return "" }
-    if ($Map.PSObject.Properties.Name -contains $Name) {
+    $propertyNames = @($Map.PSObject.Properties | ForEach-Object { [string]$_.Name })
+    if ($propertyNames -contains $Name) {
         return [string]$Map.$Name
     }
     return ""
@@ -116,6 +117,7 @@ $tempTrainerPocket = Join-Path ([System.IO.Path]::GetTempPath()) "threshold-disc
 $tempLegacyExpectedPath = Join-Path ([System.IO.Path]::GetTempPath()) "threshold-discovery-canary-legacy-expected-$head.json"
 $tempLegacyTrainerPath = Join-Path ([System.IO.Path]::GetTempPath()) "threshold-discovery-canary-legacy-trainer-$head.json"
 $tempMissingClassesExpectedPath = Join-Path ([System.IO.Path]::GetTempPath()) "threshold-discovery-canary-missing-classes-expected-$head.json"
+$tempMissingTrainerExpectedPath = Join-Path ([System.IO.Path]::GetTempPath()) "threshold-discovery-canary-missing-trainer-expected-$head.json"
 if (-not $SkipInternalRegressions.IsPresent) {
     foreach ($repoOwnedPath in @($defaultLeasePath, $defaultGatePath, $defaultTrainerReportPath, $defaultExpectedPath)) {
         if (-not (Test-Path $repoOwnedPath)) {
@@ -133,6 +135,7 @@ if (-not $SkipInternalRegressions.IsPresent) {
     if (Test-Path $tempLegacyExpectedPath) { Remove-Item -LiteralPath $tempLegacyExpectedPath -Force }
     if (Test-Path $tempLegacyTrainerPath) { Remove-Item -LiteralPath $tempLegacyTrainerPath -Force }
     if (Test-Path $tempMissingClassesExpectedPath) { Remove-Item -LiteralPath $tempMissingClassesExpectedPath -Force }
+    if (Test-Path $tempMissingTrainerExpectedPath) { Remove-Item -LiteralPath $tempMissingTrainerExpectedPath -Force }
     $alternateTrainerReport = Get-Content $defaultTrainerReportPath -Raw | ConvertFrom-Json
     $alternateDecision = @(
         $alternateTrainerReport.decisions |
@@ -228,6 +231,29 @@ if (-not $SkipInternalRegressions.IsPresent) {
     }
     $global:LASTEXITCODE = 0
     Write-Host "missingDiscoverableExpectationRejected=true"
+
+    $missingTrainerExpected = [ordered]@{
+        schemaVersion = "threshold.petclinic.discovery-canary.v0.1"
+        fixtureRoot = [string]$defaultExpected.fixtureRoot
+        requiredDiscoverableCandidateClasses = @("comment_wrap_cleanup")
+        expectedExecutionModes = [ordered]@{
+            comment_wrap_cleanup = "review_only"
+        }
+        expectedTrainerDecisions = [ordered]@{}
+        nonClaims = @("missing trainer expectation negative fixture")
+    }
+    $missingTrainerExpected | ConvertTo-Json -Depth 8 | Set-Content $tempMissingTrainerExpectedPath
+    & powershell.exe -NoProfile -ExecutionPolicy Bypass -File $PSCommandPath `
+        -LeasePath $defaultLeasePath `
+        -GatePath $defaultGatePath `
+        -TrainerReportPath $defaultTrainerReportPath `
+        -ExpectedPath $tempMissingTrainerExpectedPath `
+        -SkipInternalRegressions
+    if ($LASTEXITCODE -eq 0) {
+        throw "Discovery canary missing trainer expectation regression unexpectedly passed."
+    }
+    $global:LASTEXITCODE = 0
+    Write-Host "missingTrainerExpectationRejected=true"
 }
 
 $visibleClasses = @(
@@ -265,27 +291,27 @@ foreach ($requiredClass in @($requiredDiscoverableClasses)) {
         Write-Host "executionModeMismatch=$candidateClass expected=$expectedMode observed=$($observedModes -join ',')"
     }
 
-    if ($expectedMode -ne "auto_patchable") {
-        $unexpectedPromotions = @($classCandidates | Where-Object { $_.autoPatchable -eq $true })
-        if ($unexpectedPromotions.Count -gt 0) {
-            $unexpectedAutoPromotionCount += $unexpectedPromotions.Count
-            Write-Host "unexpectedAutoPromotion=$candidateClass count=$($unexpectedPromotions.Count)"
-        }
+    $expectedTrainerDecision = Get-ExpectedMapValue -Map $expected.expectedTrainerDecisions -Name $candidateClass
+    if ([string]::IsNullOrWhiteSpace($expectedTrainerDecision)) {
+        throw "Discovery canary expectation missing expectedTrainerDecisions entry for '$candidateClass'."
     }
-}
-
-foreach ($property in @($expected.expectedTrainerDecisions.PSObject.Properties)) {
-    $candidateClass = [string]$property.Name
-    $expectedDecision = [string]$property.Value
     $trainerDecision = @(
         $trainerReport.decisions |
             Where-Object { [string]$_.candidateClass -eq $candidateClass } |
             ForEach-Object { [string]$_.decision } |
             Sort-Object -Unique
     )
-    if ($trainerDecision.Count -ne 1 -or $trainerDecision[0] -ne $expectedDecision) {
+    if ($trainerDecision.Count -ne 1 -or $trainerDecision[0] -ne $expectedTrainerDecision) {
         $trainerDecisionMismatchCount++
-        Write-Host "trainerDecisionMismatch=$candidateClass expected=$expectedDecision observed=$($trainerDecision -join ',')"
+        Write-Host "trainerDecisionMismatch=$candidateClass expected=$expectedTrainerDecision observed=$($trainerDecision -join ',')"
+    }
+
+    if ($expectedMode -ne "auto_patchable") {
+        $unexpectedPromotions = @($classCandidates | Where-Object { $_.autoPatchable -eq $true })
+        if ($unexpectedPromotions.Count -gt 0) {
+            $unexpectedAutoPromotionCount += $unexpectedPromotions.Count
+            Write-Host "unexpectedAutoPromotion=$candidateClass count=$($unexpectedPromotions.Count)"
+        }
     }
 }
 
@@ -307,6 +333,9 @@ if (Test-Path $tempLegacyTrainerPath) {
 if (Test-Path $tempMissingClassesExpectedPath) {
     Remove-Item -LiteralPath $tempMissingClassesExpectedPath -Force
 }
+if (Test-Path $tempMissingTrainerExpectedPath) {
+    Remove-Item -LiteralPath $tempMissingTrainerExpectedPath -Force
+}
 
 $discoveryVisibilityMatched = ($missingRequiredCandidateClassCount -eq 0)
 $executionModeMatched = ($executionModeMismatchCount -eq 0)
@@ -326,6 +355,7 @@ Write-Host "trainerDecisionMatched=$trainerDecisionMatched"
 Write-Host "unexpectedAutoPromotionCount=$unexpectedAutoPromotionCount"
 Write-Host "selectedTrainerReportForwarded=true"
 Write-Host "legacyExpectationFallbackUsed=$legacyExpectationFallbackUsed"
+Write-Host "trainerExpectationCoverageRequired=true"
 Write-Host "missingRequiredCandidateClassCount=$missingRequiredCandidateClassCount"
 Write-Host "executionModeMismatchCount=$executionModeMismatchCount"
 Write-Host "trainerDecisionMismatchCount=$trainerDecisionMismatchCount"
