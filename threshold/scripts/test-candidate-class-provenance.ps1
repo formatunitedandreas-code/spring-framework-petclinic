@@ -1035,6 +1035,53 @@ try {
     Assert-False -Condition ([bool]$wrongLineCountProvenance.candidateExecutionParametersMatched) -Name "leading tab mismatched lineCount is rejected"
     Assert-False -Condition ([bool]$wrongLineCountProvenance.candidateClassProvenanceMatched) -Name "leading tab wrong execution parameter blocks provenance"
 
+    $nonContiguousTabPath = "src/main/java/org/example/NonContiguousTabCanary.java"
+    Write-CanaryFile -Path $nonContiguousTabPath -Lines @(
+        "class NonContiguousTabCanary {",
+        "`tvoid first() {}",
+        "`tvoid second() {}",
+        "    void anchor() {}",
+        "    void spacer() {}",
+        "`tvoid distant() {}",
+        "}"
+    )
+    & git add .
+    & git commit -m "Add non-contiguous leading tab canary" | Out-Null
+    if ($LASTEXITCODE -ne 0) { throw "non-contiguous leading tab base commit failed" }
+    $nonContiguousTabBase = (& git rev-parse HEAD).Trim()
+    Write-CanaryFile -Path $nonContiguousTabPath -Lines @(
+        "class NonContiguousTabCanary {",
+        "    void first() {}",
+        "`tvoid second() {}",
+        "    void anchor() {}",
+        "    void spacer() {}",
+        "    void distant() {}",
+        "}"
+    )
+    & git add .
+    & git commit -m "Normalize non-contiguous leading tabs" | Out-Null
+    if ($LASTEXITCODE -ne 0) { throw "non-contiguous leading tab mutation commit failed" }
+    $nonContiguousTabCommit = (& git rev-parse HEAD).Trim()
+    $nonContiguousTabCandidate = [ordered]@{
+        candidateId = "canary-leading-tab-non-contiguous"
+        candidateClass = "leading_tab_indentation_cleanup"
+        file = $nonContiguousTabPath
+        member = "line-2"
+        lineCount = 2
+    }
+    $nonContiguousTabProvenance = New-ThresholdCandidateClassProvenance `
+        -CandidateId "canary-leading-tab-non-contiguous" `
+        -GrantedCandidateClass "leading_tab_indentation_cleanup" `
+        -ExecutorCandidateClass "leading_tab_indentation_cleanup" `
+        -ReceiptCandidateClass "leading_tab_indentation_cleanup" `
+        -LearningProjectionClass "leading_tab_indentation_cleanup" `
+        -BaseHead $nonContiguousTabBase `
+        -CommitHash $nonContiguousTabCommit `
+        -CandidateSnapshot $nonContiguousTabCandidate
+    Assert-True -Condition ([bool]$nonContiguousTabProvenance.candidateMemberMatched) -Name "leading tab non-contiguous diff still touches candidate member"
+    Assert-False -Condition ([bool]$nonContiguousTabProvenance.candidateExecutionParametersMatched) -Name "leading tab removed lines must form candidate block"
+    Assert-False -Condition ([bool]$nonContiguousTabProvenance.candidateClassProvenanceMatched) -Name "leading tab non-contiguous removed lines block provenance"
+
     $changedLiteralDiff = @(
         "-    private static final String OWNER_QUERY = `"foo bar`";",
         "+    private static final String OWNER_QUERY = `"different `" +",

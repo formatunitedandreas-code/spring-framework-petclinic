@@ -599,13 +599,36 @@ function Get-ThresholdLeadingTabObservedLineCount {
     return @($contentLines | Where-Object { $_ -match "^-\t+\S" }).Count
 }
 
+function Test-ThresholdLeadingTabObservedLinesMatchCandidateBlock {
+    param(
+        [string[]] $DiffLines,
+        [string] $CandidateMember,
+        [int] $LineCount
+    )
+
+    if ($LineCount -lt 1) { return $false }
+    if ([string]::IsNullOrWhiteSpace($CandidateMember) -or $CandidateMember -notmatch '^line-(?<line>\d+)$') {
+        return $false
+    }
+    $candidateStartLine = [int]$Matches['line']
+    $removedLineNumbers = @(Get-ThresholdDiffRemovedLineNumbers -DiffLines $DiffLines | Sort-Object)
+    if ($removedLineNumbers.Count -ne $LineCount) { return $false }
+    for ($i = 0; $i -lt $LineCount; $i++) {
+        if ([int]$removedLineNumbers[$i] -ne ($candidateStartLine + $i)) {
+            return $false
+        }
+    }
+    return $true
+}
+
 function Test-ThresholdCandidateExecutionParametersMatchObservedDiff {
     param(
         [string] $CandidateClass,
         [object] $ExecutionParameters,
         [string] $BaseHead,
         [string] $CommitHash,
-        [string] $ProductPath
+        [string] $ProductPath,
+        [string] $CandidateMember = ""
     )
     if ([string]::IsNullOrWhiteSpace($ProductPath)) {
         return $false
@@ -615,7 +638,8 @@ function Test-ThresholdCandidateExecutionParametersMatchObservedDiff {
         "leading_tab_indentation_cleanup" {
             $expectedLineCount = Get-ThresholdJsonProperty $ExecutionParameters "lineCount" $null
             if ($null -eq $expectedLineCount -or [int]$expectedLineCount -lt 1) { return $false }
-            return [int]$expectedLineCount -eq (Get-ThresholdLeadingTabObservedLineCount -DiffLines $diffLines)
+            return [int]$expectedLineCount -eq (Get-ThresholdLeadingTabObservedLineCount -DiffLines $diffLines) -and
+                (Test-ThresholdLeadingTabObservedLinesMatchCandidateBlock -DiffLines $diffLines -CandidateMember $CandidateMember -LineCount ([int]$expectedLineCount))
         }
         "method_spacing_normalization" {
             $expectedSpacingAction = [string](Get-ThresholdJsonProperty $ExecutionParameters "spacingAction" "")
@@ -972,7 +996,7 @@ function New-ThresholdCandidateClassProvenance {
     $executionParameters = Get-ThresholdJsonProperty $executionCandidateSnapshot "executionParameters" ([ordered]@{})
     $candidatePathMatched = -not [string]::IsNullOrWhiteSpace($candidateFile) -and [string]$candidateFile -eq [string]$observedDiffPath
     $candidateMemberMatched = $candidatePathMatched -and (Test-ThresholdObservedDiffMemberMatchesCandidate -BaseHead $BaseHead -CommitHash $CommitHash -ProductPath $observedDiffPath -CandidateMember $candidateMember)
-    $candidateExecutionParametersMatched = $candidatePathMatched -and (Test-ThresholdCandidateExecutionParametersMatchObservedDiff -CandidateClass ([string]$discoveredCandidateClass) -ExecutionParameters $executionParameters -BaseHead $BaseHead -CommitHash $CommitHash -ProductPath $observedDiffPath)
+    $candidateExecutionParametersMatched = $candidatePathMatched -and (Test-ThresholdCandidateExecutionParametersMatchObservedDiff -CandidateClass ([string]$discoveredCandidateClass) -ExecutionParameters $executionParameters -BaseHead $BaseHead -CommitHash $CommitHash -ProductPath $observedDiffPath -CandidateMember $candidateMember)
     $chain = @(
         $discoveredCandidateClass,
         $GrantedCandidateClass,
