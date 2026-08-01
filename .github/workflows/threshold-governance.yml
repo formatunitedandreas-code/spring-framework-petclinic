@@ -2,7 +2,9 @@ name: Threshold governance
 
 on:
   pull_request:
-    branches: [main]
+    branches:
+      - main
+      - 'threshold-governed-refactor-demo-*-discovery-base'
     types: [opened, synchronize, reopened, edited, ready_for_review]
 
 jobs:
@@ -296,7 +298,8 @@ jobs:
       - name: Verify Threshold capability and fidelity knowledge graphs
         env:
           THRESHOLD_RECEIPT_TREEISH: ${{ github.event.pull_request.head.sha }}
+          THRESHOLD_PR_BASE_HEAD: ${{ github.event.pull_request.base.sha }}
         shell: pwsh
         run: |
           $ErrorActionPreference = "Stop"
-          pwsh -File threshold/scripts/test-kg-governance.ps1
+          pwsh -File threshold/scripts/test-kg-governance.ps1 -BaseRef "${{ github.base_ref }}"

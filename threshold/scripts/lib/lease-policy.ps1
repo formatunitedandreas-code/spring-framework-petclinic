@@ -145,6 +145,7 @@ function Test-ThresholdGovernanceEvidencePath {
         $normalized -like "threshold/lease-state/*" -or
         $normalized -like "threshold/receipts/*" -or
         $normalized -like "threshold/attestations/*" -or
+        $normalized -like "threshold/discovery-evidence/*" -or
         $normalized -like "threshold/discovery-canaries/*" -or
         $normalized -like "threshold/kgs/*" -or
         $normalized -like "threshold/runs/*" -or
@@ -160,6 +161,95 @@ function Test-ThresholdGovernancePath {
     param([Parameter(Mandatory = $true)][string] $Path)
 
     return (Test-ThresholdGovernancePolicyPath -Path $Path) -or (Test-ThresholdGovernanceEvidencePath -Path $Path)
+}
+
+function Get-ThresholdReceiptJsonProperty {
+    [CmdletBinding()]
+    param(
+        [AllowNull()]
+        [object] $Object,
+        [Parameter(Mandatory = $true)]
+        [string] $Name,
+        [AllowNull()]
+        [object] $DefaultValue = $null
+    )
+
+    if ($null -eq $Object) { return $DefaultValue }
+    if ($Object -is [System.Collections.IDictionary] -and $Object.Contains($Name)) {
+        return $Object[$Name]
+    }
+    if ($Object.PSObject.Properties.Name -contains $Name) {
+        return $Object.$Name
+    }
+    return $DefaultValue
+}
+
+function Test-ThresholdCanonicalCommitSha {
+    [CmdletBinding()]
+    param([AllowEmptyString()][string] $Value)
+
+    return -not [string]::IsNullOrWhiteSpace($Value) -and $Value -match "^[0-9a-f]{40}$"
+}
+
+function Resolve-ThresholdReceiptPrBaseHead {
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory = $true)]
+        [pscustomobject] $Receipt,
+        [Parameter(Mandatory = $true)]
+        [string] $ReceiptPath
+    )
+
+    $canonicalPrBaseHeads = New-Object System.Collections.Generic.List[string]
+
+    $provenance = Get-ThresholdReceiptJsonProperty -Object $Receipt -Name "candidateClassProvenance" -DefaultValue $null
+    if ($null -ne $provenance) {
+        $singleReceiptPrBaseHead = [string](Get-ThresholdReceiptJsonProperty -Object $provenance -Name "prBaseHead" -DefaultValue "")
+        if ([string]::IsNullOrWhiteSpace($singleReceiptPrBaseHead)) {
+            throw "Receipt candidateClassProvenance is missing canonical prBaseHead receipt=$ReceiptPath"
+        }
+        $canonicalPrBaseHeads.Add($singleReceiptPrBaseHead)
+    }
+
+    $candidates = @(Get-ThresholdReceiptJsonProperty -Object $Receipt -Name "candidates" -DefaultValue @())
+    if ($candidates.Count -gt 0) {
+        foreach ($candidate in $candidates) {
+            $candidateId = [string](Get-ThresholdReceiptJsonProperty -Object $candidate -Name "candidateId" -DefaultValue "")
+            $binding = Get-ThresholdReceiptJsonProperty -Object $candidate -Name "candidateDiscoveryEvidence" -DefaultValue $null
+            if ($null -eq $binding) {
+                throw "Batch candidate is missing canonical discovery evidence PR base binding receipt=$ReceiptPath candidateId=$candidateId"
+            }
+            $candidatePrBaseHead = [string](Get-ThresholdReceiptJsonProperty -Object $binding -Name "prBaseHead" -DefaultValue "")
+            if ([string]::IsNullOrWhiteSpace($candidatePrBaseHead)) {
+                throw "Batch candidate discovery evidence is missing canonical prBaseHead receipt=$ReceiptPath candidateId=$candidateId"
+            }
+            $canonicalPrBaseHeads.Add($candidatePrBaseHead)
+        }
+    }
+
+    $uniquePrBaseHeads = @($canonicalPrBaseHeads.ToArray() | Sort-Object -Unique)
+    if ($uniquePrBaseHeads.Count -eq 0) {
+        $topLevelPrBaseHead = [string](Get-ThresholdReceiptJsonProperty -Object $Receipt -Name "prBaseHead" -DefaultValue "")
+        if (-not [string]::IsNullOrWhiteSpace($topLevelPrBaseHead)) {
+            throw "Receipt contains only non-canonical top-level prBaseHead without nested provenance binding receipt=$ReceiptPath"
+        }
+        throw "Receipt is missing canonical nested prBaseHead binding receipt=$ReceiptPath"
+    }
+    if ($uniquePrBaseHeads.Count -gt 1) {
+        throw "Receipt has multiple conflicting canonical prBaseHead bindings receipt=$ReceiptPath prBaseHeads=[$($uniquePrBaseHeads -join ', ')]"
+    }
+
+    $resolvedPrBaseHead = [string]$uniquePrBaseHeads[0]
+    if (-not (Test-ThresholdCanonicalCommitSha -Value $resolvedPrBaseHead)) {
+        throw "Receipt canonical prBaseHead is malformed receipt=$ReceiptPath prBaseHead=$resolvedPrBaseHead"
+    }
+
+    $topLevelClaim = [string](Get-ThresholdReceiptJsonProperty -Object $Receipt -Name "prBaseHead" -DefaultValue "")
+    if (-not [string]::IsNullOrWhiteSpace($topLevelClaim) -and [string]$topLevelClaim -ne [string]$resolvedPrBaseHead) {
+        throw "Receipt top-level prBaseHead conflicts with canonical nested binding receipt=$ReceiptPath topLevelPrBaseHead=$topLevelClaim canonicalPrBaseHead=$resolvedPrBaseHead"
+    }
+
+    return $resolvedPrBaseHead
 }
 
 function Assert-ThresholdHeadPolicy {

@@ -8,6 +8,8 @@ param(
     [string] $FidelityKgPath = "threshold/kgs/fidelity-kg.json",
     [string] $TrainingReportPath = "threshold/trainer/training-report.json",
     [string] $CanaryRulesPath = "threshold/trainer/generated-canary-rules.json",
+    [string] $PrBaseHead = "",
+    [string] $BaseRef = "",
     [switch] $CheckOnly
 )
 
@@ -15,6 +17,7 @@ Set-StrictMode -Version Latest
 $ErrorActionPreference = "Stop"
 
 . (Join-Path $PSScriptRoot "lib/candidate-class-provenance.ps1")
+. (Join-Path $PSScriptRoot "lib/lease-policy.ps1")
 
 function ConvertTo-RepoPath {
     param([string] $Path)
@@ -86,6 +89,23 @@ function Write-JsonFile {
     $Value | ConvertTo-Json -Depth 16 | Set-Content $Path
 }
 
+function Resolve-ObservedPrBaseHead {
+    param([string] $PrBaseHead, [string] $BaseRef)
+    if (-not [string]::IsNullOrWhiteSpace($PrBaseHead)) {
+        return [string]$PrBaseHead
+    }
+    if (-not [string]::IsNullOrWhiteSpace($env:THRESHOLD_PR_BASE_HEAD)) {
+        return [string]$env:THRESHOLD_PR_BASE_HEAD
+    }
+    if (-not [string]::IsNullOrWhiteSpace($BaseRef)) {
+        $resolved = (& git rev-parse "origin/${BaseRef}" 2>$null)
+        if ($LASTEXITCODE -eq 0 -and -not [string]::IsNullOrWhiteSpace([string]$resolved)) {
+            return [string]($resolved.Trim())
+        }
+    }
+    return ""
+}
+
 function ConvertTo-NormalizedJson {
     param([object] $Value)
     return ($Value | ConvertTo-Json -Depth 16).Trim()
@@ -138,6 +158,7 @@ $leaseAllowedPaths = @(Get-LeaseList -Lines $leaseLines -Name "allowedPaths")
 $leaseForbiddenActions = @(Get-LeaseList -Lines $leaseLines -Name "forbiddenActions")
 $leaseBranch = Get-LeaseScalarOrDefault -Lines $leaseLines -Name "branch"
 $leaseName = Get-LeaseScalarOrDefault -Lines $leaseLines -Name "leaseName"
+$observedPrBaseHead = Resolve-ObservedPrBaseHead -PrBaseHead $PrBaseHead -BaseRef $BaseRef
 
 $gate = Get-Content $GatePath -Raw | ConvertFrom-Json
 $gateClasses = @(Get-JsonProperty $gate "approvedAutoPatchableCandidateClasses" @() | ForEach-Object {
@@ -183,7 +204,26 @@ foreach ($receiptFile in $receiptFiles) {
     $candidateClassValue = Get-JsonProperty $receipt "candidateClass" ""
     $batchClassValue = Get-JsonProperty $receipt "batchClass" ""
     $candidateClass = if (-not [string]::IsNullOrWhiteSpace([string]$candidateClassValue)) { [string]$candidateClassValue } elseif (-not [string]::IsNullOrWhiteSpace([string]$batchClassValue)) { [string]$batchClassValue } else { "unknown" }
-    Assert-ThresholdCandidateClassProvenance -Receipt $receipt -ReceiptPath (ConvertTo-RepoRelativePath $receiptFile.FullName)
+    $repoReceiptPath = ConvertTo-RepoRelativePath $receiptFile.FullName
+    $receiptChangedInCurrentPr = $false
+    if (-not [string]::IsNullOrWhiteSpace($observedPrBaseHead)) {
+        $changedInCurrentPr = @(git diff --name-only "${observedPrBaseHead}...HEAD" -- $repoReceiptPath 2>$null)
+        $receiptChangedInCurrentPr = $LASTEXITCODE -eq 0 -and $changedInCurrentPr.Count -gt 0
+    }
+
+    $receiptPrBaseHead = ""
+    if ($receiptChangedInCurrentPr) {
+        $receiptPrBaseHead = Resolve-ThresholdReceiptPrBaseHead -Receipt $receipt -ReceiptPath $repoReceiptPath
+    }
+    else {
+        try {
+            $receiptPrBaseHead = Resolve-ThresholdReceiptPrBaseHead -Receipt $receipt -ReceiptPath $repoReceiptPath
+        }
+        catch {
+            $receiptPrBaseHead = $observedPrBaseHead
+        }
+    }
+    Assert-ThresholdCandidateClassProvenance -Receipt $receipt -ReceiptPath $repoReceiptPath -PrBaseHead $receiptPrBaseHead
     $positiveLearningEligible = Test-ThresholdCandidateClassProvenancePositiveLearningEligible -Receipt $receipt
     if (-not $classStats.ContainsKey($candidateClass)) {
         $classStats[$candidateClass] = [ordered]@{
