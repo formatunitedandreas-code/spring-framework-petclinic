@@ -10,6 +10,11 @@ param(
 Set-StrictMode -Version Latest
 $ErrorActionPreference = "Stop"
 
+$defaultLeasePath = "threshold/leases/current.yaml"
+$defaultGatePath = "threshold/gates/auto-patchable-candidate-classes.json"
+$defaultTrainerReportPath = "threshold/trainer/training-report.json"
+$defaultExpectedPath = "threshold/discovery-canaries/expected.json"
+
 function ConvertTo-RepoPath {
     param([string] $Path)
     return ($Path -replace "\\", "/").Trim()
@@ -108,11 +113,22 @@ $tempTrainerPocket = Join-Path ([System.IO.Path]::GetTempPath()) "threshold-disc
 $tempLegacyExpectedPath = Join-Path ([System.IO.Path]::GetTempPath()) "threshold-discovery-canary-legacy-expected-$head.json"
 $tempLegacyTrainerPath = Join-Path ([System.IO.Path]::GetTempPath()) "threshold-discovery-canary-legacy-trainer-$head.json"
 if (-not $SkipInternalRegressions.IsPresent) {
+    foreach ($repoOwnedPath in @($defaultLeasePath, $defaultGatePath, $defaultTrainerReportPath, $defaultExpectedPath)) {
+        if (-not (Test-Path $repoOwnedPath)) {
+            throw "Discovery canary internal regression input not found: $repoOwnedPath"
+        }
+    }
+    $defaultExpected = Get-Content $defaultExpectedPath -Raw | ConvertFrom-Json
+    $defaultFixtureRoot = ConvertTo-RepoPath ([string]$defaultExpected.fixtureRoot)
+    if (-not (Test-Path $defaultFixtureRoot)) {
+        throw "Discovery canary internal regression fixture root not found: $defaultFixtureRoot"
+    }
+
     if (Test-Path $tempTrainerReport) { Remove-Item -LiteralPath $tempTrainerReport -Force }
     if (Test-Path $tempTrainerPocket) { Remove-Item -LiteralPath $tempTrainerPocket -Force }
     if (Test-Path $tempLegacyExpectedPath) { Remove-Item -LiteralPath $tempLegacyExpectedPath -Force }
     if (Test-Path $tempLegacyTrainerPath) { Remove-Item -LiteralPath $tempLegacyTrainerPath -Force }
-    $alternateTrainerReport = Get-Content $TrainerReportPath -Raw | ConvertFrom-Json
+    $alternateTrainerReport = Get-Content $defaultTrainerReportPath -Raw | ConvertFrom-Json
     $alternateDecision = @(
         $alternateTrainerReport.decisions |
             Where-Object { [string]$_.candidateClass -eq "annotation_attribute_wrap_cleanup" } |
@@ -126,10 +142,10 @@ if (-not $SkipInternalRegressions.IsPresent) {
 
     $alternateOutput = @(
         & powershell.exe -NoProfile -ExecutionPolicy Bypass -File "threshold/scripts/discover-candidates.ps1" `
-            -LeasePath $LeasePath `
-            -GatePath $GatePath `
+            -LeasePath $defaultLeasePath `
+            -GatePath $defaultGatePath `
             -TrainerReportPath $tempTrainerReport `
-            -SourceRoot $fixtureRoot `
+            -SourceRoot $defaultFixtureRoot `
             -PocketPath $tempTrainerPocket `
             -Limit 100
     )
@@ -161,12 +177,12 @@ if (-not $SkipInternalRegressions.IsPresent) {
 
     $legacyExpected = [ordered]@{
         schemaVersion = "threshold.petclinic.discovery-canary.v0.1"
-        fixtureRoot = [string]$expected.fixtureRoot
+        fixtureRoot = [string]$defaultExpected.fixtureRoot
         requiredAutoPatchableCandidateClasses = @("annotation_attribute_wrap_cleanup")
         nonClaims = @("legacy fallback fixture")
     }
     $legacyExpected | ConvertTo-Json -Depth 8 | Set-Content $tempLegacyExpectedPath
-    $legacyTrainerReport = Get-Content $TrainerReportPath -Raw | ConvertFrom-Json
+    $legacyTrainerReport = Get-Content $defaultTrainerReportPath -Raw | ConvertFrom-Json
     $legacyTrainerDecision = @(
         $legacyTrainerReport.decisions |
             Where-Object { [string]$_.candidateClass -eq "annotation_attribute_wrap_cleanup" } |
@@ -178,8 +194,8 @@ if (-not $SkipInternalRegressions.IsPresent) {
     $legacyTrainerDecision[0].decision = "autoPatchable"
     $legacyTrainerReport | ConvertTo-Json -Depth 16 | Set-Content $tempLegacyTrainerPath
     & powershell.exe -NoProfile -ExecutionPolicy Bypass -File $PSCommandPath `
-        -LeasePath $LeasePath `
-        -GatePath $GatePath `
+        -LeasePath $defaultLeasePath `
+        -GatePath $defaultGatePath `
         -TrainerReportPath $tempLegacyTrainerPath `
         -ExpectedPath $tempLegacyExpectedPath `
         -SkipInternalRegressions
