@@ -216,6 +216,33 @@ function Update-CandidatePocket {
     foreach ($line in $output) { Write-Host $line }
 }
 
+function Invoke-PreProductDiscoveryPreparation {
+    param([int] $MinScore)
+
+    $output = Invoke-Checked -FilePath "powershell.exe" -ArgumentList @(
+        "-NoProfile",
+        "-ExecutionPolicy",
+        "Bypass",
+        "-File",
+        "threshold/scripts/prepare-discovery-evidence.ps1",
+        "-CandidatePocketPath",
+        $PocketPath,
+        "-MinScore",
+        "$MinScore"
+    ) -FailureMessage "Pre-product discovery evidence preparation failed for scope-drain segment."
+    foreach ($line in $output) { Write-Host $line }
+
+    $evidencePaths = @(
+        $output |
+            Where-Object { [string]$_ -match "^discoveryEvidencePath=" } |
+            ForEach-Object { ([string]$_).Substring("discoveryEvidencePath=".Length) }
+    )
+    if ($evidencePaths.Count -eq 0) {
+        throw "Pre-product discovery evidence preparation produced no evidence artifacts for scope-drain segment."
+    }
+    return $evidencePaths
+}
+
 function Try-ExpandScope {
     param([string] $Reason)
 
@@ -275,9 +302,8 @@ function Start-DrainSegment {
         $autoPatchableCandidateCount = Get-AutoPatchableCandidateCount -Path $PocketPath
     }
 
-    if ($EvidenceMode -ne "Compact") {
-        [void](Commit-PathsIfNeeded -Paths @($LeasePath, $StatePath, $PocketPath) -Message "Start Threshold scope drain segment $Segment")
-    }
+    $evidencePaths = @(Invoke-PreProductDiscoveryPreparation -MinScore $MinScore)
+    [void](Commit-PathsIfNeeded -Paths (@($LeasePath, $StatePath, $PocketPath) + $evidencePaths) -Message "Prepare Threshold scope drain segment $Segment discovery evidence")
     return $autoPatchableCandidateCount
 }
 
@@ -345,6 +371,8 @@ function Invoke-RunNextSlice {
         "-MinScore",
         "$MinScore"
     )
+    $prBaseHead = (& git rev-parse HEAD).Trim()
+    $args += @("-PrBaseHead", $prBaseHead)
     if ($SkipMavenTest.IsPresent) { $args += "-SkipMavenTest" }
     if ($EvidenceMode -eq "Compact") {
         $args += @("-ReceiptRoot", $receiptRoot, "-CompactEvidence")

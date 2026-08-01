@@ -82,6 +82,20 @@ function ConvertTo-RemoteIndependentLeaseBaseRef {
     return (ConvertTo-PrVisibleBaseRef -Ref $trimmedRef)
 }
 
+function ConvertTo-OriginResolvedEvidenceRef {
+    param([string] $Ref)
+
+    $remoteIndependentRef = ConvertTo-RemoteIndependentLeaseBaseRef -Ref $Ref
+    if ([string]::IsNullOrWhiteSpace($remoteIndependentRef)) { return "" }
+    if ($remoteIndependentRef -match "^[0-9a-f]{40}$" -or $remoteIndependentRef -like "refs/*") {
+        return $remoteIndependentRef
+    }
+    if ($remoteIndependentRef -match "^origin/.+$") {
+        return $remoteIndependentRef
+    }
+    return "origin/$remoteIndependentRef"
+}
+
 function Resolve-BaseRefForGit {
     param([string] $Ref)
 
@@ -749,7 +763,7 @@ if ($LASTEXITCODE -ne 0 -or [string]::IsNullOrWhiteSpace([string]$observedPrBase
 $observedPrBaseHead = [string]($observedPrBaseHead.Trim())
 $effectiveReceiptPrBaseHead = $observedPrBaseHead
 if ($governedEvidenceBasePromotionPr) {
-    $resolvedExpectedBaseRefForGit = Resolve-BaseRefForGit -Ref $expectedBaseRef
+    $resolvedExpectedBaseRefForGit = ConvertTo-OriginResolvedEvidenceRef -Ref $expectedBaseRef
     $evidenceBaseHead = (& git rev-parse $resolvedExpectedBaseRefForGit 2>$null)
     if ($LASTEXITCODE -ne 0 -or [string]::IsNullOrWhiteSpace([string]$evidenceBaseHead)) {
         throw "Unable to resolve evidence-base head for governed promotion '$expectedBaseRef'."
@@ -844,7 +858,8 @@ foreach ($commit in $prCommits) {
         if ([string]::IsNullOrWhiteSpace([string]$receiptSourceCommit)) {
             $receiptSourceCommit = $commit
         }
-        $receiptValidationPrBaseHead = $effectiveReceiptPrBaseHead
+        $receiptPrBaseHead = $effectiveReceiptPrBaseHead
+        $sourceBaseHead = ""
         if ($isPromotionReconciledCommit) {
             $receiptParentHead = (& git rev-parse "$receiptSourceCommit^1" 2>$null)
             if ($LASTEXITCODE -ne 0 -or [string]::IsNullOrWhiteSpace([string]$receiptParentHead)) {
@@ -854,18 +869,22 @@ foreach ($commit in $prCommits) {
             if ([string]$receipt.baseHead -ne [string]$receiptParentHead) {
                 throw "Promotion receipt baseHead mismatch receipt=$($entry.path) baseHead=$($receipt.baseHead) parentHead=$receiptParentHead"
             }
-            if (-not (Test-ThresholdCommitIsAncestor -Ancestor $receiptParentHead -Descendant $effectiveReceiptPrBaseHead)) {
-                throw "Promotion receipt pre-merge base is not ancestor of evidence promotion base receipt=$($entry.path) preMergeBase=$receiptParentHead evidenceBase=$effectiveReceiptPrBaseHead"
+            if (-not (Test-ThresholdCommitIsAncestor -Ancestor $effectiveReceiptPrBaseHead -Descendant $receiptParentHead)) {
+                throw "Promotion receipt immutable PR base is not ancestor of source base receipt=$($entry.path) receiptPrBaseHead=$effectiveReceiptPrBaseHead sourceBaseHead=$receiptParentHead"
             }
-            $receiptValidationPrBaseHead = $receiptParentHead
+            $sourceBaseHead = $receiptParentHead
+        }
+        Write-Host "receiptPrBaseHead=$receiptPrBaseHead"
+        if (-not [string]::IsNullOrWhiteSpace($sourceBaseHead)) {
+            Write-Host "sourceBaseHead=$sourceBaseHead"
         }
         if ($isCandidateReceipt) {
-            Assert-ThresholdCandidateClassProvenance -Receipt $receipt -ReceiptPath $entry.path -RequirePresent -PrBaseHead $receiptValidationPrBaseHead
+            Assert-ThresholdCandidateClassProvenance -Receipt $receipt -ReceiptPath $entry.path -RequirePresent -PrBaseHead $receiptPrBaseHead
         }
         elseif ($hasProvenance) {
-            Assert-ThresholdCandidateClassProvenance -Receipt $receipt -ReceiptPath $entry.path -PrBaseHead $receiptValidationPrBaseHead
+            Assert-ThresholdCandidateClassProvenance -Receipt $receipt -ReceiptPath $entry.path -PrBaseHead $receiptPrBaseHead
         }
-        Assert-BatchCandidateDiscoveryEvidenceMatchesPrBase -Receipt $receipt -ReceiptPath $entry.path -PrBaseHead $receiptValidationPrBaseHead
+        Assert-BatchCandidateDiscoveryEvidenceMatchesPrBase -Receipt $receipt -ReceiptPath $entry.path -PrBaseHead $receiptPrBaseHead
         Assert-BatchCandidateMutationsMatchSourceCommit -Receipt $receipt -ReceiptPath $entry.path -SourceCommit ([string]$receiptSourceCommit)
         Assert-ReceiptLeaseDigestMatchesReceiptCommit -ReceiptPath $entry.path -Receipt $receipt
         $changedFilesCommit = if ($isPromotionReconciledCommit) { [string]$receiptSourceCommit } else { [string]$commit }
