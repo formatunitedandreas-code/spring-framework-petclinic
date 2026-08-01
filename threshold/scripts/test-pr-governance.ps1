@@ -172,6 +172,96 @@ function Get-ReceiptChangedFileRecords {
     return @($records | Where-Object { -not [string]::IsNullOrWhiteSpace($_.path) })
 }
 
+function Get-ObservedCandidateDiffClassForPath {
+    param(
+        [Parameter(Mandatory = $true)]
+        [string] $BaseHead,
+        [Parameter(Mandatory = $true)]
+        [string] $CommitHash,
+        [Parameter(Mandatory = $true)]
+        [string] $ProductPath
+    )
+
+    $diffLines = @(& git diff --unified=3 "$BaseHead..$CommitHash" -- $ProductPath)
+    if (Test-ThresholdBlankLinePackageImportDiff -DiffLines $diffLines) { return "import_spacing_normalization" }
+    if (Test-ThresholdMethodSpacingDiff -DiffLines $diffLines) { return "method_spacing_normalization" }
+    if (Test-ThresholdStringConstantWrapDiff -DiffLines $diffLines) { return "string_constant_wrap_cleanup" }
+    if (Test-ThresholdSplitStringConstantNormalizationDiff -DiffLines $diffLines) { return "split_string_constant_normalization" }
+    if (Test-ThresholdCommentWrapDiff -DiffLines $diffLines) { return "comment_wrap_cleanup" }
+    if (Test-ThresholdLineCommentWrapDiff -DiffLines $diffLines) { return "line_comment_wrap_cleanup" }
+    if (Test-ThresholdBootstrapInvocationWrapDiff -DiffLines $diffLines) { return "application_bootstrap_readability_cleanup" }
+    if (Test-ThresholdAnnotationAttributeWrapDiff -DiffLines $diffLines) { return "annotation_attribute_wrap_cleanup" }
+    if (Test-ThresholdLeadingTabIndentationDiff -DiffLines $diffLines -BaseHead $BaseHead -ProductPath $ProductPath) { return "leading_tab_indentation_cleanup" }
+    return "unknown"
+}
+
+function Assert-BatchCandidateMutationsMatchSourceCommit {
+    param(
+        [pscustomobject] $Receipt,
+        [string] $ReceiptPath,
+        [string] $SourceCommit
+    )
+
+    $batchId = Get-ThresholdJsonProperty $Receipt "batchId" $null
+    if ([string]::IsNullOrWhiteSpace([string]$batchId)) { return }
+
+    $parentHead = (& git rev-parse "$SourceCommit^1" 2>$null)
+    if ($LASTEXITCODE -ne 0 -or [string]::IsNullOrWhiteSpace([string]$parentHead)) {
+        throw "Batch candidate source commit parent unavailable receipt=$ReceiptPath sourceCommit=$SourceCommit"
+    }
+    $parentHead = ([string]$parentHead).Trim()
+    $changedPaths = @(git diff-tree --no-commit-id --name-only -r $SourceCommit | ForEach-Object { ConvertTo-RepoPath $_ })
+    $candidates = @(Get-ThresholdJsonProperty $Receipt "candidates" @())
+    if ($candidates.Count -eq 0) {
+        throw "Batch receipt is missing per-candidate entries: $ReceiptPath"
+    }
+
+    foreach ($candidate in $candidates) {
+        $candidateId = [string](Get-ThresholdJsonProperty $candidate "candidateId" "")
+        $candidateClass = [string](Get-ThresholdJsonProperty $candidate "candidateClass" "")
+        $candidatePath = ConvertTo-RepoPath ([string](Get-ThresholdJsonProperty $candidate "file" ""))
+        $beforeSha256 = [string](Get-ThresholdJsonProperty $candidate "beforeSha256" "")
+        $afterSha256 = [string](Get-ThresholdJsonProperty $candidate "afterSha256" "")
+        if ([string]::IsNullOrWhiteSpace($candidateId)) {
+            throw "Batch candidate is missing candidateId receipt=$ReceiptPath"
+        }
+        if ([string]::IsNullOrWhiteSpace($candidateClass)) {
+            throw "Batch candidate is missing candidateClass receipt=$ReceiptPath candidateId=$candidateId"
+        }
+        if ([string]::IsNullOrWhiteSpace($candidatePath)) {
+            throw "Batch candidate is missing file receipt=$ReceiptPath candidateId=$candidateId"
+        }
+        if ($changedPaths -notcontains $candidatePath) {
+            throw "Batch candidate file was not changed by source commit receipt=$ReceiptPath candidateId=$candidateId file=$candidatePath"
+        }
+        if ([string]::IsNullOrWhiteSpace($beforeSha256) -or [string]::IsNullOrWhiteSpace($afterSha256)) {
+            throw "Batch candidate is missing beforeSha256/afterSha256 receipt=$ReceiptPath candidateId=$candidateId file=$candidatePath"
+        }
+
+        $actualBeforeSha256 = (Get-CommitPathBlobSha256 -Commit $parentHead -Path $candidatePath).ToLowerInvariant()
+        $actualAfterSha256 = (Get-CommitPathBlobSha256 -Commit $SourceCommit -Path $candidatePath).ToLowerInvariant()
+        if ($beforeSha256.ToLowerInvariant() -ne $actualBeforeSha256) {
+            throw "Batch candidate beforeSha256 mismatch receipt=$ReceiptPath candidateId=$candidateId file=$candidatePath claimed=$beforeSha256 actual=$actualBeforeSha256"
+        }
+        if ($afterSha256.ToLowerInvariant() -ne $actualAfterSha256) {
+            throw "Batch candidate afterSha256 mismatch receipt=$ReceiptPath candidateId=$candidateId file=$candidatePath claimed=$afterSha256 actual=$actualAfterSha256"
+        }
+
+        $observedClass = Get-ObservedCandidateDiffClassForPath -BaseHead $parentHead -CommitHash $SourceCommit -ProductPath $candidatePath
+        if ([string]$observedClass -ne [string]$candidateClass) {
+            throw "Batch candidate observed diff class mismatch receipt=$ReceiptPath candidateId=$candidateId file=$candidatePath candidateClass=$candidateClass observedDiffClass=$observedClass"
+        }
+        $candidateMember = [string](Get-ThresholdJsonProperty $candidate "member" "")
+        if (-not (Test-ThresholdObservedDiffMemberMatchesCandidate -BaseHead $parentHead -CommitHash $SourceCommit -ProductPath $candidatePath -CandidateMember $candidateMember)) {
+            throw "Batch candidate observed diff member mismatch receipt=$ReceiptPath candidateId=$candidateId file=$candidatePath member=$candidateMember"
+        }
+        $executionParameters = Get-ThresholdCandidateExecutionParameters -Candidate $candidate
+        if (-not (Test-ThresholdCandidateExecutionParametersMatchObservedDiff -CandidateClass $candidateClass -ExecutionParameters $executionParameters -BaseHead $parentHead -CommitHash $SourceCommit -ProductPath $candidatePath)) {
+            throw "Batch candidate execution parameters mismatch receipt=$ReceiptPath candidateId=$candidateId file=$candidatePath"
+        }
+    }
+}
+
 function Assert-PromotionSquashCommitCoveredByReceipts {
     param(
         [string] $Commit,
@@ -570,20 +660,22 @@ foreach ($commit in $prCommits) {
     }
 
     $sourceCommitCount += 1
+    $entriesForCommit = @()
     if (-not $receiptByCommit.ContainsKey($commit)) {
         if ($governedEvidenceBasePromotionPr) {
             $promotionReceiptEntries = @(Assert-PromotionSquashCommitCoveredByReceipts -Commit $commit -ReceiptEntries @($receiptEntries.ToArray()))
             foreach ($promotionReceiptEntry in $promotionReceiptEntries) {
-                $sourceReceiptEntries.Add($promotionReceiptEntry)
+                $entriesForCommit += $promotionReceiptEntry
             }
-            continue
         }
         else {
             throw "Source commit without corresponding Threshold receipt: $commit"
         }
     }
+    else {
+        $entriesForCommit = @($receiptByCommit[$commit].ToArray())
+    }
 
-    $entriesForCommit = @($receiptByCommit[$commit].ToArray())
     $h1bEntriesForCommit = @($entriesForCommit | Where-Object { $_.receipt.PSObject.Properties["candidateClass"] -and [string]$_.receipt.candidateClass -eq "industrial_refactoring_h1b" })
     if ($entriesForCommit.Count -gt 1) {
         if ($h1bEntriesForCommit.Count -gt 1) {
@@ -613,6 +705,11 @@ foreach ($commit in $prCommits) {
         Assert-ThresholdCandidateClassProvenance -Receipt $receipt -ReceiptPath $entry.path -PrBaseHead $effectiveReceiptPrBaseHead
     }
     Assert-BatchCandidateDiscoveryEvidenceMatchesPrBase -Receipt $receipt -ReceiptPath $entry.path -PrBaseHead $effectiveReceiptPrBaseHead
+    $receiptSourceCommit = Get-ThresholdReceiptSourceCommit -Receipt $receipt
+    if ([string]::IsNullOrWhiteSpace([string]$receiptSourceCommit)) {
+        $receiptSourceCommit = $commit
+    }
+    Assert-BatchCandidateMutationsMatchSourceCommit -Receipt $receipt -ReceiptPath $entry.path -SourceCommit ([string]$receiptSourceCommit)
     Assert-ReceiptLeaseDigestMatchesReceiptCommit -ReceiptPath $entry.path -Receipt $receipt
     Assert-ChangedFilesMatchReceipt -Commit $commit -Receipt $receipt
     $sourceReceiptEntries.Add($entry)
