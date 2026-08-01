@@ -58,6 +58,7 @@ $output = @(
     & powershell.exe -NoProfile -ExecutionPolicy Bypass -File "threshold/scripts/discover-candidates.ps1" `
         -LeasePath $LeasePath `
         -GatePath $GatePath `
+        -TrainerReportPath $TrainerReportPath `
         -SourceRoot $fixtureRoot `
         -PocketPath $tempPocket `
         -Limit 100
@@ -75,6 +76,58 @@ if (-not (Test-Path $tempPocket)) {
 
 $pocket = Get-Content $tempPocket -Raw | ConvertFrom-Json
 $trainerReport = Get-Content $TrainerReportPath -Raw | ConvertFrom-Json
+
+$tempTrainerReport = Join-Path ([System.IO.Path]::GetTempPath()) "threshold-discovery-canary-trainer-$head.json"
+$tempTrainerPocket = Join-Path ([System.IO.Path]::GetTempPath()) "threshold-discovery-canary-trainer-pocket-$head.json"
+if (Test-Path $tempTrainerReport) { Remove-Item -LiteralPath $tempTrainerReport -Force }
+if (Test-Path $tempTrainerPocket) { Remove-Item -LiteralPath $tempTrainerPocket -Force }
+$alternateTrainerReport = Get-Content $TrainerReportPath -Raw | ConvertFrom-Json
+$alternateDecision = @(
+    $alternateTrainerReport.decisions |
+        Where-Object { [string]$_.candidateClass -eq "annotation_attribute_wrap_cleanup" } |
+        Select-Object -First 1
+)
+if ($alternateDecision.Count -ne 1) {
+    throw "Discovery canary trainer report missing annotation_attribute_wrap_cleanup decision."
+}
+$alternateDecision[0].decision = "reviewOnly"
+$alternateTrainerReport | ConvertTo-Json -Depth 16 | Set-Content $tempTrainerReport
+
+$alternateOutput = @(
+    & powershell.exe -NoProfile -ExecutionPolicy Bypass -File "threshold/scripts/discover-candidates.ps1" `
+        -LeasePath $LeasePath `
+        -GatePath $GatePath `
+        -TrainerReportPath $tempTrainerReport `
+        -SourceRoot $fixtureRoot `
+        -PocketPath $tempTrainerPocket `
+        -Limit 100
+)
+foreach ($line in $alternateOutput) {
+    Write-Host $line
+}
+if ($LASTEXITCODE -ne 0) {
+    throw "Discovery canary alternate trainer candidate generation failed."
+}
+if (-not (Test-Path $tempTrainerPocket)) {
+    throw "Discovery canary alternate trainer produced no pocket: $tempTrainerPocket"
+}
+$alternatePocket = Get-Content $tempTrainerPocket -Raw | ConvertFrom-Json
+$alternateAnnotationCandidates = @(
+    $alternatePocket.candidates |
+        Where-Object { [string]$_.candidateClass -eq "annotation_attribute_wrap_cleanup" }
+)
+if ($alternateAnnotationCandidates.Count -lt 1) {
+    throw "Discovery canary alternate trainer produced no annotation_attribute_wrap_cleanup candidate."
+}
+$alternateAnnotationModes = @($alternateAnnotationCandidates | ForEach-Object { [string]$_.executionMode } | Sort-Object -Unique)
+if ($alternateAnnotationModes.Count -ne 1 -or $alternateAnnotationModes[0] -ne "review_only") {
+    throw "Discovery canary did not pass selected trainer report to discovery. expected=review_only observed=$($alternateAnnotationModes -join ',')"
+}
+$alternateAnnotationAutoPatchable = @($alternateAnnotationCandidates | Where-Object { $_.autoPatchable -eq $true })
+if ($alternateAnnotationAutoPatchable.Count -ne 0) {
+    throw "Discovery canary alternate trainer unexpectedly auto-promoted annotation_attribute_wrap_cleanup."
+}
+
 $visibleClasses = @(
     $pocket.candidates |
         ForEach-Object { [string]$_.candidateClass } |
@@ -142,6 +195,12 @@ foreach ($property in @($expected.expectedTrainerDecisions.PSObject.Properties))
 if (Test-Path $tempPocket) {
     Remove-Item -LiteralPath $tempPocket -Force
 }
+if (Test-Path $tempTrainerReport) {
+    Remove-Item -LiteralPath $tempTrainerReport -Force
+}
+if (Test-Path $tempTrainerPocket) {
+    Remove-Item -LiteralPath $tempTrainerPocket -Force
+}
 
 $discoveryVisibilityMatched = ($missingRequiredCandidateClassCount -eq 0)
 $executionModeMatched = ($executionModeMismatchCount -eq 0)
@@ -159,6 +218,7 @@ Write-Host "discoveryVisibilityMatched=$discoveryVisibilityMatched"
 Write-Host "executionModeMatched=$executionModeMatched"
 Write-Host "trainerDecisionMatched=$trainerDecisionMatched"
 Write-Host "unexpectedAutoPromotionCount=$unexpectedAutoPromotionCount"
+Write-Host "selectedTrainerReportForwarded=true"
 Write-Host "missingRequiredCandidateClassCount=$missingRequiredCandidateClassCount"
 Write-Host "executionModeMismatchCount=$executionModeMismatchCount"
 Write-Host "trainerDecisionMismatchCount=$trainerDecisionMismatchCount"
