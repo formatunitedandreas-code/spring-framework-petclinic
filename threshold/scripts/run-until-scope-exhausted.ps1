@@ -318,7 +318,12 @@ function Start-DrainSegment {
     $evidencePaths = @(Invoke-PreProductDiscoveryPreparation -MinScore $MinScore -AllowEmpty:$allowEmptyEvidence)
     $preparationCommitPaths = if ($EvidenceMode -eq "Compact") { @($evidencePaths) } else { @($LeasePath, $StatePath, $PocketPath) + $evidencePaths }
     [void](Commit-PathsIfNeeded -Paths $preparationCommitPaths -Message "Prepare Threshold scope drain segment $Segment discovery evidence")
-    return $autoPatchableCandidateCount
+    $segmentPreparedPrBaseHead = (& git rev-parse HEAD).Trim()
+    Write-Host "segmentPreparedPrBaseHead=$segmentPreparedPrBaseHead"
+    return [pscustomobject]@{
+        autoPatchableCandidateCount = $autoPatchableCandidateCount
+        segmentPreparedPrBaseHead = $segmentPreparedPrBaseHead
+    }
 }
 
 function Mark-TerminalEvidenceSourceHead {
@@ -368,6 +373,8 @@ function Set-ScopeDrainTerminalState {
 }
 
 function Invoke-RunNextSlice {
+    param([string] $SegmentPreparedPrBaseHead)
+
     $args = @(
         "-NoProfile",
         "-ExecutionPolicy",
@@ -385,8 +392,10 @@ function Invoke-RunNextSlice {
         "-MinScore",
         "$MinScore"
     )
-    $prBaseHead = (& git rev-parse HEAD).Trim()
-    $args += @("-PrBaseHead", $prBaseHead)
+    if ([string]::IsNullOrWhiteSpace($SegmentPreparedPrBaseHead)) {
+        throw "Segment prepared PR base head is required before executing a scope-drain slice."
+    }
+    $args += @("-PrBaseHead", $SegmentPreparedPrBaseHead)
     if ($SkipMavenTest.IsPresent) { $args += "-SkipMavenTest" }
     if ($EvidenceMode -eq "Compact") {
         $args += @("-ReceiptRoot", $receiptRoot, "-CompactEvidence")
@@ -424,7 +433,9 @@ while ($segment -lt $MaxSegments) {
     Assert-CleanWorktree
     Write-Host "scopeDrainSegment=$segment"
 
-    $initialAutoPatchableCount = Start-DrainSegment -Segment $segment
+    $segmentPreparation = Start-DrainSegment -Segment $segment
+    $initialAutoPatchableCount = [int]$segmentPreparation.autoPatchableCandidateCount
+    $segmentPreparedPrBaseHead = [string]$segmentPreparation.segmentPreparedPrBaseHead
     if ($initialAutoPatchableCount -lt $MinAutoPatchableCandidates) {
         Mark-TerminalEvidenceSourceHead
         Set-ScopeDrainTerminalState -TerminalState "scope_exhausted_verified" -Reason "fresh segment discovery found no auto-patchable candidates after all available scope expansion tiers"
@@ -441,7 +452,7 @@ while ($segment -lt $MaxSegments) {
     }
 
     while ($true) {
-        Invoke-RunNextSlice
+        Invoke-RunNextSlice -SegmentPreparedPrBaseHead $segmentPreparedPrBaseHead
         $state = Read-JsonFile -Path $StatePath
         if ($state.terminalState -eq "ready_no_candidates_verified") {
             $autoPatchableCandidateCount = Get-AutoPatchableCandidateCount -Path $PocketPath
