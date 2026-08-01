@@ -119,6 +119,7 @@ $tempLegacyTrainerPath = Join-Path ([System.IO.Path]::GetTempPath()) "threshold-
 $tempMissingClassesExpectedPath = Join-Path ([System.IO.Path]::GetTempPath()) "threshold-discovery-canary-missing-classes-expected-$head.json"
 $tempMissingTrainerExpectedPath = Join-Path ([System.IO.Path]::GetTempPath()) "threshold-discovery-canary-missing-trainer-expected-$head.json"
 $tempExtraTrainerExpectedPath = Join-Path ([System.IO.Path]::GetTempPath()) "threshold-discovery-canary-extra-trainer-expected-$head.json"
+$tempExtraExecutionModeExpectedPath = Join-Path ([System.IO.Path]::GetTempPath()) "threshold-discovery-canary-extra-execution-mode-expected-$head.json"
 if (-not $SkipInternalRegressions.IsPresent) {
     foreach ($repoOwnedPath in @($defaultLeasePath, $defaultGatePath, $defaultTrainerReportPath, $defaultExpectedPath)) {
         if (-not (Test-Path $repoOwnedPath)) {
@@ -138,6 +139,7 @@ if (-not $SkipInternalRegressions.IsPresent) {
     if (Test-Path $tempMissingClassesExpectedPath) { Remove-Item -LiteralPath $tempMissingClassesExpectedPath -Force }
     if (Test-Path $tempMissingTrainerExpectedPath) { Remove-Item -LiteralPath $tempMissingTrainerExpectedPath -Force }
     if (Test-Path $tempExtraTrainerExpectedPath) { Remove-Item -LiteralPath $tempExtraTrainerExpectedPath -Force }
+    if (Test-Path $tempExtraExecutionModeExpectedPath) { Remove-Item -LiteralPath $tempExtraExecutionModeExpectedPath -Force }
     $alternateTrainerReport = Get-Content $defaultTrainerReportPath -Raw | ConvertFrom-Json
     $alternateDecision = @(
         $alternateTrainerReport.decisions |
@@ -282,6 +284,32 @@ if (-not $SkipInternalRegressions.IsPresent) {
     }
     $global:LASTEXITCODE = 0
     Write-Host "extraTrainerExpectationRejected=true"
+
+    $extraExecutionModeExpected = [ordered]@{
+        schemaVersion = "threshold.petclinic.discovery-canary.v0.1"
+        fixtureRoot = [string]$defaultExpected.fixtureRoot
+        requiredDiscoverableCandidateClasses = @("comment_wrap_cleanup")
+        expectedExecutionModes = [ordered]@{
+            comment_wrap_cleanup = "review_only"
+            undiscovered_fixture_class = "review_only"
+        }
+        expectedTrainerDecisions = [ordered]@{
+            comment_wrap_cleanup = "reviewOnly"
+        }
+        nonClaims = @("extra execution-mode expectation negative fixture")
+    }
+    $extraExecutionModeExpected | ConvertTo-Json -Depth 8 | Set-Content $tempExtraExecutionModeExpectedPath
+    & powershell.exe -NoProfile -ExecutionPolicy Bypass -File $PSCommandPath `
+        -LeasePath $defaultLeasePath `
+        -GatePath $defaultGatePath `
+        -TrainerReportPath $defaultTrainerReportPath `
+        -ExpectedPath $tempExtraExecutionModeExpectedPath `
+        -SkipInternalRegressions
+    if ($LASTEXITCODE -eq 0) {
+        throw "Discovery canary extra execution-mode expectation regression unexpectedly passed."
+    }
+    $global:LASTEXITCODE = 0
+    Write-Host "extraExecutionModeExpectationRejected=true"
 }
 
 $visibleClasses = @(
@@ -343,6 +371,20 @@ foreach ($requiredClass in @($requiredDiscoverableClasses)) {
     }
 }
 
+foreach ($property in @($expected.expectedExecutionModes.PSObject.Properties)) {
+    $candidateClass = [string]$property.Name
+    $expectedMode = [string]$property.Value
+    if ($visibleClasses -notcontains $candidateClass) {
+        throw "Discovery canary expectation declared expectedExecutionModes entry for undiscovered class '$candidateClass'."
+    }
+    $classCandidates = @($pocket.candidates | Where-Object { [string]$_.candidateClass -eq $candidateClass })
+    $observedModes = @($classCandidates | ForEach-Object { [string]$_.executionMode } | Sort-Object -Unique)
+    if ($observedModes.Count -ne 1 -or $observedModes[0] -ne $expectedMode) {
+        $executionModeMismatchCount++
+        Write-Host "executionModeMismatch=$candidateClass expected=$expectedMode observed=$($observedModes -join ',')"
+    }
+}
+
 foreach ($property in @($expected.expectedTrainerDecisions.PSObject.Properties)) {
     $candidateClass = [string]$property.Name
     $expectedTrainerDecision = [string]$property.Value
@@ -385,6 +427,9 @@ if (Test-Path $tempMissingTrainerExpectedPath) {
 if (Test-Path $tempExtraTrainerExpectedPath) {
     Remove-Item -LiteralPath $tempExtraTrainerExpectedPath -Force
 }
+if (Test-Path $tempExtraExecutionModeExpectedPath) {
+    Remove-Item -LiteralPath $tempExtraExecutionModeExpectedPath -Force
+}
 
 $discoveryVisibilityMatched = ($missingRequiredCandidateClassCount -eq 0)
 $executionModeMatched = ($executionModeMismatchCount -eq 0)
@@ -406,6 +451,7 @@ Write-Host "selectedTrainerReportForwarded=true"
 Write-Host "legacyExpectationFallbackUsed=$legacyExpectationFallbackUsed"
 Write-Host "trainerExpectationCoverageRequired=true"
 Write-Host "declaredTrainerExpectationCoverageRequired=true"
+Write-Host "declaredExecutionModeExpectationCoverageRequired=true"
 Write-Host "missingRequiredCandidateClassCount=$missingRequiredCandidateClassCount"
 Write-Host "executionModeMismatchCount=$executionModeMismatchCount"
 Write-Host "trainerDecisionMismatchCount=$trainerDecisionMismatchCount"
