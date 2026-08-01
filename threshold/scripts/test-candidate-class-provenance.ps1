@@ -356,6 +356,8 @@ try {
     Assert-True -Condition ($prGovernanceText -match 'Batch candidate path final afterSha256 mismatch') -Name "PR governance binds same-path batch chain to final blob"
     Assert-True -Condition ($prGovernanceText -match 'Test-ThresholdRepeatedCommentWrapDiff') -Name "PR governance classifies multi-candidate same-file comment wraps"
     Assert-True -Condition ($prGovernanceText -match 'Get-ObservedBatchCandidateDiffClassForPath') -Name "PR governance uses batch-aware candidate diff classification"
+    Assert-True -Condition ($prGovernanceText -match 'Assert-RepeatedCommentWrapDiffMatchesCandidates') -Name "PR governance binds repeated wraps to candidate line members"
+    Assert-True -Condition ($prGovernanceText -match 'Batch repeated comment wrap candidate line mismatch') -Name "PR governance rejects repeated wraps at unclaimed candidate lines"
     Assert-True -Condition ($prGovernanceText -match 'Promotion squash commit content mismatch') -Name "PR governance rejects tampered promotion content on receipt-covered paths"
     Assert-True -Condition ($prGovernanceText -match 'Promotion squash commit has no current-wave product source receipts') -Name "PR governance rejects promotion without current-wave source receipts"
     Assert-True -Condition ($prGovernanceText -match 'promotionSquashReceiptReconciliation=passed') -Name "PR governance reports promotion squash receipt reconciliation"

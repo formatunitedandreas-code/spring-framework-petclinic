@@ -231,6 +231,35 @@ function Get-ObservedBatchCandidateDiffClassForPath {
     return (Get-ObservedCandidateDiffClassForPath -BaseHead $BaseHead -CommitHash $CommitHash -ProductPath $ProductPath)
 }
 
+function Assert-RepeatedCommentWrapDiffMatchesCandidates {
+    param(
+        [string] $BaseHead,
+        [string] $CommitHash,
+        [string] $ProductPath,
+        [object[]] $PathCandidates,
+        [string] $ReceiptPath
+    )
+
+    $diffLines = @(& git diff --unified=3 "$BaseHead..$CommitHash" -- $ProductPath)
+    if (-not (Test-ThresholdRepeatedCommentWrapDiff -DiffLines $diffLines)) {
+        throw "Batch repeated comment wrap diff did not match expected shape receipt=$ReceiptPath file=$ProductPath"
+    }
+    $removedLineNumbers = @(Get-ThresholdDiffRemovedLineNumbers -DiffLines $diffLines | Sort-Object)
+    $candidateLineNumbers = @(
+        $PathCandidates | ForEach-Object {
+            $candidateId = [string](Get-ThresholdJsonProperty $_ "candidateId" "")
+            $candidateMember = [string](Get-ThresholdJsonProperty $_ "member" "")
+            if (-not $candidateMember.StartsWith("line-")) {
+                throw "Batch repeated comment wrap candidate must use line member receipt=$ReceiptPath candidateId=$candidateId member=$candidateMember"
+            }
+            [int]($candidateMember.Substring(5))
+        } | Sort-Object
+    )
+    if (($removedLineNumbers -join ",") -ne ($candidateLineNumbers -join ",")) {
+        throw "Batch repeated comment wrap candidate line mismatch receipt=$ReceiptPath file=$ProductPath removedLines=[$($removedLineNumbers -join ', ')] candidateLines=[$($candidateLineNumbers -join ', ')]"
+    }
+}
+
 function Assert-BatchCandidateMutationsMatchSourceCommit {
     param(
         [pscustomobject] $Receipt,
@@ -315,6 +344,9 @@ function Assert-BatchCandidateMutationsMatchSourceCommit {
         $observedClass = Get-ObservedBatchCandidateDiffClassForPath -BaseHead $parentHead -CommitHash $SourceCommit -ProductPath $candidatePath
         if ([string]$observedClass -ne [string]$candidateClass) {
             throw "Batch candidate observed diff class mismatch receipt=$ReceiptPath file=$candidatePath candidateClass=$candidateClass observedDiffClass=$observedClass"
+        }
+        if ($pathCandidates.Count -gt 1 -and [string]$candidateClass -eq "comment_wrap_cleanup") {
+            Assert-RepeatedCommentWrapDiffMatchesCandidates -BaseHead $parentHead -CommitHash $SourceCommit -ProductPath $candidatePath -PathCandidates $pathCandidates -ReceiptPath $ReceiptPath
         }
         if ($pathCandidates.Count -eq 1) {
             $candidate = $pathCandidates[0]
