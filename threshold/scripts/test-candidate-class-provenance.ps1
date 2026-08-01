@@ -407,6 +407,8 @@ try {
     Assert-True -Condition ($scopeDrainText -match "scope-drain segment preserves prepared pocket across product slices") -Name "scope-drain keeps prepared pocket stable across segment slices"
     Assert-True -Condition ($scopeDrainText -match "scopeDrainSegmentRequiresFreshDiscovery=true") -Name "scope-drain requires fresh discovery after a processed segment"
     Assert-True -Condition ($scopeDrainText -match "processed segment cannot independently prove global scope exhaustion") -Name "scope-drain does not use old prepared pocket as global exhaustion proof"
+    Assert-True -Condition ($scopeDrainText -match "scopeDrainMidSegmentExpansionRequiresReprepare=true") -Name "scope-drain reparses candidates after mid-segment scope expansion"
+    Assert-True -Condition ($scopeDrainText -match "successful mid-segment scope expansion starts a fresh prepared segment") -Name "scope-drain starts a fresh prepared segment after expansion"
     Assert-True -Condition ($scopeDrainText -match "runStartHead=") -Name "scope-drain preserves immutable run start head"
     Assert-True -Condition ($scopeDrainText -match "cumulativeProcessedCandidateCount") -Name "scope-drain preserves cumulative processed candidate count across segments"
     Assert-True -Condition ($scopeDrainText -match "terminalRunProcessedCandidateCount") -Name "scope-drain aggregate receipt reports run-level processed count"

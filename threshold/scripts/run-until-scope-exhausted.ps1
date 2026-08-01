@@ -462,10 +462,12 @@ while ($segment -lt $MaxSegments) {
                 (Try-ExpandScope -Reason "scope_drain_mid_segment_candidate_shortage")) {
                 Write-Host "candidatePocketRefreshBlocked=true"
                 Write-Host "candidatePocketRefreshPolicy=scope-drain segment slices must consume the prepared pre-product candidate pocket"
+                Write-Host "scopeDrainMidSegmentExpansionRequiresReprepare=true"
+                Write-Host "scopeDrainSegmentExpansionPolicy=successful mid-segment scope expansion starts a fresh prepared segment"
                 if ($EvidenceMode -ne "Compact") {
                     [void](Commit-PathsIfNeeded -Paths @($LeasePath, $StatePath) -Message "Expand Threshold scope drain segment $segment")
                 }
-                continue
+                break
             }
             break
         }
