@@ -366,6 +366,9 @@ try {
     Assert-True -Condition ($prGovernanceText -match 'promotionSquashContentReconciliation=passed') -Name "PR governance reports promotion squash content reconciliation"
     Assert-True -Condition ($prGovernanceText -match 'Ancestor \$receiptParentHead -Descendant \$effectiveReceiptPrBaseHead') -Name "PR governance accepts source parent ancestry toward promotion evidence head"
     Assert-True -Condition ($prGovernanceText -match 'Promotion receipt source base is not ancestor of immutable PR base') -Name "PR governance rejects reversed promotion ancestry"
+    Assert-True -Condition ($prGovernanceText -match 'Get-ThresholdJsonProperty \$receipt "prBaseHead"') -Name "PR governance reads immutable pre-product receipt PR base"
+    Assert-True -Condition ($prGovernanceText -match '\$receiptPrBaseHead = \$receiptClaimedPrBaseHead') -Name "PR governance validates provenance against receipt prBaseHead during promotion"
+    Assert-True -Condition ($prGovernanceText -match 'Ancestor \$receiptPrBaseHead -Descendant \$effectiveReceiptPrBaseHead') -Name "PR governance separately checks receipt prBaseHead reaches promotion evidence head"
     Assert-True -Condition ($prGovernanceText -match 'receiptPrBaseHead') -Name "PR governance preserves immutable receipt PR base during promotion validation"
     Assert-True -Condition ($prGovernanceText -match 'sourceBaseHead') -Name "PR governance checks source parent base separately from receipt PR base"
     Assert-True -Condition ($prGovernanceText -match 'Promotion squash commit is not covered by source receipt changedFiles') -Name "PR governance rejects uncovered promotion squash product paths"
@@ -384,6 +387,8 @@ try {
     Assert-True -Condition ($runNextBatchText -match "candidateDiscoveryEvidence") -Name "run-next-batch records per-candidate discovery evidence binding"
     $scopeDrainText = Get-Content (Join-Path $thresholdScriptRoot "run-until-scope-exhausted.ps1") -Raw
     Assert-True -Condition ($scopeDrainText -match "Invoke-PreProductDiscoveryPreparation") -Name "scope-drain prepares pre-product discovery evidence before slices"
+    Assert-True -Condition ($scopeDrainText -match 'git check-ignore') -Name "scope-drain does not stage ignored runtime paths"
+    Assert-True -Condition ($scopeDrainText -match '\$preparationCommitPaths = if \(\$EvidenceMode -eq "Compact"\) \{ @\(\$evidencePaths\) \}') -Name "scope-drain compact preparation commits only persistent discovery evidence"
     Assert-True -Condition ($scopeDrainText -match "AllowEmpty") -Name "scope-drain can accept empty discovery evidence for true scope exhaustion"
     Assert-True -Condition ($scopeDrainText -match 'allowEmptyEvidence = \$autoPatchableCandidateCount -lt \$MinAutoPatchableCandidates') -Name "scope-drain binds empty evidence allowance to eligible candidate count"
     Assert-True -Condition ($scopeDrainText -match '"-PrBaseHead", \$prBaseHead') -Name "scope-drain passes evidence-bearing PR base to run-next-slice"

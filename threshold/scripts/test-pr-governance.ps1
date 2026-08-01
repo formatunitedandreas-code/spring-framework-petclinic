@@ -861,6 +861,11 @@ foreach ($commit in $prCommits) {
         $receiptPrBaseHead = $effectiveReceiptPrBaseHead
         $sourceBaseHead = ""
         if ($isPromotionReconciledCommit) {
+            $receiptClaimedPrBaseHead = [string](Get-ThresholdJsonProperty $receipt "prBaseHead" "")
+            if ([string]::IsNullOrWhiteSpace($receiptClaimedPrBaseHead)) {
+                throw "Promotion receipt is missing immutable prBaseHead claim receipt=$($entry.path)"
+            }
+            $receiptPrBaseHead = $receiptClaimedPrBaseHead
             $receiptParentHead = (& git rev-parse "$receiptSourceCommit^1" 2>$null)
             if ($LASTEXITCODE -ne 0 -or [string]::IsNullOrWhiteSpace([string]$receiptParentHead)) {
                 throw "Promotion receipt source parent unavailable receipt=$($entry.path) sourceCommit=$receiptSourceCommit"
@@ -871,6 +876,9 @@ foreach ($commit in $prCommits) {
             }
             if (-not (Test-ThresholdCommitIsAncestor -Ancestor $receiptParentHead -Descendant $effectiveReceiptPrBaseHead)) {
                 throw "Promotion receipt source base is not ancestor of immutable PR base receipt=$($entry.path) receiptPrBaseHead=$effectiveReceiptPrBaseHead sourceBaseHead=$receiptParentHead"
+            }
+            if (-not (Test-ThresholdCommitIsAncestor -Ancestor $receiptPrBaseHead -Descendant $effectiveReceiptPrBaseHead)) {
+                throw "Promotion receipt immutable prBaseHead is not ancestor of promotion evidence head receipt=$($entry.path) receiptPrBaseHead=$receiptPrBaseHead promotionEvidenceHead=$effectiveReceiptPrBaseHead"
             }
             $sourceBaseHead = $receiptParentHead
         }

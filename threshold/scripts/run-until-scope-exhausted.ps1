@@ -85,6 +85,11 @@ function Commit-PathsIfNeeded {
     )
 
     $existingPaths = @($Paths | Where-Object { Test-Path $_ } | ForEach-Object { ConvertTo-RepoPath $_ } | Select-Object -Unique)
+    $existingPaths = @($existingPaths | Where-Object {
+        & git check-ignore -q -- $_
+        $ignored = ($LASTEXITCODE -eq 0)
+        -not $ignored
+    })
     if (-not $existingPaths) { return $false }
 
     & git add -- @existingPaths
@@ -307,7 +312,8 @@ function Start-DrainSegment {
 
     $allowEmptyEvidence = $autoPatchableCandidateCount -lt $MinAutoPatchableCandidates
     $evidencePaths = @(Invoke-PreProductDiscoveryPreparation -MinScore $MinScore -AllowEmpty:$allowEmptyEvidence)
-    [void](Commit-PathsIfNeeded -Paths (@($LeasePath, $StatePath, $PocketPath) + $evidencePaths) -Message "Prepare Threshold scope drain segment $Segment discovery evidence")
+    $preparationCommitPaths = if ($EvidenceMode -eq "Compact") { @($evidencePaths) } else { @($LeasePath, $StatePath, $PocketPath) + $evidencePaths }
+    [void](Commit-PathsIfNeeded -Paths $preparationCommitPaths -Message "Prepare Threshold scope drain segment $Segment discovery evidence")
     return $autoPatchableCandidateCount
 }
 
