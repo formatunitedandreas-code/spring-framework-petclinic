@@ -44,6 +44,8 @@ else {
 if ([string]::IsNullOrWhiteSpace($GatePath)) { $GatePath = $runtimePaths.AutoPatchableGatePath }
 $receiptRoot = if ($EvidenceMode -eq "Compact") { "$compactRuntimeRoot/receipts" } else { $runtimePaths.ReceiptDirectory }
 $semanticRunPaths = Get-ThresholdSemanticRuntimePaths -RunId $RunId
+$runStartHead = ""
+$cumulativeProcessedCandidateCount = 0
 
 function ConvertTo-RepoPath {
     param([string] $Path)
@@ -85,6 +87,11 @@ function Commit-PathsIfNeeded {
     )
 
     $existingPaths = @($Paths | Where-Object { Test-Path $_ } | ForEach-Object { ConvertTo-RepoPath $_ } | Select-Object -Unique)
+    $existingPaths = @($existingPaths | Where-Object {
+        & git check-ignore -q -- $_
+        $ignored = ($LASTEXITCODE -eq 0)
+        -not $ignored
+    })
     if (-not $existingPaths) { return $false }
 
     & git add -- @existingPaths
@@ -132,11 +139,13 @@ function Save-CompactScopeDrainEvidence {
         schemaVersion = "threshold.scope-drain.aggregate-receipt.v0.1"
         runId = $RunId
         evidenceMode = "Compact"
-        sourceHead = if ($state -and $state.PSObject.Properties["startHead"]) { [string]$state.startHead } else { $null }
+        sourceHead = if (-not [string]::IsNullOrWhiteSpace($runStartHead)) { $runStartHead } elseif ($state -and $state.PSObject.Properties["startHead"]) { [string]$state.startHead } else { $null }
         finalHead = $head
         terminalState = $TerminalState
         terminalReason = $Reason
-        processedCandidates = if ($state) { [int]$state.candidatesProcessed } else { 0 }
+        processedCandidates = $cumulativeProcessedCandidateCount
+        terminalRunProcessedCandidateCount = $cumulativeProcessedCandidateCount
+        verificationSegmentProcessedCandidateCount = if ($state) { [int]$state.candidatesProcessed } else { 0 }
         productCommits = $productCommits
         changedProductFiles = $changedProductFiles
         receiptCount = $receipts.Count
@@ -216,6 +225,36 @@ function Update-CandidatePocket {
     foreach ($line in $output) { Write-Host $line }
 }
 
+function Invoke-PreProductDiscoveryPreparation {
+    param(
+        [int] $MinScore,
+        [switch] $AllowEmpty
+    )
+
+    $output = Invoke-Checked -FilePath "powershell.exe" -ArgumentList @(
+        "-NoProfile",
+        "-ExecutionPolicy",
+        "Bypass",
+        "-File",
+        "threshold/scripts/prepare-discovery-evidence.ps1",
+        "-CandidatePocketPath",
+        $PocketPath,
+        "-MinScore",
+        "$MinScore"
+    ) -FailureMessage "Pre-product discovery evidence preparation failed for scope-drain segment."
+    foreach ($line in $output) { Write-Host $line }
+
+    $evidencePaths = @(
+        $output |
+            Where-Object { [string]$_ -match "^discoveryEvidencePath=" } |
+            ForEach-Object { ([string]$_).Substring("discoveryEvidencePath=".Length) }
+    )
+    if ($evidencePaths.Count -eq 0 -and -not $AllowEmpty.IsPresent) {
+        throw "Pre-product discovery evidence preparation produced no evidence artifacts for scope-drain segment."
+    }
+    return $evidencePaths
+}
+
 function Try-ExpandScope {
     param([string] $Reason)
 
@@ -275,10 +314,16 @@ function Start-DrainSegment {
         $autoPatchableCandidateCount = Get-AutoPatchableCandidateCount -Path $PocketPath
     }
 
-    if ($EvidenceMode -ne "Compact") {
-        [void](Commit-PathsIfNeeded -Paths @($LeasePath, $StatePath, $PocketPath) -Message "Start Threshold scope drain segment $Segment")
+    $allowEmptyEvidence = $autoPatchableCandidateCount -lt $MinAutoPatchableCandidates
+    $evidencePaths = @(Invoke-PreProductDiscoveryPreparation -MinScore $MinScore -AllowEmpty:$allowEmptyEvidence)
+    $preparationCommitPaths = if ($EvidenceMode -eq "Compact") { @($evidencePaths) } else { @($LeasePath, $StatePath, $PocketPath) + $evidencePaths }
+    [void](Commit-PathsIfNeeded -Paths $preparationCommitPaths -Message "Prepare Threshold scope drain segment $Segment discovery evidence")
+    $segmentPreparedPrBaseHead = (& git rev-parse HEAD).Trim()
+    Write-Host "segmentPreparedPrBaseHead=$segmentPreparedPrBaseHead"
+    return [pscustomobject]@{
+        autoPatchableCandidateCount = $autoPatchableCandidateCount
+        segmentPreparedPrBaseHead = $segmentPreparedPrBaseHead
     }
-    return $autoPatchableCandidateCount
 }
 
 function Mark-TerminalEvidenceSourceHead {
@@ -328,6 +373,8 @@ function Set-ScopeDrainTerminalState {
 }
 
 function Invoke-RunNextSlice {
+    param([string] $SegmentPreparedPrBaseHead)
+
     $args = @(
         "-NoProfile",
         "-ExecutionPolicy",
@@ -345,6 +392,10 @@ function Invoke-RunNextSlice {
         "-MinScore",
         "$MinScore"
     )
+    if ([string]::IsNullOrWhiteSpace($SegmentPreparedPrBaseHead)) {
+        throw "Segment prepared PR base head is required before executing a scope-drain slice."
+    }
+    $args += @("-PrBaseHead", $SegmentPreparedPrBaseHead)
     if ($SkipMavenTest.IsPresent) { $args += "-SkipMavenTest" }
     if ($EvidenceMode -eq "Compact") {
         $args += @("-ReceiptRoot", $receiptRoot, "-CompactEvidence")
@@ -360,6 +411,8 @@ Write-Host "scopeDrain=started"
 Write-Host "branch=$((& git branch --show-current).Trim())"
 Write-Host "head=$((& git rev-parse HEAD).Trim())"
 Write-Host "maxSegments=$MaxSegments"
+$runStartHead = (& git rev-parse HEAD).Trim()
+Write-Host "runStartHead=$runStartHead"
 
 if ($PlanOnly.IsPresent) {
     Write-Host "planOnly=true"
@@ -380,7 +433,9 @@ while ($segment -lt $MaxSegments) {
     Assert-CleanWorktree
     Write-Host "scopeDrainSegment=$segment"
 
-    $initialAutoPatchableCount = Start-DrainSegment -Segment $segment
+    $segmentPreparation = Start-DrainSegment -Segment $segment
+    $initialAutoPatchableCount = [int]$segmentPreparation.autoPatchableCandidateCount
+    $segmentPreparedPrBaseHead = [string]$segmentPreparation.segmentPreparedPrBaseHead
     if ($initialAutoPatchableCount -lt $MinAutoPatchableCandidates) {
         Mark-TerminalEvidenceSourceHead
         Set-ScopeDrainTerminalState -TerminalState "scope_exhausted_verified" -Reason "fresh segment discovery found no auto-patchable candidates after all available scope expansion tiers"
@@ -397,18 +452,18 @@ while ($segment -lt $MaxSegments) {
     }
 
     while ($true) {
-        Invoke-RunNextSlice
+        Invoke-RunNextSlice -SegmentPreparedPrBaseHead $segmentPreparedPrBaseHead
         $state = Read-JsonFile -Path $StatePath
         if ($state.terminalState -eq "ready_no_candidates_verified") {
-            Update-CandidatePocket
             $autoPatchableCandidateCount = Get-AutoPatchableCandidateCount -Path $PocketPath
             if ($state.remainingBudget.candidates -gt 0 -and
                 $state.remainingBudget.commits -gt 0 -and
                 $autoPatchableCandidateCount -lt $MinAutoPatchableCandidates -and
                 (Try-ExpandScope -Reason "scope_drain_mid_segment_candidate_shortage")) {
-                Update-CandidatePocket
+                Write-Host "candidatePocketRefreshBlocked=true"
+                Write-Host "candidatePocketRefreshPolicy=scope-drain segment slices must consume the prepared pre-product candidate pocket"
                 if ($EvidenceMode -ne "Compact") {
-                    [void](Commit-PathsIfNeeded -Paths @($LeasePath, $StatePath, $PocketPath) -Message "Expand Threshold scope drain segment $segment")
+                    [void](Commit-PathsIfNeeded -Paths @($LeasePath, $StatePath) -Message "Expand Threshold scope drain segment $segment")
                 }
                 continue
             }
@@ -418,35 +473,29 @@ while ($segment -lt $MaxSegments) {
             break
         }
 
-        Update-CandidatePocket
-        if ($EvidenceMode -ne "Compact") {
-            [void](Commit-PathsIfNeeded -Paths @($PocketPath) -Message "Record Threshold scope drain segment $segment updated candidate pocket")
-        }
+        Write-Host "candidatePocketRefreshBlocked=true"
+        Write-Host "candidatePocketRefreshPolicy=scope-drain segment preserves prepared pocket across product slices"
     }
 
-    Update-CandidatePocket
     Mark-TerminalEvidenceSourceHead
     $state = Read-JsonFile -Path $StatePath
+    $segmentProcessedCandidateCount = [int]$state.candidatesProcessed
+    if ($segmentProcessedCandidateCount -gt 0) {
+        $cumulativeProcessedCandidateCount += $segmentProcessedCandidateCount
+    }
     if ($EvidenceMode -ne "Compact") {
         [void](Commit-PathsIfNeeded -Paths @($LeasePath, $StatePath, $PocketPath) -Message "Record Threshold scope drain segment $segment terminal state")
     }
 
     Write-Host "scopeDrainSegmentTerminalState=$($state.terminalState)"
-    Write-Host "scopeDrainSegmentCandidatesProcessed=$($state.candidatesProcessed)"
+    Write-Host "scopeDrainSegmentCandidatesProcessed=$segmentProcessedCandidateCount"
+    Write-Host "scopeDrainCumulativeCandidatesProcessed=$cumulativeProcessedCandidateCount"
     Write-Host "scopeDrainSegmentCommitsCreated=$($state.commitsCreated)"
 
     if ($state.terminalState -eq "ready_no_candidates_verified") {
-        Set-ScopeDrainTerminalState -TerminalState "scope_exhausted_verified" -Reason "terminal segment verified no auto-patchable candidates remain"
-        if ($EvidenceMode -eq "Compact") {
-            Save-CompactScopeDrainEvidence -TerminalState "scope_exhausted_verified" -Reason "terminal segment verified no auto-patchable candidates remain"
-        }
-        else {
-            [void](Commit-PathsIfNeeded -Paths @($StatePath) -Message "Record Threshold scope drain completion")
-        }
-        Write-Host "scopeDrainTerminalState=scope_exhausted_verified"
-        Write-Host "scopeDrainSegmentsRun=$segment"
-        Write-Host "scopeDrain=completed"
-        exit 0
+        Write-Host "scopeDrainSegmentRequiresFreshDiscovery=true"
+        Write-Host "scopeDrainSegmentCompletionPolicy=processed segment cannot independently prove global scope exhaustion"
+        continue
     }
 }
 

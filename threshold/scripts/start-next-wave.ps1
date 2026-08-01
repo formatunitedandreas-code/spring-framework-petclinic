@@ -822,7 +822,8 @@ non-claims: no upstream interaction, no release, no deploy, no public readiness/
 
     Assert-RemoteBaseMatchesMergeCommit -MergedPullRequest $mergedPullRequest -ExpectedBaseBranch $Wave.PullRequestBaseBranch
     if ($Wave.PullRequestBaseBranch -ne $BaseBranch) {
-        [void](@(Invoke-GovernedEvidenceBasePromotion -Wave $Wave -MergedPullRequest $mergedPullRequest) | Select-Object -Last 1)
+        $promotionMergedPullRequest = @(Invoke-GovernedEvidenceBasePromotion -Wave $Wave -MergedPullRequest $mergedPullRequest) | Select-Object -Last 1
+        return $promotionMergedPullRequest
     }
     return $mergedPullRequest
 }
