@@ -244,7 +244,7 @@ function Assert-RepeatedCommentWrapDiffMatchesCandidates {
     if (-not (Test-ThresholdRepeatedCommentWrapDiff -DiffLines $diffLines)) {
         throw "Batch repeated comment wrap diff did not match expected shape receipt=$ReceiptPath file=$ProductPath"
     }
-    $removedLineNumbers = @(Get-ThresholdDiffRemovedLineNumbers -DiffLines $diffLines | Sort-Object)
+    $removedLineNumbers = @(Get-ThresholdDiffRemovedLineNumbers -DiffLines $diffLines)
     $candidateLineNumbers = @(
         $PathCandidates | ForEach-Object {
             $candidateId = [string](Get-ThresholdJsonProperty $_ "candidateId" "")
@@ -257,6 +257,23 @@ function Assert-RepeatedCommentWrapDiffMatchesCandidates {
     )
     if (($removedLineNumbers -join ",") -ne ($candidateLineNumbers -join ",")) {
         throw "Batch repeated comment wrap candidate line mismatch receipt=$ReceiptPath file=$ProductPath removedLines=[$($removedLineNumbers -join ', ')] candidateLines=[$($candidateLineNumbers -join ', ')]"
+    }
+
+    $contentLines = Get-ThresholdDiffContentLines -DiffLines $diffLines
+    $removed = @($contentLines | Where-Object { $_ -match '^-\s*\*\s+\S' })
+    $added = @($contentLines | Where-Object { $_ -match '^\+\s*\*\s+\S' })
+    if ($removed.Count -ne $PathCandidates.Count -or $added.Count -ne ($PathCandidates.Count * 2)) {
+        throw "Batch repeated comment wrap count mismatch receipt=$ReceiptPath file=$ProductPath removedCount=$($removed.Count) addedCount=$($added.Count) candidateCount=$($PathCandidates.Count)"
+    }
+    for ($i = 0; $i -lt $removed.Count; $i++) {
+        $removedText = ConvertTo-ThresholdCollapsedWhitespace (Get-ThresholdCommentPayload -Line $removed[$i] -PrefixPattern '^[+-]\s*\*\s*')
+        $addedText = ConvertTo-ThresholdCollapsedWhitespace ((@($added[$i * 2], $added[($i * 2) + 1]) | ForEach-Object {
+            Get-ThresholdCommentPayload -Line $_ -PrefixPattern '^[+-]\s*\*\s*'
+        }) -join " ")
+        if ($removedText -ne $addedText) {
+            $candidateId = [string](Get-ThresholdJsonProperty $PathCandidates[$i] "candidateId" "")
+            throw "Batch repeated comment wrap per-candidate text mismatch receipt=$ReceiptPath candidateId=$candidateId file=$ProductPath line=$($removedLineNumbers[$i])"
+        }
     }
 }
 
