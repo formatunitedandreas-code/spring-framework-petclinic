@@ -17,6 +17,7 @@ Set-StrictMode -Version Latest
 $ErrorActionPreference = "Stop"
 
 . (Join-Path $PSScriptRoot "lib/candidate-class-provenance.ps1")
+. (Join-Path $PSScriptRoot "lib/lease-policy.ps1")
 
 function ConvertTo-RepoPath {
     param([string] $Path)
@@ -103,37 +104,6 @@ function Resolve-ObservedPrBaseHead {
         }
     }
     return ""
-}
-
-function Resolve-ReceiptPrBaseHead {
-    param(
-        [object] $Receipt,
-        [string] $ReceiptPath,
-        [string] $ObservedPrBaseHead,
-        [string] $BaseRef
-    )
-
-    $provenance = Get-JsonProperty $Receipt "candidateClassProvenance" $null
-    if ($null -eq $provenance) {
-        return ""
-    }
-
-    $receiptPrBaseHead = [string](Get-JsonProperty $provenance "prBaseHead" "")
-    if ([string]::IsNullOrWhiteSpace($ObservedPrBaseHead)) {
-        return $receiptPrBaseHead
-    }
-
-    if (-not [string]::IsNullOrWhiteSpace($BaseRef)) {
-        $changedInCurrentPr = @(git diff --name-only "origin/${BaseRef}...HEAD" -- $ReceiptPath 2>$null)
-        if ($LASTEXITCODE -eq 0 -and $changedInCurrentPr.Count -gt 0) {
-            return $ObservedPrBaseHead
-        }
-    }
-
-    if (-not [string]::IsNullOrWhiteSpace($receiptPrBaseHead)) {
-        return $receiptPrBaseHead
-    }
-    return $ObservedPrBaseHead
 }
 
 function ConvertTo-NormalizedJson {
@@ -235,7 +205,24 @@ foreach ($receiptFile in $receiptFiles) {
     $batchClassValue = Get-JsonProperty $receipt "batchClass" ""
     $candidateClass = if (-not [string]::IsNullOrWhiteSpace([string]$candidateClassValue)) { [string]$candidateClassValue } elseif (-not [string]::IsNullOrWhiteSpace([string]$batchClassValue)) { [string]$batchClassValue } else { "unknown" }
     $repoReceiptPath = ConvertTo-RepoRelativePath $receiptFile.FullName
-    $receiptPrBaseHead = Resolve-ReceiptPrBaseHead -Receipt $receipt -ReceiptPath $repoReceiptPath -ObservedPrBaseHead $observedPrBaseHead -BaseRef $BaseRef
+    $receiptChangedInCurrentPr = $false
+    if (-not [string]::IsNullOrWhiteSpace($observedPrBaseHead)) {
+        $changedInCurrentPr = @(git diff --name-only "${observedPrBaseHead}...HEAD" -- $repoReceiptPath 2>$null)
+        $receiptChangedInCurrentPr = $LASTEXITCODE -eq 0 -and $changedInCurrentPr.Count -gt 0
+    }
+
+    $receiptPrBaseHead = ""
+    if ($receiptChangedInCurrentPr) {
+        $receiptPrBaseHead = Resolve-ThresholdReceiptPrBaseHead -Receipt $receipt -ReceiptPath $repoReceiptPath
+    }
+    else {
+        try {
+            $receiptPrBaseHead = Resolve-ThresholdReceiptPrBaseHead -Receipt $receipt -ReceiptPath $repoReceiptPath
+        }
+        catch {
+            $receiptPrBaseHead = $observedPrBaseHead
+        }
+    }
     Assert-ThresholdCandidateClassProvenance -Receipt $receipt -ReceiptPath $repoReceiptPath -PrBaseHead $receiptPrBaseHead
     $positiveLearningEligible = Test-ThresholdCandidateClassProvenancePositiveLearningEligible -Receipt $receipt
     if (-not $classStats.ContainsKey($candidateClass)) {

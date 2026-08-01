@@ -219,6 +219,13 @@ if ($UpdateState -and -not $DryRun) {
     if (Test-Path $StatePath) {
         $state = Get-Content $StatePath -Raw | ConvertFrom-Json
         $candidatesProcessed = [int]$state.candidatesProcessed + 1
+        $processedCandidateIds = @()
+        if ($state.PSObject.Properties.Name -contains "processedCandidateIds") {
+            $processedCandidateIds = @($state.processedCandidateIds | ForEach-Object { [string]$_ } | Where-Object { -not [string]::IsNullOrWhiteSpace($_) })
+        }
+        if ($processedCandidateIds -notcontains [string]$CandidateId) {
+            $processedCandidateIds += [string]$CandidateId
+        }
         $commitsCreated = [int]$state.commitsCreated + 1
         $remainingCandidates = [Math]::Max(0, [int]$state.remainingBudget.candidates - 1)
         $remainingCommits = [Math]::Max(0, [int]$state.remainingBudget.commits - 1)
@@ -242,6 +249,7 @@ if ($UpdateState -and -not $DryRun) {
     }
     else {
         $candidatesProcessed = 1
+        $processedCandidateIds = @([string]$CandidateId)
         $commitsCreated = 1
         $remainingCandidates = 0
         $remainingCommits = 0
@@ -261,6 +269,7 @@ if ($UpdateState -and -not $DryRun) {
         currentHead = $CommitHash
         currentSourceHead = $CommitHash
         candidatesProcessed = $candidatesProcessed
+        processedCandidateIds = @($processedCandidateIds)
         commitsCreated = $commitsCreated
         remainingBudget = [ordered]@{ candidates = $remainingCandidates; commits = $remainingCommits; repairAttempts = $remainingRepairs }
         lastReceipt = ConvertTo-RepoPath $outPath
