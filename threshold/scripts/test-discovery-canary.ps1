@@ -2,6 +2,7 @@
 param(
     [string] $LeasePath = "threshold/leases/current.yaml",
     [string] $GatePath = "threshold/gates/auto-patchable-candidate-classes.json",
+    [string] $TrainerReportPath = "threshold/trainer/training-report.json",
     [string] $ExpectedPath = "threshold/discovery-canaries/expected.json"
 )
 
@@ -13,6 +14,27 @@ function ConvertTo-RepoPath {
     return ($Path -replace "\\", "/").Trim()
 }
 
+function Get-JsonProperty {
+    param([object] $Object, [string] $Name, [object] $DefaultValue = $null)
+    if ($null -eq $Object) { return $DefaultValue }
+    if ($Object -is [System.Collections.IDictionary] -and $Object.Contains($Name)) {
+        return $Object[$Name]
+    }
+    if ($Object.PSObject.Properties.Name -contains $Name) {
+        return $Object.$Name
+    }
+    return $DefaultValue
+}
+
+function Get-ExpectedMapValue {
+    param([object] $Map, [string] $Name)
+    if ($null -eq $Map) { return "" }
+    if ($Map.PSObject.Properties.Name -contains $Name) {
+        return [string]$Map.$Name
+    }
+    return ""
+}
+
 if (-not (Test-Path $ExpectedPath)) {
     throw "Discovery canary expectation file not found: $ExpectedPath"
 }
@@ -21,6 +43,9 @@ $expected = Get-Content $ExpectedPath -Raw | ConvertFrom-Json
 $fixtureRoot = ConvertTo-RepoPath ([string]$expected.fixtureRoot)
 if (-not (Test-Path $fixtureRoot)) {
     throw "Discovery canary fixture root not found: $fixtureRoot"
+}
+if (-not (Test-Path $TrainerReportPath)) {
+    throw "Discovery canary trainer report not found: $TrainerReportPath"
 }
 
 $head = (& git rev-parse HEAD).Trim()
@@ -49,16 +74,68 @@ if (-not (Test-Path $tempPocket)) {
 }
 
 $pocket = Get-Content $tempPocket -Raw | ConvertFrom-Json
+$trainerReport = Get-Content $TrainerReportPath -Raw | ConvertFrom-Json
+$visibleClasses = @(
+    $pocket.candidates |
+        ForEach-Object { [string]$_.candidateClass } |
+        Sort-Object -Unique
+)
 $autoClasses = @(
     $pocket.candidates |
         Where-Object { $_.autoPatchable -eq $true } |
         ForEach-Object { [string]$_.candidateClass } |
         Sort-Object -Unique
 )
+$unexpectedAutoPromotionCount = 0
+$missingRequiredCandidateClassCount = 0
+$executionModeMismatchCount = 0
+$trainerDecisionMismatchCount = 0
 
-foreach ($requiredClass in @($expected.requiredAutoPatchableCandidateClasses)) {
-    if ($autoClasses -notcontains [string]$requiredClass) {
-        throw "Discovery canary failed. Missing autoPatchable candidate class '$requiredClass'."
+$requiredDiscoverableClasses = @(Get-JsonProperty $expected "requiredDiscoverableCandidateClasses" @())
+if ($requiredDiscoverableClasses.Count -eq 0) {
+    $requiredDiscoverableClasses = @(Get-JsonProperty $expected "requiredAutoPatchableCandidateClasses" @())
+}
+
+foreach ($requiredClass in @($requiredDiscoverableClasses)) {
+    $candidateClass = [string]$requiredClass
+    if ($visibleClasses -notcontains $candidateClass) {
+        $missingRequiredCandidateClassCount++
+        Write-Host "missingRequiredCandidateClass=$candidateClass"
+        continue
+    }
+
+    $classCandidates = @($pocket.candidates | Where-Object { [string]$_.candidateClass -eq $candidateClass })
+    $observedModes = @($classCandidates | ForEach-Object { [string]$_.executionMode } | Sort-Object -Unique)
+    $expectedMode = Get-ExpectedMapValue -Map $expected.expectedExecutionModes -Name $candidateClass
+    if ([string]::IsNullOrWhiteSpace($expectedMode)) {
+        throw "Discovery canary expectation missing expectedExecutionModes entry for '$candidateClass'."
+    }
+    if ($observedModes.Count -ne 1 -or $observedModes[0] -ne $expectedMode) {
+        $executionModeMismatchCount++
+        Write-Host "executionModeMismatch=$candidateClass expected=$expectedMode observed=$($observedModes -join ',')"
+    }
+
+    if ($expectedMode -ne "auto_patchable") {
+        $unexpectedPromotions = @($classCandidates | Where-Object { $_.autoPatchable -eq $true })
+        if ($unexpectedPromotions.Count -gt 0) {
+            $unexpectedAutoPromotionCount += $unexpectedPromotions.Count
+            Write-Host "unexpectedAutoPromotion=$candidateClass count=$($unexpectedPromotions.Count)"
+        }
+    }
+}
+
+foreach ($property in @($expected.expectedTrainerDecisions.PSObject.Properties)) {
+    $candidateClass = [string]$property.Name
+    $expectedDecision = [string]$property.Value
+    $trainerDecision = @(
+        $trainerReport.decisions |
+            Where-Object { [string]$_.candidateClass -eq $candidateClass } |
+            ForEach-Object { [string]$_.decision } |
+            Sort-Object -Unique
+    )
+    if ($trainerDecision.Count -ne 1 -or $trainerDecision[0] -ne $expectedDecision) {
+        $trainerDecisionMismatchCount++
+        Write-Host "trainerDecisionMismatch=$candidateClass expected=$expectedDecision observed=$($trainerDecision -join ',')"
     }
 }
 
@@ -66,6 +143,24 @@ if (Test-Path $tempPocket) {
     Remove-Item -LiteralPath $tempPocket -Force
 }
 
+$discoveryVisibilityMatched = ($missingRequiredCandidateClassCount -eq 0)
+$executionModeMatched = ($executionModeMismatchCount -eq 0)
+$trainerDecisionMatched = ($trainerDecisionMismatchCount -eq 0)
+if (-not $discoveryVisibilityMatched -or
+    -not $executionModeMatched -or
+    -not $trainerDecisionMatched -or
+    $unexpectedAutoPromotionCount -ne 0) {
+    throw "Discovery canary failed semantic reconciliation."
+}
+
 Write-Host "discoveryCanary=passed"
 Write-Host "fixtureRoot=$fixtureRoot"
+Write-Host "discoveryVisibilityMatched=$discoveryVisibilityMatched"
+Write-Host "executionModeMatched=$executionModeMatched"
+Write-Host "trainerDecisionMatched=$trainerDecisionMatched"
+Write-Host "unexpectedAutoPromotionCount=$unexpectedAutoPromotionCount"
+Write-Host "missingRequiredCandidateClassCount=$missingRequiredCandidateClassCount"
+Write-Host "executionModeMismatchCount=$executionModeMismatchCount"
+Write-Host "trainerDecisionMismatchCount=$trainerDecisionMismatchCount"
+Write-Host "discoverableClasses=$($visibleClasses -join ',')"
 Write-Host "autoPatchableClasses=$($autoClasses -join ',')"
