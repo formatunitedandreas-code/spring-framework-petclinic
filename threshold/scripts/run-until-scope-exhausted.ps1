@@ -217,7 +217,10 @@ function Update-CandidatePocket {
 }
 
 function Invoke-PreProductDiscoveryPreparation {
-    param([int] $MinScore)
+    param(
+        [int] $MinScore,
+        [switch] $AllowEmpty
+    )
 
     $output = Invoke-Checked -FilePath "powershell.exe" -ArgumentList @(
         "-NoProfile",
@@ -237,7 +240,7 @@ function Invoke-PreProductDiscoveryPreparation {
             Where-Object { [string]$_ -match "^discoveryEvidencePath=" } |
             ForEach-Object { ([string]$_).Substring("discoveryEvidencePath=".Length) }
     )
-    if ($evidencePaths.Count -eq 0) {
+    if ($evidencePaths.Count -eq 0 -and -not $AllowEmpty.IsPresent) {
         throw "Pre-product discovery evidence preparation produced no evidence artifacts for scope-drain segment."
     }
     return $evidencePaths
@@ -302,7 +305,8 @@ function Start-DrainSegment {
         $autoPatchableCandidateCount = Get-AutoPatchableCandidateCount -Path $PocketPath
     }
 
-    $evidencePaths = @(Invoke-PreProductDiscoveryPreparation -MinScore $MinScore)
+    $allowEmptyEvidence = $autoPatchableCandidateCount -lt $MinAutoPatchableCandidates
+    $evidencePaths = @(Invoke-PreProductDiscoveryPreparation -MinScore $MinScore -AllowEmpty:$allowEmptyEvidence)
     [void](Commit-PathsIfNeeded -Paths (@($LeasePath, $StatePath, $PocketPath) + $evidencePaths) -Message "Prepare Threshold scope drain segment $Segment discovery evidence")
     return $autoPatchableCandidateCount
 }
@@ -428,15 +432,15 @@ while ($segment -lt $MaxSegments) {
         Invoke-RunNextSlice
         $state = Read-JsonFile -Path $StatePath
         if ($state.terminalState -eq "ready_no_candidates_verified") {
-            Update-CandidatePocket
             $autoPatchableCandidateCount = Get-AutoPatchableCandidateCount -Path $PocketPath
             if ($state.remainingBudget.candidates -gt 0 -and
                 $state.remainingBudget.commits -gt 0 -and
                 $autoPatchableCandidateCount -lt $MinAutoPatchableCandidates -and
                 (Try-ExpandScope -Reason "scope_drain_mid_segment_candidate_shortage")) {
-                Update-CandidatePocket
+                Write-Host "candidatePocketRefreshBlocked=true"
+                Write-Host "candidatePocketRefreshPolicy=scope-drain segment slices must consume the prepared pre-product candidate pocket"
                 if ($EvidenceMode -ne "Compact") {
-                    [void](Commit-PathsIfNeeded -Paths @($LeasePath, $StatePath, $PocketPath) -Message "Expand Threshold scope drain segment $segment")
+                    [void](Commit-PathsIfNeeded -Paths @($LeasePath, $StatePath) -Message "Expand Threshold scope drain segment $segment")
                 }
                 continue
             }
@@ -446,13 +450,10 @@ while ($segment -lt $MaxSegments) {
             break
         }
 
-        Update-CandidatePocket
-        if ($EvidenceMode -ne "Compact") {
-            [void](Commit-PathsIfNeeded -Paths @($PocketPath) -Message "Record Threshold scope drain segment $segment updated candidate pocket")
-        }
+        Write-Host "candidatePocketRefreshBlocked=true"
+        Write-Host "candidatePocketRefreshPolicy=scope-drain segment preserves prepared pocket across product slices"
     }
 
-    Update-CandidatePocket
     Mark-TerminalEvidenceSourceHead
     $state = Read-JsonFile -Path $StatePath
     if ($EvidenceMode -ne "Compact") {

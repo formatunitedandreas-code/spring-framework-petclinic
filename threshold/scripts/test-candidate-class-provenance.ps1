@@ -383,7 +383,11 @@ try {
     Assert-True -Condition ($runNextBatchText -match "candidateDiscoveryEvidence") -Name "run-next-batch records per-candidate discovery evidence binding"
     $scopeDrainText = Get-Content (Join-Path $thresholdScriptRoot "run-until-scope-exhausted.ps1") -Raw
     Assert-True -Condition ($scopeDrainText -match "Invoke-PreProductDiscoveryPreparation") -Name "scope-drain prepares pre-product discovery evidence before slices"
+    Assert-True -Condition ($scopeDrainText -match "AllowEmpty") -Name "scope-drain can accept empty discovery evidence for true scope exhaustion"
+    Assert-True -Condition ($scopeDrainText -match 'allowEmptyEvidence = \$autoPatchableCandidateCount -lt \$MinAutoPatchableCandidates') -Name "scope-drain binds empty evidence allowance to eligible candidate count"
     Assert-True -Condition ($scopeDrainText -match '"-PrBaseHead", \$prBaseHead') -Name "scope-drain passes evidence-bearing PR base to run-next-slice"
+    Assert-True -Condition ($scopeDrainText -match "scope-drain segment preserves prepared pocket across product slices") -Name "scope-drain keeps prepared pocket stable across segment slices"
+    Assert-False -Condition ($scopeDrainText -match "Record Threshold scope drain segment .* updated candidate pocket") -Name "scope-drain does not refresh discovery identity between segment slices"
     Assert-True -Condition ($startNextWaveText -match 'return \$promotionMergedPullRequest') -Name "start-next-wave reports configured-base promotion merge result"
     Assert-True -Condition ($runNextBatchText -match 'ProcessedCandidateIds') -Name "run-next-batch excludes already processed candidate IDs"
     Assert-True -Condition ($runNextBatchText -match 'line_rebinding_required_after_prior_line_mutation') -Name "run-next-batch fail-closes remaining line candidates after prior line mutation"
