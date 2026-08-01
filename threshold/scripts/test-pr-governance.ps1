@@ -218,6 +218,7 @@ function Assert-BatchCandidateMutationsMatchSourceCommit {
 
     $actualProductPaths = @($changedPaths | Where-Object { Test-ProductPath -Path $_ } | Sort-Object -Unique)
     $candidateProductPaths = New-Object System.Collections.Generic.HashSet[string]
+    $candidatesByPath = @{}
     foreach ($candidate in $candidates) {
         $candidateId = [string](Get-ThresholdJsonProperty $candidate "candidateId" "")
         $candidateClass = [string](Get-ThresholdJsonProperty $candidate "candidateClass" "")
@@ -242,27 +243,54 @@ function Assert-BatchCandidateMutationsMatchSourceCommit {
         if ([string]::IsNullOrWhiteSpace($beforeSha256) -or [string]::IsNullOrWhiteSpace($afterSha256)) {
             throw "Batch candidate is missing beforeSha256/afterSha256 receipt=$ReceiptPath candidateId=$candidateId file=$candidatePath"
         }
+        if ($beforeSha256.ToLowerInvariant() -eq $afterSha256.ToLowerInvariant()) {
+            throw "Batch candidate beforeSha256 equals afterSha256 receipt=$ReceiptPath candidateId=$candidateId file=$candidatePath"
+        }
+        if (-not $candidatesByPath.ContainsKey($candidatePath)) {
+            $candidatesByPath[$candidatePath] = New-Object System.Collections.Generic.List[object]
+        }
+        $candidatesByPath[$candidatePath].Add($candidate)
+    }
 
+    foreach ($candidatePath in $candidatesByPath.Keys) {
+        $pathCandidates = @($candidatesByPath[$candidatePath].ToArray())
         $actualBeforeSha256 = (Get-CommitPathBlobSha256 -Commit $parentHead -Path $candidatePath).ToLowerInvariant()
         $actualAfterSha256 = (Get-CommitPathBlobSha256 -Commit $SourceCommit -Path $candidatePath).ToLowerInvariant()
-        if ($beforeSha256.ToLowerInvariant() -ne $actualBeforeSha256) {
-            throw "Batch candidate beforeSha256 mismatch receipt=$ReceiptPath candidateId=$candidateId file=$candidatePath claimed=$beforeSha256 actual=$actualBeforeSha256"
+        $firstCandidate = $pathCandidates[0]
+        $lastCandidate = $pathCandidates[$pathCandidates.Count - 1]
+        $firstBeforeSha256 = ([string](Get-ThresholdJsonProperty $firstCandidate "beforeSha256" "")).ToLowerInvariant()
+        $lastAfterSha256 = ([string](Get-ThresholdJsonProperty $lastCandidate "afterSha256" "")).ToLowerInvariant()
+        if ($firstBeforeSha256 -ne $actualBeforeSha256) {
+            throw "Batch candidate path first beforeSha256 mismatch receipt=$ReceiptPath file=$candidatePath claimed=$firstBeforeSha256 actual=$actualBeforeSha256"
         }
-        if ($afterSha256.ToLowerInvariant() -ne $actualAfterSha256) {
-            throw "Batch candidate afterSha256 mismatch receipt=$ReceiptPath candidateId=$candidateId file=$candidatePath claimed=$afterSha256 actual=$actualAfterSha256"
+        if ($lastAfterSha256 -ne $actualAfterSha256) {
+            throw "Batch candidate path final afterSha256 mismatch receipt=$ReceiptPath file=$candidatePath claimed=$lastAfterSha256 actual=$actualAfterSha256"
+        }
+        for ($i = 1; $i -lt $pathCandidates.Count; $i++) {
+            $previousAfterSha256 = ([string](Get-ThresholdJsonProperty $pathCandidates[$i - 1] "afterSha256" "")).ToLowerInvariant()
+            $currentBeforeSha256 = ([string](Get-ThresholdJsonProperty $pathCandidates[$i] "beforeSha256" "")).ToLowerInvariant()
+            if ($previousAfterSha256 -ne $currentBeforeSha256) {
+                $candidateId = [string](Get-ThresholdJsonProperty $pathCandidates[$i] "candidateId" "")
+                throw "Batch candidate same-path hash chain mismatch receipt=$ReceiptPath candidateId=$candidateId file=$candidatePath previousAfterSha256=$previousAfterSha256 currentBeforeSha256=$currentBeforeSha256"
+            }
         }
 
+        $candidateClass = [string](Get-ThresholdJsonProperty $firstCandidate "candidateClass" "")
         $observedClass = Get-ObservedCandidateDiffClassForPath -BaseHead $parentHead -CommitHash $SourceCommit -ProductPath $candidatePath
         if ([string]$observedClass -ne [string]$candidateClass) {
-            throw "Batch candidate observed diff class mismatch receipt=$ReceiptPath candidateId=$candidateId file=$candidatePath candidateClass=$candidateClass observedDiffClass=$observedClass"
+            throw "Batch candidate observed diff class mismatch receipt=$ReceiptPath file=$candidatePath candidateClass=$candidateClass observedDiffClass=$observedClass"
         }
-        $candidateMember = [string](Get-ThresholdJsonProperty $candidate "member" "")
-        if (-not (Test-ThresholdObservedDiffMemberMatchesCandidate -BaseHead $parentHead -CommitHash $SourceCommit -ProductPath $candidatePath -CandidateMember $candidateMember)) {
-            throw "Batch candidate observed diff member mismatch receipt=$ReceiptPath candidateId=$candidateId file=$candidatePath member=$candidateMember"
-        }
-        $executionParameters = Get-ThresholdCandidateExecutionParameters -Candidate $candidate
-        if (-not (Test-ThresholdCandidateExecutionParametersMatchObservedDiff -CandidateClass $candidateClass -ExecutionParameters $executionParameters -BaseHead $parentHead -CommitHash $SourceCommit -ProductPath $candidatePath)) {
-            throw "Batch candidate execution parameters mismatch receipt=$ReceiptPath candidateId=$candidateId file=$candidatePath"
+        if ($pathCandidates.Count -eq 1) {
+            $candidate = $pathCandidates[0]
+            $candidateId = [string](Get-ThresholdJsonProperty $candidate "candidateId" "")
+            $candidateMember = [string](Get-ThresholdJsonProperty $candidate "member" "")
+            if (-not (Test-ThresholdObservedDiffMemberMatchesCandidate -BaseHead $parentHead -CommitHash $SourceCommit -ProductPath $candidatePath -CandidateMember $candidateMember)) {
+                throw "Batch candidate observed diff member mismatch receipt=$ReceiptPath candidateId=$candidateId file=$candidatePath member=$candidateMember"
+            }
+            $executionParameters = Get-ThresholdCandidateExecutionParameters -Candidate $candidate
+            if (-not (Test-ThresholdCandidateExecutionParametersMatchObservedDiff -CandidateClass $candidateClass -ExecutionParameters $executionParameters -BaseHead $parentHead -CommitHash $SourceCommit -ProductPath $candidatePath)) {
+                throw "Batch candidate execution parameters mismatch receipt=$ReceiptPath candidateId=$candidateId file=$candidatePath"
+            }
         }
     }
 
@@ -275,7 +303,8 @@ function Assert-BatchCandidateMutationsMatchSourceCommit {
 function Assert-PromotionSquashCommitCoveredByReceipts {
     param(
         [string] $Commit,
-        [object[]] $ReceiptEntries
+        [object[]] $ReceiptEntries,
+        [string] $PromotionBaseHead = ""
     )
 
     $actualProductPaths = @(git diff-tree --no-commit-id --name-only -r $Commit | Where-Object { Test-ProductPath -Path $_ } | ForEach-Object { ConvertTo-RepoPath $_ } | Sort-Object -Unique)
@@ -286,8 +315,23 @@ function Assert-PromotionSquashCommitCoveredByReceipts {
         throw "Promotion squash commit has product changes but no source receipts: $Commit"
     }
 
-    $coveredProductPaths = New-Object System.Collections.Generic.HashSet[string]
+    $currentWaveReceiptEntries = New-Object System.Collections.Generic.List[object]
     foreach ($entry in $ReceiptEntries) {
+        if (-not [string]::IsNullOrWhiteSpace($PromotionBaseHead) -and
+            -not (Test-ThresholdPathChangedInRange -BaseHead $PromotionBaseHead -CommitHash "HEAD" -Path ([string]$entry.path))) {
+            continue
+        }
+        $entryProductPaths = @(Get-ReceiptChangedFileRecords -Receipt $entry.receipt | Where-Object { Test-ProductPath -Path $_.path })
+        if ($entryProductPaths.Count -gt 0) {
+            $currentWaveReceiptEntries.Add($entry)
+        }
+    }
+    if ($currentWaveReceiptEntries.Count -eq 0) {
+        throw "Promotion squash commit has no current-wave product source receipts: $Commit"
+    }
+
+    $coveredProductPaths = New-Object System.Collections.Generic.HashSet[string]
+    foreach ($entry in $currentWaveReceiptEntries.ToArray()) {
         $entryProductPaths = @(Get-ReceiptChangedFileRecords -Receipt $entry.receipt | Where-Object { Test-ProductPath -Path $_.path })
         foreach ($changedFile in $entryProductPaths) {
             $path = [string]$changedFile.path
@@ -300,11 +344,10 @@ function Assert-PromotionSquashCommitCoveredByReceipts {
         throw "Promotion squash commit is not covered by source receipt changedFiles. commit=$Commit missing=[$($missing -join ', ')]"
     }
 
-    $matchingReceiptEntries = New-Object System.Collections.Generic.List[object]
     foreach ($path in $actualProductPaths) {
         $actualAfterSha256 = (Get-CommitPathBlobSha256 -Commit $Commit -Path $path).ToLowerInvariant()
         $pathMatched = $false
-        foreach ($entry in $ReceiptEntries) {
+        foreach ($entry in $currentWaveReceiptEntries.ToArray()) {
             $matchingChangedFiles = @(
                 Get-ReceiptChangedFileRecords -Receipt $entry.receipt |
                     Where-Object {
@@ -315,9 +358,6 @@ function Assert-PromotionSquashCommitCoveredByReceipts {
             foreach ($changedFile in $matchingChangedFiles) {
                 if ([string]$changedFile.afterSha256.ToLowerInvariant() -eq $actualAfterSha256) {
                     $pathMatched = $true
-                    if (-not $matchingReceiptEntries.Contains($entry)) {
-                        $matchingReceiptEntries.Add($entry)
-                    }
                     break
                 }
             }
@@ -327,14 +367,11 @@ function Assert-PromotionSquashCommitCoveredByReceipts {
             throw "Promotion squash commit content mismatch for receipt-covered path. commit=$Commit path=$path actualAfterSha256=$actualAfterSha256"
         }
     }
-    if ($matchingReceiptEntries.Count -eq 0) {
-        throw "Promotion squash commit has no content-matching source receipts: $Commit"
-    }
 
     Write-Host "promotionSquashReceiptReconciliation=passed"
     Write-Host "promotionSquashContentReconciliation=passed"
     Write-Host "promotionSquashCommit=$Commit"
-    return @($matchingReceiptEntries.ToArray())
+    return @($currentWaveReceiptEntries.ToArray())
 }
 
 function Assert-BatchCandidateDiscoveryEvidenceMatchesPrBase {
@@ -674,7 +711,7 @@ foreach ($commit in $prCommits) {
     $isPromotionReconciledCommit = $false
     if (-not $receiptByCommit.ContainsKey($commit)) {
         if ($governedEvidenceBasePromotionPr) {
-            $promotionReceiptEntries = @(Assert-PromotionSquashCommitCoveredByReceipts -Commit $commit -ReceiptEntries @($receiptEntries.ToArray()))
+            $promotionReceiptEntries = @(Assert-PromotionSquashCommitCoveredByReceipts -Commit $commit -ReceiptEntries @($receiptEntries.ToArray()) -PromotionBaseHead $observedPrBaseHead)
             foreach ($promotionReceiptEntry in $promotionReceiptEntries) {
                 $entriesForCommit += $promotionReceiptEntry
             }
