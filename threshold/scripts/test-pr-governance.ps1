@@ -874,8 +874,8 @@ foreach ($commit in $prCommits) {
             if ([string]$receipt.baseHead -ne [string]$receiptParentHead) {
                 throw "Promotion receipt baseHead mismatch receipt=$($entry.path) baseHead=$($receipt.baseHead) parentHead=$receiptParentHead"
             }
-            if (-not (Test-ThresholdCommitIsAncestor -Ancestor $receiptParentHead -Descendant $effectiveReceiptPrBaseHead)) {
-                throw "Promotion receipt source base is not ancestor of immutable PR base receipt=$($entry.path) receiptPrBaseHead=$effectiveReceiptPrBaseHead sourceBaseHead=$receiptParentHead"
+            if (-not (Test-ThresholdCommitIsAncestor -Ancestor $receiptPrBaseHead -Descendant $receiptParentHead)) {
+                throw "Promotion receipt immutable prBaseHead is not ancestor of source base receipt=$($entry.path) receiptPrBaseHead=$receiptPrBaseHead sourceBaseHead=$receiptParentHead"
             }
             if (-not (Test-ThresholdCommitIsAncestor -Ancestor $receiptPrBaseHead -Descendant $effectiveReceiptPrBaseHead)) {
                 throw "Promotion receipt immutable prBaseHead is not ancestor of promotion evidence head receipt=$($entry.path) receiptPrBaseHead=$receiptPrBaseHead promotionEvidenceHead=$effectiveReceiptPrBaseHead"

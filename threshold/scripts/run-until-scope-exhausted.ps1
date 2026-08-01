@@ -44,6 +44,8 @@ else {
 if ([string]::IsNullOrWhiteSpace($GatePath)) { $GatePath = $runtimePaths.AutoPatchableGatePath }
 $receiptRoot = if ($EvidenceMode -eq "Compact") { "$compactRuntimeRoot/receipts" } else { $runtimePaths.ReceiptDirectory }
 $semanticRunPaths = Get-ThresholdSemanticRuntimePaths -RunId $RunId
+$runStartHead = ""
+$cumulativeProcessedCandidateCount = 0
 
 function ConvertTo-RepoPath {
     param([string] $Path)
@@ -137,11 +139,13 @@ function Save-CompactScopeDrainEvidence {
         schemaVersion = "threshold.scope-drain.aggregate-receipt.v0.1"
         runId = $RunId
         evidenceMode = "Compact"
-        sourceHead = if ($state -and $state.PSObject.Properties["startHead"]) { [string]$state.startHead } else { $null }
+        sourceHead = if (-not [string]::IsNullOrWhiteSpace($runStartHead)) { $runStartHead } elseif ($state -and $state.PSObject.Properties["startHead"]) { [string]$state.startHead } else { $null }
         finalHead = $head
         terminalState = $TerminalState
         terminalReason = $Reason
-        processedCandidates = if ($state) { [int]$state.candidatesProcessed } else { 0 }
+        processedCandidates = $cumulativeProcessedCandidateCount
+        terminalRunProcessedCandidateCount = $cumulativeProcessedCandidateCount
+        verificationSegmentProcessedCandidateCount = if ($state) { [int]$state.candidatesProcessed } else { 0 }
         productCommits = $productCommits
         changedProductFiles = $changedProductFiles
         receiptCount = $receipts.Count
@@ -398,6 +402,8 @@ Write-Host "scopeDrain=started"
 Write-Host "branch=$((& git branch --show-current).Trim())"
 Write-Host "head=$((& git rev-parse HEAD).Trim())"
 Write-Host "maxSegments=$MaxSegments"
+$runStartHead = (& git rev-parse HEAD).Trim()
+Write-Host "runStartHead=$runStartHead"
 
 if ($PlanOnly.IsPresent) {
     Write-Host "planOnly=true"
@@ -462,12 +468,17 @@ while ($segment -lt $MaxSegments) {
 
     Mark-TerminalEvidenceSourceHead
     $state = Read-JsonFile -Path $StatePath
+    $segmentProcessedCandidateCount = [int]$state.candidatesProcessed
+    if ($segmentProcessedCandidateCount -gt 0) {
+        $cumulativeProcessedCandidateCount += $segmentProcessedCandidateCount
+    }
     if ($EvidenceMode -ne "Compact") {
         [void](Commit-PathsIfNeeded -Paths @($LeasePath, $StatePath, $PocketPath) -Message "Record Threshold scope drain segment $segment terminal state")
     }
 
     Write-Host "scopeDrainSegmentTerminalState=$($state.terminalState)"
-    Write-Host "scopeDrainSegmentCandidatesProcessed=$($state.candidatesProcessed)"
+    Write-Host "scopeDrainSegmentCandidatesProcessed=$segmentProcessedCandidateCount"
+    Write-Host "scopeDrainCumulativeCandidatesProcessed=$cumulativeProcessedCandidateCount"
     Write-Host "scopeDrainSegmentCommitsCreated=$($state.commitsCreated)"
 
     if ($state.terminalState -eq "ready_no_candidates_verified") {
