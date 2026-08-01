@@ -894,6 +894,7 @@ function New-ThresholdCandidateClassProvenance {
         [string] $BaseHead,
         [Parameter(Mandatory = $true)]
         [string] $CommitHash,
+        [string] $PrBaseHead = "",
         [string] $CandidatePocketPath = "threshold/candidate-pocket/current.json",
         [string] $DiscoveryEvidenceRoot = "threshold/discovery-evidence",
         [string] $DiscoveryEvidencePath = "",
@@ -926,19 +927,25 @@ function New-ThresholdCandidateClassProvenance {
     if ($MaterializeDiscoveryEvidence.IsPresent -and $null -ne $discoveryEvidence) {
         Write-ThresholdCandidateDiscoveryEvidence -DiscoveryEvidence $discoveryEvidence -Path $DiscoveryEvidencePath
     }
+    $prBaseHeadPresent = -not [string]::IsNullOrWhiteSpace($PrBaseHead)
+    $effectivePrBaseHead = if ($prBaseHeadPresent) { [string]$PrBaseHead } else { "" }
+    $prBaseHeadMatched = $prBaseHeadPresent
     $discoveryEvidenceDigest = if ($null -ne $discoveryEvidence) { [string]$discoveryEvidence.discoveryEvidenceDigest } else { "" }
     $discoveryEvidenceCreatedByCurrentProductPr = Test-ThresholdPathChangedInRange -BaseHead $BaseHead -CommitHash $CommitHash -Path $DiscoveryEvidencePath
-    $baseDiscoveryEvidence = Get-ThresholdCandidateDiscoveryEvidenceFromRevision -Revision $BaseHead -Path $DiscoveryEvidencePath
+    $discoveryEvidenceChangedInsideProductPr = if ($prBaseHeadPresent) { Test-ThresholdPathChangedInRange -BaseHead $effectivePrBaseHead -CommitHash $CommitHash -Path $DiscoveryEvidencePath } else { $false }
+    $baseDiscoveryEvidence = Get-ThresholdCandidateDiscoveryEvidenceFromRevision -Revision $effectivePrBaseHead -Path $DiscoveryEvidencePath
     $baseDiscoveryEvidenceDigest = if ($null -ne $baseDiscoveryEvidence) { Get-ThresholdCandidateDiscoveryEvidenceDigest -DiscoveryEvidence $baseDiscoveryEvidence } else { "" }
     $discoveryEvidencePresentInBaseHead = $null -ne $baseDiscoveryEvidence
     $discoveryEvidenceBaseDigestMatched = $discoveryEvidencePresentInBaseHead -and [string]$baseDiscoveryEvidenceDigest -eq [string]$discoveryEvidenceDigest
-    $discoveryEvidenceCommit = Get-ThresholdLastCommitTouchingPath -Revision $BaseHead -Path $DiscoveryEvidencePath
-    $discoveryEvidenceCommitIsAncestorOfBaseHead = Test-ThresholdCommitIsAncestor -Ancestor $discoveryEvidenceCommit -Descendant $BaseHead
+    $discoveryEvidenceCommit = Get-ThresholdLastCommitTouchingPath -Revision $effectivePrBaseHead -Path $DiscoveryEvidencePath
+    $discoveryEvidenceCommitIsAncestorOfBaseHead = Test-ThresholdCommitIsAncestor -Ancestor $discoveryEvidenceCommit -Descendant $effectivePrBaseHead
     $discoveryEvidenceSourceBaseHead = if ($null -ne $discoveryEvidence) { [string](Get-ThresholdJsonProperty $discoveryEvidence "baseHead" "") } else { "" }
-    $discoveryEvidenceSourceBaseHeadIsAncestorOfBaseHead = Test-ThresholdCommitIsAncestor -Ancestor $discoveryEvidenceSourceBaseHead -Descendant $BaseHead
+    $discoveryEvidenceSourceBaseHeadIsAncestorOfBaseHead = Test-ThresholdCommitIsAncestor -Ancestor $discoveryEvidenceSourceBaseHead -Descendant $effectivePrBaseHead
     $externalDiscoverySignatureVerified = $false
     $discoveryEvidenceTrustRootVerified = (
-        -not $discoveryEvidenceCreatedByCurrentProductPr -and
+        $prBaseHeadPresent -and
+        $prBaseHeadMatched -and
+        -not $discoveryEvidenceChangedInsideProductPr -and
         $discoveryEvidencePresentInBaseHead -and
         $discoveryEvidenceBaseDigestMatched -and
         $discoveryEvidenceCommitIsAncestorOfBaseHead -and
@@ -991,10 +998,14 @@ function New-ThresholdCandidateClassProvenance {
         "receiptCandidateClass=$ReceiptCandidateClass",
         "learningProjectionClass=$LearningProjectionClass",
         "baseHead=$BaseHead",
+        "prBaseHead=$effectivePrBaseHead",
+        "prBaseHeadPresent=$prBaseHeadPresent",
+        "prBaseHeadMatched=$prBaseHeadMatched",
         "commitHash=$CommitHash",
         "executionCandidateDigest=$executionCandidateDigest",
         "candidateExecutionParametersMatched=$candidateExecutionParametersMatched",
         "discoveryEvidenceCreatedByCurrentProductPr=$discoveryEvidenceCreatedByCurrentProductPr",
+        "discoveryEvidenceChangedInsideProductPr=$discoveryEvidenceChangedInsideProductPr",
         "discoveryEvidenceCommit=$discoveryEvidenceCommit",
         "discoveryEvidenceCommitIsAncestorOfBaseHead=$discoveryEvidenceCommitIsAncestorOfBaseHead",
         "externalDiscoverySignatureVerified=$externalDiscoverySignatureVerified",
@@ -1010,7 +1021,11 @@ function New-ThresholdCandidateClassProvenance {
         discoveryEvidence = $null
         discoveryEvidencePath = $DiscoveryEvidencePath
         discoveryEvidenceDigest = $discoveryEvidenceDigest
+        prBaseHead = $effectivePrBaseHead
+        prBaseHeadPresent = [bool]$prBaseHeadPresent
+        prBaseHeadMatched = [bool]$prBaseHeadMatched
         discoveryEvidenceCreatedByCurrentProductPr = [bool]$discoveryEvidenceCreatedByCurrentProductPr
+        discoveryEvidenceChangedInsideProductPr = [bool]$discoveryEvidenceChangedInsideProductPr
         discoveryEvidencePresentInBaseHead = [bool]$discoveryEvidencePresentInBaseHead
         discoveryEvidenceBaseDigestMatched = [bool]$discoveryEvidenceBaseDigestMatched
         discoveryEvidenceCommit = $discoveryEvidenceCommit
@@ -1063,6 +1078,7 @@ function Assert-ThresholdCandidateClassProvenance {
         [pscustomobject] $Receipt,
         [string] $ReceiptPath = "",
         [switch] $RequirePresent,
+        [string] $PrBaseHead = "",
         [string] $CandidatePocketPath = "threshold/candidate-pocket/current.json",
         [string] $DiscoveryEvidenceRoot = "threshold/discovery-evidence"
     )
@@ -1091,6 +1107,7 @@ function Assert-ThresholdCandidateClassProvenance {
     $candidateId = Get-ThresholdJsonProperty $Receipt "candidateId" $null
     $baseHead = Get-ThresholdJsonProperty $Receipt "baseHead" $null
     $commitHash = Get-ThresholdJsonProperty $Receipt "commitHash" $null
+    $receiptPrBaseHead = Get-ThresholdJsonProperty $provenance "prBaseHead" ""
     if ([string]::IsNullOrWhiteSpace([string]$commitHash)) {
         $commitHash = Get-ThresholdJsonProperty $Receipt "sourceCommit" $null
     }
@@ -1103,6 +1120,15 @@ function Assert-ThresholdCandidateClassProvenance {
         }
         if ([string]$baseHead -ne [string]($parentHead.Trim())) {
             throw "candidateClassProvenance baseHead mismatch receipt=$ReceiptPath baseHead=$baseHead parentHead=$([string]($parentHead.Trim()))"
+        }
+        if ([string]::IsNullOrWhiteSpace([string]$PrBaseHead)) {
+            throw "candidateClassProvenance prBaseHead missing from independent PR context receipt=$ReceiptPath"
+        }
+        if (-not (Test-ThresholdCommitIsAncestor -Ancestor ([string]$PrBaseHead) -Descendant ([string]$baseHead))) {
+            throw "candidateClassProvenance prBaseHead is not ancestor of source baseHead receipt=$ReceiptPath prBaseHead=$PrBaseHead sourceBaseHead=$baseHead"
+        }
+        if (-not [string]::IsNullOrWhiteSpace([string]$receiptPrBaseHead) -and [string]$receiptPrBaseHead -ne [string]$PrBaseHead) {
+            throw "candidateClassProvenance receipt prBaseHead claim mismatch receipt=$ReceiptPath receiptPrBaseHead=$receiptPrBaseHead observedPrBaseHead=$PrBaseHead"
         }
 
         if ($null -ne (Get-ThresholdJsonProperty $provenance "discoveryEvidence" $null)) {
@@ -1124,24 +1150,24 @@ function Assert-ThresholdCandidateClassProvenance {
         if ([string](Get-ThresholdJsonProperty $provenance "discoveryEvidenceDigest" "") -ne [string]$observedDiscoveryEvidenceDigest) {
             throw "candidateClassProvenance discovery evidence digest mismatch receipt=$ReceiptPath"
         }
-        if (Test-ThresholdPathChangedInRange -BaseHead ([string]$baseHead) -CommitHash ([string]$commitHash) -Path $discoveryEvidencePath) {
-            throw "candidateClassProvenance discovery evidence was added or modified by current product commit receipt=$ReceiptPath path=$discoveryEvidencePath"
+        if (Test-ThresholdPathChangedInRange -BaseHead ([string]$PrBaseHead) -CommitHash ([string]$commitHash) -Path $discoveryEvidencePath) {
+            throw "candidateClassProvenance discovery evidence was added or modified inside current product PR receipt=$ReceiptPath path=$discoveryEvidencePath"
         }
-        $baseDiscoveryEvidence = Get-ThresholdCandidateDiscoveryEvidenceFromRevision -Revision ([string]$baseHead) -Path $discoveryEvidencePath
+        $baseDiscoveryEvidence = Get-ThresholdCandidateDiscoveryEvidenceFromRevision -Revision ([string]$PrBaseHead) -Path $discoveryEvidencePath
         if ($null -eq $baseDiscoveryEvidence) {
-            throw "candidateClassProvenance discovery evidence must pre-exist in source baseHead receipt=$ReceiptPath path=$discoveryEvidencePath"
+            throw "candidateClassProvenance discovery evidence must pre-exist in PR baseHead receipt=$ReceiptPath path=$discoveryEvidencePath"
         }
         $baseDiscoveryEvidenceDigest = Get-ThresholdCandidateDiscoveryEvidenceDigest -DiscoveryEvidence $baseDiscoveryEvidence
         if ([string]$baseDiscoveryEvidenceDigest -ne [string]$observedDiscoveryEvidenceDigest) {
-            throw "candidateClassProvenance discovery evidence was modified after source baseHead receipt=$ReceiptPath path=$discoveryEvidencePath"
+            throw "candidateClassProvenance discovery evidence was modified after PR baseHead receipt=$ReceiptPath path=$discoveryEvidencePath"
         }
-        $discoveryEvidenceCommit = Get-ThresholdLastCommitTouchingPath -Revision ([string]$baseHead) -Path $discoveryEvidencePath
-        if (-not (Test-ThresholdCommitIsAncestor -Ancestor $discoveryEvidenceCommit -Descendant ([string]$baseHead))) {
-            throw "candidateClassProvenance discovery evidence commit is not ancestor of source baseHead receipt=$ReceiptPath path=$discoveryEvidencePath"
+        $discoveryEvidenceCommit = Get-ThresholdLastCommitTouchingPath -Revision ([string]$PrBaseHead) -Path $discoveryEvidencePath
+        if (-not (Test-ThresholdCommitIsAncestor -Ancestor $discoveryEvidenceCommit -Descendant ([string]$PrBaseHead))) {
+            throw "candidateClassProvenance discovery evidence commit is not ancestor of PR baseHead receipt=$ReceiptPath path=$discoveryEvidencePath"
         }
         $discoveryEvidenceSourceBaseHead = [string](Get-ThresholdJsonProperty $observedDiscoveryEvidence "baseHead" "")
-        if (-not (Test-ThresholdCommitIsAncestor -Ancestor $discoveryEvidenceSourceBaseHead -Descendant ([string]$baseHead))) {
-            throw "candidateClassProvenance discovery evidence source baseHead is not ancestor of source baseHead receipt=$ReceiptPath evidenceBaseHead=$discoveryEvidenceSourceBaseHead sourceBaseHead=$baseHead"
+        if (-not (Test-ThresholdCommitIsAncestor -Ancestor $discoveryEvidenceSourceBaseHead -Descendant ([string]$PrBaseHead))) {
+            throw "candidateClassProvenance discovery evidence source baseHead is not ancestor of PR baseHead receipt=$ReceiptPath evidenceBaseHead=$discoveryEvidenceSourceBaseHead prBaseHead=$PrBaseHead"
         }
         foreach ($field in @("candidateId")) {
             Assert-ThresholdProvenanceFieldMatches -Observed $observedDiscoveryEvidence -Expected ([pscustomobject]@{ candidateId = $candidateId }) -Field $field -ReceiptPath $ReceiptPath
@@ -1190,6 +1216,7 @@ function Assert-ThresholdCandidateClassProvenance {
             -LearningProjectionClass ([string](Get-ThresholdJsonProperty $provenance "learningProjectionClass" "")) `
             -BaseHead ([string]$baseHead) `
             -CommitHash ([string]$commitHash) `
+            -PrBaseHead ([string]$PrBaseHead) `
             -CandidatePocketPath $CandidatePocketPath `
             -DiscoveryEvidenceRoot $DiscoveryEvidenceRoot `
             -DiscoveryEvidencePath $discoveryEvidencePath
@@ -1200,7 +1227,11 @@ function Assert-ThresholdCandidateClassProvenance {
             "discoveryCandidateId",
             "discoveryEvidencePath",
             "discoveryEvidenceDigest",
+            "prBaseHead",
+            "prBaseHeadPresent",
+            "prBaseHeadMatched",
             "discoveryEvidenceCreatedByCurrentProductPr",
+            "discoveryEvidenceChangedInsideProductPr",
             "discoveryEvidencePresentInBaseHead",
             "discoveryEvidenceBaseDigestMatched",
             "discoveryEvidenceCommit",

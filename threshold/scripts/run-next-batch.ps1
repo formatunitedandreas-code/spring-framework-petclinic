@@ -7,11 +7,17 @@ param(
     [int] $MaxSlicesPerBatch = 3,
     [int] $MaxFilesPerBatch = 3,
     [int] $MaxChangedLinesPerBatch = 120,
+    [string] $CandidatePocketPath = "",
+    [string] $PrBaseHead = "",
+    [string] $DiscoveryEvidenceRoot = "threshold/discovery-evidence",
+    [switch] $RequirePreProductDiscoveryEvidence,
     [switch] $SkipMavenTest
 )
 
 Set-StrictMode -Version Latest
 $ErrorActionPreference = "Stop"
+
+. (Join-Path $PSScriptRoot "lib/candidate-class-provenance.ps1")
 
 function ConvertTo-RepoPath {
     param([string] $Path)
@@ -229,27 +235,21 @@ function Invoke-DiscoveryCanary {
 }
 
 function New-CandidatePocket {
-    $head = (& git rev-parse HEAD).Trim()
-    $path = Join-Path ([System.IO.Path]::GetTempPath()) "threshold-batch-candidate-pocket-$head.json"
-    if (Test-Path $path) { Remove-Item -LiteralPath $path -Force }
-
-    $discoveryOutput = @(& powershell.exe -NoProfile -ExecutionPolicy Bypass -File "threshold/scripts/discover-candidates.ps1" `
-        -LeasePath $LeasePath `
-        -GatePath $GatePath `
-        -PocketPath $path `
-        -Limit 100)
-    if ($LASTEXITCODE -ne 0) { throw "Candidate discovery failed." }
-    foreach ($line in $discoveryOutput) {
-        Write-Host $line
+    if (-not [string]::IsNullOrWhiteSpace($CandidatePocketPath)) {
+        if (-not (Test-Path $CandidatePocketPath)) {
+            throw "Prepared candidate pocket not found for batch execution: $CandidatePocketPath"
+        }
+        return $CandidatePocketPath
     }
-    if (-not (Test-Path $path)) { throw "Candidate discovery produced no pocket." }
-    return $path
+
+    throw "Batch execution requires a prepared candidate pocket with pre-product discovery evidence before mutation."
 }
 
 function Get-BatchCandidates {
     param(
         [string] $PocketPath,
-        [string[]] $ApprovedBatchClasses
+        [string[]] $ApprovedBatchClasses,
+        [string[]] $ProcessedCandidateIds = @()
     )
 
     $pocket = Get-Content $PocketPath -Raw | ConvertFrom-Json
@@ -258,6 +258,7 @@ function Get-BatchCandidates {
             Where-Object {
                 [int]$_.score -ge $MinScore -and
                 $_.autoPatchable -eq $true -and
+                ($ProcessedCandidateIds -notcontains [string]$_.candidateId) -and
                 $ApprovedBatchClasses -contains [string]$_.candidateClass
             }
     )
@@ -275,6 +276,12 @@ function Get-BatchCandidates {
     foreach ($candidate in $sameClass) {
         $path = ConvertTo-RepoPath $candidate.file
         if (-not (Test-Path $path)) { continue }
+        $candidateId = [string]$candidate.candidateId
+        $candidateMember = if ($candidate.PSObject.Properties["member"]) { [string]$candidate.member } else { "" }
+        if ($ProcessedCandidateIds.Count -gt 0 -and $candidateMember.StartsWith("line-")) {
+            Write-Host "candidateSkippedReason=line_rebinding_required_after_prior_line_mutation:$candidateId"
+            continue
+        }
         if ([string]$candidate.candidateClass -eq "comment_wrap_cleanup" -and
             -not (Test-CommentWrapCandidateApplies -Candidate $candidate)) {
             Write-Host "skippedStaleCandidate=$($candidate.candidateId)"
@@ -289,6 +296,61 @@ function Get-BatchCandidates {
     }
 
     return $selected
+}
+
+function Assert-BatchCandidateHasPreProductDiscoveryEvidence {
+    param(
+        [pscustomobject] $Candidate,
+        [string] $PocketPath,
+        [string] $ObservedPrBaseHead
+    )
+
+    if ([string]::IsNullOrWhiteSpace($ObservedPrBaseHead)) {
+        throw "Batch execution requires PrBaseHead with pre-product discovery evidence before mutation."
+    }
+
+    $pocket = Get-Content $PocketPath -Raw | ConvertFrom-Json
+    $discoverySourceHead = [string](Get-ThresholdJsonProperty $pocket "preProductDiscoverySourceHead" "")
+    if ([string]::IsNullOrWhiteSpace($discoverySourceHead)) {
+        $discoverySourceHead = [string](Get-ThresholdJsonProperty $pocket "generatedFromHead" "")
+    }
+    if ([string]::IsNullOrWhiteSpace($discoverySourceHead)) {
+        throw "Prepared candidate pocket is missing discovery source head for batch execution."
+    }
+    if (-not (Test-ThresholdCommitIsAncestor -Ancestor $discoverySourceHead -Descendant $ObservedPrBaseHead)) {
+        throw "Batch discovery source head is not an ancestor of PR base head. source=$discoverySourceHead prBase=$ObservedPrBaseHead"
+    }
+
+    $candidateId = [string]$Candidate.candidateId
+    $evidencePath = Get-ThresholdCandidateDiscoveryEvidencePath -DiscoveryEvidenceRoot $DiscoveryEvidenceRoot -CandidateId $candidateId -BaseHead $discoverySourceHead
+    $evidenceAtPrBase = Get-ThresholdCandidateDiscoveryEvidenceFromRevision -Revision $ObservedPrBaseHead -Path $evidencePath
+    if ($null -eq $evidenceAtPrBase) {
+        throw "Pre-product discovery evidence is required before batch execution. candidateId=$candidateId path=$evidencePath prBase=$ObservedPrBaseHead"
+    }
+    $evidenceDigest = Get-ThresholdCandidateDiscoveryEvidenceDigest -DiscoveryEvidence $evidenceAtPrBase
+    if ([string]$evidenceDigest -ne [string](Get-ThresholdJsonProperty $evidenceAtPrBase "discoveryEvidenceDigest" "")) {
+        throw "Pre-product discovery evidence digest mismatch before batch execution. candidateId=$candidateId path=$evidencePath"
+    }
+
+    foreach ($field in @("candidateId", "candidateClass")) {
+        if ([string](Get-ThresholdJsonProperty $evidenceAtPrBase $field "") -ne [string](Get-ThresholdJsonProperty $Candidate $field "")) {
+            throw "Pre-product discovery evidence candidate $field mismatch before batch execution. candidateId=$candidateId path=$evidencePath"
+        }
+    }
+    if ([string](Get-ThresholdJsonProperty $evidenceAtPrBase "candidatePath" "") -ne [string](ConvertTo-RepoPath $Candidate.file)) {
+        throw "Pre-product discovery evidence candidatePath mismatch before batch execution. candidateId=$candidateId path=$evidencePath"
+    }
+    if ([string](Get-ThresholdJsonProperty $evidenceAtPrBase "candidateMember" "") -ne [string]$Candidate.member) {
+        throw "Pre-product discovery evidence candidateMember mismatch before batch execution. candidateId=$candidateId path=$evidencePath"
+    }
+
+    return [ordered]@{
+        discoveryEvidencePath = ConvertTo-RepoPath $evidencePath
+        discoveryEvidenceDigest = $evidenceDigest
+        discoverySourceHead = $discoverySourceHead
+        prBaseHead = $ObservedPrBaseHead
+        immutableDiscoveryEvidencePresent = $true
+    }
 }
 
 function Get-ChangedLineCount {
@@ -333,8 +395,14 @@ if (-not $approvedBatchClasses) {
     exit 0
 }
 Invoke-DiscoveryCanary
+Write-Host "batchPreProductDiscoveryEvidenceRequired=true"
+Write-Host "batchPreProductDiscoveryEvidencePolicy=all batch executions require prepared discovery evidence before file mutation"
 $pocketPath = New-CandidatePocket
-$candidates = @(Get-BatchCandidates -PocketPath $pocketPath -ApprovedBatchClasses $approvedBatchClasses)
+$processedCandidateIds = @()
+if ($state.PSObject.Properties.Name -contains "processedCandidateIds") {
+    $processedCandidateIds = @($state.processedCandidateIds | ForEach-Object { [string]$_ } | Where-Object { -not [string]::IsNullOrWhiteSpace($_) })
+}
+$candidates = @(Get-BatchCandidates -PocketPath $pocketPath -ApprovedBatchClasses $approvedBatchClasses -ProcessedCandidateIds $processedCandidateIds)
 if (-not $candidates -or $candidates.Count -eq 0) {
     exit 0
 }
@@ -344,16 +412,34 @@ if ($candidates.Count -gt $allowedCandidateBudget) {
     $candidates = @($candidates | Select-Object -First $allowedCandidateBudget)
 }
 
+$candidateDiscoveryEvidenceById = @{}
+foreach ($candidate in $candidates) {
+    $candidateId = [string]$candidate.candidateId
+    if ([string]::IsNullOrWhiteSpace($candidateId)) {
+        throw "Batch candidate is missing candidateId before mutation."
+    }
+    if ($candidateDiscoveryEvidenceById.ContainsKey($candidateId)) {
+        throw "Duplicate batch candidateId before mutation: $candidateId"
+    }
+    $candidateDiscoveryEvidenceById[$candidateId] = Assert-BatchCandidateHasPreProductDiscoveryEvidence `
+        -Candidate $candidate `
+        -PocketPath $pocketPath `
+        -ObservedPrBaseHead $PrBaseHead
+}
+
 $baseHead = (& git rev-parse HEAD).Trim()
 $batchId = "threshold-batch-$($baseHead.Substring(0, 12))-$((Get-Date).ToUniversalTime().ToString("yyyyMMddTHHmmssZ"))"
 $candidateReceipts = New-Object System.Collections.Generic.List[object]
 
 try {
     foreach ($candidate in $candidates) {
+        $candidateId = [string]$candidate.candidateId
         $candidateClass = [string]$candidate.candidateClass
         if ($candidateClass -ne "comment_wrap_cleanup") {
             throw "Batch executor does not support candidate class '$candidateClass'."
         }
+
+        $candidateDiscoveryEvidence = $candidateDiscoveryEvidenceById[$candidateId]
 
         $path = ConvertTo-RepoPath $candidate.file
         $beforeHash = Get-FileSha256 -Path $path
@@ -364,7 +450,7 @@ try {
         }
 
         $candidateReceipts.Add([ordered]@{
-            candidateId = [string]$candidate.candidateId
+            candidateId = $candidateId
             candidateClass = $candidateClass
             file = $path
             member = [string]$candidate.member
@@ -373,6 +459,7 @@ try {
             expectedDiffSummary = [string]$candidate.expectedDiffSummary
             gateApproved = $true
             executionMode = "batched_auto_patchable"
+            candidateDiscoveryEvidence = $candidateDiscoveryEvidence
         }) | Out-Null
     }
 
@@ -448,6 +535,13 @@ try {
     $state.currentHead = $sourceCommit
     $state.currentSourceHead = $sourceCommit
     $state.candidatesProcessed = [int]$state.candidatesProcessed + $candidateReceipts.Count
+    foreach ($candidateReceipt in $candidateReceipts) {
+        $processedId = [string]$candidateReceipt.candidateId
+        if (-not [string]::IsNullOrWhiteSpace($processedId) -and $processedCandidateIds -notcontains $processedId) {
+            $processedCandidateIds += $processedId
+        }
+    }
+    $state | Add-Member -NotePropertyName "processedCandidateIds" -NotePropertyValue @($processedCandidateIds) -Force
     $state.commitsCreated = [int]$state.commitsCreated + 1
     $state.remainingBudget.candidates = $remainingCandidates
     $state.remainingBudget.commits = $remainingCommits
