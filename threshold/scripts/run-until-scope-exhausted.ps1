@@ -465,17 +465,9 @@ while ($segment -lt $MaxSegments) {
     Write-Host "scopeDrainSegmentCommitsCreated=$($state.commitsCreated)"
 
     if ($state.terminalState -eq "ready_no_candidates_verified") {
-        Set-ScopeDrainTerminalState -TerminalState "scope_exhausted_verified" -Reason "terminal segment verified no auto-patchable candidates remain"
-        if ($EvidenceMode -eq "Compact") {
-            Save-CompactScopeDrainEvidence -TerminalState "scope_exhausted_verified" -Reason "terminal segment verified no auto-patchable candidates remain"
-        }
-        else {
-            [void](Commit-PathsIfNeeded -Paths @($StatePath) -Message "Record Threshold scope drain completion")
-        }
-        Write-Host "scopeDrainTerminalState=scope_exhausted_verified"
-        Write-Host "scopeDrainSegmentsRun=$segment"
-        Write-Host "scopeDrain=completed"
-        exit 0
+        Write-Host "scopeDrainSegmentRequiresFreshDiscovery=true"
+        Write-Host "scopeDrainSegmentCompletionPolicy=processed segment cannot independently prove global scope exhaustion"
+        continue
     }
 }
 
