@@ -29,7 +29,8 @@ $powerShellCommand = Resolve-PowerShellCommand
 $simulationLeasePath = "threshold/leases/current.yaml"
 $simulationGatePath = "threshold/gates/auto-patchable-candidate-classes.json"
 $simulationTrainerReportPath = "threshold/trainer/training-report.json"
-foreach ($simulationInputPath in @($simulationLeasePath, $simulationGatePath, $simulationTrainerReportPath)) {
+$simulationFixtureRoot = "threshold/discovery-canaries/fixtures/src/main/java/org/springframework/samples/petclinic"
+foreach ($simulationInputPath in @($simulationLeasePath, $simulationGatePath, $simulationTrainerReportPath, $simulationFixtureRoot)) {
     if (-not (Test-Path $simulationInputPath)) {
         throw "Local review simulation repo-owned input not found: $simulationInputPath"
     }
@@ -115,7 +116,7 @@ Invoke-DiscoveryCanarySimulation `
     -Name "duplicate_missing_required_class_counted_once" `
     -Expected ([ordered]@{
         schemaVersion = "threshold.petclinic.discovery-canary.v0.1"
-        fixtureRoot = $FixtureRoot
+        fixtureRoot = $simulationFixtureRoot
         requiredDiscoverableCandidateClasses = @("missing_fixture_class", "missing_fixture_class")
         expectedExecutionModes = [ordered]@{}
         expectedTrainerDecisions = [ordered]@{}
@@ -130,7 +131,7 @@ Invoke-DiscoveryCanarySimulation `
     -Name "duplicate_required_execution_and_trainer_mismatch_counted_once" `
     -Expected ([ordered]@{
         schemaVersion = "threshold.petclinic.discovery-canary.v0.1"
-        fixtureRoot = $FixtureRoot
+        fixtureRoot = $simulationFixtureRoot
         requiredDiscoverableCandidateClasses = @("comment_wrap_cleanup", "comment_wrap_cleanup")
         expectedExecutionModes = [ordered]@{
             comment_wrap_cleanup = "auto_patchable"
@@ -150,7 +151,7 @@ Invoke-DiscoveryCanarySimulation `
     -Name "duplicate_legacy_required_class_fallback" `
     -Expected ([ordered]@{
         schemaVersion = "threshold.petclinic.discovery-canary.v0.1"
-        fixtureRoot = $FixtureRoot
+        fixtureRoot = $simulationFixtureRoot
         requiredAutoPatchableCandidateClasses = @("annotation_attribute_wrap_cleanup", "annotation_attribute_wrap_cleanup")
         nonClaims = @("local review simulation for duplicate legacy fallback classes")
     }) `
