@@ -278,6 +278,12 @@ if ($runNextBatchText -notmatch 'Test-BatchJavadocCommentLine') {
 if ($runNextSliceText -notmatch 'Test-SliceJavadocCommentLine') {
     $candidateFindings += New-Finding -ReviewerId "threshold.candidate_class_reviewer.v0_1" -Category "candidate_class" -Severity "P2" -Title "Slice runner does not revalidate current Javadoc context" -AffectedPaths @("threshold/scripts/run-next-slice.ps1") -ViolatedPredicates @("slice_comment_wrap_revalidates_current_javadoc_context") -Description "Prepared single-slice candidates must be revalidated against the current file's Javadoc and text-block state before mutation."
 }
+if ($runNextSliceText -notmatch 'Get-CommentWrapThreshold' -or $runNextSliceText -notmatch 'comment_wrap_threshold_not_met') {
+    $candidateFindings += New-Finding -ReviewerId "threshold.candidate_class_reviewer.v0_1" -Category "candidate_class" -Severity "P2" -Title "Slice runner does not revalidate active comment wrap threshold" -AffectedPaths @("threshold/scripts/run-next-slice.ps1") -ViolatedPredicates @("slice_comment_wrap_uses_discovery_threshold") -Description "Prepared single-slice candidates must be revalidated against the active lease commentWrapThreshold before selection and immediately before mutation."
+}
+if ($runNextBatchText -notmatch 'selectedLineCandidatePaths' -or $runNextBatchText -notmatch 'same_file_line_marker_rebinding_required') {
+    $candidateFindings += New-Finding -ReviewerId "threshold.candidate_class_reviewer.v0_1" -Category "candidate_class" -Severity "P1" -Title "Batch runner can apply stale same-file line markers" -AffectedPaths @("threshold/scripts/run-next-batch.ps1") -ViolatedPredicates @("batch_comment_wrap_rejects_same_file_line_markers") -Description "A batch must not execute multiple line-based comment_wrap_cleanup candidates in the same file without bottom-up ordering or marker rebinding."
+}
 if ($candidateTestText -notmatch 'run-next-batch derives comment wrap eligibility from lease threshold') {
     $candidateFindings += New-Finding -ReviewerId "threshold.candidate_class_reviewer.v0_1" -Category "candidate_class" -Severity "P2" -Title "Batch threshold coherence is not regression-tested" -AffectedPaths @("threshold/scripts/test-candidate-class-provenance.ps1") -ViolatedPredicates @("batch_comment_wrap_uses_discovery_threshold") -Description "The local reviewer cannot prove the batch runner remains aligned with discovery thresholds."
 }
@@ -286,6 +292,12 @@ if ($candidateTestText -notmatch 'run-next-batch revalidates current Javadoc con
 }
 if ($candidateTestText -notmatch 'run-next-slice revalidates current Javadoc context for prepared candidates') {
     $candidateFindings += New-Finding -ReviewerId "threshold.candidate_class_reviewer.v0_1" -Category "candidate_class" -Severity "P2" -Title "Missing slice Javadoc revalidation regression" -AffectedPaths @("threshold/scripts/test-candidate-class-provenance.ps1") -ViolatedPredicates @("slice_comment_wrap_revalidates_current_javadoc_context") -Description "The local reviewer cannot prove prepared single-slice candidates revalidate current Javadoc context."
+}
+if ($candidateTestText -notmatch 'run-next-slice revalidates active comment wrap threshold') {
+    $candidateFindings += New-Finding -ReviewerId "threshold.candidate_class_reviewer.v0_1" -Category "candidate_class" -Severity "P2" -Title "Missing slice threshold revalidation regression" -AffectedPaths @("threshold/scripts/test-candidate-class-provenance.ps1") -ViolatedPredicates @("slice_comment_wrap_uses_discovery_threshold") -Description "The local reviewer cannot prove prepared single-slice candidates revalidate the active commentWrapThreshold."
+}
+if ($candidateTestText -notmatch 'run-next-batch rejects same-file line marker candidates in one batch') {
+    $candidateFindings += New-Finding -ReviewerId "threshold.candidate_class_reviewer.v0_1" -Category "candidate_class" -Severity "P2" -Title "Missing same-file batch line-marker regression" -AffectedPaths @("threshold/scripts/test-candidate-class-provenance.ps1") -ViolatedPredicates @("batch_comment_wrap_rejects_same_file_line_markers") -Description "The local reviewer cannot prove batch comment_wrap_cleanup avoids stale same-file line markers."
 }
 
 $fixtureFindings = @()
@@ -326,7 +338,7 @@ if ($internalReviewTwinText -notmatch 'git merge-base' -or $internalReviewTwinTe
 
 $results = @(
     (New-ReviewerResult -ReviewerId "threshold.runtime_literal_reviewer.v0_1" -Findings $runtimeFindings -CoverageClaims @("java_text_block_content_not_comment_wrap_candidate", "java_line_comment_detection_respects_string_literals", "java_text_block_delimiters_must_be_unescaped", "block_comment_text_block_delimiters_ignored", "ordinary_block_comment_not_promoted_as_javadoc", "ordinary_block_comment_nested_javadoc_opener_not_promoted", "java_unicode_escapes_decoded_before_text_block_tracking", "java_unicode_line_terminators_split_before_text_block_tracking", "java_unicode_escape_translation_respects_backslash_eligibility", "javadoc_target_line_scanned_through_terminator", "text_block_closing_suffix_comment_state_preserved")),
-    (New-ReviewerResult -ReviewerId "threshold.candidate_class_reviewer.v0_1" -Findings $candidateFindings -CoverageClaims @("candidate_class_provenance_chain_bound", "observed_diff_class_matches_candidate_class", "batch_comment_wrap_uses_discovery_threshold", "batch_comment_wrap_revalidates_current_javadoc_context", "slice_comment_wrap_revalidates_current_javadoc_context")),
+    (New-ReviewerResult -ReviewerId "threshold.candidate_class_reviewer.v0_1" -Findings $candidateFindings -CoverageClaims @("candidate_class_provenance_chain_bound", "observed_diff_class_matches_candidate_class", "batch_comment_wrap_uses_discovery_threshold", "batch_comment_wrap_revalidates_current_javadoc_context", "batch_comment_wrap_rejects_same_file_line_markers", "slice_comment_wrap_revalidates_current_javadoc_context", "slice_comment_wrap_uses_discovery_threshold")),
     (New-ReviewerResult -ReviewerId "threshold.fixture_integrity_reviewer.v0_1" -Findings $fixtureFindings -CoverageClaims @("negative_fixture_reason_isolated", "missing_trainer_fixture_keeps_execution_mode_valid", "duplicate_required_class_counted_once")),
     (New-ReviewerResult -ReviewerId "threshold.scope_authority_reviewer.v0_1" -Findings $scopeFindings -CoverageClaims @("reviewer_authorizing_false", "internal_review_does_not_create_push_or_merge_authority", "declared_forbidden_paths_mechanically_enforced")),
     (New-ReviewerResult -ReviewerId "threshold.evidence_causality_reviewer.v0_1" -Findings $evidenceFindings -CoverageClaims @("review_subject_exact_head_bound", "reviewer_inputs_bound_to_resolved_head", "patch_digest_bound_to_base_and_head", "changed_path_digest_bound", "review_patch_bound_to_merge_base"))

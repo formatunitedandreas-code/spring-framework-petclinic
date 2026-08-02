@@ -332,6 +332,8 @@ try {
     Assert-True -Condition ($runNextSliceText -match 'line_rebinding_required_after_prior_line_mutation_unknown_scope') -Name "run-next-slice fail-closes line rebinding when processed candidate path is unknown"
     Assert-True -Condition ($runNextSliceText -match "Test-SliceJavadocCommentLine") -Name "run-next-slice revalidates current Javadoc context for prepared candidates"
     Assert-True -Condition ($runNextSliceText -match "Get-ThresholdJavaTextBlockLineState") -Name "run-next-slice revalidates current text block state before applying comment wrap"
+    Assert-True -Condition ($runNextSliceText -match "Get-CommentWrapThreshold") -Name "run-next-slice revalidates active comment wrap threshold"
+    Assert-True -Condition ($runNextSliceText -match "comment_wrap_threshold_not_met") -Name "run-next-slice reports stale prepared comment candidates below threshold"
 
     $kgMaterializationText = Get-Content (Join-Path $thresholdScriptRoot "materialize-knowledge-graphs.ps1") -Raw
     $leasePolicyText = Get-Content (Join-Path $thresholdScriptRoot "lib/lease-policy.ps1") -Raw
@@ -399,6 +401,8 @@ try {
     Assert-False -Condition ($runNextBatchText -match '\$line\.Length -le 120') -Name "run-next-batch does not hardcode the baseline comment wrap threshold"
     Assert-True -Condition ($runNextBatchText -match "Test-BatchJavadocCommentLine") -Name "run-next-batch revalidates current Javadoc context for prepared candidates"
     Assert-True -Condition ($runNextBatchText -match 'Get-ThresholdJavaTextBlockLineState -Lines \$lines') -Name "run-next-batch revalidates current text block state before applying comment wrap"
+    Assert-True -Condition ($runNextBatchText -match "same_file_line_marker_rebinding_required") -Name "run-next-batch rejects same-file line marker candidates in one batch"
+    Assert-True -Condition ($runNextBatchText -match "selectedLineCandidatePaths") -Name "run-next-batch tracks selected line candidate paths"
     Assert-True -Condition ($runNextBatchText -match "Assert-BatchCandidateHasPreProductDiscoveryEvidence") -Name "run-next-batch requires pre-product evidence for every batched candidate"
     Assert-True -Condition ($runNextBatchText -match "Get-ThresholdCandidateDiscoveryEvidenceFromRevision") -Name "run-next-batch reads batch discovery evidence from PR base"
     Assert-True -Condition ($runNextBatchText -match "candidateDiscoveryEvidence") -Name "run-next-batch records per-candidate discovery evidence binding"

@@ -53,6 +53,8 @@ try {
     Assert-True -Condition ($coverageClaims -contains "text_block_closing_suffix_comment_state_preserved") -Name "internal review twin covers text-block closing suffix comment state"
     Assert-True -Condition ($coverageClaims -contains "review_patch_bound_to_merge_base") -Name "internal review twin covers merge-base patch binding"
     Assert-True -Condition ($coverageClaims -contains "slice_comment_wrap_revalidates_current_javadoc_context") -Name "internal review twin covers single-slice Javadoc revalidation"
+    Assert-True -Condition ($coverageClaims -contains "slice_comment_wrap_uses_discovery_threshold") -Name "internal review twin covers single-slice threshold revalidation"
+    Assert-True -Condition ($coverageClaims -contains "batch_comment_wrap_rejects_same_file_line_markers") -Name "internal review twin covers same-file batch line marker rejection"
 
     $registryPath = Join-Path $repoRoot "threshold/review/registry/internal-reviewers.v0_1.json"
     $registry = Get-Content -LiteralPath $registryPath -Raw | ConvertFrom-Json
@@ -73,8 +75,10 @@ try {
     $sliceText = Get-Content -LiteralPath (Join-Path $repoRoot "threshold/scripts/run-next-slice.ps1") -Raw
     Assert-True -Condition ($batchText -match "Get-CommentWrapThreshold") -Name "PR197 batch threshold external finding is now locally covered"
     Assert-True -Condition ($batchText -match "Test-BatchJavadocCommentLine") -Name "PR197 prepared batch Javadoc-context external finding is now locally covered"
+    Assert-True -Condition ($batchText -match "same_file_line_marker_rebinding_required") -Name "PR197 same-file batch line-marker external finding is now locally covered"
     Assert-False -Condition ($batchText -match '\$line\.Length -le 120') -Name "hardcoded batch threshold is blocked by local review predicate"
     Assert-True -Condition ($sliceText -match "Test-SliceJavadocCommentLine") -Name "PR197 prepared single-slice Javadoc-context external finding is now locally covered"
+    Assert-True -Condition ($sliceText -match "comment_wrap_threshold_not_met") -Name "PR197 single-slice threshold external finding is now locally covered"
 
     $twinText = Get-Content -LiteralPath (Join-Path $repoRoot "threshold/scripts/invoke-internal-review-twin.ps1") -Raw
     Assert-True -Condition ($twinText -match "Get-RevisionTextOrEmpty") -Name "internal review twin reads reviewer inputs from resolved head"
@@ -91,6 +95,8 @@ try {
     Assert-True -Condition ($twinText -match "git merge-base") -Name "internal review twin computes patch from merge base"
     Assert-True -Condition ($twinText -match "patchBaseHead") -Name "internal review twin materializes patch base head"
     Assert-True -Condition ($twinText -match "run-next-slice revalidates current Javadoc context for prepared candidates") -Name "internal review twin requires single-slice revalidation fixture"
+    Assert-True -Condition ($twinText -match "run-next-slice revalidates active comment wrap threshold") -Name "internal review twin requires single-slice threshold fixture"
+    Assert-True -Condition ($twinText -match "run-next-batch rejects same-file line marker candidates in one batch") -Name "internal review twin requires same-file batch line-marker fixture"
 
     Write-Host "internalReviewTwinTests=passed"
 }

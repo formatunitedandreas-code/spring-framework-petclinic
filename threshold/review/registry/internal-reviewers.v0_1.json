@@ -11,7 +11,9 @@
         "observed_diff_class_matches_candidate_class",
         "batch_comment_wrap_uses_discovery_threshold",
         "batch_comment_wrap_revalidates_current_javadoc_context",
-        "slice_comment_wrap_revalidates_current_javadoc_context"
+        "batch_comment_wrap_rejects_same_file_line_markers",
+        "slice_comment_wrap_revalidates_current_javadoc_context",
+        "slice_comment_wrap_uses_discovery_threshold"
       ]
     },
     {

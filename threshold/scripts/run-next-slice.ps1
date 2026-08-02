@@ -50,6 +50,28 @@ function Get-LineEnding {
     return "`n"
 }
 
+function Get-LeaseIntScalarOrDefault {
+    param(
+        [string[]] $Lines,
+        [string] $Name,
+        [int] $DefaultValue
+    )
+
+    $match = $Lines | Where-Object { $_ -match "^\s*$([regex]::Escape($Name)):\s*(\d+)\s*$" } | Select-Object -First 1
+    if (-not $match) {
+        return $DefaultValue
+    }
+    return [int]($match -replace "^\s*$([regex]::Escape($Name)):\s*", "")
+}
+
+function Get-CommentWrapThreshold {
+    if (-not (Test-Path $LeasePath)) {
+        return 120
+    }
+    $leaseLines = @(Get-Content $LeasePath)
+    return Get-LeaseIntScalarOrDefault -Lines $leaseLines -Name "commentWrapThreshold" -DefaultValue 120
+}
+
 function ConvertTo-ContentLineEndings {
     param(
         [string] $Text,
@@ -797,6 +819,13 @@ function Get-NextCandidate {
                     $applicable = $false
                     break
                 }
+                $line = $lines[$lineNumber - 1]
+                $match = [regex]::Match($line, '^(?<indent>\s*\*\s+)(?<text>\S.*)$')
+                if (-not $match.Success -or $line.Length -le (Get-CommentWrapThreshold)) {
+                    Write-Host "candidateSkippedReason=comment_wrap_threshold_not_met:$($candidate.candidateId)"
+                    $applicable = $false
+                    break
+                }
             }
             "line_comment_wrap_cleanup" {
                 $member = [string]$candidate.member
@@ -1504,7 +1533,7 @@ function Apply-CommentWrapCleanup {
 
     $line = $lines[$lineNumber - 1]
     $match = [regex]::Match($line, '^(?<indent>\s*\*\s+)(?<text>\S.*)$')
-    if (-not $match.Success) {
+    if (-not $match.Success -or $line.Length -le (Get-CommentWrapThreshold)) {
         throw "Line '$lineNumber' is not a supported long comment line in $path."
     }
 

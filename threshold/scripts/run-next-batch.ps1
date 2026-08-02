@@ -309,6 +309,7 @@ function Get-BatchCandidates {
     $sameClass = @($eligible | Where-Object { [string]$_.candidateClass -eq $firstClass })
     $selected = @()
     $selectedFiles = @()
+    $selectedLineCandidatePaths = New-Object System.Collections.Generic.HashSet[string]
     $processedCandidatePaths = New-Object System.Collections.Generic.HashSet[string]
     foreach ($candidate in @($pocket.candidates)) {
         $candidateId = [string]$candidate.candidateId
@@ -339,6 +340,13 @@ function Get-BatchCandidates {
             -not (Test-CommentWrapCandidateApplies -Candidate $candidate)) {
             Write-Host "skippedStaleCandidate=$($candidate.candidateId)"
             continue
+        }
+        if ([string]$candidate.candidateClass -eq "comment_wrap_cleanup" -and $candidateMember.StartsWith("line-")) {
+            if ($selectedLineCandidatePaths.Contains($path)) {
+                Write-Host "candidateSkippedReason=same_file_line_marker_rebinding_required:$candidateId"
+                continue
+            }
+            [void]$selectedLineCandidatePaths.Add($path)
         }
         if ($selectedFiles -notcontains $path) {
             $selectedFiles += $path
