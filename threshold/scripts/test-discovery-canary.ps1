@@ -102,11 +102,15 @@ if (-not (Test-Path $TrainerReportPath)) {
 }
 
 $head = (& git rev-parse HEAD).Trim()
-$tempPocket = Join-Path ([System.IO.Path]::GetTempPath()) "threshold-discovery-canary-$head.json"
+$tempRunId = [guid]::NewGuid().ToString("N")
+$tempRoot = Join-Path ([System.IO.Path]::GetTempPath()) "threshold-discovery-canary-$head-$tempRunId"
+New-Item -ItemType Directory -Path $tempRoot | Out-Null
+$tempPocket = Join-Path $tempRoot "pocket.json"
 if (Test-Path $tempPocket) {
     Remove-Item -LiteralPath $tempPocket -Force
 }
 
+try {
 $output = @(
     & $powerShellCommand -NoProfile -ExecutionPolicy Bypass -File "threshold/scripts/discover-candidates.ps1" `
         -LeasePath $LeasePath `
@@ -130,17 +134,17 @@ if (-not (Test-Path $tempPocket)) {
 $pocket = Get-Content $tempPocket -Raw | ConvertFrom-Json
 $trainerReport = Get-Content $TrainerReportPath -Raw | ConvertFrom-Json
 
-$tempTrainerReport = Join-Path ([System.IO.Path]::GetTempPath()) "threshold-discovery-canary-trainer-$head.json"
-$tempTrainerPocket = Join-Path ([System.IO.Path]::GetTempPath()) "threshold-discovery-canary-trainer-pocket-$head.json"
-$tempLegacyExpectedPath = Join-Path ([System.IO.Path]::GetTempPath()) "threshold-discovery-canary-legacy-expected-$head.json"
-$tempLegacyTrainerPath = Join-Path ([System.IO.Path]::GetTempPath()) "threshold-discovery-canary-legacy-trainer-$head.json"
-$tempMissingClassesExpectedPath = Join-Path ([System.IO.Path]::GetTempPath()) "threshold-discovery-canary-missing-classes-expected-$head.json"
-$tempMissingTrainerExpectedPath = Join-Path ([System.IO.Path]::GetTempPath()) "threshold-discovery-canary-missing-trainer-expected-$head.json"
-$tempExtraTrainerExpectedPath = Join-Path ([System.IO.Path]::GetTempPath()) "threshold-discovery-canary-extra-trainer-expected-$head.json"
-$tempExtraExecutionModeExpectedPath = Join-Path ([System.IO.Path]::GetTempPath()) "threshold-discovery-canary-extra-execution-mode-expected-$head.json"
-$tempWrongExecutionModeExpectedPath = Join-Path ([System.IO.Path]::GetTempPath()) "threshold-discovery-canary-wrong-execution-mode-expected-$head.json"
-$tempWrongTrainerExpectedPath = Join-Path ([System.IO.Path]::GetTempPath()) "threshold-discovery-canary-wrong-trainer-expected-$head.json"
-$tempDuplicateRequiredExpectedPath = Join-Path ([System.IO.Path]::GetTempPath()) "threshold-discovery-canary-duplicate-required-expected-$head.json"
+$tempTrainerReport = Join-Path $tempRoot "trainer.json"
+$tempTrainerPocket = Join-Path $tempRoot "trainer-pocket.json"
+$tempLegacyExpectedPath = Join-Path $tempRoot "legacy-expected.json"
+$tempLegacyTrainerPath = Join-Path $tempRoot "legacy-trainer.json"
+$tempMissingClassesExpectedPath = Join-Path $tempRoot "missing-classes-expected.json"
+$tempMissingTrainerExpectedPath = Join-Path $tempRoot "missing-trainer-expected.json"
+$tempExtraTrainerExpectedPath = Join-Path $tempRoot "extra-trainer-expected.json"
+$tempExtraExecutionModeExpectedPath = Join-Path $tempRoot "extra-execution-mode-expected.json"
+$tempWrongExecutionModeExpectedPath = Join-Path $tempRoot "wrong-execution-mode-expected.json"
+$tempWrongTrainerExpectedPath = Join-Path $tempRoot "wrong-trainer-expected.json"
+$tempDuplicateRequiredExpectedPath = Join-Path $tempRoot "duplicate-required-expected.json"
 if (-not $SkipInternalRegressions.IsPresent) {
     foreach ($repoOwnedPath in @($defaultLeasePath, $defaultGatePath, $defaultTrainerReportPath, $defaultExpectedPath)) {
         if (-not (Test-Path $repoOwnedPath)) {
@@ -555,43 +559,6 @@ foreach ($property in @($expected.expectedTrainerDecisions.PSObject.Properties))
     }
 }
 
-if (Test-Path $tempPocket) {
-    Remove-Item -LiteralPath $tempPocket -Force
-}
-if (Test-Path $tempTrainerReport) {
-    Remove-Item -LiteralPath $tempTrainerReport -Force
-}
-if (Test-Path $tempTrainerPocket) {
-    Remove-Item -LiteralPath $tempTrainerPocket -Force
-}
-if (Test-Path $tempLegacyExpectedPath) {
-    Remove-Item -LiteralPath $tempLegacyExpectedPath -Force
-}
-if (Test-Path $tempLegacyTrainerPath) {
-    Remove-Item -LiteralPath $tempLegacyTrainerPath -Force
-}
-if (Test-Path $tempMissingClassesExpectedPath) {
-    Remove-Item -LiteralPath $tempMissingClassesExpectedPath -Force
-}
-if (Test-Path $tempMissingTrainerExpectedPath) {
-    Remove-Item -LiteralPath $tempMissingTrainerExpectedPath -Force
-}
-if (Test-Path $tempExtraTrainerExpectedPath) {
-    Remove-Item -LiteralPath $tempExtraTrainerExpectedPath -Force
-}
-if (Test-Path $tempExtraExecutionModeExpectedPath) {
-    Remove-Item -LiteralPath $tempExtraExecutionModeExpectedPath -Force
-}
-if (Test-Path $tempWrongExecutionModeExpectedPath) {
-    Remove-Item -LiteralPath $tempWrongExecutionModeExpectedPath -Force
-}
-if (Test-Path $tempWrongTrainerExpectedPath) {
-    Remove-Item -LiteralPath $tempWrongTrainerExpectedPath -Force
-}
-if (Test-Path $tempDuplicateRequiredExpectedPath) {
-    Remove-Item -LiteralPath $tempDuplicateRequiredExpectedPath -Force
-}
-
 $discoveryVisibilityMatched = ($missingRequiredCandidateClassCount -eq 0)
 $executionModeMatched = ($executionModeMismatchCount -eq 0)
 $trainerDecisionMatched = ($trainerDecisionMismatchCount -eq 0)
@@ -621,3 +588,9 @@ Write-Host "executionModeMismatchCount=$executionModeMismatchCount"
 Write-Host "trainerDecisionMismatchCount=$trainerDecisionMismatchCount"
 Write-Host "discoverableClasses=$($visibleClasses -join ',')"
 Write-Host "autoPatchableClasses=$($autoClasses -join ',')"
+}
+finally {
+    if (Test-Path $tempRoot) {
+        Remove-Item -LiteralPath $tempRoot -Recurse -Force
+    }
+}

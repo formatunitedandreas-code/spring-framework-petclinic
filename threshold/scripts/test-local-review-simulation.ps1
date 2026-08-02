@@ -44,16 +44,17 @@ function Invoke-DiscoveryCanarySimulation {
         [hashtable] $ExpectedLineCounts
     )
 
-    $expectedPath = Join-Path ([System.IO.Path]::GetTempPath()) "threshold-local-review-simulation-$Name.json"
-    $stderrPath = Join-Path ([System.IO.Path]::GetTempPath()) "threshold-local-review-simulation-$Name.stderr.txt"
+    $caseRunId = [guid]::NewGuid().ToString("N")
+    $expectedPath = Join-Path ([System.IO.Path]::GetTempPath()) "threshold-local-review-simulation-$Name-$caseRunId.json"
+    $stderrPath = Join-Path ([System.IO.Path]::GetTempPath()) "threshold-local-review-simulation-$Name-$caseRunId.stderr.txt"
     if (Test-Path $expectedPath) {
         Remove-Item -LiteralPath $expectedPath -Force
     }
     if (Test-Path $stderrPath) {
         Remove-Item -LiteralPath $stderrPath -Force
     }
-    $Expected | ConvertTo-Json -Depth 8 | Set-Content -LiteralPath $expectedPath
     try {
+        $Expected | ConvertTo-Json -Depth 8 | Set-Content -LiteralPath $expectedPath
         $previousErrorActionPreference = $ErrorActionPreference
         $ErrorActionPreference = "Continue"
         try {
@@ -69,16 +70,18 @@ function Invoke-DiscoveryCanarySimulation {
             $ErrorActionPreference = $previousErrorActionPreference
         }
         $output = @($rawOutput | ForEach-Object { [string]$_ })
+        $stderrOutput = @()
+        if (Test-Path $stderrPath) {
+            $stderrOutput = @(Get-Content -LiteralPath $stderrPath | ForEach-Object { [string]$_ })
+        }
     }
     finally {
         if (Test-Path $expectedPath) {
             Remove-Item -LiteralPath $expectedPath -Force
         }
-    }
-    $stderrOutput = @()
-    if (Test-Path $stderrPath) {
-        $stderrOutput = @(Get-Content -LiteralPath $stderrPath | ForEach-Object { [string]$_ })
-        Remove-Item -LiteralPath $stderrPath -Force
+        if (Test-Path $stderrPath) {
+            Remove-Item -LiteralPath $stderrPath -Force
+        }
     }
 
     if ($exitCode -ne $ExpectedExitCode) {
