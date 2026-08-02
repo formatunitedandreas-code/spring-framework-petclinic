@@ -60,7 +60,7 @@
                       "candidateClass":  "comment_wrap_cleanup",
                       "allowedByLease":  true,
                       "approvedByGate":  true,
-                      "pilotAutoPatchableAtF2":  false,
+                      "pilotAutoPatchableAtF2":  true,
                       "discoveredByRunner":  true,
                       "executableByRunner":  true,
                       "batchExecutable":  true,
@@ -77,7 +77,7 @@
                                                "public_compliance_claim"
                                            ],
                       "allowedPathCount":  22,
-                      "trainerDecision":  "reviewOnly"
+                      "trainerDecision":  "autoPatchable"
                   },
                   {
                       "id":  "capability:duplicate_literal_local_constant_extraction",
@@ -967,5 +967,5 @@
                       "to":  "fidelity:utility_readability_cleanup"
                   }
               ],
-    "semanticDigest":  "9cb73ad13886a819c0394dd076080edc566d3afc7a52c8c120f32b632da79a94"
+    "semanticDigest":  "154c3bd6629e1bf0e9c93887475bb1911431dc8b89d45d7dd3fc65393fa2e874"
 }

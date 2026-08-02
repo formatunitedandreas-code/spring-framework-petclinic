@@ -141,7 +141,9 @@
       "candidateClass": "comment_wrap_cleanup",
       "authorizedBy": "governance-hardening-bootstrap",
       "scope": "single long Javadoc comment line wrapping only",
-      "requiresCanary": true
+      "requiresCanary": true,
+      "pilotAutoPatchableAtF2": true,
+      "pilotScope": "single long Javadoc comment line wrapping after gate, discovery canary, runner support, local review simulation, and provenance checks are present"
     },
     {
       "candidateClass": "line_comment_wrap_cleanup",
