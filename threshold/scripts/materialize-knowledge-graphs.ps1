@@ -263,6 +263,34 @@ foreach ($receiptFile in $receiptFiles) {
 
 $reviewFindings = Read-JsonOrNull -Path $ReviewFindingsPath
 $findingNodes = @()
+$findingClassNodes = @()
+if ($reviewFindings -and (Get-JsonProperty $reviewFindings "findingClasses" $null)) {
+    foreach ($findingClass in @(Get-JsonProperty $reviewFindings "findingClasses" @())) {
+        $findingClassNodes += [ordered]@{
+            id = [string](Get-JsonProperty $findingClass "id" "")
+            candidateClass = [string](Get-JsonProperty $findingClass "candidateClass" "")
+            rootCauseClass = [string](Get-JsonProperty $findingClass "rootCauseClass" "")
+            targetPredicate = [string](Get-JsonProperty $findingClass "targetPredicate" "")
+            affectedSurface = @(
+                Get-JsonProperty $findingClass "affectedSurface" @() |
+                    ForEach-Object { [string]$_ } |
+                    Where-Object { -not [string]::IsNullOrWhiteSpace($_) }
+            )
+            neighboringPredicates = @(
+                Get-JsonProperty $findingClass "neighboringPredicates" @() |
+                    ForEach-Object { [string]$_ } |
+                    Where-Object { -not [string]::IsNullOrWhiteSpace($_) }
+            )
+            hostileFixtureNames = @(
+                Get-JsonProperty $findingClass "hostileFixtureNames" @() |
+                    ForEach-Object { [string]$_ } |
+                    Where-Object { -not [string]::IsNullOrWhiteSpace($_) }
+            )
+            ruleSuggestion = [string](Get-JsonProperty $findingClass "ruleSuggestion" "")
+            canarySuggestion = [string](Get-JsonProperty $findingClass "canarySuggestion" "")
+        }
+    }
+}
 if ($reviewFindings -and (Get-JsonProperty $reviewFindings "findings" $null)) {
     foreach ($finding in @(Get-JsonProperty $reviewFindings "findings" @())) {
         $findingClass = Get-JsonProperty $finding "candidateClass" ""
@@ -372,6 +400,7 @@ $fidelityKg = [ordered]@{
     generatedAt = $generatedAt
     nodes = $fidelityNodeArray
     evidence = $receiptEvidenceArray
+    reviewFindingClasses = @($findingClassNodes)
     reviewFindings = @($findingNodes)
     fidelityLevels = @(
         "F0_UNOBSERVED",
@@ -397,7 +426,22 @@ $generatedCanaryRules = [ordered]@{
     schemaVersion = "threshold.petclinic.generated-canary-rules.v0.1"
     generatedAt = $generatedAt
     source = ConvertTo-RepoPath $ReviewFindingsPath
-    rules = @($findingNodes | Where-Object { -not [string]::IsNullOrWhiteSpace($_.canarySuggestion) } | ForEach-Object {
+    findingClasses = @($findingClassNodes)
+    rules = @(
+        @($findingClassNodes | Where-Object { -not [string]::IsNullOrWhiteSpace($_.canarySuggestion) } | ForEach-Object {
+            [ordered]@{
+                id = "review-finding-class-canary-$($_.id)"
+                candidateClass = $_.candidateClass
+                severity = "P2"
+                targetPredicate = $_.targetPredicate
+                rootCauseClass = $_.rootCauseClass
+                ruleSuggestion = $_.ruleSuggestion
+                canarySuggestion = $_.canarySuggestion
+                hostileFixtureNames = @($_.hostileFixtureNames)
+                status = "generated_from_finding_class"
+            }
+        }) +
+        @($findingNodes | Where-Object { -not [string]::IsNullOrWhiteSpace($_.canarySuggestion) } | ForEach-Object {
         [ordered]@{
             id = "review-finding-canary-$($_.id)"
             candidateClass = $_.candidateClass
@@ -406,7 +450,8 @@ $generatedCanaryRules = [ordered]@{
             canarySuggestion = $_.canarySuggestion
             status = "generated_review_required"
         }
-    })
+        })
+    )
 }
 
 $capabilityKg["semanticDigest"] = New-SemanticDigest @(
@@ -435,6 +480,9 @@ $fidelityKg["semanticDigest"] = New-SemanticDigest @(
         $positiveLearning = Get-JsonProperty $_ "positiveLearningEligible" $false
         "evidence=$evidenceId|$evidenceClass|source=$evidenceSource|lease=$evidenceLease|validation=$evidenceValidation|semantic=$evidenceSemantic|positiveLearning=$positiveLearning"
     })
+    @($findingClassNodes | ForEach-Object {
+        "findingClass=$($_.id)|$($_.candidateClass)|predicate=$($_.targetPredicate)|rootCause=$($_.rootCauseClass)|surface=$([string]::Join(',', @($_.affectedSurface)))|neighbors=$([string]::Join(',', @($_.neighboringPredicates)))|fixtures=$([string]::Join(',', @($_.hostileFixtureNames)))|rule=$($_.ruleSuggestion)|canary=$($_.canarySuggestion)"
+    })
     @($findingNodes | ForEach-Object {
         "finding=$($_.id)|$($_.candidateClass)|$($_.severity)|rule=$($_.ruleSuggestion)|canary=$($_.canarySuggestion)"
     })
@@ -451,8 +499,11 @@ $trainingReport["semanticDigest"] = New-SemanticDigest @(
 $generatedCanaryRules["semanticDigest"] = New-SemanticDigest @(
     "schema=$($generatedCanaryRules.schemaVersion)"
     "source=$($generatedCanaryRules.source)"
+    @($findingClassNodes | ForEach-Object {
+        "findingClass=$($_.id)|$($_.candidateClass)|predicate=$($_.targetPredicate)|rootCause=$($_.rootCauseClass)|surface=$([string]::Join(',', @($_.affectedSurface)))|neighbors=$([string]::Join(',', @($_.neighboringPredicates)))|fixtures=$([string]::Join(',', @($_.hostileFixtureNames)))|rule=$($_.ruleSuggestion)|canary=$($_.canarySuggestion)"
+    })
     @($generatedCanaryRules.rules | ForEach-Object {
-        "rule=$($_.id)|$($_.candidateClass)|$($_.severity)|$($_.ruleSuggestion)|$($_.canarySuggestion)|$($_.status)"
+        "rule=$($_.id)|$($_.candidateClass)|$($_.severity)|predicate=$([string](Get-JsonProperty $_ 'targetPredicate' ''))|rootCause=$([string](Get-JsonProperty $_ 'rootCauseClass' ''))|fixtures=$([string]::Join(',', @(Get-JsonProperty $_ 'hostileFixtureNames' @())))|$($_.ruleSuggestion)|$($_.canarySuggestion)|$($_.status)"
     })
 )
 

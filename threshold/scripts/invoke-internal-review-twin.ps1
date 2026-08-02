@@ -71,6 +71,18 @@ function Get-RevisionTreeFileSetDigest {
     return Get-StringSha256Lower -Text $basis
 }
 
+function Get-JsonProperty {
+    param([object] $Object, [string] $Name, [object] $DefaultValue = $null)
+    if ($null -eq $Object) { return $DefaultValue }
+    if ($Object -is [System.Collections.IDictionary] -and $Object.Contains($Name)) {
+        return $Object[$Name]
+    }
+    if ($Object.PSObject.Properties.Name -contains $Name) {
+        return $Object.$Name
+    }
+    return $DefaultValue
+}
+
 function Test-ReviewPathAgainstPattern {
     param([string] $Path, [string] $Pattern)
 
@@ -253,6 +265,13 @@ $candidateTestText = Get-RevisionTextOrEmpty -Revision $headSha -Path "threshold
 $discoveryCanaryText = Get-RevisionTextOrEmpty -Revision $headSha -Path "threshold/scripts/test-discovery-canary.ps1"
 $canaryCommentModelText = Get-RevisionTextOrEmpty -Revision $headSha -Path "threshold/discovery-canaries/fixtures/src/main/java/org/springframework/samples/petclinic/model/CanaryCommentModel.java"
 $internalReviewTwinText = Get-RevisionTextOrEmpty -Revision $headSha -Path "threshold/scripts/invoke-internal-review-twin.ps1"
+$reviewFindingCorpusText = Get-RevisionTextOrEmpty -Revision $headSha -Path "threshold/trainer/review-findings.json"
+$reviewFindingCorpus = if (-not [string]::IsNullOrWhiteSpace($reviewFindingCorpusText)) { $reviewFindingCorpusText | ConvertFrom-Json } else { $null }
+$inlineBraceFindingClass = @(
+    @(Get-JsonProperty $reviewFindingCorpus "findingClasses" @()) |
+        Where-Object { [string](Get-JsonProperty $_ "targetPredicate" "") -eq "javadoc_inline_tag_brace_balance_preserved" } |
+        Select-Object -First 1
+)
 
 $runtimeFindings = @()
 if ($candidateProvenanceText -notmatch 'function Remove-ThresholdJavaLineCommentOutsideLiteral') {
@@ -328,6 +347,22 @@ if ($candidateProvenanceText -notmatch 'InlineTagDepth') {
 }
 if ($candidateTestText -notmatch 'java javadoc lexical state preserves inline tag depth across lines') {
     $runtimeFindings += New-Finding -ReviewerId "threshold.runtime_literal_reviewer.v0_1" -Category "runtime_literal" -Severity "P2" -Title "Missing multiline inline-tag hostile fixture" -AffectedPaths @("threshold/scripts/test-candidate-class-provenance.ps1") -ViolatedPredicates @("javadoc_multiline_inline_tag_depth_preserved") -Description "The internal test corpus does not exercise a Javadoc inline tag that starts on one line, contains apparent </pre> text on the next line, and closes later."
+}
+if (@($inlineBraceFindingClass).Count -eq 0) {
+    $runtimeFindings += New-Finding -ReviewerId "threshold.runtime_literal_reviewer.v0_1" -Category "runtime_literal" -Severity "P2" -Title "Review finding corpus does not model inline Javadoc brace-balance risk" -AffectedPaths @("threshold/trainer/review-findings.json") -ViolatedPredicates @("javadoc_inline_tag_brace_balance_preserved") -Description "The local finding corpus must materialize the inline-Javadoc brace-balance root-cause class and its neighboring hostile fixtures before external holdout."
+}
+if ($candidateProvenanceText -notmatch 'if \(\$ch -eq ''\{''\)') {
+    $runtimeFindings += New-Finding -ReviewerId "threshold.runtime_literal_reviewer.v0_1" -Category "runtime_literal" -Severity "P2" -Title "Ordinary braces can terminate inline Javadoc state early" -AffectedPaths @("threshold/scripts/lib/candidate-class-provenance.ps1") -ViolatedPredicates @("javadoc_inline_tag_brace_balance_preserved") -Description "Apparent </pre> text inside brace-balanced inline Javadoc tags such as {@code if (x) { return; } </pre>} must remain escaped until the balanced closing brace ends the inline tag."
+}
+if ($candidateTestText -notmatch 'java javadoc lexical state preserves inline tag brace balance') {
+    $runtimeFindings += New-Finding -ReviewerId "threshold.runtime_literal_reviewer.v0_1" -Category "runtime_literal" -Severity "P2" -Title "Missing inline Javadoc brace-balance hostile fixture" -AffectedPaths @("threshold/scripts/test-candidate-class-provenance.ps1") -ViolatedPredicates @("javadoc_inline_tag_brace_balance_preserved") -Description "The internal test corpus does not exercise an inline Javadoc tag whose ordinary balanced braces would otherwise expose an escaped-looking </pre> marker."
+}
+if (@($inlineBraceFindingClass).Count -gt 0) {
+    foreach ($fixtureName in @((Get-JsonProperty @($inlineBraceFindingClass)[0] "hostileFixtureNames" @()) | ForEach-Object { [string]$_ })) {
+        if (-not [string]::IsNullOrWhiteSpace($fixtureName) -and $candidateTestText -notmatch [regex]::Escape($fixtureName)) {
+            $runtimeFindings += New-Finding -ReviewerId "threshold.runtime_literal_reviewer.v0_1" -Category "runtime_literal" -Severity "P2" -Title "Neighbor hostile fixture from finding corpus is missing" -AffectedPaths @("threshold/scripts/test-candidate-class-provenance.ps1", "threshold/trainer/review-findings.json") -ViolatedPredicates @("javadoc_inline_tag_brace_balance_preserved") -Description "The local finding corpus declares hostile fixture '$fixtureName', but the current candidate provenance test surface does not materialize it."
+        }
+    }
 }
 if ($candidateProvenanceText -notmatch 'InsideJavadocHtmlComment') {
     $runtimeFindings += New-Finding -ReviewerId "threshold.runtime_literal_reviewer.v0_1" -Category "runtime_literal" -Severity "P2" -Title "Javadoc HTML comments can terminate preformatted state" -AffectedPaths @("threshold/scripts/lib/candidate-class-provenance.ps1") -ViolatedPredicates @("javadoc_html_comment_pre_markers_ignored") -Description "Apparent <pre> or </pre> markers inside Javadoc HTML comments such as <!-- </pre> --> must not change preformatted state."
@@ -447,7 +482,7 @@ if ($internalReviewTwinText -notmatch '-split "`0"') {
 }
 
 $results = @(
-    (New-ReviewerResult -ReviewerId "threshold.runtime_literal_reviewer.v0_1" -Findings $runtimeFindings -CoverageClaims @("java_text_block_content_not_comment_wrap_candidate", "java_line_comment_detection_respects_string_literals", "java_text_block_delimiters_must_be_unescaped", "block_comment_text_block_delimiters_ignored", "ordinary_block_comment_not_promoted_as_javadoc", "ordinary_block_comment_nested_javadoc_opener_not_promoted", "java_unicode_escapes_decoded_before_text_block_tracking", "java_unicode_line_terminators_split_before_text_block_tracking", "java_unicode_escape_translation_respects_backslash_eligibility", "javadoc_target_line_scanned_through_terminator", "text_block_closing_suffix_comment_state_preserved", "javadoc_preformatted_content_not_comment_wrap_candidate", "javadoc_same_line_preformatted_content_not_comment_wrap_candidate", "javadoc_line_end_pre_tag_starts_preformatted_content", "javadoc_pre_tag_source_order_preserved", "javadoc_inline_tag_pre_markers_ignored", "javadoc_multiline_inline_tag_depth_preserved", "javadoc_html_comment_pre_markers_ignored", "javadoc_html_comment_rescan_uses_incoming_state")),
+    (New-ReviewerResult -ReviewerId "threshold.runtime_literal_reviewer.v0_1" -Findings $runtimeFindings -CoverageClaims @("java_text_block_content_not_comment_wrap_candidate", "java_line_comment_detection_respects_string_literals", "java_text_block_delimiters_must_be_unescaped", "block_comment_text_block_delimiters_ignored", "ordinary_block_comment_not_promoted_as_javadoc", "ordinary_block_comment_nested_javadoc_opener_not_promoted", "java_unicode_escapes_decoded_before_text_block_tracking", "java_unicode_line_terminators_split_before_text_block_tracking", "java_unicode_escape_translation_respects_backslash_eligibility", "javadoc_target_line_scanned_through_terminator", "text_block_closing_suffix_comment_state_preserved", "javadoc_preformatted_content_not_comment_wrap_candidate", "javadoc_same_line_preformatted_content_not_comment_wrap_candidate", "javadoc_line_end_pre_tag_starts_preformatted_content", "javadoc_pre_tag_source_order_preserved", "javadoc_inline_tag_pre_markers_ignored", "javadoc_multiline_inline_tag_depth_preserved", "javadoc_inline_tag_brace_balance_preserved", "javadoc_html_comment_pre_markers_ignored", "javadoc_html_comment_rescan_uses_incoming_state")),
     (New-ReviewerResult -ReviewerId "threshold.candidate_class_reviewer.v0_1" -Findings $candidateFindings -CoverageClaims @("candidate_class_provenance_chain_bound", "observed_diff_class_matches_candidate_class", "batch_comment_wrap_uses_discovery_threshold", "batch_comment_wrap_revalidates_current_javadoc_context", "batch_comment_wrap_rejects_same_file_line_markers", "batch_comment_wrap_uses_discovery_split_predicate", "batch_comment_wrap_preserves_final_newline", "slice_comment_wrap_revalidates_current_javadoc_context", "slice_comment_wrap_uses_discovery_threshold", "slice_comment_wrap_revalidates_split_predicate", "slice_comment_wrap_preserves_file_formatting")),
     (New-ReviewerResult -ReviewerId "threshold.fixture_integrity_reviewer.v0_1" -Findings $fixtureFindings -CoverageClaims @("negative_fixture_reason_isolated", "missing_trainer_fixture_keeps_execution_mode_valid", "duplicate_required_class_counted_once")),
     (New-ReviewerResult -ReviewerId "threshold.scope_authority_reviewer.v0_1" -Findings $scopeFindings -CoverageClaims @("reviewer_authorizing_false", "internal_review_does_not_create_push_or_merge_authority", "declared_forbidden_paths_mechanically_enforced")),

@@ -309,9 +309,11 @@ function Get-ThresholdJavadocPreformattedTransitionScanResult {
         $next = if (($i + 1) -lt $payload.Length) { $payload[$i + 1] } else { [char]0 }
 
         if ($inlineTagDepth -gt 0) {
-            if ($ch -eq '{' -and $next -eq '@') {
+            if ($ch -eq '{') {
                 $inlineTagDepth++
-                $i++
+                if ($next -eq '@') {
+                    $i++
+                }
                 continue
             }
             if ($ch -eq '}') {

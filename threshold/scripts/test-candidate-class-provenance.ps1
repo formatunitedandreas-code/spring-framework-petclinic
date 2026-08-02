@@ -1111,6 +1111,19 @@ try {
     )
     Assert-False -Condition (Test-ThresholdJavaLineIsJavadocCommentContent -Lines $javaJavadocInlineCodePreTagLines -Index 4 -JavaTextBlockLineState (Get-ThresholdJavaTextBlockLineState -Lines $javaJavadocInlineCodePreTagLines)) -Name "java javadoc lexical state ignores pre markers inside inline code tags"
     Assert-False -Condition (Test-ThresholdCommentWrapCandidateLine -Lines $javaJavadocInlineCodePreTagLines -Index 4 -CommentWrapThreshold 69 -JavaTextBlockLineState (Get-ThresholdJavaTextBlockLineState -Lines $javaJavadocInlineCodePreTagLines)) -Name "java comment wrap predicate rejects inline code pre tag content"
+    $javaJavadocInlineCodeBraceBalancedPreTagLines = @(
+        "class JavadocCanary {",
+        "    /**",
+        "     * <pre>",
+        "     * {@code if (x) { return; } </pre>}",
+        "     * SELECT id, first_name, last_name, telephone FROM owners WHERE last_name = ? ORDER BY last_name, first_name",
+        "     * </pre>",
+        "     */",
+        "    void normalize() {}",
+        "}"
+    )
+    Assert-False -Condition (Test-ThresholdJavaLineIsJavadocCommentContent -Lines $javaJavadocInlineCodeBraceBalancedPreTagLines -Index 4 -JavaTextBlockLineState (Get-ThresholdJavaTextBlockLineState -Lines $javaJavadocInlineCodeBraceBalancedPreTagLines)) -Name "java javadoc lexical state preserves inline tag brace balance"
+    Assert-False -Condition (Test-ThresholdCommentWrapCandidateLine -Lines $javaJavadocInlineCodeBraceBalancedPreTagLines -Index 4 -CommentWrapThreshold 69 -JavaTextBlockLineState (Get-ThresholdJavaTextBlockLineState -Lines $javaJavadocInlineCodeBraceBalancedPreTagLines)) -Name "java comment wrap predicate rejects inline code brace-balanced pre tag content"
     $javaJavadocMultilineInlineCodePreTagLines = @(
         "class JavadocCanary {",
         "    /**",

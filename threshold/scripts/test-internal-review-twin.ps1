@@ -57,6 +57,7 @@ try {
     Assert-True -Condition ($coverageClaims -contains "javadoc_pre_tag_source_order_preserved") -Name "internal review twin covers source-order pre tag transitions"
     Assert-True -Condition ($coverageClaims -contains "javadoc_inline_tag_pre_markers_ignored") -Name "internal review twin covers inline Javadoc pre markers"
     Assert-True -Condition ($coverageClaims -contains "javadoc_multiline_inline_tag_depth_preserved") -Name "internal review twin covers multiline inline-tag Javadoc pre markers"
+    Assert-True -Condition ($coverageClaims -contains "javadoc_inline_tag_brace_balance_preserved") -Name "internal review twin covers inline-tag ordinary brace balance"
     Assert-True -Condition ($coverageClaims -contains "javadoc_html_comment_pre_markers_ignored") -Name "internal review twin covers HTML-comment Javadoc pre markers"
     Assert-True -Condition ($coverageClaims -contains "javadoc_html_comment_rescan_uses_incoming_state") -Name "internal review twin covers incoming HTML-comment-state preservation"
     Assert-True -Condition ($coverageClaims -contains "review_patch_bound_to_merge_base") -Name "internal review twin covers merge-base patch binding"
@@ -87,6 +88,7 @@ try {
     Assert-True -Condition ($libraryText -match "Update-ThresholdJavadocPreformattedStateInSourceOrder") -Name "PR197 source-order pre tag external finding is now locally covered"
     Assert-True -Condition ($libraryText -match "Get-ThresholdJavadocPreformattedTransitions") -Name "PR197 inline Javadoc pre marker external finding is now locally covered"
     Assert-True -Condition ($libraryText -match "InlineTagDepth") -Name "PR197 multiline inline-tag external finding is now locally covered"
+    Assert-True -Condition ($libraryText -match 'if \(\$ch -eq ''\{''\)') -Name "PR197 inline-tag ordinary brace-balance external finding is now locally covered"
     Assert-True -Condition ($libraryText -match "InsideJavadocHtmlComment") -Name "PR197 Javadoc HTML comment external finding is now locally covered"
     Assert-True -Condition ($libraryText -match "Find-ThresholdConservativeCommentSplitPoint") -Name "PR197 shared comment split predicate is now locally covered"
     Assert-False -Condition ($libraryText -match '\.IndexOf\("//"\)') -Name "raw double slash detection is blocked by local review predicate"
@@ -127,6 +129,7 @@ try {
     Assert-True -Condition ($twinText -match "java javadoc lexical state preserves source-order pre tag transitions") -Name "internal review twin requires source-order pre tag hostile fixture"
     Assert-True -Condition ($twinText -match "java javadoc lexical state ignores pre markers inside inline code tags") -Name "internal review twin requires inline Javadoc pre marker hostile fixture"
     Assert-True -Condition ($twinText -match "java javadoc lexical state preserves inline tag depth across lines") -Name "internal review twin requires multiline inline-tag hostile fixture"
+    Assert-True -Condition ($twinText -match "java javadoc lexical state preserves inline tag brace balance") -Name "internal review twin requires inline-tag ordinary brace-balance hostile fixture"
     Assert-True -Condition ($twinText -match "java javadoc lexical state ignores pre markers inside HTML comments") -Name "internal review twin requires HTML-comment Javadoc pre marker hostile fixture"
     Assert-True -Condition ($twinText -match "java javadoc lexical state preserves pre state from incoming HTML comment context") -Name "internal review twin requires incoming HTML-comment-state hostile fixture"
     Assert-True -Condition ($twinText -match "git merge-base") -Name "internal review twin computes patch from merge base"
@@ -138,6 +141,11 @@ try {
     Assert-True -Condition ($twinText -match "run-next-batch preserves final newline when comment wrap rewrites file") -Name "internal review twin requires final-newline preservation fixture"
     Assert-True -Condition ($twinText -match "run-next-slice revalidates conservative comment split point before selection") -Name "internal review twin requires single-slice split predicate fixture"
     Assert-True -Condition ($twinText -match "run-next-slice preserves final newline when comment wrap rewrites file") -Name "internal review twin requires single-slice formatting preservation fixture"
+
+    $reviewFindingCorpusPath = Join-Path $repoRoot "threshold/trainer/review-findings.json"
+    $reviewFindingCorpus = Get-Content -LiteralPath $reviewFindingCorpusPath -Raw | ConvertFrom-Json
+    $reviewFindingClassPredicates = @($reviewFindingCorpus.findingClasses | ForEach-Object { [string]$_.targetPredicate })
+    Assert-True -Condition ($reviewFindingClassPredicates -contains "javadoc_inline_tag_brace_balance_preserved") -Name "review finding corpus models inline-tag ordinary brace-balance predicate"
 
     Write-Host "internalReviewTwinTests=passed"
 }

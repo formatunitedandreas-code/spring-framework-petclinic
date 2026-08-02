@@ -2,8 +2,53 @@
     "schemaVersion":  "threshold.petclinic.generated-canary-rules.v0.1",
     "generatedAt":  "deterministic-from-current-repo-state",
     "source":  "threshold/trainer/review-findings.json",
+    "findingClasses":  [
+                           {
+                               "id":  "comment_wrap_javadoc_inline_tag_brace_balance_v0_1",
+                               "candidateClass":  "comment_wrap_cleanup",
+                               "rootCauseClass":  "javadoc_inline_tag_lexical_state_under_modeled",
+                               "targetPredicate":  "javadoc_inline_tag_brace_balance_preserved",
+                               "affectedSurface":  [
+                                                       "threshold/scripts/lib/candidate-class-provenance.ps1",
+                                                       "threshold/scripts/test-candidate-class-provenance.ps1",
+                                                       "threshold/scripts/invoke-internal-review-twin.ps1",
+                                                       "threshold/review/registry/internal-reviewers.v0_1.json"
+                                                   ],
+                               "neighboringPredicates":  [
+                                                             "javadoc_inline_tag_pre_markers_ignored",
+                                                             "javadoc_multiline_inline_tag_depth_preserved",
+                                                             "javadoc_html_comment_pre_markers_ignored",
+                                                             "javadoc_html_comment_rescan_uses_incoming_state"
+                                                         ],
+                               "hostileFixtureNames":  [
+                                                           "java javadoc lexical state ignores pre markers inside inline code tags",
+                                                           "java javadoc lexical state preserves inline tag depth across lines",
+                                                           "java javadoc lexical state preserves inline tag brace balance",
+                                                           "java javadoc lexical state ignores pre markers inside HTML comments",
+                                                           "java javadoc lexical state preserves pre state from incoming HTML comment context"
+                                                       ],
+                               "ruleSuggestion":  "Keep inline-Javadoc lexical state inside brace-balanced tags until the balanced closing brace terminates the inline tag.",
+                               "canarySuggestion":  "Inline Javadoc with balanced ordinary braces must not expose escaped-looking \u003c/pre\u003e text to comment-wrap discovery or runner revalidation."
+                           }
+                       ],
     "rules":  [
-
+                  {
+                      "id":  "review-finding-class-canary-comment_wrap_javadoc_inline_tag_brace_balance_v0_1",
+                      "candidateClass":  "comment_wrap_cleanup",
+                      "severity":  "P2",
+                      "targetPredicate":  "javadoc_inline_tag_brace_balance_preserved",
+                      "rootCauseClass":  "javadoc_inline_tag_lexical_state_under_modeled",
+                      "ruleSuggestion":  "Keep inline-Javadoc lexical state inside brace-balanced tags until the balanced closing brace terminates the inline tag.",
+                      "canarySuggestion":  "Inline Javadoc with balanced ordinary braces must not expose escaped-looking \u003c/pre\u003e text to comment-wrap discovery or runner revalidation.",
+                      "hostileFixtureNames":  [
+                                                  "java javadoc lexical state ignores pre markers inside inline code tags",
+                                                  "java javadoc lexical state preserves inline tag depth across lines",
+                                                  "java javadoc lexical state preserves inline tag brace balance",
+                                                  "java javadoc lexical state ignores pre markers inside HTML comments",
+                                                  "java javadoc lexical state preserves pre state from incoming HTML comment context"
+                                              ],
+                      "status":  "generated_from_finding_class"
+                  }
               ],
-    "semanticDigest":  "248d21d47b2091656a4d2dec60a0217aa328c3453880fae32f1033643ff9eb92"
+    "semanticDigest":  "f70745684ed21f291cec98dda9ebdb09fd658ce5a11fe7e048d6bc69cdbbaee9"
 }
