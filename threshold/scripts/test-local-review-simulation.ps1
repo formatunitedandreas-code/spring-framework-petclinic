@@ -12,9 +12,23 @@ if (Get-Variable -Name PSNativeCommandUseErrorActionPreference -ErrorAction Sile
     $PSNativeCommandUseErrorActionPreference = $false
 }
 
-$powerShellCommand = (Get-Command pwsh -ErrorAction SilentlyContinue).Source
-if ([string]::IsNullOrWhiteSpace($powerShellCommand)) {
-    $powerShellCommand = (Get-Command powershell.exe -ErrorAction Stop).Source
+function Resolve-PowerShellCommand {
+    $pwshCommand = Get-Command pwsh -ErrorAction SilentlyContinue
+    if ($null -ne $pwshCommand -and -not [string]::IsNullOrWhiteSpace([string]$pwshCommand.Source)) {
+        return [string]$pwshCommand.Source
+    }
+
+    $windowsPowerShellCommand = Get-Command powershell.exe -ErrorAction Stop
+    if ($null -eq $windowsPowerShellCommand -or [string]::IsNullOrWhiteSpace([string]$windowsPowerShellCommand.Source)) {
+        throw "Unable to resolve a PowerShell command for local review simulation."
+    }
+    return [string]$windowsPowerShellCommand.Source
+}
+
+$powerShellCommand = Resolve-PowerShellCommand
+$simulationTrainerReportPath = "threshold/trainer/training-report.json"
+if (-not (Test-Path $simulationTrainerReportPath)) {
+    throw "Local review simulation trainer report not found: $simulationTrainerReportPath"
 }
 
 function Invoke-DiscoveryCanarySimulation {
@@ -41,7 +55,7 @@ function Invoke-DiscoveryCanarySimulation {
             $rawOutput = & $powerShellCommand -NoProfile -ExecutionPolicy Bypass -File "threshold/scripts/test-discovery-canary.ps1" `
                 -LeasePath $LeasePath `
                 -GatePath $GatePath `
-                -TrainerReportPath $TrainerReportPath `
+                -TrainerReportPath $simulationTrainerReportPath `
                 -ExpectedPath $expectedPath `
                 -SkipInternalRegressions 2> $stderrPath
             $exitCode = $LASTEXITCODE
