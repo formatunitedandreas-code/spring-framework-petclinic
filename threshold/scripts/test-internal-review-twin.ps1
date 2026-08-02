@@ -45,6 +45,8 @@ try {
     Assert-True -Condition ($coverageClaims -contains "block_comment_text_block_delimiters_ignored") -Name "internal review twin covers block-comment text-block delimiters"
     Assert-True -Condition ($coverageClaims -contains "reviewer_inputs_bound_to_resolved_head") -Name "internal review twin covers resolved-head reviewer inputs"
     Assert-True -Condition ($coverageClaims -contains "declared_forbidden_paths_mechanically_enforced") -Name "internal review twin covers mechanical forbidden path enforcement"
+    Assert-True -Condition ($coverageClaims -contains "java_unicode_escapes_decoded_before_text_block_tracking") -Name "internal review twin covers Unicode text-block delimiter translation"
+    Assert-True -Condition ($coverageClaims -contains "slice_comment_wrap_revalidates_current_javadoc_context") -Name "internal review twin covers single-slice Javadoc revalidation"
 
     $registryPath = Join-Path $repoRoot "threshold/review/registry/internal-reviewers.v0_1.json"
     $registry = Get-Content -LiteralPath $registryPath -Raw | ConvertFrom-Json
@@ -56,18 +58,24 @@ try {
     Assert-True -Condition ($libraryText -match "Remove-ThresholdJavaLineCommentOutsideLiteral") -Name "PR197 URL literal external finding is now locally covered"
     Assert-True -Condition ($libraryText -match "Get-ThresholdJavaTextBlockDelimiterCount") -Name "PR197 escaped text-block delimiter external finding is now locally covered"
     Assert-True -Condition ($libraryText -match "Remove-ThresholdJavaCommentsOutsideLiteral") -Name "PR197 block-comment text-block delimiter external finding is now locally covered"
+    Assert-True -Condition ($libraryText -match "Convert-ThresholdJavaUnicodeEscapes") -Name "PR197 Unicode text-block delimiter external finding is now locally covered"
     Assert-False -Condition ($libraryText -match '\.IndexOf\("//"\)') -Name "raw double slash detection is blocked by local review predicate"
 
     $batchText = Get-Content -LiteralPath (Join-Path $repoRoot "threshold/scripts/run-next-batch.ps1") -Raw
+    $sliceText = Get-Content -LiteralPath (Join-Path $repoRoot "threshold/scripts/run-next-slice.ps1") -Raw
     Assert-True -Condition ($batchText -match "Get-CommentWrapThreshold") -Name "PR197 batch threshold external finding is now locally covered"
     Assert-True -Condition ($batchText -match "Test-BatchJavadocCommentLine") -Name "PR197 prepared batch Javadoc-context external finding is now locally covered"
     Assert-False -Condition ($batchText -match '\$line\.Length -le 120') -Name "hardcoded batch threshold is blocked by local review predicate"
+    Assert-True -Condition ($sliceText -match "Test-SliceJavadocCommentLine") -Name "PR197 prepared single-slice Javadoc-context external finding is now locally covered"
 
     $twinText = Get-Content -LiteralPath (Join-Path $repoRoot "threshold/scripts/invoke-internal-review-twin.ps1") -Raw
     Assert-True -Condition ($twinText -match "Get-RevisionTextOrEmpty") -Name "internal review twin reads reviewer inputs from resolved head"
     Assert-True -Condition ($twinText -match "Get-RevisionTreeFileSetDigest") -Name "internal review twin binds evidence digests to resolved head"
     Assert-True -Condition ($twinText -match "Test-ReviewPathAgainstPattern") -Name "internal review twin mechanically matches forbidden path patterns"
     Assert-True -Condition ($twinText -match "forbiddenChangedPaths") -Name "internal review twin reports forbidden changed paths"
+    Assert-True -Condition ($twinText -match "HOLD_INTERNAL_FINDINGS") -Name "internal review twin holds on P2 findings"
+    Assert-True -Condition ($twinText -match "java text block state decodes unicode quote delimiters") -Name "internal review twin requires Unicode delimiter hostile fixture"
+    Assert-True -Condition ($twinText -match "run-next-slice revalidates current Javadoc context for prepared candidates") -Name "internal review twin requires single-slice revalidation fixture"
 
     Write-Host "internalReviewTwinTests=passed"
 }

@@ -184,6 +184,37 @@ function Test-MethodOrAnnotationBoundaryLine {
     return $Line -match '^\s*(?:@|public\b|private\b|protected\b)'
 }
 
+function Test-SliceJavadocCommentLine {
+    param(
+        [string[]] $Lines,
+        [int] $Index,
+        [hashtable] $JavaTextBlockLineState = @{}
+    )
+
+    if ($Index -lt 0 -or $Index -ge $Lines.Count) { return $false }
+    if ($JavaTextBlockLineState.ContainsKey($Index + 1)) { return $false }
+    if ($Lines[$Index] -notmatch '^\s*\*\s+\S') { return $false }
+
+    $insideJavadoc = $false
+    for ($i = 0; $i -le $Index; $i++) {
+        if ($JavaTextBlockLineState.ContainsKey($i + 1)) {
+            continue
+        }
+        $line = [string]$Lines[$i]
+        if (-not $insideJavadoc -and $line -match '^\s*/\*\*') {
+            $insideJavadoc = $true
+        }
+        if ($i -eq $Index) {
+            return $insideJavadoc
+        }
+        if ($insideJavadoc -and $line -match '\*/') {
+            $insideJavadoc = $false
+        }
+    }
+
+    return $false
+}
+
 function Find-ConservativeCommentSplitPoint {
     param([string] $Text)
 
@@ -782,7 +813,8 @@ function Get-NextCandidate {
                     $applicable = $false
                     break
                 }
-                if ($lines[$lineNumber - 1] -notmatch '^\s*\*\s+\S') {
+                $javaTextBlockLineState = Get-ThresholdJavaTextBlockLineState -Lines $lines
+                if (-not (Test-SliceJavadocCommentLine -Lines $lines -Index ($lineNumber - 1) -JavaTextBlockLineState $javaTextBlockLineState)) {
                     Write-Host "candidateSkippedReason=unsupported_comment_cleanup:$($candidate.candidateId)"
                     $applicable = $false
                     break
@@ -1485,6 +1517,11 @@ function Apply-CommentWrapCleanup {
     $lines = Get-Content $path
     if ($lineNumber -lt 1 -or $lineNumber -gt $lines.Count) {
         throw "Candidate line '$lineNumber' is outside file range in $path."
+    }
+
+    $javaTextBlockLineState = Get-ThresholdJavaTextBlockLineState -Lines $lines
+    if (-not (Test-SliceJavadocCommentLine -Lines $lines -Index ($lineNumber - 1) -JavaTextBlockLineState $javaTextBlockLineState)) {
+        throw "Line '$lineNumber' is not inside a current Javadoc context in $path."
     }
 
     $line = $lines[$lineNumber - 1]

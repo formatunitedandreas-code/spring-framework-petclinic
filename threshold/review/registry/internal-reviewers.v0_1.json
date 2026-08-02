@@ -10,7 +10,8 @@
         "candidate_class_provenance_chain_bound",
         "observed_diff_class_matches_candidate_class",
         "batch_comment_wrap_uses_discovery_threshold",
-        "batch_comment_wrap_revalidates_current_javadoc_context"
+        "batch_comment_wrap_revalidates_current_javadoc_context",
+        "slice_comment_wrap_revalidates_current_javadoc_context"
       ]
     },
     {
@@ -30,7 +31,8 @@
         "java_line_comment_detection_respects_string_literals",
         "java_text_block_delimiters_must_be_unescaped",
         "block_comment_text_block_delimiters_ignored",
-        "ordinary_block_comment_not_promoted_as_javadoc"
+        "ordinary_block_comment_not_promoted_as_javadoc",
+        "java_unicode_escapes_decoded_before_text_block_tracking"
       ]
     },
     {
@@ -57,6 +59,7 @@
     "anyP0": "BLOCK_AUTHORITY_VIOLATION",
     "anyP1": "HOLD_INTERNAL_FINDINGS",
     "coverageIncomplete": "HOLD_INSUFFICIENT_REVIEW_COVERAGE",
-    "findingFree": "PROCEED_TO_EXTERNAL_HOLDOUT"
+    "findingFree": "PROCEED_TO_EXTERNAL_HOLDOUT",
+    "anyP2": "HOLD_INTERNAL_FINDINGS"
   }
 }

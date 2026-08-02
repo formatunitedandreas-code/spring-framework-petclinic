@@ -133,6 +133,15 @@ function Test-ThresholdJavaCharacterIsEscaped {
     return (($backslashCount % 2) -eq 1)
 }
 
+function Convert-ThresholdJavaUnicodeEscapes {
+    param([string] $Line)
+
+    return [regex]::Replace($Line, '\\u+(?<hex>[0-9a-fA-F]{4})', {
+        param($match)
+        return [string][char]([Convert]::ToInt32($match.Groups["hex"].Value, 16))
+    })
+}
+
 function Get-ThresholdJavaTextBlockDelimiterCount {
     param([string] $Line)
 
@@ -163,7 +172,7 @@ function Get-ThresholdJavaTextBlockLineState {
     $insideBlockComment = $false
     for ($i = 0; $i -lt $Lines.Count; $i++) {
         $lineNumber = $i + 1
-        $line = [string]$Lines[$i]
+        $line = Convert-ThresholdJavaUnicodeEscapes -Line ([string]$Lines[$i])
         if ($insideTextBlock) {
             $states[$lineNumber] = $true
             $delimiterIndexes = @(Get-ThresholdJavaTextBlockDelimiterStartIndexes -Line $line)

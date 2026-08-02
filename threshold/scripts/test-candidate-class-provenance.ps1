@@ -330,6 +330,8 @@ try {
     Assert-True -Condition ($runNextSliceText -match 'candidateSkippedReason=already_processed') -Name "run-next-slice reports already processed candidate suppression"
     Assert-True -Condition ($runNextSliceText -match 'processedCandidatePaths\.Contains\(\$path\)') -Name "run-next-slice only rebinding-skips line candidates on already processed paths"
     Assert-True -Condition ($runNextSliceText -match 'line_rebinding_required_after_prior_line_mutation_unknown_scope') -Name "run-next-slice fail-closes line rebinding when processed candidate path is unknown"
+    Assert-True -Condition ($runNextSliceText -match "Test-SliceJavadocCommentLine") -Name "run-next-slice revalidates current Javadoc context for prepared candidates"
+    Assert-True -Condition ($runNextSliceText -match "Get-ThresholdJavaTextBlockLineState") -Name "run-next-slice revalidates current text block state before applying comment wrap"
 
     $kgMaterializationText = Get-Content (Join-Path $thresholdScriptRoot "materialize-knowledge-graphs.ps1") -Raw
     $leasePolicyText = Get-Content (Join-Path $thresholdScriptRoot "lib/lease-policy.ps1") -Raw
@@ -971,6 +973,18 @@ try {
     )
     Assert-True -Condition (Test-ThresholdJavaLineIsInsideTextBlock -Lines $javaTextBlockWithBlockCommentDelimiterLines -LineNumber 5) -Name "java text block state ignores block-comment triple quote delimiter"
     Assert-False -Condition (Test-ThresholdJavaLineIsInsideTextBlock -Lines $javaTextBlockWithBlockCommentDelimiterLines -LineNumber 8) -Name "java text block state closes after block-comment delimiter canary"
+    $javaTextBlockWithUnicodeDelimiterLines = @(
+        "class TextBlockCanary {",
+        "    String query = \u0022\u0022\u0022",
+        "        /**",
+        "         * Text block content after unicode quote delimiters still remains inside the text block.",
+        "         */",
+        "    \u0022\u0022\u0022;",
+        "    void normalize() {}",
+        "}"
+    )
+    Assert-True -Condition (Test-ThresholdJavaLineIsInsideTextBlock -Lines $javaTextBlockWithUnicodeDelimiterLines -LineNumber 4) -Name "java text block state decodes unicode quote delimiters"
+    Assert-False -Condition (Test-ThresholdJavaLineIsInsideTextBlock -Lines $javaTextBlockWithUnicodeDelimiterLines -LineNumber 7) -Name "java text block state closes after unicode quote delimiter canary"
     $javaTextBlockWithPostCloseBlockCommentLines = @(
         "class TextBlockCanary {",
         "    String first = `"`"`"",
