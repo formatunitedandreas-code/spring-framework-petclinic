@@ -263,10 +263,15 @@ function Test-ThresholdJavaLineIsJavadocCommentContent {
     $insideJavadoc = $false
     $insideOrdinaryBlockComment = $false
     $insideTextBlock = $false
+    $insidePreformattedJavadoc = $false
     for ($i = 0; $i -le $Index; $i++) {
         $segments = @(Split-ThresholdJavaUnicodeTranslatedLine -Line ([string]$Lines[$i]))
         foreach ($segment in $segments) {
             $line = [string]$segment
+            $javadocLinePayload = ($line -replace '^\s*\*\s?', '')
+            $lineStartsPreformattedJavadoc = $javadocLinePayload -match '(?i)<pre(?:\s|>)'
+            $lineEndsPreformattedJavadoc = $javadocLinePayload -match '(?i)</pre>'
+            $targetLineInsidePreformattedJavadoc = $insidePreformattedJavadoc -or ($lineStartsPreformattedJavadoc -and -not $lineEndsPreformattedJavadoc)
             $insideString = $false
             $insideChar = $false
             $escaped = $false
@@ -283,8 +288,12 @@ function Test-ThresholdJavaLineIsJavadocCommentContent {
                 }
 
                 if ($insideJavadoc) {
+                    if ($i -eq $Index -and $targetLineInsidePreformattedJavadoc) {
+                        return $false
+                    }
                     if ($ch -eq '*' -and $next -eq '/') {
                         $insideJavadoc = $false
+                        $insidePreformattedJavadoc = $false
                         $offset++
                         if ($i -eq $Index) {
                             $suffix = if ($offset + 1 -lt $line.Length) { $line.Substring($offset + 1) } else { '' }
@@ -335,12 +344,21 @@ function Test-ThresholdJavaLineIsJavadocCommentContent {
                 if ($ch -eq '/' -and $next -eq '*') {
                     if (($offset + 2) -lt $line.Length -and $line[$offset + 2] -eq '*') {
                         $insideJavadoc = $true
+                        $insidePreformattedJavadoc = $false
                     }
                     else {
                         $insideOrdinaryBlockComment = $true
                     }
                     $offset++
                     continue
+                }
+            }
+            if ($insideJavadoc) {
+                if ($lineStartsPreformattedJavadoc) {
+                    $insidePreformattedJavadoc = $true
+                }
+                if ($lineEndsPreformattedJavadoc) {
+                    $insidePreformattedJavadoc = $false
                 }
             }
         }
@@ -350,6 +368,62 @@ function Test-ThresholdJavaLineIsJavadocCommentContent {
     }
 
     return $false
+}
+
+function Find-ThresholdConservativeCommentSplitPoint {
+    param([string] $Text)
+
+    $minimumPrefix = 24
+    $minimumSegmentLength = 16
+    $preferredMaxIndex = [Math]::Min(112, $Text.Length - 1)
+    if ($preferredMaxIndex -lt $minimumPrefix) {
+        return $null
+    }
+
+    $spaceSplit = $preferredMaxIndex
+    while ($spaceSplit -ge $minimumPrefix) {
+        $spaceSplit = $Text.LastIndexOf(" ", $spaceSplit)
+        if ($spaceSplit -lt $minimumPrefix) {
+            break
+        }
+        $beforeSplit = $Text.Substring(0, $spaceSplit)
+        $lastInlineTagStart = $beforeSplit.LastIndexOf("{@")
+        $lastInlineTagEnd = $beforeSplit.LastIndexOf("}")
+        if ($lastInlineTagStart -gt $lastInlineTagEnd) {
+            $spaceSplit--
+            continue
+        }
+        if ($spaceSplit -lt ($Text.Length - 1) -and
+            $spaceSplit -ge $minimumSegmentLength -and
+            ($Text.Length - ($spaceSplit + 1)) -ge $minimumSegmentLength) {
+            return [pscustomobject]@{
+                Index = $spaceSplit
+                KeepDelimiter = $false
+            }
+        }
+        $spaceSplit--
+    }
+
+    return $null
+}
+
+function Test-ThresholdCommentWrapCandidateLine {
+    param(
+        [string[]] $Lines,
+        [int] $Index,
+        [int] $CommentWrapThreshold,
+        [hashtable] $JavaTextBlockLineState = @{}
+    )
+
+    if (-not (Test-ThresholdJavaLineIsJavadocCommentContent -Lines $Lines -Index $Index -JavaTextBlockLineState $JavaTextBlockLineState)) {
+        return $false
+    }
+    $line = [string]$Lines[$Index]
+    $match = [regex]::Match($line, '^(?<indent>\s*\*\s+)(?<text>\S.*)$')
+    if (-not $match.Success -or $line.Length -le $CommentWrapThreshold) {
+        return $false
+    }
+    return $null -ne (Find-ThresholdConservativeCommentSplitPoint -Text $match.Groups["text"].Value.Trim())
 }
 function Test-ThresholdJavaLineIsInsideTextBlock {
     param([string[]] $Lines, [int] $LineNumber)

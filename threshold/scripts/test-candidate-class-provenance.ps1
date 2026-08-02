@@ -334,6 +334,7 @@ try {
     Assert-True -Condition ($runNextSliceText -match "Get-ThresholdJavaTextBlockLineState") -Name "run-next-slice revalidates current text block state before applying comment wrap"
     Assert-True -Condition ($runNextSliceText -match "Get-CommentWrapThreshold") -Name "run-next-slice revalidates active comment wrap threshold"
     Assert-True -Condition ($runNextSliceText -match "comment_wrap_threshold_not_met") -Name "run-next-slice reports stale prepared comment candidates below threshold"
+    Assert-True -Condition ($runNextSliceText -match "Test-ThresholdCommentWrapCandidateLine") -Name "run-next-slice revalidates conservative comment split point before selection"
 
     $kgMaterializationText = Get-Content (Join-Path $thresholdScriptRoot "materialize-knowledge-graphs.ps1") -Raw
     $leasePolicyText = Get-Content (Join-Path $thresholdScriptRoot "lib/lease-policy.ps1") -Raw
@@ -400,6 +401,8 @@ try {
     Assert-True -Condition ($runNextBatchText -match "Get-CommentWrapThreshold") -Name "run-next-batch derives comment wrap eligibility from lease threshold"
     Assert-False -Condition ($runNextBatchText -match '\$line\.Length -le 120') -Name "run-next-batch does not hardcode the baseline comment wrap threshold"
     Assert-True -Condition ($runNextBatchText -match "Test-BatchJavadocCommentLine") -Name "run-next-batch revalidates current Javadoc context for prepared candidates"
+    Assert-True -Condition ($runNextBatchText -match "Test-ThresholdCommentWrapCandidateLine") -Name "run-next-batch uses shared discovery comment wrap predicate"
+    Assert-False -Condition ($runNextBatchText.Contains('foreach ($delimiter in @("/")')) -Name "run-next-batch does not add URL punctuation split delimiters"
     Assert-True -Condition ($runNextBatchText -match 'Get-ThresholdJavaTextBlockLineState -Lines \$lines') -Name "run-next-batch revalidates current text block state before applying comment wrap"
     Assert-True -Condition ($runNextBatchText -match "same_file_line_marker_rebinding_required") -Name "run-next-batch rejects same-file line marker candidates in one batch"
     Assert-True -Condition ($runNextBatchText -match "selectedLineCandidatePaths") -Name "run-next-batch tracks selected line candidate paths"
@@ -1040,6 +1043,28 @@ try {
         "}"
     )
     Assert-True -Condition (Test-ThresholdJavaLineIsJavadocCommentContent -Lines $javaJavadocCommentLines -Index 2 -JavaTextBlockLineState (Get-ThresholdJavaTextBlockLineState -Lines $javaJavadocCommentLines)) -Name "java javadoc lexical state accepts real Javadoc content"
+    Assert-True -Condition (Test-ThresholdCommentWrapCandidateLine -Lines $javaJavadocCommentLines -Index 2 -CommentWrapThreshold 69 -JavaTextBlockLineState (Get-ThresholdJavaTextBlockLineState -Lines $javaJavadocCommentLines)) -Name "java comment wrap predicate accepts real splittable Javadoc content"
+    $javaJavadocPreformattedLines = @(
+        "class JavadocCanary {",
+        "    /**",
+        "     * <pre>",
+        "     * SELECT id, first_name, last_name, telephone FROM owners WHERE last_name = ? ORDER BY last_name, first_name",
+        "     * </pre>",
+        "     */",
+        "    void normalize() {}",
+        "}"
+    )
+    Assert-False -Condition (Test-ThresholdJavaLineIsJavadocCommentContent -Lines $javaJavadocPreformattedLines -Index 3 -JavaTextBlockLineState (Get-ThresholdJavaTextBlockLineState -Lines $javaJavadocPreformattedLines)) -Name "java javadoc lexical state rejects preformatted Javadoc content"
+    Assert-False -Condition (Test-ThresholdCommentWrapCandidateLine -Lines $javaJavadocPreformattedLines -Index 3 -CommentWrapThreshold 69 -JavaTextBlockLineState (Get-ThresholdJavaTextBlockLineState -Lines $javaJavadocPreformattedLines)) -Name "java comment wrap predicate rejects preformatted Javadoc content"
+    $javaJavadocNoSplitLines = @(
+        "class JavadocCanary {",
+        "    /**",
+        "     * https://example.invalid/petclinic/owners/search/results/detail/view/with/no/conservative/space/split/available",
+        "     */",
+        "    void normalize() {}",
+        "}"
+    )
+    Assert-False -Condition (Test-ThresholdCommentWrapCandidateLine -Lines $javaJavadocNoSplitLines -Index 2 -CommentWrapThreshold 69 -JavaTextBlockLineState (Get-ThresholdJavaTextBlockLineState -Lines $javaJavadocNoSplitLines)) -Name "java comment wrap predicate rejects Javadoc without conservative split point"
     $javaOrdinaryCommentLines = @(
         "class JavadocCanary {",
         "    /*",

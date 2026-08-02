@@ -218,38 +218,7 @@ function Test-SliceJavadocCommentLine {
 function Find-ConservativeCommentSplitPoint {
     param([string] $Text)
 
-    $minimumPrefix = 24
-    $minimumSegmentLength = 16
-    $preferredMaxIndex = [Math]::Min(112, $Text.Length - 1)
-    if ($preferredMaxIndex -lt $minimumPrefix) {
-        return $null
-    }
-
-    $spaceSplit = $preferredMaxIndex
-    while ($spaceSplit -ge $minimumPrefix) {
-        $spaceSplit = $Text.LastIndexOf(" ", $spaceSplit)
-        if ($spaceSplit -lt $minimumPrefix) {
-            break
-        }
-        $beforeSplit = $Text.Substring(0, $spaceSplit)
-        $lastInlineTagStart = $beforeSplit.LastIndexOf("{@")
-        $lastInlineTagEnd = $beforeSplit.LastIndexOf("}")
-        if ($lastInlineTagStart -gt $lastInlineTagEnd) {
-            $spaceSplit--
-            continue
-        }
-        if ($spaceSplit -lt ($Text.Length - 1) -and
-            $spaceSplit -ge $minimumSegmentLength -and
-            ($Text.Length - ($spaceSplit + 1)) -ge $minimumSegmentLength) {
-            return [pscustomobject]@{
-                Index = $spaceSplit
-                KeepDelimiter = $false
-            }
-        }
-        $spaceSplit--
-    }
-
-    return $null
+    return Find-ThresholdConservativeCommentSplitPoint -Text $Text
 }
 function Write-TextFile {
     param([string] $Path, [string] $Content)
@@ -819,9 +788,7 @@ function Get-NextCandidate {
                     $applicable = $false
                     break
                 }
-                $line = $lines[$lineNumber - 1]
-                $match = [regex]::Match($line, '^(?<indent>\s*\*\s+)(?<text>\S.*)$')
-                if (-not $match.Success -or $line.Length -le (Get-CommentWrapThreshold)) {
+                if (-not (Test-ThresholdCommentWrapCandidateLine -Lines $lines -Index ($lineNumber - 1) -CommentWrapThreshold (Get-CommentWrapThreshold) -JavaTextBlockLineState $javaTextBlockLineState)) {
                     Write-Host "candidateSkippedReason=comment_wrap_threshold_not_met:$($candidate.candidateId)"
                     $applicable = $false
                     break

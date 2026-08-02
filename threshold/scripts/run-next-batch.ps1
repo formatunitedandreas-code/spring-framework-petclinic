@@ -160,23 +160,7 @@ function Get-SupportedBatchClasses {
 function Find-ConservativeCommentSplitPoint {
     param([string] $Text)
 
-    $minimumPrefix = 24
-    $preferredMaxIndex = [Math]::Min(112, $Text.Length - 1)
-    if ($preferredMaxIndex -lt $minimumPrefix) { return $null }
-
-    $spaceSplit = $Text.LastIndexOf(" ", $preferredMaxIndex)
-    if ($spaceSplit -ge $minimumPrefix -and $spaceSplit -lt ($Text.Length - 1)) {
-        return [pscustomobject]@{ Index = $spaceSplit; KeepDelimiter = $false }
-    }
-
-    foreach ($delimiter in @("/", "#", "?", "&", "-", ".", ":")) {
-        $splitIndex = $Text.LastIndexOf($delimiter, $preferredMaxIndex)
-        if ($splitIndex -ge $minimumPrefix -and $splitIndex -lt ($Text.Length - 1)) {
-            return [pscustomobject]@{ Index = $splitIndex; KeepDelimiter = $true }
-        }
-    }
-
-    return $null
+    return Find-ThresholdConservativeCommentSplitPoint -Text $Text
 }
 
 function Test-BatchJavadocCommentLine {
@@ -256,12 +240,7 @@ function Test-CommentWrapCandidateApplies {
     $javaTextBlockLineState = Get-ThresholdJavaTextBlockLineState -Lines $lines
     if (-not (Test-BatchJavadocCommentLine -Lines $lines -Index ($lineNumber - 1) -JavaTextBlockLineState $javaTextBlockLineState)) { return $false }
 
-    $line = $lines[$lineNumber - 1]
-    $match = [regex]::Match($line, '^(?<indent>\s*\*\s+)(?<text>\S.*)$')
-    if (-not $match.Success -or $line.Length -le (Get-CommentWrapThreshold)) { return $false }
-
-    $text = $match.Groups["text"].Value.Trim()
-    return $null -ne (Find-ConservativeCommentSplitPoint -Text $text)
+    return Test-ThresholdCommentWrapCandidateLine -Lines $lines -Index ($lineNumber - 1) -CommentWrapThreshold (Get-CommentWrapThreshold) -JavaTextBlockLineState $javaTextBlockLineState
 }
 
 function Invoke-DiscoveryCanary {

@@ -12,8 +12,10 @@
         "batch_comment_wrap_uses_discovery_threshold",
         "batch_comment_wrap_revalidates_current_javadoc_context",
         "batch_comment_wrap_rejects_same_file_line_markers",
+        "batch_comment_wrap_uses_discovery_split_predicate",
         "slice_comment_wrap_revalidates_current_javadoc_context",
-        "slice_comment_wrap_uses_discovery_threshold"
+        "slice_comment_wrap_uses_discovery_threshold",
+        "slice_comment_wrap_revalidates_split_predicate"
       ]
     },
     {
@@ -39,7 +41,8 @@
         "ordinary_block_comment_nested_javadoc_opener_not_promoted",
         "java_unicode_escape_translation_respects_backslash_eligibility",
         "javadoc_target_line_scanned_through_terminator",
-        "text_block_closing_suffix_comment_state_preserved"
+        "text_block_closing_suffix_comment_state_preserved",
+        "javadoc_preformatted_content_not_comment_wrap_candidate"
       ]
     },
     {

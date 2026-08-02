@@ -426,38 +426,7 @@ function Test-MethodOrAnnotationBoundaryLine {
 function Find-ConservativeCommentSplitPoint {
     param([string] $Text)
 
-    $minimumPrefix = 24
-    $minimumSegmentLength = 16
-    $preferredMaxIndex = [Math]::Min(112, $Text.Length - 1)
-    if ($preferredMaxIndex -lt $minimumPrefix) {
-        return $null
-    }
-
-    $spaceSplit = $preferredMaxIndex
-    while ($spaceSplit -ge $minimumPrefix) {
-        $spaceSplit = $Text.LastIndexOf(" ", $spaceSplit)
-        if ($spaceSplit -lt $minimumPrefix) {
-            break
-        }
-        $beforeSplit = $Text.Substring(0, $spaceSplit)
-        $lastInlineTagStart = $beforeSplit.LastIndexOf("{@")
-        $lastInlineTagEnd = $beforeSplit.LastIndexOf("}")
-        if ($lastInlineTagStart -gt $lastInlineTagEnd) {
-            $spaceSplit--
-            continue
-        }
-        if ($spaceSplit -lt ($Text.Length - 1) -and
-            $spaceSplit -ge $minimumSegmentLength -and
-            ($Text.Length - ($spaceSplit + 1)) -ge $minimumSegmentLength) {
-            return [pscustomobject]@{
-                Index = $spaceSplit
-                KeepDelimiter = $false
-            }
-        }
-        $spaceSplit--
-    }
-
-    return $null
+    return Find-ThresholdConservativeCommentSplitPoint -Text $Text
 }
 
 function Test-JavadocCommentLine {
@@ -795,17 +764,7 @@ foreach ($file in $sourceFiles) {
     # Heuristic 4: tiny spacing normalization between adjacent methods.
     for ($i = 0; $i -lt $lines.Count; $i++) {
         $line = $lines[$i]
-        if ($line.Length -le $commentWrapThreshold) {
-            continue
-        }
-        if ($line -notmatch '^\s*\*\s+\S') {
-            continue
-        }
-        if (-not (Test-JavadocCommentLine -Lines $lines -Index $i -JavaTextBlockLineState $javaTextBlockLineState)) {
-            continue
-        }
-        $commentText = ($line -replace '^\s*\*\s+', '')
-        if (-not (Find-ConservativeCommentSplitPoint -Text $commentText)) {
+        if (-not (Test-ThresholdCommentWrapCandidateLine -Lines $lines -Index $i -CommentWrapThreshold $commentWrapThreshold -JavaTextBlockLineState $javaTextBlockLineState)) {
             continue
         }
         $member = "line-$($i + 1)"

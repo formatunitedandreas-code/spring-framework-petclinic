@@ -51,10 +51,13 @@ try {
     Assert-True -Condition ($coverageClaims -contains "ordinary_block_comment_nested_javadoc_opener_not_promoted") -Name "internal review twin covers nested ordinary block-comment Javadoc opener rejection"
     Assert-True -Condition ($coverageClaims -contains "javadoc_target_line_scanned_through_terminator") -Name "internal review twin covers Javadoc target-line terminator scanning"
     Assert-True -Condition ($coverageClaims -contains "text_block_closing_suffix_comment_state_preserved") -Name "internal review twin covers text-block closing suffix comment state"
+    Assert-True -Condition ($coverageClaims -contains "javadoc_preformatted_content_not_comment_wrap_candidate") -Name "internal review twin covers preformatted Javadoc exclusion"
     Assert-True -Condition ($coverageClaims -contains "review_patch_bound_to_merge_base") -Name "internal review twin covers merge-base patch binding"
     Assert-True -Condition ($coverageClaims -contains "slice_comment_wrap_revalidates_current_javadoc_context") -Name "internal review twin covers single-slice Javadoc revalidation"
     Assert-True -Condition ($coverageClaims -contains "slice_comment_wrap_uses_discovery_threshold") -Name "internal review twin covers single-slice threshold revalidation"
     Assert-True -Condition ($coverageClaims -contains "batch_comment_wrap_rejects_same_file_line_markers") -Name "internal review twin covers same-file batch line marker rejection"
+    Assert-True -Condition ($coverageClaims -contains "batch_comment_wrap_uses_discovery_split_predicate") -Name "internal review twin covers batch shared split predicate"
+    Assert-True -Condition ($coverageClaims -contains "slice_comment_wrap_revalidates_split_predicate") -Name "internal review twin covers single-slice split revalidation"
 
     $registryPath = Join-Path $repoRoot "threshold/review/registry/internal-reviewers.v0_1.json"
     $registry = Get-Content -LiteralPath $registryPath -Raw | ConvertFrom-Json
@@ -69,6 +72,8 @@ try {
     Assert-True -Condition ($libraryText -match "Convert-ThresholdJavaUnicodeEscapes") -Name "PR197 Unicode text-block delimiter external finding is now locally covered"
     Assert-True -Condition ($libraryText -match "Split-ThresholdJavaUnicodeTranslatedLine") -Name "PR197 Unicode line-terminator external finding is now locally covered"
     Assert-True -Condition ($libraryText -match "Test-ThresholdJavaUnicodeEscapeBackslashIsEligible") -Name "PR197 Unicode eligibility external finding is now locally covered"
+    Assert-True -Condition ($libraryText -match "insidePreformattedJavadoc") -Name "PR197 preformatted Javadoc external finding is now locally covered"
+    Assert-True -Condition ($libraryText -match "Find-ThresholdConservativeCommentSplitPoint") -Name "PR197 shared comment split predicate is now locally covered"
     Assert-False -Condition ($libraryText -match '\.IndexOf\("//"\)') -Name "raw double slash detection is blocked by local review predicate"
 
     $batchText = Get-Content -LiteralPath (Join-Path $repoRoot "threshold/scripts/run-next-batch.ps1") -Raw
@@ -76,9 +81,12 @@ try {
     Assert-True -Condition ($batchText -match "Get-CommentWrapThreshold") -Name "PR197 batch threshold external finding is now locally covered"
     Assert-True -Condition ($batchText -match "Test-BatchJavadocCommentLine") -Name "PR197 prepared batch Javadoc-context external finding is now locally covered"
     Assert-True -Condition ($batchText -match "same_file_line_marker_rebinding_required") -Name "PR197 same-file batch line-marker external finding is now locally covered"
+    Assert-True -Condition ($batchText -match "Test-ThresholdCommentWrapCandidateLine") -Name "PR197 batch split-predicate external finding is now locally covered"
+    Assert-False -Condition ($batchText.Contains('foreach ($delimiter in @("/")')) -Name "batch URL punctuation split drift is blocked by local review predicate"
     Assert-False -Condition ($batchText -match '\$line\.Length -le 120') -Name "hardcoded batch threshold is blocked by local review predicate"
     Assert-True -Condition ($sliceText -match "Test-SliceJavadocCommentLine") -Name "PR197 prepared single-slice Javadoc-context external finding is now locally covered"
     Assert-True -Condition ($sliceText -match "comment_wrap_threshold_not_met") -Name "PR197 single-slice threshold external finding is now locally covered"
+    Assert-True -Condition ($sliceText -match "Test-ThresholdCommentWrapCandidateLine") -Name "PR197 single-slice split revalidation external finding is now locally covered"
 
     $twinText = Get-Content -LiteralPath (Join-Path $repoRoot "threshold/scripts/invoke-internal-review-twin.ps1") -Raw
     Assert-True -Condition ($twinText -match "Get-RevisionTextOrEmpty") -Name "internal review twin reads reviewer inputs from resolved head"
@@ -92,11 +100,14 @@ try {
     Assert-True -Condition ($twinText -match "Nested ordinary-comment content deliberately") -Name "internal review twin requires nested ordinary block-comment Javadoc hostile fixture"
     Assert-True -Condition ($twinText -match "java javadoc lexical state rejects target line with code after terminator") -Name "internal review twin requires Javadoc terminator suffix hostile fixture"
     Assert-True -Condition ($twinText -match "java javadoc lexical state preserves ordinary comment opened after text block close") -Name "internal review twin requires text-block closing suffix hostile fixture"
+    Assert-True -Condition ($twinText -match "java javadoc lexical state rejects preformatted Javadoc content") -Name "internal review twin requires preformatted Javadoc hostile fixture"
     Assert-True -Condition ($twinText -match "git merge-base") -Name "internal review twin computes patch from merge base"
     Assert-True -Condition ($twinText -match "patchBaseHead") -Name "internal review twin materializes patch base head"
     Assert-True -Condition ($twinText -match "run-next-slice revalidates current Javadoc context for prepared candidates") -Name "internal review twin requires single-slice revalidation fixture"
     Assert-True -Condition ($twinText -match "run-next-slice revalidates active comment wrap threshold") -Name "internal review twin requires single-slice threshold fixture"
     Assert-True -Condition ($twinText -match "run-next-batch rejects same-file line marker candidates in one batch") -Name "internal review twin requires same-file batch line-marker fixture"
+    Assert-True -Condition ($twinText -match "run-next-batch uses shared discovery comment wrap predicate") -Name "internal review twin requires batch shared split predicate fixture"
+    Assert-True -Condition ($twinText -match "run-next-slice revalidates conservative comment split point before selection") -Name "internal review twin requires single-slice split predicate fixture"
 
     Write-Host "internalReviewTwinTests=passed"
 }
