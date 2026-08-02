@@ -136,17 +136,23 @@ function Test-ThresholdJavaCharacterIsEscaped {
 function Get-ThresholdJavaTextBlockDelimiterCount {
     param([string] $Line)
 
-    $count = 0
+    return @(Get-ThresholdJavaTextBlockDelimiterStartIndexes -Line $Line).Count
+}
+
+function Get-ThresholdJavaTextBlockDelimiterStartIndexes {
+    param([string] $Line)
+
+    $indexes = New-Object System.Collections.Generic.List[int]
     for ($i = 0; $i -le ($Line.Length - 3); $i++) {
         if ($Line[$i] -eq '"' -and
             $Line[$i + 1] -eq '"' -and
             $Line[$i + 2] -eq '"' -and
             -not (Test-ThresholdJavaCharacterIsEscaped -Line $Line -Index $i)) {
-            $count++
+            $indexes.Add($i)
             $i += 2
         }
     }
-    return $count
+    return $indexes.ToArray()
 }
 
 function Get-ThresholdJavaTextBlockLineState {
@@ -160,11 +166,28 @@ function Get-ThresholdJavaTextBlockLineState {
         $line = [string]$Lines[$i]
         if ($insideTextBlock) {
             $states[$lineNumber] = $true
+            $delimiterIndexes = @(Get-ThresholdJavaTextBlockDelimiterStartIndexes -Line $line)
+            if ($delimiterIndexes.Count -eq 0) {
+                continue
+            }
+
+            $closingDelimiterIndex = [int]$delimiterIndexes[0]
+            $insideTextBlock = $false
+            $afterClosingDelimiterIndex = $closingDelimiterIndex + 3
+            if ($afterClosingDelimiterIndex -ge $line.Length) {
+                continue
+            }
+
+            $suffix = $line.Substring($afterClosingDelimiterIndex)
+            $lexicalSuffix = Remove-ThresholdJavaCommentsOutsideLiteral -Line $suffix -InsideBlockComment ([ref]$insideBlockComment)
+            $suffixDelimiterCount = Get-ThresholdJavaTextBlockDelimiterCount -Line $lexicalSuffix
+            if (($suffixDelimiterCount % 2) -eq 1) {
+                $insideTextBlock = $true
+            }
+            continue
         }
         $lexicalLine = $line
-        if (-not $insideTextBlock) {
-            $lexicalLine = Remove-ThresholdJavaCommentsOutsideLiteral -Line $line -InsideBlockComment ([ref]$insideBlockComment)
-        }
+        $lexicalLine = Remove-ThresholdJavaCommentsOutsideLiteral -Line $line -InsideBlockComment ([ref]$insideBlockComment)
         $delimiterCount = Get-ThresholdJavaTextBlockDelimiterCount -Line $lexicalLine
         if (($delimiterCount % 2) -eq 1) {
             $insideTextBlock = -not $insideTextBlock

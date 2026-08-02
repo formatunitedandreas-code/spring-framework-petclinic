@@ -971,6 +971,23 @@ try {
     )
     Assert-True -Condition (Test-ThresholdJavaLineIsInsideTextBlock -Lines $javaTextBlockWithBlockCommentDelimiterLines -LineNumber 5) -Name "java text block state ignores block-comment triple quote delimiter"
     Assert-False -Condition (Test-ThresholdJavaLineIsInsideTextBlock -Lines $javaTextBlockWithBlockCommentDelimiterLines -LineNumber 8) -Name "java text block state closes after block-comment delimiter canary"
+    $javaTextBlockWithPostCloseBlockCommentLines = @(
+        "class TextBlockCanary {",
+        "    String first = `"`"`"",
+        "        closed before the comment",
+        "    `"`"`"; /* comment starts after the text block closes",
+        "       Mention `"`"`" while still inside the block comment. */",
+        "    String second = `"`"`"",
+        "        /**",
+        "         * Text block content after a post-close block comment still remains inside the text block.",
+        "         */",
+        "    `"`"`";",
+        "    void normalize() {}",
+        "}"
+    )
+    Assert-False -Condition (Test-ThresholdJavaLineIsInsideTextBlock -Lines $javaTextBlockWithPostCloseBlockCommentLines -LineNumber 5) -Name "java text block state tracks block comment after closing delimiter"
+    Assert-True -Condition (Test-ThresholdJavaLineIsInsideTextBlock -Lines $javaTextBlockWithPostCloseBlockCommentLines -LineNumber 8) -Name "java text block state ignores post-close block-comment triple quote delimiter"
+    Assert-False -Condition (Test-ThresholdJavaLineIsInsideTextBlock -Lines $javaTextBlockWithPostCloseBlockCommentLines -LineNumber 11) -Name "java text block state closes after post-close block-comment canary"
 
     $textBlockPath = "src/main/java/org/example/TextBlockCanary.java"
     Write-CanaryFile -Path $textBlockPath -Lines $javaTextBlockLines
