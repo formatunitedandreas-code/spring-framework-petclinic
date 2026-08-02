@@ -55,6 +55,7 @@ try {
     Assert-True -Condition ($coverageClaims -contains "javadoc_same_line_preformatted_content_not_comment_wrap_candidate") -Name "internal review twin covers same-line preformatted Javadoc exclusion"
     Assert-True -Condition ($coverageClaims -contains "javadoc_line_end_pre_tag_starts_preformatted_content") -Name "internal review twin covers line-end pre tag Javadoc exclusion"
     Assert-True -Condition ($coverageClaims -contains "javadoc_pre_tag_source_order_preserved") -Name "internal review twin covers source-order pre tag transitions"
+    Assert-True -Condition ($coverageClaims -contains "javadoc_inline_tag_pre_markers_ignored") -Name "internal review twin covers inline Javadoc pre markers"
     Assert-True -Condition ($coverageClaims -contains "review_patch_bound_to_merge_base") -Name "internal review twin covers merge-base patch binding"
     Assert-True -Condition ($coverageClaims -contains "review_forbidden_path_checks_include_rename_sources") -Name "internal review twin covers rename-source forbidden path checks"
     Assert-True -Condition ($coverageClaims -contains "review_changed_paths_use_nul_name_status") -Name "internal review twin covers NUL-delimited name-status parsing"
@@ -80,6 +81,7 @@ try {
     Assert-True -Condition ($libraryText -match "insidePreformattedJavadoc") -Name "PR197 preformatted Javadoc external finding is now locally covered"
     Assert-True -Condition ($libraryText -match '\$targetLineInsidePreformattedJavadoc = \$insidePreformattedJavadoc -or \$lineStartsPreformattedJavadoc') -Name "PR197 same-line preformatted Javadoc external finding is now locally covered"
     Assert-True -Condition ($libraryText -match "Update-ThresholdJavadocPreformattedStateInSourceOrder") -Name "PR197 source-order pre tag external finding is now locally covered"
+    Assert-True -Condition ($libraryText -match "Get-ThresholdJavadocPreformattedTransitions") -Name "PR197 inline Javadoc pre marker external finding is now locally covered"
     Assert-True -Condition ($libraryText -match "Find-ThresholdConservativeCommentSplitPoint") -Name "PR197 shared comment split predicate is now locally covered"
     Assert-False -Condition ($libraryText -match '\.IndexOf\("//"\)') -Name "raw double slash detection is blocked by local review predicate"
 
@@ -114,6 +116,7 @@ try {
     Assert-True -Condition ($twinText -match "java javadoc lexical state rejects same-line preformatted Javadoc content") -Name "internal review twin requires same-line preformatted Javadoc hostile fixture"
     Assert-True -Condition ($twinText -match "java javadoc lexical state treats line-end pre tag as preformatted opener") -Name "internal review twin requires line-end pre tag hostile fixture"
     Assert-True -Condition ($twinText -match "java javadoc lexical state preserves source-order pre tag transitions") -Name "internal review twin requires source-order pre tag hostile fixture"
+    Assert-True -Condition ($twinText -match "java javadoc lexical state ignores pre markers inside inline code tags") -Name "internal review twin requires inline Javadoc pre marker hostile fixture"
     Assert-True -Condition ($twinText -match "git merge-base") -Name "internal review twin computes patch from merge base"
     Assert-True -Condition ($twinText -match "patchBaseHead") -Name "internal review twin materializes patch base head"
     Assert-True -Condition ($twinText -match "run-next-slice revalidates current Javadoc context for prepared candidates") -Name "internal review twin requires single-slice revalidation fixture"

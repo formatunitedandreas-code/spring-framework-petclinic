@@ -256,17 +256,59 @@ function Update-ThresholdJavadocPreformattedStateInSourceOrder {
         [string] $JavadocLinePayload
     )
 
-    $preTagPattern = [regex]'(?i)</?pre(?:\s|>|$)'
-    foreach ($match in $preTagPattern.Matches([string]$JavadocLinePayload)) {
-        $tag = [string]$match.Value
-        if ($tag.StartsWith("</", [System.StringComparison]::Ordinal)) {
+    foreach ($transition in @(Get-ThresholdJavadocPreformattedTransitions -JavadocLinePayload $JavadocLinePayload)) {
+        if ($transition -eq "close") {
             $InsidePreformattedJavadoc = $false
+            continue
         }
-        else {
+        if ($transition -eq "open") {
             $InsidePreformattedJavadoc = $true
         }
     }
     return $InsidePreformattedJavadoc
+}
+
+function Get-ThresholdJavadocPreformattedTransitions {
+    param([string] $JavadocLinePayload)
+
+    $transitions = New-Object System.Collections.Generic.List[string]
+    $payload = [string]$JavadocLinePayload
+    $inlineTagDepth = 0
+    for ($i = 0; $i -lt $payload.Length; $i++) {
+        $ch = $payload[$i]
+        $next = if (($i + 1) -lt $payload.Length) { $payload[$i + 1] } else { [char]0 }
+
+        if ($inlineTagDepth -gt 0) {
+            if ($ch -eq '{' -and $next -eq '@') {
+                $inlineTagDepth++
+                $i++
+                continue
+            }
+            if ($ch -eq '}') {
+                $inlineTagDepth--
+            }
+            continue
+        }
+
+        if ($ch -eq '{' -and $next -eq '@') {
+            $inlineTagDepth = 1
+            $i++
+            continue
+        }
+
+        $remaining = $payload.Substring($i)
+        if ($remaining -match '^(?i)</pre(?:\s|>|$)') {
+            $transitions.Add("close")
+            $i += $Matches[0].Length - 1
+            continue
+        }
+        if ($remaining -match '^(?i)<pre(?:\s|>|$)') {
+            $transitions.Add("open")
+            $i += $Matches[0].Length - 1
+            continue
+        }
+    }
+    return @($transitions)
 }
 
 function Test-ThresholdJavaLineIsJavadocCommentContent {
@@ -288,8 +330,9 @@ function Test-ThresholdJavaLineIsJavadocCommentContent {
         foreach ($segment in $segments) {
             $line = [string]$segment
             $javadocLinePayload = ($line -replace '^\s*\*\s?', '')
-            $lineStartsPreformattedJavadoc = $javadocLinePayload -match '(?i)<pre(?:\s|>|$)'
-            $lineEndsPreformattedJavadoc = $javadocLinePayload -match '(?i)</pre(?:\s|>|$)'
+            $preformattedTransitions = @(Get-ThresholdJavadocPreformattedTransitions -JavadocLinePayload $javadocLinePayload)
+            $lineStartsPreformattedJavadoc = $preformattedTransitions -contains "open"
+            $lineEndsPreformattedJavadoc = $preformattedTransitions -contains "close"
             $targetLineInsidePreformattedJavadoc = $insidePreformattedJavadoc -or $lineStartsPreformattedJavadoc
             $insideString = $false
             $insideChar = $false
