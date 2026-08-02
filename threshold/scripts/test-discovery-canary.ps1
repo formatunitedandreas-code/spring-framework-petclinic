@@ -51,6 +51,19 @@ function Add-JsonProperty {
     $Object | Add-Member -NotePropertyName $Name -NotePropertyValue $Value
 }
 
+function Select-UniqueString {
+    param([object[]] $Values)
+    $seen = @{}
+    foreach ($value in @($Values)) {
+        $stringValue = [string]$value
+        if ($seen.ContainsKey($stringValue)) {
+            continue
+        }
+        $seen[$stringValue] = $true
+        $stringValue
+    }
+}
+
 if (-not (Test-Path $ExpectedPath)) {
     throw "Discovery canary expectation file not found: $ExpectedPath"
 }
@@ -75,6 +88,7 @@ if ($requiredDiscoverableClasses.Count -eq 0 -and $legacyRequiredAutoPatchableCl
 if ($requiredDiscoverableClasses.Count -eq 0) {
     throw "Discovery canary expectation must declare requiredDiscoverableCandidateClasses or legacy requiredAutoPatchableCandidateClasses."
 }
+$requiredDiscoverableClasses = @(Select-UniqueString -Values $requiredDiscoverableClasses)
 $fixtureRoot = ConvertTo-RepoPath ([string]$expected.fixtureRoot)
 if (-not (Test-Path $fixtureRoot)) {
     throw "Discovery canary fixture root not found: $fixtureRoot"
@@ -122,6 +136,7 @@ $tempExtraTrainerExpectedPath = Join-Path ([System.IO.Path]::GetTempPath()) "thr
 $tempExtraExecutionModeExpectedPath = Join-Path ([System.IO.Path]::GetTempPath()) "threshold-discovery-canary-extra-execution-mode-expected-$head.json"
 $tempWrongExecutionModeExpectedPath = Join-Path ([System.IO.Path]::GetTempPath()) "threshold-discovery-canary-wrong-execution-mode-expected-$head.json"
 $tempWrongTrainerExpectedPath = Join-Path ([System.IO.Path]::GetTempPath()) "threshold-discovery-canary-wrong-trainer-expected-$head.json"
+$tempDuplicateRequiredExpectedPath = Join-Path ([System.IO.Path]::GetTempPath()) "threshold-discovery-canary-duplicate-required-expected-$head.json"
 if (-not $SkipInternalRegressions.IsPresent) {
     foreach ($repoOwnedPath in @($defaultLeasePath, $defaultGatePath, $defaultTrainerReportPath, $defaultExpectedPath)) {
         if (-not (Test-Path $repoOwnedPath)) {
@@ -144,6 +159,7 @@ if (-not $SkipInternalRegressions.IsPresent) {
     if (Test-Path $tempExtraExecutionModeExpectedPath) { Remove-Item -LiteralPath $tempExtraExecutionModeExpectedPath -Force }
     if (Test-Path $tempWrongExecutionModeExpectedPath) { Remove-Item -LiteralPath $tempWrongExecutionModeExpectedPath -Force }
     if (Test-Path $tempWrongTrainerExpectedPath) { Remove-Item -LiteralPath $tempWrongTrainerExpectedPath -Force }
+    if (Test-Path $tempDuplicateRequiredExpectedPath) { Remove-Item -LiteralPath $tempDuplicateRequiredExpectedPath -Force }
     $alternateTrainerReport = Get-Content $defaultTrainerReportPath -Raw | ConvertFrom-Json
     $alternateDecision = @(
         $alternateTrainerReport.decisions |
@@ -390,6 +406,51 @@ if (-not $SkipInternalRegressions.IsPresent) {
     }
     $global:LASTEXITCODE = 0
     Write-Host "trainerDecisionMismatchCountedOnce=true"
+
+    $duplicateRequiredExpected = [ordered]@{
+        schemaVersion = "threshold.petclinic.discovery-canary.v0.1"
+        fixtureRoot = [string]$defaultExpected.fixtureRoot
+        requiredDiscoverableCandidateClasses = @("comment_wrap_cleanup", "comment_wrap_cleanup")
+        expectedExecutionModes = [ordered]@{
+            comment_wrap_cleanup = "auto_patchable"
+        }
+        expectedTrainerDecisions = [ordered]@{
+            comment_wrap_cleanup = "autoPatchable"
+        }
+        nonClaims = @("duplicate required-class count negative fixture")
+    }
+    $duplicateRequiredExpected | ConvertTo-Json -Depth 8 | Set-Content $tempDuplicateRequiredExpectedPath
+    $duplicateRequiredOutput = @(
+        & powershell.exe -NoProfile -ExecutionPolicy Bypass -File $PSCommandPath `
+            -LeasePath $defaultLeasePath `
+            -GatePath $defaultGatePath `
+            -TrainerReportPath $defaultTrainerReportPath `
+            -ExpectedPath $tempDuplicateRequiredExpectedPath `
+            -SkipInternalRegressions |
+            ForEach-Object { [string]$_ }
+    )
+    if ($LASTEXITCODE -eq 0) {
+        throw "Discovery canary duplicate required-class regression unexpectedly passed."
+    }
+    $duplicateExecutionMismatchLines = @(
+        $duplicateRequiredOutput |
+            Where-Object { $_ -like "executionModeMismatch=comment_wrap_cleanup *" }
+    )
+    $duplicateTrainerMismatchLines = @(
+        $duplicateRequiredOutput |
+            Where-Object { $_ -like "trainerDecisionMismatch=comment_wrap_cleanup *" }
+    )
+    if ($duplicateExecutionMismatchLines.Count -ne 1) {
+        throw "Discovery canary duplicate required-class regression expected one execution-mode mismatch line but observed $($duplicateExecutionMismatchLines.Count)."
+    }
+    if ($duplicateTrainerMismatchLines.Count -ne 1) {
+        throw "Discovery canary duplicate required-class regression expected one trainer-decision mismatch line but observed $($duplicateTrainerMismatchLines.Count)."
+    }
+    foreach ($line in $duplicateRequiredOutput) {
+        Write-Host $line
+    }
+    $global:LASTEXITCODE = 0
+    Write-Host "requiredClassDeduplicationCountedOnce=true"
 }
 
 $visibleClasses = @(
@@ -523,6 +584,9 @@ if (Test-Path $tempWrongExecutionModeExpectedPath) {
 if (Test-Path $tempWrongTrainerExpectedPath) {
     Remove-Item -LiteralPath $tempWrongTrainerExpectedPath -Force
 }
+if (Test-Path $tempDuplicateRequiredExpectedPath) {
+    Remove-Item -LiteralPath $tempDuplicateRequiredExpectedPath -Force
+}
 
 $discoveryVisibilityMatched = ($missingRequiredCandidateClassCount -eq 0)
 $executionModeMatched = ($executionModeMismatchCount -eq 0)
@@ -547,6 +611,7 @@ Write-Host "declaredTrainerExpectationCoverageRequired=true"
 Write-Host "declaredExecutionModeExpectationCoverageRequired=true"
 Write-Host "executionModeMismatchCountedOnce=true"
 Write-Host "trainerDecisionMismatchCountedOnce=true"
+Write-Host "requiredClassDeduplicationCountedOnce=true"
 Write-Host "missingRequiredCandidateClassCount=$missingRequiredCandidateClassCount"
 Write-Host "executionModeMismatchCount=$executionModeMismatchCount"
 Write-Host "trainerDecisionMismatchCount=$trainerDecisionMismatchCount"
