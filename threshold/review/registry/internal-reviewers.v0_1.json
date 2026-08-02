@@ -16,7 +16,8 @@
         "batch_comment_wrap_preserves_final_newline",
         "slice_comment_wrap_revalidates_current_javadoc_context",
         "slice_comment_wrap_uses_discovery_threshold",
-        "slice_comment_wrap_revalidates_split_predicate"
+        "slice_comment_wrap_revalidates_split_predicate",
+        "slice_comment_wrap_preserves_file_formatting"
       ]
     },
     {

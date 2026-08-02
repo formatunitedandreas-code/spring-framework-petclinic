@@ -335,6 +335,9 @@ try {
     Assert-True -Condition ($runNextSliceText -match "Get-CommentWrapThreshold") -Name "run-next-slice revalidates active comment wrap threshold"
     Assert-True -Condition ($runNextSliceText -match "comment_wrap_threshold_not_met") -Name "run-next-slice reports stale prepared comment candidates below threshold"
     Assert-True -Condition ($runNextSliceText -match "Test-ThresholdCommentWrapCandidateLine") -Name "run-next-slice revalidates conservative comment split point before selection"
+    Assert-True -Condition ($runNextSliceText -match '\[bool\] \$EnsureTrailingNewline = \$false') -Name "run-next-slice write path binds trailing newline preservation"
+    Assert-True -Condition ($runNextSliceText -match '\$lineEnding = Get-LineEnding -Content \$originalText') -Name "run-next-slice write path binds source line ending preservation"
+    Assert-True -Condition ($runNextSliceText -match '\$hadTrailingNewline = \$originalText\.EndsWith\(\$lineEnding') -Name "run-next-slice preserves final newline when comment wrap rewrites file"
 
     $kgMaterializationText = Get-Content (Join-Path $thresholdScriptRoot "materialize-knowledge-graphs.ps1") -Raw
     $leasePolicyText = Get-Content (Join-Path $thresholdScriptRoot "lib/lease-policy.ps1") -Raw

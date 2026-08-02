@@ -103,6 +103,8 @@ try {
     Assert-True -Condition ($sliceText -match "Test-SliceJavadocCommentLine") -Name "PR197 prepared single-slice Javadoc-context external finding is now locally covered"
     Assert-True -Condition ($sliceText -match "comment_wrap_threshold_not_met") -Name "PR197 single-slice threshold external finding is now locally covered"
     Assert-True -Condition ($sliceText -match "Test-ThresholdCommentWrapCandidateLine") -Name "PR197 single-slice split revalidation external finding is now locally covered"
+    Assert-True -Condition ($sliceText -match "EnsureTrailingNewline") -Name "PR197 single-slice formatting preservation external finding is now locally covered"
+    Assert-True -Condition ($sliceText -match '\$lineEnding = Get-LineEnding -Content \$originalText') -Name "PR197 single-slice line ending preservation external finding is now locally covered"
 
     $twinText = Get-Content -LiteralPath (Join-Path $repoRoot "threshold/scripts/invoke-internal-review-twin.ps1") -Raw
     Assert-True -Condition ($twinText -match "Get-RevisionTextOrEmpty") -Name "internal review twin reads reviewer inputs from resolved head"
@@ -135,6 +137,7 @@ try {
     Assert-True -Condition ($twinText -match "run-next-batch uses shared discovery comment wrap predicate") -Name "internal review twin requires batch shared split predicate fixture"
     Assert-True -Condition ($twinText -match "run-next-batch preserves final newline when comment wrap rewrites file") -Name "internal review twin requires final-newline preservation fixture"
     Assert-True -Condition ($twinText -match "run-next-slice revalidates conservative comment split point before selection") -Name "internal review twin requires single-slice split predicate fixture"
+    Assert-True -Condition ($twinText -match "run-next-slice preserves final newline when comment wrap rewrites file") -Name "internal review twin requires single-slice formatting preservation fixture"
 
     Write-Host "internalReviewTwinTests=passed"
 }
