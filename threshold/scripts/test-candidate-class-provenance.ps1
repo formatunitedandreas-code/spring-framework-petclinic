@@ -1108,6 +1108,21 @@ try {
     )
     Assert-False -Condition (Test-ThresholdJavaLineIsJavadocCommentContent -Lines $javaJavadocInlineCodePreTagLines -Index 4 -JavaTextBlockLineState (Get-ThresholdJavaTextBlockLineState -Lines $javaJavadocInlineCodePreTagLines)) -Name "java javadoc lexical state ignores pre markers inside inline code tags"
     Assert-False -Condition (Test-ThresholdCommentWrapCandidateLine -Lines $javaJavadocInlineCodePreTagLines -Index 4 -CommentWrapThreshold 69 -JavaTextBlockLineState (Get-ThresholdJavaTextBlockLineState -Lines $javaJavadocInlineCodePreTagLines)) -Name "java comment wrap predicate rejects inline code pre tag content"
+    $javaJavadocMultilineInlineCodePreTagLines = @(
+        "class JavadocCanary {",
+        "    /**",
+        "     * <pre>",
+        "     * {@code",
+        "     * </pre>",
+        "     * }",
+        "     * SELECT id, first_name, last_name, telephone FROM owners WHERE last_name = ? ORDER BY last_name, first_name",
+        "     * </pre>",
+        "     */",
+        "    void normalize() {}",
+        "}"
+    )
+    Assert-False -Condition (Test-ThresholdJavaLineIsJavadocCommentContent -Lines $javaJavadocMultilineInlineCodePreTagLines -Index 6 -JavaTextBlockLineState (Get-ThresholdJavaTextBlockLineState -Lines $javaJavadocMultilineInlineCodePreTagLines)) -Name "java javadoc lexical state preserves inline tag depth across lines"
+    Assert-False -Condition (Test-ThresholdCommentWrapCandidateLine -Lines $javaJavadocMultilineInlineCodePreTagLines -Index 6 -CommentWrapThreshold 69 -JavaTextBlockLineState (Get-ThresholdJavaTextBlockLineState -Lines $javaJavadocMultilineInlineCodePreTagLines)) -Name "java comment wrap predicate rejects multiline inline code pre tag content"
     $javaJavadocHtmlCommentPreTagLines = @(
         "class JavadocCanary {",
         "    /**",
@@ -1121,6 +1136,19 @@ try {
     )
     Assert-False -Condition (Test-ThresholdJavaLineIsJavadocCommentContent -Lines $javaJavadocHtmlCommentPreTagLines -Index 4 -JavaTextBlockLineState (Get-ThresholdJavaTextBlockLineState -Lines $javaJavadocHtmlCommentPreTagLines)) -Name "java javadoc lexical state ignores pre markers inside HTML comments"
     Assert-False -Condition (Test-ThresholdCommentWrapCandidateLine -Lines $javaJavadocHtmlCommentPreTagLines -Index 4 -CommentWrapThreshold 69 -JavaTextBlockLineState (Get-ThresholdJavaTextBlockLineState -Lines $javaJavadocHtmlCommentPreTagLines)) -Name "java comment wrap predicate rejects HTML comment pre tag content"
+    $javaJavadocHtmlCommentCarryoverLines = @(
+        "class JavadocCanary {",
+        "    /**",
+        "     * <pre><!-- comment",
+        "     * still commented </pre> -->",
+        "     * SELECT id, first_name, last_name, telephone FROM owners WHERE last_name = ? ORDER BY last_name, first_name",
+        "     * </pre>",
+        "     */",
+        "    void normalize() {}",
+        "}"
+    )
+    Assert-False -Condition (Test-ThresholdJavaLineIsJavadocCommentContent -Lines $javaJavadocHtmlCommentCarryoverLines -Index 4 -JavaTextBlockLineState (Get-ThresholdJavaTextBlockLineState -Lines $javaJavadocHtmlCommentCarryoverLines)) -Name "java javadoc lexical state preserves pre state from incoming HTML comment context"
+    Assert-False -Condition (Test-ThresholdCommentWrapCandidateLine -Lines $javaJavadocHtmlCommentCarryoverLines -Index 4 -CommentWrapThreshold 69 -JavaTextBlockLineState (Get-ThresholdJavaTextBlockLineState -Lines $javaJavadocHtmlCommentCarryoverLines)) -Name "java comment wrap predicate rejects HTML comment carryover pre tag content"
     $javaJavadocNoSplitLines = @(
         "class JavadocCanary {",
         "    /**",

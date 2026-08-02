@@ -254,12 +254,14 @@ function Update-ThresholdJavadocPreformattedStateInSourceOrder {
     param(
         [bool] $InsidePreformattedJavadoc,
         [string] $JavadocLinePayload,
-        [bool] $InsideJavadocHtmlComment = $false
+        [bool] $InsideJavadocHtmlComment = $false,
+        [int] $InlineTagDepth = 0
     )
 
     $scanResult = Get-ThresholdJavadocPreformattedTransitionScanResult `
         -JavadocLinePayload $JavadocLinePayload `
-        -InsideHtmlComment $InsideJavadocHtmlComment
+        -InsideHtmlComment $InsideJavadocHtmlComment `
+        -InlineTagDepth $InlineTagDepth
     foreach ($transition in @($scanResult.Transitions)) {
         if ($transition -eq "close") {
             $InsidePreformattedJavadoc = $false
@@ -272,6 +274,7 @@ function Update-ThresholdJavadocPreformattedStateInSourceOrder {
     return [ordered]@{
         InsidePreformattedJavadoc = $InsidePreformattedJavadoc
         InsideJavadocHtmlComment = [bool]$scanResult.InsideHtmlComment
+        InlineTagDepth = [int]$scanResult.InlineTagDepth
     }
 }
 
@@ -285,12 +288,12 @@ function Get-ThresholdJavadocPreformattedTransitions {
 function Get-ThresholdJavadocPreformattedTransitionScanResult {
     param(
         [string] $JavadocLinePayload,
-        [bool] $InsideHtmlComment = $false
+        [bool] $InsideHtmlComment = $false,
+        [int] $InlineTagDepth = 0
     )
 
     $transitions = New-Object System.Collections.Generic.List[string]
     $payload = [string]$JavadocLinePayload
-    $inlineTagDepth = 0
     for ($i = 0; $i -lt $payload.Length; $i++) {
         $remaining = $payload.Substring($i)
 
@@ -343,6 +346,7 @@ function Get-ThresholdJavadocPreformattedTransitionScanResult {
     return [ordered]@{
         Transitions = @($transitions)
         InsideHtmlComment = $InsideHtmlComment
+        InlineTagDepth = $inlineTagDepth
     }
 }
 
@@ -361,18 +365,20 @@ function Test-ThresholdJavaLineIsJavadocCommentContent {
     $insideTextBlock = $false
     $insidePreformattedJavadoc = $false
     $insideJavadocHtmlComment = $false
+    $javadocInlineTagDepth = 0
     for ($i = 0; $i -le $Index; $i++) {
         $segments = @(Split-ThresholdJavaUnicodeTranslatedLine -Line ([string]$Lines[$i]))
         foreach ($segment in $segments) {
             $line = [string]$segment
             $javadocLinePayload = ($line -replace '^\s*\*\s?', '')
+            $incomingInsideJavadocHtmlComment = $insideJavadocHtmlComment
+            $incomingJavadocInlineTagDepth = $javadocInlineTagDepth
             $preformattedScanResult = Get-ThresholdJavadocPreformattedTransitionScanResult `
                 -JavadocLinePayload $javadocLinePayload `
-                -InsideHtmlComment $insideJavadocHtmlComment
-            $insideJavadocHtmlComment = [bool]$preformattedScanResult.InsideHtmlComment
+                -InsideHtmlComment $incomingInsideJavadocHtmlComment `
+                -InlineTagDepth $incomingJavadocInlineTagDepth
             $preformattedTransitions = @($preformattedScanResult.Transitions)
             $lineStartsPreformattedJavadoc = $preformattedTransitions -contains "open"
-            $lineEndsPreformattedJavadoc = $preformattedTransitions -contains "close"
             $targetLineInsidePreformattedJavadoc = $insidePreformattedJavadoc -or $lineStartsPreformattedJavadoc
             $insideString = $false
             $insideChar = $false
@@ -397,6 +403,7 @@ function Test-ThresholdJavaLineIsJavadocCommentContent {
                         $insideJavadoc = $false
                         $insidePreformattedJavadoc = $false
                         $insideJavadocHtmlComment = $false
+                        $javadocInlineTagDepth = 0
                         $offset++
                         if ($i -eq $Index) {
                             $suffix = if ($offset + 1 -lt $line.Length) { $line.Substring($offset + 1) } else { '' }
@@ -461,9 +468,11 @@ function Test-ThresholdJavaLineIsJavadocCommentContent {
                 $preformattedState = Update-ThresholdJavadocPreformattedStateInSourceOrder `
                     -InsidePreformattedJavadoc $insidePreformattedJavadoc `
                     -JavadocLinePayload $javadocLinePayload `
-                    -InsideJavadocHtmlComment $insideJavadocHtmlComment
+                    -InsideJavadocHtmlComment $incomingInsideJavadocHtmlComment `
+                    -InlineTagDepth $incomingJavadocInlineTagDepth
                 $insidePreformattedJavadoc = [bool]$preformattedState.InsidePreformattedJavadoc
                 $insideJavadocHtmlComment = [bool]$preformattedState.InsideJavadocHtmlComment
+                $javadocInlineTagDepth = [int]$preformattedState.InlineTagDepth
             }
         }
         if ($i -eq $Index) {
