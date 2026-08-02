@@ -1079,6 +1079,20 @@ try {
     )
     Assert-False -Condition (Test-ThresholdJavaLineIsJavadocCommentContent -Lines $javaJavadocLineEndPreformattedLines -Index 4 -JavaTextBlockLineState (Get-ThresholdJavaTextBlockLineState -Lines $javaJavadocLineEndPreformattedLines)) -Name "java javadoc lexical state treats line-end pre tag as preformatted opener"
     Assert-False -Condition (Test-ThresholdCommentWrapCandidateLine -Lines $javaJavadocLineEndPreformattedLines -Index 4 -CommentWrapThreshold 69 -JavaTextBlockLineState (Get-ThresholdJavaTextBlockLineState -Lines $javaJavadocLineEndPreformattedLines)) -Name "java comment wrap predicate rejects line-end pre tag preformatted content"
+    $javaJavadocPreTagSourceOrderLines = @(
+        "class JavadocCanary {",
+        "    /**",
+        "     * <pre>",
+        "     * SELECT id FROM owners",
+        "     * </pre><pre>",
+        "     * SELECT id, first_name, last_name, telephone FROM owners WHERE last_name = ? ORDER BY last_name, first_name",
+        "     * </pre>",
+        "     */",
+        "    void normalize() {}",
+        "}"
+    )
+    Assert-False -Condition (Test-ThresholdJavaLineIsJavadocCommentContent -Lines $javaJavadocPreTagSourceOrderLines -Index 5 -JavaTextBlockLineState (Get-ThresholdJavaTextBlockLineState -Lines $javaJavadocPreTagSourceOrderLines)) -Name "java javadoc lexical state preserves source-order pre tag transitions"
+    Assert-False -Condition (Test-ThresholdCommentWrapCandidateLine -Lines $javaJavadocPreTagSourceOrderLines -Index 5 -CommentWrapThreshold 69 -JavaTextBlockLineState (Get-ThresholdJavaTextBlockLineState -Lines $javaJavadocPreTagSourceOrderLines)) -Name "java comment wrap predicate rejects source-order pre tag content"
     $javaJavadocNoSplitLines = @(
         "class JavadocCanary {",
         "    /**",

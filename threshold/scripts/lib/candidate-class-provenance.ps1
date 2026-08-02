@@ -250,6 +250,25 @@ function Get-ThresholdJavaTextBlockLineState {
     return $states
 }
 
+function Update-ThresholdJavadocPreformattedStateInSourceOrder {
+    param(
+        [bool] $InsidePreformattedJavadoc,
+        [string] $JavadocLinePayload
+    )
+
+    $preTagPattern = [regex]'(?i)</?pre(?:\s|>|$)'
+    foreach ($match in $preTagPattern.Matches([string]$JavadocLinePayload)) {
+        $tag = [string]$match.Value
+        if ($tag.StartsWith("</", [System.StringComparison]::Ordinal)) {
+            $InsidePreformattedJavadoc = $false
+        }
+        else {
+            $InsidePreformattedJavadoc = $true
+        }
+    }
+    return $InsidePreformattedJavadoc
+}
+
 function Test-ThresholdJavaLineIsJavadocCommentContent {
     param(
         [string[]] $Lines,
@@ -354,12 +373,7 @@ function Test-ThresholdJavaLineIsJavadocCommentContent {
                 }
             }
             if ($insideJavadoc) {
-                if ($lineStartsPreformattedJavadoc) {
-                    $insidePreformattedJavadoc = $true
-                }
-                if ($lineEndsPreformattedJavadoc) {
-                    $insidePreformattedJavadoc = $false
-                }
+                $insidePreformattedJavadoc = Update-ThresholdJavadocPreformattedStateInSourceOrder -InsidePreformattedJavadoc $insidePreformattedJavadoc -JavadocLinePayload $javadocLinePayload
             }
         }
         if ($i -eq $Index) {
