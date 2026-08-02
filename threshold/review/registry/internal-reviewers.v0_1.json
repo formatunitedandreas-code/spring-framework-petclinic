@@ -1,0 +1,57 @@
+{
+  "schemaVersion": "ThresholdInternalReviewerRegistryV0_1",
+  "registryId": "threshold-internal-reviewer-registry-v0-1",
+  "authorizing": false,
+  "reviewers": [
+    {
+      "reviewerId": "threshold.candidate_class_reviewer.v0_1",
+      "category": "candidate_class",
+      "coveredPredicates": [
+        "candidate_class_provenance_chain_bound",
+        "observed_diff_class_matches_candidate_class",
+        "batch_comment_wrap_uses_discovery_threshold"
+      ]
+    },
+    {
+      "reviewerId": "threshold.fixture_integrity_reviewer.v0_1",
+      "category": "fixture_integrity",
+      "coveredPredicates": [
+        "negative_fixture_reason_isolated",
+        "missing_trainer_fixture_keeps_execution_mode_valid",
+        "duplicate_required_class_counted_once"
+      ]
+    },
+    {
+      "reviewerId": "threshold.runtime_literal_reviewer.v0_1",
+      "category": "runtime_literal",
+      "coveredPredicates": [
+        "java_text_block_content_not_comment_wrap_candidate",
+        "java_line_comment_detection_respects_string_literals",
+        "ordinary_block_comment_not_promoted_as_javadoc"
+      ]
+    },
+    {
+      "reviewerId": "threshold.scope_authority_reviewer.v0_1",
+      "category": "scope_authority",
+      "coveredPredicates": [
+        "reviewer_authorizing_false",
+        "internal_review_does_not_create_push_or_merge_authority"
+      ]
+    },
+    {
+      "reviewerId": "threshold.evidence_causality_reviewer.v0_1",
+      "category": "evidence_causality",
+      "coveredPredicates": [
+        "review_subject_exact_head_bound",
+        "patch_digest_bound_to_base_and_head",
+        "changed_path_digest_bound"
+      ]
+    }
+  ],
+  "aggregationPolicy": {
+    "anyP0": "BLOCK_AUTHORITY_VIOLATION",
+    "anyP1": "HOLD_INTERNAL_FINDINGS",
+    "coverageIncomplete": "HOLD_INSUFFICIENT_REVIEW_COVERAGE",
+    "findingFree": "PROCEED_TO_EXTERNAL_HOLDOUT"
+  }
+}
