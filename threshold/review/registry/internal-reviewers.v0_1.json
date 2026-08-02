@@ -29,6 +29,7 @@
         "java_text_block_content_not_comment_wrap_candidate",
         "java_line_comment_detection_respects_string_literals",
         "java_text_block_delimiters_must_be_unescaped",
+        "block_comment_text_block_delimiters_ignored",
         "ordinary_block_comment_not_promoted_as_javadoc"
       ]
     },
@@ -37,7 +38,8 @@
       "category": "scope_authority",
       "coveredPredicates": [
         "reviewer_authorizing_false",
-        "internal_review_does_not_create_push_or_merge_authority"
+        "internal_review_does_not_create_push_or_merge_authority",
+        "declared_forbidden_paths_mechanically_enforced"
       ]
     },
     {
@@ -45,6 +47,7 @@
       "category": "evidence_causality",
       "coveredPredicates": [
         "review_subject_exact_head_bound",
+        "reviewer_inputs_bound_to_resolved_head",
         "patch_digest_bound_to_base_and_head",
         "changed_path_digest_bound"
       ]

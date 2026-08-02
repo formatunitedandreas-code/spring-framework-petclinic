@@ -65,6 +65,61 @@ function Remove-ThresholdJavaLineCommentOutsideLiteral {
     return $Line
 }
 
+function Remove-ThresholdJavaCommentsOutsideLiteral {
+    param(
+        [string] $Line,
+        [ref] $InsideBlockComment
+    )
+
+    $builder = [System.Text.StringBuilder]::new()
+    $insideString = $false
+    $insideChar = $false
+    $escaped = $false
+    for ($i = 0; $i -lt $Line.Length; $i++) {
+        $ch = $Line[$i]
+        $next = if ($i + 1 -lt $Line.Length) { $Line[$i + 1] } else { [char]0 }
+
+        if ([bool]$InsideBlockComment.Value) {
+            if ($ch -eq "*" -and $next -eq "/") {
+                $InsideBlockComment.Value = $false
+                $i++
+            }
+            continue
+        }
+
+        if ($escaped) {
+            [void]$builder.Append($ch)
+            $escaped = $false
+            continue
+        }
+        if (($insideString -or $insideChar) -and $ch -eq '\') {
+            [void]$builder.Append($ch)
+            $escaped = $true
+            continue
+        }
+        if (-not $insideChar -and $ch -eq '"') {
+            [void]$builder.Append($ch)
+            $insideString = -not $insideString
+            continue
+        }
+        if (-not $insideString -and $ch -eq "'") {
+            [void]$builder.Append($ch)
+            $insideChar = -not $insideChar
+            continue
+        }
+        if (-not $insideString -and -not $insideChar -and $ch -eq "/" -and $next -eq "/") {
+            break
+        }
+        if (-not $insideString -and -not $insideChar -and $ch -eq "/" -and $next -eq "*") {
+            $InsideBlockComment.Value = $true
+            $i++
+            continue
+        }
+        [void]$builder.Append($ch)
+    }
+    return $builder.ToString()
+}
+
 function Test-ThresholdJavaCharacterIsEscaped {
     param([string] $Line, [int] $Index)
 
@@ -99,6 +154,7 @@ function Get-ThresholdJavaTextBlockLineState {
 
     $states = @{}
     $insideTextBlock = $false
+    $insideBlockComment = $false
     for ($i = 0; $i -lt $Lines.Count; $i++) {
         $lineNumber = $i + 1
         $line = [string]$Lines[$i]
@@ -107,7 +163,7 @@ function Get-ThresholdJavaTextBlockLineState {
         }
         $lexicalLine = $line
         if (-not $insideTextBlock) {
-            $lexicalLine = Remove-ThresholdJavaLineCommentOutsideLiteral -Line $line
+            $lexicalLine = Remove-ThresholdJavaCommentsOutsideLiteral -Line $line -InsideBlockComment ([ref]$insideBlockComment)
         }
         $delimiterCount = Get-ThresholdJavaTextBlockDelimiterCount -Line $lexicalLine
         if (($delimiterCount % 2) -eq 1) {

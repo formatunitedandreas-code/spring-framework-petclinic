@@ -33,6 +33,52 @@ function Get-FileDigestOrEmpty {
     return (Get-FileHash -Algorithm SHA256 -LiteralPath $Path).Hash.ToLowerInvariant()
 }
 
+function Get-RevisionTextOrEmpty {
+    param([string] $Revision, [string] $Path)
+
+    $repoPath = $Path -replace "\\", "/"
+    $text = @(& git show "$Revision`:$repoPath" 2>$null)
+    if ($LASTEXITCODE -ne 0) {
+        return ""
+    }
+    return ($text -join "`n")
+}
+
+function Get-RevisionFileDigestOrEmpty {
+    param([string] $Revision, [string] $Path)
+
+    $text = Get-RevisionTextOrEmpty -Revision $Revision -Path $Path
+    if ([string]::IsNullOrEmpty($text)) {
+        return ""
+    }
+    return Get-StringSha256Lower -Text $text
+}
+
+function Get-RevisionTreeFileSetDigest {
+    param([string] $Revision, [string] $RootPath)
+
+    $repoRootPath = $RootPath -replace "\\", "/"
+    $paths = @(& git ls-tree -r --name-only $Revision -- $repoRootPath 2>$null | Sort-Object)
+    if ($LASTEXITCODE -ne 0 -or $paths.Count -eq 0) {
+        return Get-StringSha256Lower -Text ""
+    }
+    $basis = @(
+        $paths | ForEach-Object {
+            $path = [string]$_
+            "${path}:$(Get-RevisionFileDigestOrEmpty -Revision $Revision -Path $path)"
+        }
+    ) -join "`n"
+    return Get-StringSha256Lower -Text $basis
+}
+
+function Test-ReviewPathAgainstPattern {
+    param([string] $Path, [string] $Pattern)
+
+    $normalizedPath = $Path -replace "\\", "/"
+    $normalizedPattern = $Pattern -replace "\\", "/"
+    return [System.Management.Automation.WildcardPattern]::new($normalizedPattern, "IgnoreCase").IsMatch($normalizedPath)
+}
+
 function Resolve-GitRevision {
     param([string] $Revision)
     $value = (& git rev-parse $Revision 2>$null)
@@ -132,11 +178,11 @@ $reviewSubject = [ordered]@{
     changedPathDigest = Get-StringSha256Lower -Text (@($changedPaths) -join "`n")
     workOrderDigest = ""
     authorityEnvelopeDigest = ""
-    candidatePocketDigest = Get-FileDigestOrEmpty -Path "threshold/candidate-pocket/current.json"
-    discoveryEvidenceDigest = Get-StringSha256Lower -Text (@(Get-ChildItem "threshold/discovery-evidence" -Recurse -File -ErrorAction SilentlyContinue | Sort-Object FullName | ForEach-Object { "$($_.FullName):$((Get-FileHash -Algorithm SHA256 -LiteralPath $_.FullName).Hash.ToLowerInvariant())" }) -join "`n")
-    receiptSetDigest = Get-StringSha256Lower -Text (@(Get-ChildItem "threshold/receipts" -Recurse -File -ErrorAction SilentlyContinue | Sort-Object FullName | ForEach-Object { "$($_.FullName):$((Get-FileHash -Algorithm SHA256 -LiteralPath $_.FullName).Hash.ToLowerInvariant())" }) -join "`n")
-    capabilityKgDigest = Get-FileDigestOrEmpty -Path "threshold/kgs/capability-kg.json"
-    fidelityKgDigest = Get-FileDigestOrEmpty -Path "threshold/kgs/fidelity-kg.json"
+    candidatePocketDigest = Get-RevisionFileDigestOrEmpty -Revision $headSha -Path "threshold/candidate-pocket/current.json"
+    discoveryEvidenceDigest = Get-RevisionTreeFileSetDigest -Revision $headSha -RootPath "threshold/discovery-evidence"
+    receiptSetDigest = Get-RevisionTreeFileSetDigest -Revision $headSha -RootPath "threshold/receipts"
+    capabilityKgDigest = Get-RevisionFileDigestOrEmpty -Revision $headSha -Path "threshold/kgs/capability-kg.json"
+    fidelityKgDigest = Get-RevisionFileDigestOrEmpty -Revision $headSha -Path "threshold/kgs/fidelity-kg.json"
     semanticKgDigest = ""
     expectedCandidateClasses = @("comment_wrap_cleanup")
     expectedTransformationClasses = @("comment_wrap_cleanup")
@@ -153,11 +199,11 @@ $reviewSubject = [ordered]@{
 }
 $reviewSubject.reviewSubjectDigest = Get-StringSha256Lower -Text ($reviewSubject | ConvertTo-Json -Depth 12 -Compress)
 
-$candidateProvenanceText = Get-Content -LiteralPath "threshold/scripts/lib/candidate-class-provenance.ps1" -Raw
-$runNextBatchText = Get-Content -LiteralPath "threshold/scripts/run-next-batch.ps1" -Raw
-$candidateTestText = Get-Content -LiteralPath "threshold/scripts/test-candidate-class-provenance.ps1" -Raw
-$discoveryCanaryText = Get-Content -LiteralPath "threshold/scripts/test-discovery-canary.ps1" -Raw
-$canaryCommentModelText = Get-Content -LiteralPath "threshold/discovery-canaries/fixtures/src/main/java/org/springframework/samples/petclinic/model/CanaryCommentModel.java" -Raw
+$candidateProvenanceText = Get-RevisionTextOrEmpty -Revision $headSha -Path "threshold/scripts/lib/candidate-class-provenance.ps1"
+$runNextBatchText = Get-RevisionTextOrEmpty -Revision $headSha -Path "threshold/scripts/run-next-batch.ps1"
+$candidateTestText = Get-RevisionTextOrEmpty -Revision $headSha -Path "threshold/scripts/test-candidate-class-provenance.ps1"
+$discoveryCanaryText = Get-RevisionTextOrEmpty -Revision $headSha -Path "threshold/scripts/test-discovery-canary.ps1"
+$canaryCommentModelText = Get-RevisionTextOrEmpty -Revision $headSha -Path "threshold/discovery-canaries/fixtures/src/main/java/org/springframework/samples/petclinic/model/CanaryCommentModel.java"
 
 $runtimeFindings = @()
 if ($candidateProvenanceText -notmatch 'function Remove-ThresholdJavaLineCommentOutsideLiteral') {
@@ -169,11 +215,17 @@ if ($candidateProvenanceText -match '\.IndexOf\("//"\)') {
 if ($candidateProvenanceText -notmatch 'Get-ThresholdJavaTextBlockDelimiterCount') {
     $runtimeFindings += New-Finding -ReviewerId "threshold.runtime_literal_reviewer.v0_1" -Category "runtime_literal" -Severity "P1" -Title "Text-block delimiter parser does not reject escaped quote characters" -AffectedPaths @("threshold/scripts/lib/candidate-class-provenance.ps1") -ViolatedPredicates @("java_text_block_delimiters_must_be_unescaped") -Description "The text-block scanner must count only lexically valid, unescaped triple-quote delimiters."
 }
+if ($candidateProvenanceText -notmatch 'Remove-ThresholdJavaCommentsOutsideLiteral') {
+    $runtimeFindings += New-Finding -ReviewerId "threshold.runtime_literal_reviewer.v0_1" -Category "runtime_literal" -Severity "P1" -Title "Java block-comment text-block delimiters are not ignored" -AffectedPaths @("threshold/scripts/lib/candidate-class-provenance.ps1") -ViolatedPredicates @("block_comment_text_block_delimiters_ignored") -Description "The text-block scanner must ignore triple-quote text inside Java block comments before counting delimiters."
+}
 if ($candidateTestText -notmatch 'java text block state ignores double slash inside string literal') {
     $runtimeFindings += New-Finding -ReviewerId "threshold.runtime_literal_reviewer.v0_1" -Category "runtime_literal" -Severity "P2" -Title "Missing URL-literal text-block regression" -AffectedPaths @("threshold/scripts/test-candidate-class-provenance.ps1") -ViolatedPredicates @("hostile_runtime_literal_fixture_present") -Description "The internal test corpus does not exercise a URL literal before a Java text-block opener."
 }
 if ($candidateTestText -notmatch 'java text block state ignores escaped triple quote characters') {
     $runtimeFindings += New-Finding -ReviewerId "threshold.runtime_literal_reviewer.v0_1" -Category "runtime_literal" -Severity "P2" -Title "Missing escaped text-block delimiter regression" -AffectedPaths @("threshold/scripts/test-candidate-class-provenance.ps1") -ViolatedPredicates @("hostile_runtime_literal_fixture_present") -Description "The internal test corpus does not exercise escaped triple quote characters inside a Java text block."
+}
+if ($candidateTestText -notmatch 'java text block state ignores block-comment triple quote delimiter') {
+    $runtimeFindings += New-Finding -ReviewerId "threshold.runtime_literal_reviewer.v0_1" -Category "runtime_literal" -Severity "P2" -Title "Missing block-comment text-block delimiter regression" -AffectedPaths @("threshold/scripts/test-candidate-class-provenance.ps1") -ViolatedPredicates @("block_comment_text_block_delimiters_ignored") -Description "The internal test corpus does not exercise a block comment containing triple quotes before a Java text block."
 }
 if ($canaryCommentModelText -notmatch 'http://x') {
     $runtimeFindings += New-Finding -ReviewerId "threshold.runtime_literal_reviewer.v0_1" -Category "runtime_literal" -Severity "P2" -Title "Discovery Canary lacks URL-literal text-block hostile fixture" -AffectedPaths @("threshold/discovery-canaries/fixtures/src/main/java/org/springframework/samples/petclinic/model/CanaryCommentModel.java") -ViolatedPredicates @("discovery_canary_runtime_literal_surface_present") -Description "The Discovery Canary does not bind the URL-literal plus text-block delimiter surface."
@@ -207,18 +259,34 @@ $scopeFindings = @()
 if (($reviewSubject.forbiddenActions -notcontains "merge_authorization") -or ($reviewSubject.forbiddenActions -notcontains "product_source_mutation")) {
     $scopeFindings += New-Finding -ReviewerId "threshold.scope_authority_reviewer.v0_1" -Category "scope_authority" -Severity "P1" -Title "Review subject does not explicitly forbid effects" -AffectedPaths @("threshold/scripts/invoke-internal-review-twin.ps1") -ViolatedPredicates @("reviewer_authorizing_false") -Description "Internal review subjects must make forbidden effects explicit."
 }
+$forbiddenChangedPaths = @(
+    foreach ($path in $changedPaths) {
+        foreach ($pattern in $reviewSubject.forbiddenPaths) {
+            if (Test-ReviewPathAgainstPattern -Path $path -Pattern $pattern) {
+                $path
+                break
+            }
+        }
+    }
+)
+if ($forbiddenChangedPaths.Count -gt 0) {
+    $scopeFindings += New-Finding -ReviewerId "threshold.scope_authority_reviewer.v0_1" -Category "scope_authority" -Severity "P1" -Title "Reviewed range changes declared forbidden paths" -AffectedPaths $forbiddenChangedPaths -ViolatedPredicates @("declared_forbidden_paths_mechanically_enforced") -Description "Internal review subject declares forbidden paths, and the reviewed exact-head range changes them: $($forbiddenChangedPaths -join ', ')."
+}
 
 $evidenceFindings = @()
 if ($reviewSubject.headSha -ne $headSha -or [string]::IsNullOrWhiteSpace($reviewSubject.patchDigest) -or [string]::IsNullOrWhiteSpace($reviewSubject.changedPathDigest)) {
     $evidenceFindings += New-Finding -ReviewerId "threshold.evidence_causality_reviewer.v0_1" -Category "evidence_causality" -Severity "P1" -Title "Review subject is not exact-head bound" -AffectedPaths @("threshold/scripts/invoke-internal-review-twin.ps1") -ViolatedPredicates @("review_subject_exact_head_bound") -Description "The review subject failed exact-head or digest binding."
 }
+if ($candidateProvenanceText -ne (Get-RevisionTextOrEmpty -Revision $headSha -Path "threshold/scripts/lib/candidate-class-provenance.ps1")) {
+    $evidenceFindings += New-Finding -ReviewerId "threshold.evidence_causality_reviewer.v0_1" -Category "evidence_causality" -Severity "P1" -Title "Reviewer inputs are not bound to resolved head" -AffectedPaths @("threshold/scripts/invoke-internal-review-twin.ps1") -ViolatedPredicates @("reviewer_inputs_bound_to_resolved_head") -Description "Internal reviewer input text must be loaded from the resolved reviewed head, not from the ambient checkout."
+}
 
 $results = @(
-    (New-ReviewerResult -ReviewerId "threshold.runtime_literal_reviewer.v0_1" -Findings $runtimeFindings -CoverageClaims @("java_text_block_content_not_comment_wrap_candidate", "java_line_comment_detection_respects_string_literals", "java_text_block_delimiters_must_be_unescaped", "ordinary_block_comment_not_promoted_as_javadoc")),
+    (New-ReviewerResult -ReviewerId "threshold.runtime_literal_reviewer.v0_1" -Findings $runtimeFindings -CoverageClaims @("java_text_block_content_not_comment_wrap_candidate", "java_line_comment_detection_respects_string_literals", "java_text_block_delimiters_must_be_unescaped", "block_comment_text_block_delimiters_ignored", "ordinary_block_comment_not_promoted_as_javadoc")),
     (New-ReviewerResult -ReviewerId "threshold.candidate_class_reviewer.v0_1" -Findings $candidateFindings -CoverageClaims @("candidate_class_provenance_chain_bound", "observed_diff_class_matches_candidate_class", "batch_comment_wrap_uses_discovery_threshold", "batch_comment_wrap_revalidates_current_javadoc_context")),
     (New-ReviewerResult -ReviewerId "threshold.fixture_integrity_reviewer.v0_1" -Findings $fixtureFindings -CoverageClaims @("negative_fixture_reason_isolated", "missing_trainer_fixture_keeps_execution_mode_valid", "duplicate_required_class_counted_once")),
-    (New-ReviewerResult -ReviewerId "threshold.scope_authority_reviewer.v0_1" -Findings $scopeFindings -CoverageClaims @("reviewer_authorizing_false", "internal_review_does_not_create_push_or_merge_authority")),
-    (New-ReviewerResult -ReviewerId "threshold.evidence_causality_reviewer.v0_1" -Findings $evidenceFindings -CoverageClaims @("review_subject_exact_head_bound", "patch_digest_bound_to_base_and_head", "changed_path_digest_bound"))
+    (New-ReviewerResult -ReviewerId "threshold.scope_authority_reviewer.v0_1" -Findings $scopeFindings -CoverageClaims @("reviewer_authorizing_false", "internal_review_does_not_create_push_or_merge_authority", "declared_forbidden_paths_mechanically_enforced")),
+    (New-ReviewerResult -ReviewerId "threshold.evidence_causality_reviewer.v0_1" -Findings $evidenceFindings -CoverageClaims @("review_subject_exact_head_bound", "reviewer_inputs_bound_to_resolved_head", "patch_digest_bound_to_base_and_head", "changed_path_digest_bound"))
 )
 
 $findingSet = @($results | ForEach-Object { @($_.findings) } | ForEach-Object { $_ })

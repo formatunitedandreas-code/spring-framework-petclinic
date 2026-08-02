@@ -958,6 +958,19 @@ try {
     )
     Assert-True -Condition (Test-ThresholdJavaLineIsInsideTextBlock -Lines $javaTextBlockWithEscapedDelimiterLines -LineNumber 5) -Name "java text block state ignores escaped triple quote characters"
     Assert-False -Condition (Test-ThresholdJavaLineIsInsideTextBlock -Lines $javaTextBlockWithEscapedDelimiterLines -LineNumber 8) -Name "java text block state closes after escaped delimiter canary"
+    $javaTextBlockWithBlockCommentDelimiterLines = @(
+        "class TextBlockCanary {",
+        "    /* Mention `"`"`" before the real text block opener. */",
+        "    String query = `"`"`"",
+        "        /**",
+        "         * Text block content after a block-comment delimiter mention still remains inside the text block.",
+        "         */",
+        "    `"`"`";",
+        "    void normalize() {}",
+        "}"
+    )
+    Assert-True -Condition (Test-ThresholdJavaLineIsInsideTextBlock -Lines $javaTextBlockWithBlockCommentDelimiterLines -LineNumber 5) -Name "java text block state ignores block-comment triple quote delimiter"
+    Assert-False -Condition (Test-ThresholdJavaLineIsInsideTextBlock -Lines $javaTextBlockWithBlockCommentDelimiterLines -LineNumber 8) -Name "java text block state closes after block-comment delimiter canary"
 
     $textBlockPath = "src/main/java/org/example/TextBlockCanary.java"
     Write-CanaryFile -Path $textBlockPath -Lines $javaTextBlockLines
