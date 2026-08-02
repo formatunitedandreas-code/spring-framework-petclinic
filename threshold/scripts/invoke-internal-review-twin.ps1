@@ -154,14 +154,19 @@ function New-ReviewerResult {
 
 $headSha = Resolve-GitRevision -Revision $HeadRef
 $baseHead = Resolve-GitRevision -Revision $BaseRef
-$treeDigest = Resolve-GitRevision -Revision "$headSha^{tree}"
-$changedPaths = @(& git diff --name-only "$baseHead..$headSha" | ForEach-Object { [string]$_ } | Where-Object { -not [string]::IsNullOrWhiteSpace($_) } | Sort-Object)
-if ($LASTEXITCODE -ne 0) {
-    throw "Unable to compute changed paths for $baseHead..$headSha."
+$patchBaseHead = (& git merge-base $baseHead $headSha 2>$null)
+if ($LASTEXITCODE -ne 0 -or [string]::IsNullOrWhiteSpace([string]$patchBaseHead)) {
+    throw "Unable to compute merge base for $baseHead and $headSha."
 }
-$patchText = @(& git diff --binary "$baseHead..$headSha") -join "`n"
+$patchBaseHead = ([string]$patchBaseHead).Trim()
+$treeDigest = Resolve-GitRevision -Revision "$headSha^{tree}"
+$changedPaths = @(& git diff --name-only "$patchBaseHead..$headSha" | ForEach-Object { [string]$_ } | Where-Object { -not [string]::IsNullOrWhiteSpace($_) } | Sort-Object)
 if ($LASTEXITCODE -ne 0) {
-    throw "Unable to compute patch for $baseHead..$headSha."
+    throw "Unable to compute changed paths for $patchBaseHead..$headSha."
+}
+$patchText = @(& git diff --binary "$patchBaseHead..$headSha") -join "`n"
+if ($LASTEXITCODE -ne 0) {
+    throw "Unable to compute patch for $patchBaseHead..$headSha."
 }
 
 $reviewSubject = [ordered]@{
@@ -170,6 +175,7 @@ $reviewSubject = [ordered]@{
     repository = $Repository
     baseRef = $BaseRef
     baseHead = $baseHead
+    patchBaseHead = $patchBaseHead
     headRef = $HeadRef
     headSha = $headSha
     treeDigest = $treeDigest
@@ -205,6 +211,7 @@ $runNextSliceText = Get-RevisionTextOrEmpty -Revision $headSha -Path "threshold/
 $candidateTestText = Get-RevisionTextOrEmpty -Revision $headSha -Path "threshold/scripts/test-candidate-class-provenance.ps1"
 $discoveryCanaryText = Get-RevisionTextOrEmpty -Revision $headSha -Path "threshold/scripts/test-discovery-canary.ps1"
 $canaryCommentModelText = Get-RevisionTextOrEmpty -Revision $headSha -Path "threshold/discovery-canaries/fixtures/src/main/java/org/springframework/samples/petclinic/model/CanaryCommentModel.java"
+$internalReviewTwinText = Get-RevisionTextOrEmpty -Revision $headSha -Path "threshold/scripts/invoke-internal-review-twin.ps1"
 
 $runtimeFindings = @()
 if ($candidateProvenanceText -notmatch 'function Remove-ThresholdJavaLineCommentOutsideLiteral') {
@@ -225,6 +232,9 @@ if ($candidateProvenanceText -notmatch 'Convert-ThresholdJavaUnicodeEscapes') {
 if ($candidateProvenanceText -notmatch 'Split-ThresholdJavaUnicodeTranslatedLine') {
     $runtimeFindings += New-Finding -ReviewerId "threshold.runtime_literal_reviewer.v0_1" -Category "runtime_literal" -Severity "P1" -Title "Java Unicode-produced line terminators are not split before text-block tracking" -AffectedPaths @("threshold/scripts/lib/candidate-class-provenance.ps1") -ViolatedPredicates @("java_unicode_line_terminators_split_before_text_block_tracking") -Description "Java performs Unicode translation before tokenization, so Unicode-produced line terminators must be split into logical lines before comment and text-block delimiter tracking."
 }
+if ($candidateProvenanceText -notmatch 'Test-ThresholdJavaUnicodeEscapeBackslashIsEligible') {
+    $runtimeFindings += New-Finding -ReviewerId "threshold.runtime_literal_reviewer.v0_1" -Category "runtime_literal" -Severity "P1" -Title "Java Unicode escape translation ignores eligibility" -AffectedPaths @("threshold/scripts/lib/candidate-class-provenance.ps1") -ViolatedPredicates @("java_unicode_escape_translation_respects_backslash_eligibility") -Description "Java Unicode translation must apply the contiguous-backslash eligibility rule before replacing a Unicode escape."
+}
 if ($candidateTestText -notmatch 'java text block state ignores double slash inside string literal') {
     $runtimeFindings += New-Finding -ReviewerId "threshold.runtime_literal_reviewer.v0_1" -Category "runtime_literal" -Severity "P2" -Title "Missing URL-literal text-block regression" -AffectedPaths @("threshold/scripts/test-candidate-class-provenance.ps1") -ViolatedPredicates @("hostile_runtime_literal_fixture_present") -Description "The internal test corpus does not exercise a URL literal before a Java text-block opener."
 }
@@ -240,8 +250,14 @@ if ($candidateTestText -notmatch 'java text block state decodes unicode quote de
 if ($candidateTestText -notmatch 'java text block state splits unicode-produced line terminators') {
     $runtimeFindings += New-Finding -ReviewerId "threshold.runtime_literal_reviewer.v0_1" -Category "runtime_literal" -Severity "P2" -Title "Missing Unicode line-terminator text-block regression" -AffectedPaths @("threshold/scripts/test-candidate-class-provenance.ps1") -ViolatedPredicates @("java_unicode_line_terminators_split_before_text_block_tracking") -Description "The internal test corpus does not exercise Unicode-produced Java line terminators before text-block delimiters."
 }
+if ($candidateTestText -notmatch 'java unicode escape translation skips ineligible contiguous backslash escape') {
+    $runtimeFindings += New-Finding -ReviewerId "threshold.runtime_literal_reviewer.v0_1" -Category "runtime_literal" -Severity "P2" -Title "Missing ineligible Unicode escape regression" -AffectedPaths @("threshold/scripts/test-candidate-class-provenance.ps1") -ViolatedPredicates @("java_unicode_escape_translation_respects_backslash_eligibility") -Description "The internal test corpus does not exercise an ineligible Java Unicode escape preceded by an odd contiguous backslash count."
+}
 if ($canaryCommentModelText -notmatch 'http://x') {
     $runtimeFindings += New-Finding -ReviewerId "threshold.runtime_literal_reviewer.v0_1" -Category "runtime_literal" -Severity "P2" -Title "Discovery Canary lacks URL-literal text-block hostile fixture" -AffectedPaths @("threshold/discovery-canaries/fixtures/src/main/java/org/springframework/samples/petclinic/model/CanaryCommentModel.java") -ViolatedPredicates @("discovery_canary_runtime_literal_surface_present") -Description "The Discovery Canary does not bind the URL-literal plus text-block delimiter surface."
+}
+if ($canaryCommentModelText -notmatch 'Nested ordinary-comment content deliberately') {
+    $runtimeFindings += New-Finding -ReviewerId "threshold.runtime_literal_reviewer.v0_1" -Category "runtime_literal" -Severity "P2" -Title "Discovery Canary lacks nested ordinary block-comment Javadoc hostile fixture" -AffectedPaths @("threshold/discovery-canaries/fixtures/src/main/java/org/springframework/samples/petclinic/model/CanaryCommentModel.java") -ViolatedPredicates @("ordinary_block_comment_nested_javadoc_opener_not_promoted") -Description "The Discovery Canary does not bind an ordinary block comment that contains a nested /** marker and a wrappable star-line."
 }
 
 $candidateFindings = @()
@@ -299,13 +315,16 @@ if ($reviewSubject.headSha -ne $headSha -or [string]::IsNullOrWhiteSpace($review
 if ($candidateProvenanceText -ne (Get-RevisionTextOrEmpty -Revision $headSha -Path "threshold/scripts/lib/candidate-class-provenance.ps1")) {
     $evidenceFindings += New-Finding -ReviewerId "threshold.evidence_causality_reviewer.v0_1" -Category "evidence_causality" -Severity "P1" -Title "Reviewer inputs are not bound to resolved head" -AffectedPaths @("threshold/scripts/invoke-internal-review-twin.ps1") -ViolatedPredicates @("reviewer_inputs_bound_to_resolved_head") -Description "Internal reviewer input text must be loaded from the resolved reviewed head, not from the ambient checkout."
 }
+if ($internalReviewTwinText -notmatch 'git merge-base' -or $internalReviewTwinText -notmatch 'patchBaseHead') {
+    $evidenceFindings += New-Finding -ReviewerId "threshold.evidence_causality_reviewer.v0_1" -Category "evidence_causality" -Severity "P2" -Title "Review patch is not computed from merge base" -AffectedPaths @("threshold/scripts/invoke-internal-review-twin.ps1") -ViolatedPredicates @("review_patch_bound_to_merge_base") -Description "Internal review changed paths and patch digest must be computed from the base/head merge base, not from a tip-to-tip two-dot comparison."
+}
 
 $results = @(
-    (New-ReviewerResult -ReviewerId "threshold.runtime_literal_reviewer.v0_1" -Findings $runtimeFindings -CoverageClaims @("java_text_block_content_not_comment_wrap_candidate", "java_line_comment_detection_respects_string_literals", "java_text_block_delimiters_must_be_unescaped", "block_comment_text_block_delimiters_ignored", "ordinary_block_comment_not_promoted_as_javadoc", "java_unicode_escapes_decoded_before_text_block_tracking", "java_unicode_line_terminators_split_before_text_block_tracking")),
+    (New-ReviewerResult -ReviewerId "threshold.runtime_literal_reviewer.v0_1" -Findings $runtimeFindings -CoverageClaims @("java_text_block_content_not_comment_wrap_candidate", "java_line_comment_detection_respects_string_literals", "java_text_block_delimiters_must_be_unescaped", "block_comment_text_block_delimiters_ignored", "ordinary_block_comment_not_promoted_as_javadoc", "ordinary_block_comment_nested_javadoc_opener_not_promoted", "java_unicode_escapes_decoded_before_text_block_tracking", "java_unicode_line_terminators_split_before_text_block_tracking", "java_unicode_escape_translation_respects_backslash_eligibility")),
     (New-ReviewerResult -ReviewerId "threshold.candidate_class_reviewer.v0_1" -Findings $candidateFindings -CoverageClaims @("candidate_class_provenance_chain_bound", "observed_diff_class_matches_candidate_class", "batch_comment_wrap_uses_discovery_threshold", "batch_comment_wrap_revalidates_current_javadoc_context", "slice_comment_wrap_revalidates_current_javadoc_context")),
     (New-ReviewerResult -ReviewerId "threshold.fixture_integrity_reviewer.v0_1" -Findings $fixtureFindings -CoverageClaims @("negative_fixture_reason_isolated", "missing_trainer_fixture_keeps_execution_mode_valid", "duplicate_required_class_counted_once")),
     (New-ReviewerResult -ReviewerId "threshold.scope_authority_reviewer.v0_1" -Findings $scopeFindings -CoverageClaims @("reviewer_authorizing_false", "internal_review_does_not_create_push_or_merge_authority", "declared_forbidden_paths_mechanically_enforced")),
-    (New-ReviewerResult -ReviewerId "threshold.evidence_causality_reviewer.v0_1" -Findings $evidenceFindings -CoverageClaims @("review_subject_exact_head_bound", "reviewer_inputs_bound_to_resolved_head", "patch_digest_bound_to_base_and_head", "changed_path_digest_bound"))
+    (New-ReviewerResult -ReviewerId "threshold.evidence_causality_reviewer.v0_1" -Findings $evidenceFindings -CoverageClaims @("review_subject_exact_head_bound", "reviewer_inputs_bound_to_resolved_head", "patch_digest_bound_to_base_and_head", "changed_path_digest_bound", "review_patch_bound_to_merge_base"))
 )
 
 $findingSet = @($results | ForEach-Object { @($_.findings) } | ForEach-Object { $_ })

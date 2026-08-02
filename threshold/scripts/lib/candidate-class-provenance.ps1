@@ -133,13 +133,45 @@ function Test-ThresholdJavaCharacterIsEscaped {
     return (($backslashCount % 2) -eq 1)
 }
 
+function Test-ThresholdJavaUnicodeEscapeBackslashIsEligible {
+    param([string] $Line, [int] $Index)
+
+    $precedingBackslashCount = 0
+    for ($i = $Index - 1; $i -ge 0; $i--) {
+        if ($Line[$i] -ne '\') {
+            break
+        }
+        $precedingBackslashCount++
+    }
+    return (($precedingBackslashCount % 2) -eq 0)
+}
+
 function Convert-ThresholdJavaUnicodeEscapes {
     param([string] $Line)
 
-    return [regex]::Replace($Line, '\\u+(?<hex>[0-9a-fA-F]{4})', {
-        param($match)
-        return [string][char]([Convert]::ToInt32($match.Groups["hex"].Value, 16))
-    })
+    $builder = [System.Text.StringBuilder]::new()
+    for ($i = 0; $i -lt $Line.Length; $i++) {
+        $ch = $Line[$i]
+        if ($ch -eq '\' -and
+            (Test-ThresholdJavaUnicodeEscapeBackslashIsEligible -Line $Line -Index $i) -and
+            ($i + 5) -lt $Line.Length -and
+            $Line[$i + 1] -eq 'u') {
+            $uIndex = $i + 1
+            while ($uIndex -lt $Line.Length -and $Line[$uIndex] -eq 'u') {
+                $uIndex++
+            }
+            if (($uIndex + 3) -lt $Line.Length) {
+                $hex = $Line.Substring($uIndex, 4)
+                if ($hex -match '^[0-9a-fA-F]{4}$') {
+                    [void]$builder.Append([string][char]([Convert]::ToInt32($hex, 16)))
+                    $i = $uIndex + 3
+                    continue
+                }
+            }
+        }
+        [void]$builder.Append($ch)
+    }
+    return $builder.ToString()
 }
 
 function Split-ThresholdJavaUnicodeTranslatedLine {

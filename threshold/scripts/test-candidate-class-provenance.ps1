@@ -997,6 +997,19 @@ try {
     )
     Assert-True -Condition (Test-ThresholdJavaLineIsInsideTextBlock -Lines $javaTextBlockWithUnicodeLineTerminatorLines -LineNumber 4) -Name "java text block state splits unicode-produced line terminators"
     Assert-False -Condition (Test-ThresholdJavaLineIsInsideTextBlock -Lines $javaTextBlockWithUnicodeLineTerminatorLines -LineNumber 7) -Name "java text block state closes after unicode-produced line terminator canary"
+    Assert-True -Condition ((Convert-ThresholdJavaUnicodeEscapes -Line "\u000a// comment") -match "^`n// comment$") -Name "java unicode escape translation accepts eligible single backslash escape"
+    Assert-True -Condition ((Convert-ThresholdJavaUnicodeEscapes -Line "\\u000a// comment") -eq "\\u000a// comment") -Name "java unicode escape translation skips ineligible contiguous backslash escape"
+    $javaTextBlockWithIneligibleUnicodeEscapeLines = @(
+        "class TextBlockCanary {",
+        "    static String prefix = `"\\u000a //`"; static String body = `"`"`"",
+        "        /**",
+        "         * Text block content after an ineligible Unicode escape remains inside the text block.",
+        "         */",
+        "    `"`"`";",
+        "}"
+    )
+    Assert-True -Condition (Test-ThresholdJavaLineIsInsideTextBlock -Lines $javaTextBlockWithIneligibleUnicodeEscapeLines -LineNumber 4) -Name "java text block state ignores ineligible unicode line terminator escape"
+    Assert-False -Condition (Test-ThresholdJavaLineIsInsideTextBlock -Lines $javaTextBlockWithIneligibleUnicodeEscapeLines -LineNumber 7) -Name "java text block state closes after ineligible unicode escape canary"
     $javaTextBlockWithPostCloseBlockCommentLines = @(
         "class TextBlockCanary {",
         "    String first = `"`"`"",

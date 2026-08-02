@@ -475,19 +475,76 @@ function Test-JavadocCommentLine {
     }
 
     $insideJavadoc = $false
+    $insideOrdinaryBlockComment = $false
     for ($i = 0; $i -le $Index; $i++) {
         if ($JavaTextBlockLineState.ContainsKey($i + 1)) {
             continue
         }
-        $line = $Lines[$i]
-        if (-not $insideJavadoc -and $line -match '^\s*/\*\*') {
-            $insideJavadoc = $true
+        $line = [string]$Lines[$i]
+        $insideString = $false
+        $insideChar = $false
+        $escaped = $false
+        for ($offset = 0; $offset -lt $line.Length; $offset++) {
+            $ch = $line[$offset]
+            $next = if ($offset + 1 -lt $line.Length) { $line[$offset + 1] } else { [char]0 }
+
+            if ($insideJavadoc) {
+                if ($i -eq $Index) {
+                    return $true
+                }
+                if ($ch -eq '*' -and $next -eq '/') {
+                    $insideJavadoc = $false
+                    $offset++
+                }
+                continue
+            }
+
+            if ($insideOrdinaryBlockComment) {
+                if ($ch -eq '*' -and $next -eq '/') {
+                    $insideOrdinaryBlockComment = $false
+                    $offset++
+                }
+                continue
+            }
+
+            if ($escaped) {
+                $escaped = $false
+                continue
+            }
+            if (($insideString -or $insideChar) -and $ch -eq '\') {
+                $escaped = $true
+                continue
+            }
+            if (-not $insideChar -and $ch -eq '"') {
+                $insideString = -not $insideString
+                continue
+            }
+            if (-not $insideString -and $ch -eq "'") {
+                $insideChar = -not $insideChar
+                continue
+            }
+            if ($insideString -or $insideChar) {
+                continue
+            }
+            if ($ch -eq '/' -and $next -eq '/') {
+                break
+            }
+            if ($ch -eq '/' -and $next -eq '*') {
+                if (($offset + 2) -lt $line.Length -and $line[$offset + 2] -eq '*') {
+                    $insideJavadoc = $true
+                    if ($i -eq $Index) {
+                        return $true
+                    }
+                }
+                else {
+                    $insideOrdinaryBlockComment = $true
+                }
+                $offset++
+                continue
+            }
         }
         if ($i -eq $Index) {
             return $insideJavadoc
-        }
-        if ($insideJavadoc -and $line -match '\*/') {
-            $insideJavadoc = $false
         }
     }
 

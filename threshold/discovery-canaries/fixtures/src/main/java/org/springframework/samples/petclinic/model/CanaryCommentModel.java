@@ -7,6 +7,11 @@ package org.springframework.samples.petclinic.model;
 /*
  * Ordinary block comment deliberately contains enough readable prose to look wrappable but must not be promoted as a Javadoc cleanup candidate
  */
+/*
+ * Outer ordinary block comment starts before a nested marker.
+ /**
+ * Nested ordinary-comment content deliberately contains enough readable prose to look wrappable but must not be promoted as a Javadoc cleanup candidate
+ */
 class CanaryCommentModel {
 
 	// Mention """ before the real text block opener.
