@@ -292,10 +292,10 @@ if (-not $SkipInternalRegressions.IsPresent) {
         fixtureRoot = [string]$defaultExpected.fixtureRoot
         requiredDiscoverableCandidateClasses = @("comment_wrap_cleanup")
         expectedExecutionModes = [ordered]@{
-            comment_wrap_cleanup = "review_only"
+            comment_wrap_cleanup = "auto_patchable"
         }
         expectedTrainerDecisions = [ordered]@{
-            comment_wrap_cleanup = "reviewOnly"
+            comment_wrap_cleanup = "autoPatchable"
             undiscovered_fixture_class = "reviewOnly"
         }
         nonClaims = @("extra trainer expectation negative fixture")
@@ -318,11 +318,11 @@ if (-not $SkipInternalRegressions.IsPresent) {
         fixtureRoot = [string]$defaultExpected.fixtureRoot
         requiredDiscoverableCandidateClasses = @("comment_wrap_cleanup")
         expectedExecutionModes = [ordered]@{
-            comment_wrap_cleanup = "review_only"
+            comment_wrap_cleanup = "auto_patchable"
             undiscovered_fixture_class = "review_only"
         }
         expectedTrainerDecisions = [ordered]@{
-            comment_wrap_cleanup = "reviewOnly"
+            comment_wrap_cleanup = "autoPatchable"
         }
         nonClaims = @("extra execution-mode expectation negative fixture")
     }
@@ -472,6 +472,17 @@ $autoClasses = @(
         ForEach-Object { [string]$_.candidateClass } |
         Sort-Object -Unique
 )
+$ordinaryBlockCommentCandidate = @(
+    $pocket.candidates |
+        Where-Object {
+            [string]$_.candidateClass -eq "comment_wrap_cleanup" -and
+            [string]$_.file -like "*/CanaryCommentModel.java" -and
+            [string]$_.member -eq "line-8"
+        }
+)
+if ($ordinaryBlockCommentCandidate.Count -ne 0) {
+    throw "Discovery canary promoted ordinary block comment as Javadoc comment_wrap_cleanup."
+}
 $unexpectedAutoPromotionCount = 0
 $missingRequiredCandidateClassCount = 0
 $executionModeMismatchCount = 0
