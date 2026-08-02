@@ -402,6 +402,8 @@ try {
     Assert-False -Condition ($runNextBatchText -match '\$line\.Length -le 120') -Name "run-next-batch does not hardcode the baseline comment wrap threshold"
     Assert-True -Condition ($runNextBatchText -match "Test-BatchJavadocCommentLine") -Name "run-next-batch revalidates current Javadoc context for prepared candidates"
     Assert-True -Condition ($runNextBatchText -match "Test-ThresholdCommentWrapCandidateLine") -Name "run-next-batch uses shared discovery comment wrap predicate"
+    Assert-True -Condition ($runNextBatchText -match '\[bool\] \$EnsureTrailingNewline = \$false') -Name "run-next-batch write path binds trailing newline preservation"
+    Assert-True -Condition ($runNextBatchText -match '\$hadTrailingNewline = \$originalText\.EndsWith\(\$lineEnding') -Name "run-next-batch preserves final newline when comment wrap rewrites file"
     Assert-False -Condition ($runNextBatchText.Contains('foreach ($delimiter in @("/")')) -Name "run-next-batch does not add URL punctuation split delimiters"
     Assert-True -Condition ($runNextBatchText -match 'Get-ThresholdJavaTextBlockLineState -Lines \$lines') -Name "run-next-batch revalidates current text block state before applying comment wrap"
     Assert-True -Condition ($runNextBatchText -match "same_file_line_marker_rebinding_required") -Name "run-next-batch rejects same-file line marker candidates in one batch"
@@ -1106,6 +1108,19 @@ try {
     )
     Assert-False -Condition (Test-ThresholdJavaLineIsJavadocCommentContent -Lines $javaJavadocInlineCodePreTagLines -Index 4 -JavaTextBlockLineState (Get-ThresholdJavaTextBlockLineState -Lines $javaJavadocInlineCodePreTagLines)) -Name "java javadoc lexical state ignores pre markers inside inline code tags"
     Assert-False -Condition (Test-ThresholdCommentWrapCandidateLine -Lines $javaJavadocInlineCodePreTagLines -Index 4 -CommentWrapThreshold 69 -JavaTextBlockLineState (Get-ThresholdJavaTextBlockLineState -Lines $javaJavadocInlineCodePreTagLines)) -Name "java comment wrap predicate rejects inline code pre tag content"
+    $javaJavadocHtmlCommentPreTagLines = @(
+        "class JavadocCanary {",
+        "    /**",
+        "     * <pre>",
+        "     * <!-- </pre> -->",
+        "     * SELECT id, first_name, last_name, telephone FROM owners WHERE last_name = ? ORDER BY last_name, first_name",
+        "     * </pre>",
+        "     */",
+        "    void normalize() {}",
+        "}"
+    )
+    Assert-False -Condition (Test-ThresholdJavaLineIsJavadocCommentContent -Lines $javaJavadocHtmlCommentPreTagLines -Index 4 -JavaTextBlockLineState (Get-ThresholdJavaTextBlockLineState -Lines $javaJavadocHtmlCommentPreTagLines)) -Name "java javadoc lexical state ignores pre markers inside HTML comments"
+    Assert-False -Condition (Test-ThresholdCommentWrapCandidateLine -Lines $javaJavadocHtmlCommentPreTagLines -Index 4 -CommentWrapThreshold 69 -JavaTextBlockLineState (Get-ThresholdJavaTextBlockLineState -Lines $javaJavadocHtmlCommentPreTagLines)) -Name "java comment wrap predicate rejects HTML comment pre tag content"
     $javaJavadocNoSplitLines = @(
         "class JavadocCanary {",
         "    /**",

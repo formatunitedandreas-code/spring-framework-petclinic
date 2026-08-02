@@ -253,10 +253,14 @@ function Get-ThresholdJavaTextBlockLineState {
 function Update-ThresholdJavadocPreformattedStateInSourceOrder {
     param(
         [bool] $InsidePreformattedJavadoc,
-        [string] $JavadocLinePayload
+        [string] $JavadocLinePayload,
+        [bool] $InsideJavadocHtmlComment = $false
     )
 
-    foreach ($transition in @(Get-ThresholdJavadocPreformattedTransitions -JavadocLinePayload $JavadocLinePayload)) {
+    $scanResult = Get-ThresholdJavadocPreformattedTransitionScanResult `
+        -JavadocLinePayload $JavadocLinePayload `
+        -InsideHtmlComment $InsideJavadocHtmlComment
+    foreach ($transition in @($scanResult.Transitions)) {
         if ($transition -eq "close") {
             $InsidePreformattedJavadoc = $false
             continue
@@ -265,16 +269,39 @@ function Update-ThresholdJavadocPreformattedStateInSourceOrder {
             $InsidePreformattedJavadoc = $true
         }
     }
-    return $InsidePreformattedJavadoc
+    return [ordered]@{
+        InsidePreformattedJavadoc = $InsidePreformattedJavadoc
+        InsideJavadocHtmlComment = [bool]$scanResult.InsideHtmlComment
+    }
 }
 
 function Get-ThresholdJavadocPreformattedTransitions {
     param([string] $JavadocLinePayload)
 
+    $scanResult = Get-ThresholdJavadocPreformattedTransitionScanResult -JavadocLinePayload $JavadocLinePayload
+    return @($scanResult.Transitions)
+}
+
+function Get-ThresholdJavadocPreformattedTransitionScanResult {
+    param(
+        [string] $JavadocLinePayload,
+        [bool] $InsideHtmlComment = $false
+    )
+
     $transitions = New-Object System.Collections.Generic.List[string]
     $payload = [string]$JavadocLinePayload
     $inlineTagDepth = 0
     for ($i = 0; $i -lt $payload.Length; $i++) {
+        $remaining = $payload.Substring($i)
+
+        if ($InsideHtmlComment) {
+            if ($remaining -match '^-->') {
+                $InsideHtmlComment = $false
+                $i += 2
+            }
+            continue
+        }
+
         $ch = $payload[$i]
         $next = if (($i + 1) -lt $payload.Length) { $payload[$i + 1] } else { [char]0 }
 
@@ -290,13 +317,18 @@ function Get-ThresholdJavadocPreformattedTransitions {
             continue
         }
 
+        if ($remaining -match '^<!--') {
+            $InsideHtmlComment = $true
+            $i += 3
+            continue
+        }
+
         if ($ch -eq '{' -and $next -eq '@') {
             $inlineTagDepth = 1
             $i++
             continue
         }
 
-        $remaining = $payload.Substring($i)
         if ($remaining -match '^(?i)</pre(?:\s|>|$)') {
             $transitions.Add("close")
             $i += $Matches[0].Length - 1
@@ -308,7 +340,10 @@ function Get-ThresholdJavadocPreformattedTransitions {
             continue
         }
     }
-    return @($transitions)
+    return [ordered]@{
+        Transitions = @($transitions)
+        InsideHtmlComment = $InsideHtmlComment
+    }
 }
 
 function Test-ThresholdJavaLineIsJavadocCommentContent {
@@ -325,12 +360,17 @@ function Test-ThresholdJavaLineIsJavadocCommentContent {
     $insideOrdinaryBlockComment = $false
     $insideTextBlock = $false
     $insidePreformattedJavadoc = $false
+    $insideJavadocHtmlComment = $false
     for ($i = 0; $i -le $Index; $i++) {
         $segments = @(Split-ThresholdJavaUnicodeTranslatedLine -Line ([string]$Lines[$i]))
         foreach ($segment in $segments) {
             $line = [string]$segment
             $javadocLinePayload = ($line -replace '^\s*\*\s?', '')
-            $preformattedTransitions = @(Get-ThresholdJavadocPreformattedTransitions -JavadocLinePayload $javadocLinePayload)
+            $preformattedScanResult = Get-ThresholdJavadocPreformattedTransitionScanResult `
+                -JavadocLinePayload $javadocLinePayload `
+                -InsideHtmlComment $insideJavadocHtmlComment
+            $insideJavadocHtmlComment = [bool]$preformattedScanResult.InsideHtmlComment
+            $preformattedTransitions = @($preformattedScanResult.Transitions)
             $lineStartsPreformattedJavadoc = $preformattedTransitions -contains "open"
             $lineEndsPreformattedJavadoc = $preformattedTransitions -contains "close"
             $targetLineInsidePreformattedJavadoc = $insidePreformattedJavadoc -or $lineStartsPreformattedJavadoc
@@ -356,6 +396,7 @@ function Test-ThresholdJavaLineIsJavadocCommentContent {
                     if ($ch -eq '*' -and $next -eq '/') {
                         $insideJavadoc = $false
                         $insidePreformattedJavadoc = $false
+                        $insideJavadocHtmlComment = $false
                         $offset++
                         if ($i -eq $Index) {
                             $suffix = if ($offset + 1 -lt $line.Length) { $line.Substring($offset + 1) } else { '' }
@@ -407,6 +448,7 @@ function Test-ThresholdJavaLineIsJavadocCommentContent {
                     if (($offset + 2) -lt $line.Length -and $line[$offset + 2] -eq '*') {
                         $insideJavadoc = $true
                         $insidePreformattedJavadoc = $false
+                        $insideJavadocHtmlComment = $false
                     }
                     else {
                         $insideOrdinaryBlockComment = $true
@@ -416,7 +458,12 @@ function Test-ThresholdJavaLineIsJavadocCommentContent {
                 }
             }
             if ($insideJavadoc) {
-                $insidePreformattedJavadoc = Update-ThresholdJavadocPreformattedStateInSourceOrder -InsidePreformattedJavadoc $insidePreformattedJavadoc -JavadocLinePayload $javadocLinePayload
+                $preformattedState = Update-ThresholdJavadocPreformattedStateInSourceOrder `
+                    -InsidePreformattedJavadoc $insidePreformattedJavadoc `
+                    -JavadocLinePayload $javadocLinePayload `
+                    -InsideJavadocHtmlComment $insideJavadocHtmlComment
+                $insidePreformattedJavadoc = [bool]$preformattedState.InsidePreformattedJavadoc
+                $insideJavadocHtmlComment = [bool]$preformattedState.InsideJavadocHtmlComment
             }
         }
         if ($i -eq $Index) {

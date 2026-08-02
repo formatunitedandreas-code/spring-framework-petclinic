@@ -31,9 +31,20 @@ function Get-LineEnding {
 }
 
 function Write-TextFile {
-    param([string] $Path, [string] $Content)
+    param(
+        [string] $Path,
+        [string] $Content,
+        [string] $LineEnding = "`n",
+        [bool] $EnsureTrailingNewline = $false
+    )
     $encoding = New-Object System.Text.UTF8Encoding $false
     $normalizedContent = $Content -replace "`r`n", "`n" -replace "`r", "`n"
+    if ($EnsureTrailingNewline -and -not $normalizedContent.EndsWith("`n", [System.StringComparison]::Ordinal)) {
+        $normalizedContent += "`n"
+    }
+    if ($LineEnding -eq "`r`n") {
+        $normalizedContent = $normalizedContent -replace "`n", "`r`n"
+    }
     [System.IO.File]::WriteAllText((Resolve-Path -LiteralPath $Path), $normalizedContent, $encoding)
 }
 
@@ -221,8 +232,10 @@ function Apply-CommentWrapCleanup {
     if ($lineNumber -lt $lines.Count) { $updatedLines += $lines[$lineNumber..($lines.Count - 1)] }
 
     $originalText = Get-Content $path -Raw
-    $updatedText = $updatedLines -join (Get-LineEnding -Content $originalText)
-    Write-TextFile -Path $path -Content $updatedText
+    $lineEnding = Get-LineEnding -Content $originalText
+    $hadTrailingNewline = $originalText.EndsWith($lineEnding, [System.StringComparison]::Ordinal)
+    $updatedText = $updatedLines -join $lineEnding
+    Write-TextFile -Path $path -Content $updatedText -LineEnding $lineEnding -EnsureTrailingNewline:$hadTrailingNewline
 }
 
 function Test-CommentWrapCandidateApplies {
