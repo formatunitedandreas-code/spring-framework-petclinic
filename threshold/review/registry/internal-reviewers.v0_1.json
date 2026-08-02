@@ -42,7 +42,8 @@
         "java_unicode_escape_translation_respects_backslash_eligibility",
         "javadoc_target_line_scanned_through_terminator",
         "text_block_closing_suffix_comment_state_preserved",
-        "javadoc_preformatted_content_not_comment_wrap_candidate"
+        "javadoc_preformatted_content_not_comment_wrap_candidate",
+        "javadoc_same_line_preformatted_content_not_comment_wrap_candidate"
       ]
     },
     {
@@ -62,7 +63,8 @@
         "reviewer_inputs_bound_to_resolved_head",
         "patch_digest_bound_to_base_and_head",
         "changed_path_digest_bound",
-        "review_patch_bound_to_merge_base"
+        "review_patch_bound_to_merge_base",
+        "review_forbidden_path_checks_include_rename_sources"
       ]
     }
   ],
