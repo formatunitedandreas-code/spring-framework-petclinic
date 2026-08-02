@@ -44,8 +44,9 @@ function Invoke-DiscoveryCanarySimulation {
         [hashtable] $ExpectedLineCounts
     )
 
-    $expectedPath = Join-Path ([System.IO.Path]::GetTempPath()) "threshold-local-review-simulation-$Name.json"
-    $stderrPath = Join-Path ([System.IO.Path]::GetTempPath()) "threshold-local-review-simulation-$Name.stderr.txt"
+    $caseRunId = [guid]::NewGuid().ToString("N")
+    $expectedPath = Join-Path ([System.IO.Path]::GetTempPath()) "threshold-local-review-simulation-$Name-$caseRunId.json"
+    $stderrPath = Join-Path ([System.IO.Path]::GetTempPath()) "threshold-local-review-simulation-$Name-$caseRunId.stderr.txt"
     if (Test-Path $expectedPath) {
         Remove-Item -LiteralPath $expectedPath -Force
     }
