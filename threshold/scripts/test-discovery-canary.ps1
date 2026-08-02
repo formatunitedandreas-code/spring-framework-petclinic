@@ -14,6 +14,10 @@ $defaultLeasePath = "threshold/leases/current.yaml"
 $defaultGatePath = "threshold/gates/auto-patchable-candidate-classes.json"
 $defaultTrainerReportPath = "threshold/trainer/training-report.json"
 $defaultExpectedPath = "threshold/discovery-canaries/expected.json"
+$powerShellCommand = (Get-Command pwsh -ErrorAction SilentlyContinue).Source
+if ([string]::IsNullOrWhiteSpace($powerShellCommand)) {
+    $powerShellCommand = (Get-Command powershell.exe -ErrorAction Stop).Source
+}
 
 function ConvertTo-RepoPath {
     param([string] $Path)
@@ -104,7 +108,7 @@ if (Test-Path $tempPocket) {
 }
 
 $output = @(
-    & powershell.exe -NoProfile -ExecutionPolicy Bypass -File "threshold/scripts/discover-candidates.ps1" `
+    & $powerShellCommand -NoProfile -ExecutionPolicy Bypass -File "threshold/scripts/discover-candidates.ps1" `
         -LeasePath $LeasePath `
         -GatePath $GatePath `
         -TrainerReportPath $TrainerReportPath `
@@ -173,7 +177,7 @@ if (-not $SkipInternalRegressions.IsPresent) {
     $alternateTrainerReport | ConvertTo-Json -Depth 16 | Set-Content $tempTrainerReport
 
     $alternateOutput = @(
-        & powershell.exe -NoProfile -ExecutionPolicy Bypass -File "threshold/scripts/discover-candidates.ps1" `
+        & $powerShellCommand -NoProfile -ExecutionPolicy Bypass -File "threshold/scripts/discover-candidates.ps1" `
             -LeasePath $defaultLeasePath `
             -GatePath $defaultGatePath `
             -TrainerReportPath $tempTrainerReport `
@@ -225,7 +229,7 @@ if (-not $SkipInternalRegressions.IsPresent) {
     }
     $legacyTrainerDecision[0].decision = "autoPatchable"
     $legacyTrainerReport | ConvertTo-Json -Depth 16 | Set-Content $tempLegacyTrainerPath
-    & powershell.exe -NoProfile -ExecutionPolicy Bypass -File $PSCommandPath `
+    & $powerShellCommand -NoProfile -ExecutionPolicy Bypass -File $PSCommandPath `
         -LeasePath $defaultLeasePath `
         -GatePath $defaultGatePath `
         -TrainerReportPath $tempLegacyTrainerPath `
@@ -244,7 +248,7 @@ if (-not $SkipInternalRegressions.IsPresent) {
         nonClaims = @("missing discoverable classes negative fixture")
     }
     $missingClassesExpected | ConvertTo-Json -Depth 8 | Set-Content $tempMissingClassesExpectedPath
-    & powershell.exe -NoProfile -ExecutionPolicy Bypass -File $PSCommandPath `
+    & $powerShellCommand -NoProfile -ExecutionPolicy Bypass -File $PSCommandPath `
         -LeasePath $defaultLeasePath `
         -GatePath $defaultGatePath `
         -TrainerReportPath $defaultTrainerReportPath `
@@ -267,7 +271,7 @@ if (-not $SkipInternalRegressions.IsPresent) {
         nonClaims = @("missing trainer expectation negative fixture")
     }
     $missingTrainerExpected | ConvertTo-Json -Depth 8 | Set-Content $tempMissingTrainerExpectedPath
-    & powershell.exe -NoProfile -ExecutionPolicy Bypass -File $PSCommandPath `
+    & $powerShellCommand -NoProfile -ExecutionPolicy Bypass -File $PSCommandPath `
         -LeasePath $defaultLeasePath `
         -GatePath $defaultGatePath `
         -TrainerReportPath $defaultTrainerReportPath `
@@ -293,7 +297,7 @@ if (-not $SkipInternalRegressions.IsPresent) {
         nonClaims = @("extra trainer expectation negative fixture")
     }
     $extraTrainerExpected | ConvertTo-Json -Depth 8 | Set-Content $tempExtraTrainerExpectedPath
-    & powershell.exe -NoProfile -ExecutionPolicy Bypass -File $PSCommandPath `
+    & $powerShellCommand -NoProfile -ExecutionPolicy Bypass -File $PSCommandPath `
         -LeasePath $defaultLeasePath `
         -GatePath $defaultGatePath `
         -TrainerReportPath $defaultTrainerReportPath `
@@ -319,7 +323,7 @@ if (-not $SkipInternalRegressions.IsPresent) {
         nonClaims = @("extra execution-mode expectation negative fixture")
     }
     $extraExecutionModeExpected | ConvertTo-Json -Depth 8 | Set-Content $tempExtraExecutionModeExpectedPath
-    & powershell.exe -NoProfile -ExecutionPolicy Bypass -File $PSCommandPath `
+    & $powerShellCommand -NoProfile -ExecutionPolicy Bypass -File $PSCommandPath `
         -LeasePath $defaultLeasePath `
         -GatePath $defaultGatePath `
         -TrainerReportPath $defaultTrainerReportPath `
@@ -345,7 +349,7 @@ if (-not $SkipInternalRegressions.IsPresent) {
     }
     $wrongExecutionModeExpected | ConvertTo-Json -Depth 8 | Set-Content $tempWrongExecutionModeExpectedPath
     $wrongExecutionModeOutput = @(
-        & powershell.exe -NoProfile -ExecutionPolicy Bypass -File $PSCommandPath `
+        & $powerShellCommand -NoProfile -ExecutionPolicy Bypass -File $PSCommandPath `
             -LeasePath $defaultLeasePath `
             -GatePath $defaultGatePath `
             -TrainerReportPath $defaultTrainerReportPath `
@@ -383,7 +387,7 @@ if (-not $SkipInternalRegressions.IsPresent) {
     }
     $wrongTrainerExpected | ConvertTo-Json -Depth 8 | Set-Content $tempWrongTrainerExpectedPath
     $wrongTrainerOutput = @(
-        & powershell.exe -NoProfile -ExecutionPolicy Bypass -File $PSCommandPath `
+        & $powerShellCommand -NoProfile -ExecutionPolicy Bypass -File $PSCommandPath `
             -LeasePath $defaultLeasePath `
             -GatePath $defaultGatePath `
             -TrainerReportPath $defaultTrainerReportPath `
@@ -421,7 +425,7 @@ if (-not $SkipInternalRegressions.IsPresent) {
     }
     $duplicateRequiredExpected | ConvertTo-Json -Depth 8 | Set-Content $tempDuplicateRequiredExpectedPath
     $duplicateRequiredOutput = @(
-        & powershell.exe -NoProfile -ExecutionPolicy Bypass -File $PSCommandPath `
+        & $powerShellCommand -NoProfile -ExecutionPolicy Bypass -File $PSCommandPath `
             -LeasePath $defaultLeasePath `
             -GatePath $defaultGatePath `
             -TrainerReportPath $defaultTrainerReportPath `
