@@ -26,9 +26,13 @@ function Resolve-PowerShellCommand {
 }
 
 $powerShellCommand = Resolve-PowerShellCommand
+$simulationLeasePath = "threshold/leases/current.yaml"
+$simulationGatePath = "threshold/gates/auto-patchable-candidate-classes.json"
 $simulationTrainerReportPath = "threshold/trainer/training-report.json"
-if (-not (Test-Path $simulationTrainerReportPath)) {
-    throw "Local review simulation trainer report not found: $simulationTrainerReportPath"
+foreach ($simulationInputPath in @($simulationLeasePath, $simulationGatePath, $simulationTrainerReportPath)) {
+    if (-not (Test-Path $simulationInputPath)) {
+        throw "Local review simulation repo-owned input not found: $simulationInputPath"
+    }
 }
 
 function Invoke-DiscoveryCanarySimulation {
@@ -53,8 +57,8 @@ function Invoke-DiscoveryCanarySimulation {
         $ErrorActionPreference = "Continue"
         try {
             $rawOutput = & $powerShellCommand -NoProfile -ExecutionPolicy Bypass -File "threshold/scripts/test-discovery-canary.ps1" `
-                -LeasePath $LeasePath `
-                -GatePath $GatePath `
+                -LeasePath $simulationLeasePath `
+                -GatePath $simulationGatePath `
                 -TrainerReportPath $simulationTrainerReportPath `
                 -ExpectedPath $expectedPath `
                 -SkipInternalRegressions 2> $stderrPath
