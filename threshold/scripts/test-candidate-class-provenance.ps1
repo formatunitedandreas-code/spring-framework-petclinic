@@ -1053,6 +1053,24 @@ try {
         "}"
     )
     Assert-False -Condition (Test-ThresholdJavaLineIsJavadocCommentContent -Lines $javaNestedOrdinaryCommentLines -Index 3 -JavaTextBlockLineState (Get-ThresholdJavaTextBlockLineState -Lines $javaNestedOrdinaryCommentLines)) -Name "java javadoc lexical state rejects nested ordinary block-comment opener"
+    $javaJavadocTerminatorSuffixLines = @(
+        "class JavadocCanary {",
+        "    /**",
+        "     * Javadoc content closes here */ public void declarationAfterCommentTerminatorWithEnoughWordsToLookWrappable() {}",
+        "}"
+    )
+    Assert-False -Condition (Test-ThresholdJavaLineIsJavadocCommentContent -Lines $javaJavadocTerminatorSuffixLines -Index 2 -JavaTextBlockLineState (Get-ThresholdJavaTextBlockLineState -Lines $javaJavadocTerminatorSuffixLines)) -Name "java javadoc lexical state rejects target line with code after terminator"
+    $javaTextBlockCloseThenOrdinaryCommentLines = @(
+        "class JavadocCanary {",
+        "    String text = `"`"`"",
+        "        text block content",
+        "    `"`"`"; /* outer ordinary block starts after text block close",
+        "     /**",
+        "     * Nested ordinary-comment content after text-block suffix deliberately contains enough readable prose but is not Javadoc.",
+        "     */",
+        "}"
+    )
+    Assert-False -Condition (Test-ThresholdJavaLineIsJavadocCommentContent -Lines $javaTextBlockCloseThenOrdinaryCommentLines -Index 5 -JavaTextBlockLineState (Get-ThresholdJavaTextBlockLineState -Lines $javaTextBlockCloseThenOrdinaryCommentLines)) -Name "java javadoc lexical state preserves ordinary comment opened after text block close"
 
     $textBlockPath = "src/main/java/org/example/TextBlockCanary.java"
     Write-CanaryFile -Path $textBlockPath -Lines $javaTextBlockLines

@@ -35,7 +35,9 @@
         "java_unicode_escapes_decoded_before_text_block_tracking",
         "java_unicode_line_terminators_split_before_text_block_tracking",
         "ordinary_block_comment_nested_javadoc_opener_not_promoted",
-        "java_unicode_escape_translation_respects_backslash_eligibility"
+        "java_unicode_escape_translation_respects_backslash_eligibility",
+        "javadoc_target_line_scanned_through_terminator",
+        "text_block_closing_suffix_comment_state_preserved"
       ]
     },
     {

@@ -49,6 +49,8 @@ try {
     Assert-True -Condition ($coverageClaims -contains "java_unicode_line_terminators_split_before_text_block_tracking") -Name "internal review twin covers Unicode-produced line terminator splitting"
     Assert-True -Condition ($coverageClaims -contains "java_unicode_escape_translation_respects_backslash_eligibility") -Name "internal review twin covers Java Unicode escape eligibility"
     Assert-True -Condition ($coverageClaims -contains "ordinary_block_comment_nested_javadoc_opener_not_promoted") -Name "internal review twin covers nested ordinary block-comment Javadoc opener rejection"
+    Assert-True -Condition ($coverageClaims -contains "javadoc_target_line_scanned_through_terminator") -Name "internal review twin covers Javadoc target-line terminator scanning"
+    Assert-True -Condition ($coverageClaims -contains "text_block_closing_suffix_comment_state_preserved") -Name "internal review twin covers text-block closing suffix comment state"
     Assert-True -Condition ($coverageClaims -contains "review_patch_bound_to_merge_base") -Name "internal review twin covers merge-base patch binding"
     Assert-True -Condition ($coverageClaims -contains "slice_comment_wrap_revalidates_current_javadoc_context") -Name "internal review twin covers single-slice Javadoc revalidation"
 
@@ -84,6 +86,8 @@ try {
     Assert-True -Condition ($twinText -match "java text block state splits unicode-produced line terminators") -Name "internal review twin requires Unicode line-terminator hostile fixture"
     Assert-True -Condition ($twinText -match "java unicode escape translation skips ineligible contiguous backslash escape") -Name "internal review twin requires ineligible Unicode escape hostile fixture"
     Assert-True -Condition ($twinText -match "Nested ordinary-comment content deliberately") -Name "internal review twin requires nested ordinary block-comment Javadoc hostile fixture"
+    Assert-True -Condition ($twinText -match "java javadoc lexical state rejects target line with code after terminator") -Name "internal review twin requires Javadoc terminator suffix hostile fixture"
+    Assert-True -Condition ($twinText -match "java javadoc lexical state preserves ordinary comment opened after text block close") -Name "internal review twin requires text-block closing suffix hostile fixture"
     Assert-True -Condition ($twinText -match "git merge-base") -Name "internal review twin computes patch from merge base"
     Assert-True -Condition ($twinText -match "patchBaseHead") -Name "internal review twin materializes patch base head"
     Assert-True -Condition ($twinText -match "run-next-slice revalidates current Javadoc context for prepared candidates") -Name "internal review twin requires single-slice revalidation fixture"
