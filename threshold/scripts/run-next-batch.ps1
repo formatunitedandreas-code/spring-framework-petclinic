@@ -186,33 +186,8 @@ function Test-BatchJavadocCommentLine {
         [hashtable] $JavaTextBlockLineState = @{}
     )
 
-    if ($Index -lt 0 -or $Index -ge $Lines.Count) {
-        return $false
-    }
-    if ($JavaTextBlockLineState.ContainsKey($Index + 1)) {
-        return $false
-    }
-
-    $insideJavadoc = $false
-    for ($i = 0; $i -le $Index; $i++) {
-        if ($JavaTextBlockLineState.ContainsKey($i + 1)) {
-            continue
-        }
-        $line = [string]$Lines[$i]
-        if (-not $insideJavadoc -and $line -match '^\s*/\*\*') {
-            $insideJavadoc = $true
-        }
-        if ($i -eq $Index) {
-            return $insideJavadoc
-        }
-        if ($insideJavadoc -and $line -match '\*/') {
-            $insideJavadoc = $false
-        }
-    }
-
-    return $false
+    return Test-ThresholdJavaLineIsJavadocCommentContent -Lines $Lines -Index $Index -JavaTextBlockLineState $JavaTextBlockLineState
 }
-
 function Apply-CommentWrapCleanup {
     param([pscustomobject] $Candidate)
 

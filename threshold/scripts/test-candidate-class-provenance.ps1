@@ -1027,6 +1027,32 @@ try {
     Assert-False -Condition (Test-ThresholdJavaLineIsInsideTextBlock -Lines $javaTextBlockWithPostCloseBlockCommentLines -LineNumber 5) -Name "java text block state tracks block comment after closing delimiter"
     Assert-True -Condition (Test-ThresholdJavaLineIsInsideTextBlock -Lines $javaTextBlockWithPostCloseBlockCommentLines -LineNumber 8) -Name "java text block state ignores post-close block-comment triple quote delimiter"
     Assert-False -Condition (Test-ThresholdJavaLineIsInsideTextBlock -Lines $javaTextBlockWithPostCloseBlockCommentLines -LineNumber 11) -Name "java text block state closes after post-close block-comment canary"
+    $javaJavadocCommentLines = @(
+        "class JavadocCanary {",
+        "    /**",
+        "     * Real Javadoc content deliberately contains enough readable prose to remain eligible for comment wrapping.",
+        "     */",
+        "    void normalize() {}",
+        "}"
+    )
+    Assert-True -Condition (Test-ThresholdJavaLineIsJavadocCommentContent -Lines $javaJavadocCommentLines -Index 2 -JavaTextBlockLineState (Get-ThresholdJavaTextBlockLineState -Lines $javaJavadocCommentLines)) -Name "java javadoc lexical state accepts real Javadoc content"
+    $javaOrdinaryCommentLines = @(
+        "class JavadocCanary {",
+        "    /*",
+        "     * Ordinary block comment content deliberately contains enough readable prose but is not Javadoc.",
+        "     */",
+        "}"
+    )
+    Assert-False -Condition (Test-ThresholdJavaLineIsJavadocCommentContent -Lines $javaOrdinaryCommentLines -Index 2 -JavaTextBlockLineState (Get-ThresholdJavaTextBlockLineState -Lines $javaOrdinaryCommentLines)) -Name "java javadoc lexical state rejects ordinary block comment content"
+    $javaNestedOrdinaryCommentLines = @(
+        "class JavadocCanary {",
+        "    /* Ordinary block comment starts before a nested marker.",
+        "     /**",
+        "     * Nested ordinary-comment content deliberately contains enough readable prose but is not Javadoc.",
+        "     */",
+        "}"
+    )
+    Assert-False -Condition (Test-ThresholdJavaLineIsJavadocCommentContent -Lines $javaNestedOrdinaryCommentLines -Index 3 -JavaTextBlockLineState (Get-ThresholdJavaTextBlockLineState -Lines $javaNestedOrdinaryCommentLines)) -Name "java javadoc lexical state rejects nested ordinary block-comment opener"
 
     $textBlockPath = "src/main/java/org/example/TextBlockCanary.java"
     Write-CanaryFile -Path $textBlockPath -Lines $javaTextBlockLines

@@ -472,27 +472,32 @@ $autoClasses = @(
         ForEach-Object { [string]$_.candidateClass } |
         Sort-Object -Unique
 )
-$ordinaryBlockCommentCandidate = @(
-    $pocket.candidates |
-        Where-Object {
-            [string]$_.candidateClass -eq "comment_wrap_cleanup" -and
-            [string]$_.file -like "*/CanaryCommentModel.java" -and
-            [string]$_.member -eq "line-8"
-        }
+$hostileCommentWrapMembers = @(
+    [pscustomobject]@{
+        Member = "line-8"
+        Description = "ordinary block comment"
+    },
+    [pscustomobject]@{
+        Member = "line-13"
+        Description = "nested ordinary block-comment Javadoc marker"
+    },
+    [pscustomobject]@{
+        Member = "line-20"
+        Description = "Java text block Javadoc-shaped content"
+    }
 )
-if ($ordinaryBlockCommentCandidate.Count -ne 0) {
-    throw "Discovery canary promoted ordinary block comment as Javadoc comment_wrap_cleanup."
-}
-$textBlockJavadocLikeCandidate = @(
-    $pocket.candidates |
-        Where-Object {
-            [string]$_.candidateClass -eq "comment_wrap_cleanup" -and
-            [string]$_.file -like "*/CanaryCommentModel.java" -and
-            [string]$_.member -eq "line-15"
-        }
-)
-if ($textBlockJavadocLikeCandidate.Count -ne 0) {
-    throw "Discovery canary promoted Java text block content as Javadoc comment_wrap_cleanup."
+foreach ($hostileMember in $hostileCommentWrapMembers) {
+    $hostileCandidate = @(
+        $pocket.candidates |
+            Where-Object {
+                [string]$_.candidateClass -eq "comment_wrap_cleanup" -and
+                [string]$_.file -like "*/CanaryCommentModel.java" -and
+                [string]$_.member -eq [string]$hostileMember.Member
+            }
+    )
+    if ($hostileCandidate.Count -ne 0) {
+        throw "Discovery canary promoted $($hostileMember.Description) as Javadoc comment_wrap_cleanup. member=$($hostileMember.Member)"
+    }
 }
 $unexpectedAutoPromotionCount = 0
 $missingRequiredCandidateClassCount = 0
