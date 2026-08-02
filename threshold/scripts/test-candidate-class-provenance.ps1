@@ -985,6 +985,18 @@ try {
     )
     Assert-True -Condition (Test-ThresholdJavaLineIsInsideTextBlock -Lines $javaTextBlockWithUnicodeDelimiterLines -LineNumber 4) -Name "java text block state decodes unicode quote delimiters"
     Assert-False -Condition (Test-ThresholdJavaLineIsInsideTextBlock -Lines $javaTextBlockWithUnicodeDelimiterLines -LineNumber 7) -Name "java text block state closes after unicode quote delimiter canary"
+    $javaTextBlockWithUnicodeLineTerminatorLines = @(
+        "class TextBlockCanary {",
+        "    // comment \u000a    String query = \u0022\u0022\u0022",
+        "        /**",
+        "         * Text block content after a Unicode-produced line terminator still remains inside the text block.",
+        "         */",
+        "    \u0022\u0022\u0022;",
+        "    void normalize() {}",
+        "}"
+    )
+    Assert-True -Condition (Test-ThresholdJavaLineIsInsideTextBlock -Lines $javaTextBlockWithUnicodeLineTerminatorLines -LineNumber 4) -Name "java text block state splits unicode-produced line terminators"
+    Assert-False -Condition (Test-ThresholdJavaLineIsInsideTextBlock -Lines $javaTextBlockWithUnicodeLineTerminatorLines -LineNumber 7) -Name "java text block state closes after unicode-produced line terminator canary"
     $javaTextBlockWithPostCloseBlockCommentLines = @(
         "class TextBlockCanary {",
         "    String first = `"`"`"",

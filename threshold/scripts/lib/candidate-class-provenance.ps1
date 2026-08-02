@@ -142,6 +142,13 @@ function Convert-ThresholdJavaUnicodeEscapes {
     })
 }
 
+function Split-ThresholdJavaUnicodeTranslatedLine {
+    param([string] $Line)
+
+    $translated = Convert-ThresholdJavaUnicodeEscapes -Line $Line
+    return @([regex]::Split($translated, "\r\n|\r|\n"))
+}
+
 function Get-ThresholdJavaTextBlockDelimiterCount {
     param([string] $Line)
 
@@ -172,36 +179,39 @@ function Get-ThresholdJavaTextBlockLineState {
     $insideBlockComment = $false
     for ($i = 0; $i -lt $Lines.Count; $i++) {
         $lineNumber = $i + 1
-        $line = Convert-ThresholdJavaUnicodeEscapes -Line ([string]$Lines[$i])
-        if ($insideTextBlock) {
-            $states[$lineNumber] = $true
-            $delimiterIndexes = @(Get-ThresholdJavaTextBlockDelimiterStartIndexes -Line $line)
-            if ($delimiterIndexes.Count -eq 0) {
-                continue
-            }
-
-            $closingDelimiterIndex = [int]$delimiterIndexes[0]
-            $insideTextBlock = $false
-            $afterClosingDelimiterIndex = $closingDelimiterIndex + 3
-            if ($afterClosingDelimiterIndex -ge $line.Length) {
-                continue
-            }
-
-            $suffix = $line.Substring($afterClosingDelimiterIndex)
-            $lexicalSuffix = Remove-ThresholdJavaCommentsOutsideLiteral -Line $suffix -InsideBlockComment ([ref]$insideBlockComment)
-            $suffixDelimiterCount = Get-ThresholdJavaTextBlockDelimiterCount -Line $lexicalSuffix
-            if (($suffixDelimiterCount % 2) -eq 1) {
-                $insideTextBlock = $true
-            }
-            continue
-        }
-        $lexicalLine = $line
-        $lexicalLine = Remove-ThresholdJavaCommentsOutsideLiteral -Line $line -InsideBlockComment ([ref]$insideBlockComment)
-        $delimiterCount = Get-ThresholdJavaTextBlockDelimiterCount -Line $lexicalLine
-        if (($delimiterCount % 2) -eq 1) {
-            $insideTextBlock = -not $insideTextBlock
-            if (-not $insideTextBlock) {
+        $segments = @(Split-ThresholdJavaUnicodeTranslatedLine -Line ([string]$Lines[$i]))
+        foreach ($segment in $segments) {
+            $line = [string]$segment
+            if ($insideTextBlock) {
                 $states[$lineNumber] = $true
+                $delimiterIndexes = @(Get-ThresholdJavaTextBlockDelimiterStartIndexes -Line $line)
+                if ($delimiterIndexes.Count -eq 0) {
+                    continue
+                }
+
+                $closingDelimiterIndex = [int]$delimiterIndexes[0]
+                $insideTextBlock = $false
+                $afterClosingDelimiterIndex = $closingDelimiterIndex + 3
+                if ($afterClosingDelimiterIndex -ge $line.Length) {
+                    continue
+                }
+
+                $suffix = $line.Substring($afterClosingDelimiterIndex)
+                $lexicalSuffix = Remove-ThresholdJavaCommentsOutsideLiteral -Line $suffix -InsideBlockComment ([ref]$insideBlockComment)
+                $suffixDelimiterCount = Get-ThresholdJavaTextBlockDelimiterCount -Line $lexicalSuffix
+                if (($suffixDelimiterCount % 2) -eq 1) {
+                    $insideTextBlock = $true
+                    $states[$lineNumber] = $true
+                }
+                continue
+            }
+            $lexicalLine = Remove-ThresholdJavaCommentsOutsideLiteral -Line $line -InsideBlockComment ([ref]$insideBlockComment)
+            $delimiterCount = Get-ThresholdJavaTextBlockDelimiterCount -Line $lexicalLine
+            if (($delimiterCount % 2) -eq 1) {
+                $insideTextBlock = -not $insideTextBlock
+                if (-not $insideTextBlock) {
+                    $states[$lineNumber] = $true
+                }
             }
         }
     }

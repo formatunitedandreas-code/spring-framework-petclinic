@@ -32,7 +32,8 @@
         "java_text_block_delimiters_must_be_unescaped",
         "block_comment_text_block_delimiters_ignored",
         "ordinary_block_comment_not_promoted_as_javadoc",
-        "java_unicode_escapes_decoded_before_text_block_tracking"
+        "java_unicode_escapes_decoded_before_text_block_tracking",
+        "java_unicode_line_terminators_split_before_text_block_tracking"
       ]
     },
     {
