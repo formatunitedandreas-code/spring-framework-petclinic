@@ -32,6 +32,39 @@ function Get-ThresholdStringSha256Lower {
     }
 }
 
+function Remove-ThresholdJavaLineCommentOutsideLiteral {
+    param([string] $Line)
+
+    $insideString = $false
+    $insideChar = $false
+    $escaped = $false
+    for ($i = 0; $i -lt $Line.Length; $i++) {
+        $ch = $Line[$i]
+        $next = if ($i + 1 -lt $Line.Length) { $Line[$i + 1] } else { [char]0 }
+
+        if ($escaped) {
+            $escaped = $false
+            continue
+        }
+        if (($insideString -or $insideChar) -and $ch -eq '\') {
+            $escaped = $true
+            continue
+        }
+        if (-not $insideChar -and $ch -eq '"') {
+            $insideString = -not $insideString
+            continue
+        }
+        if (-not $insideString -and $ch -eq "'") {
+            $insideChar = -not $insideChar
+            continue
+        }
+        if (-not $insideString -and -not $insideChar -and $ch -eq "/" -and $next -eq "/") {
+            return $Line.Substring(0, $i)
+        }
+    }
+    return $Line
+}
+
 function Get-ThresholdJavaTextBlockLineState {
     param([string[]] $Lines)
 
@@ -45,10 +78,7 @@ function Get-ThresholdJavaTextBlockLineState {
         }
         $lexicalLine = $line
         if (-not $insideTextBlock) {
-            $lineCommentIndex = $line.IndexOf("//")
-            if ($lineCommentIndex -ge 0) {
-                $lexicalLine = $line.Substring(0, $lineCommentIndex)
-            }
+            $lexicalLine = Remove-ThresholdJavaLineCommentOutsideLiteral -Line $line
         }
         $quoteMatches = [regex]::Matches($lexicalLine, '"""')
         if (($quoteMatches.Count % 2) -eq 1) {

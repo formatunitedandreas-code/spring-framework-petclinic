@@ -122,6 +122,28 @@ function Get-LeaseState {
     return Get-Content $StatePath -Raw | ConvertFrom-Json
 }
 
+function Get-LeaseIntScalarOrDefault {
+    param(
+        [string[]] $Lines,
+        [string] $Name,
+        [int] $DefaultValue
+    )
+
+    $match = $Lines | Where-Object { $_ -match "^\s*$([regex]::Escape($Name)):\s*(\d+)\s*$" } | Select-Object -First 1
+    if (-not $match) {
+        return $DefaultValue
+    }
+    return [int]($match -replace "^\s*$([regex]::Escape($Name)):\s*", "")
+}
+
+function Get-CommentWrapThreshold {
+    if (-not (Test-Path $LeasePath)) {
+        return 120
+    }
+    $leaseLines = @(Get-Content $LeasePath)
+    return Get-LeaseIntScalarOrDefault -Lines $leaseLines -Name "commentWrapThreshold" -DefaultValue 120
+}
+
 function Get-ApprovedBatchClasses {
     if (-not (Test-Path $GatePath)) { throw "Batch gate file not found: $GatePath" }
     $gate = Get-Content $GatePath -Raw | ConvertFrom-Json
@@ -176,7 +198,7 @@ function Apply-CommentWrapCleanup {
 
     $line = $lines[$lineNumber - 1]
     $match = [regex]::Match($line, '^(?<indent>\s*\*\s+)(?<text>\S.*)$')
-    if (-not $match.Success -or $line.Length -le 120) {
+    if (-not $match.Success -or $line.Length -le (Get-CommentWrapThreshold)) {
         throw "Line '$lineNumber' is not a supported long comment line in $path."
     }
 
@@ -221,7 +243,7 @@ function Test-CommentWrapCandidateApplies {
 
     $line = $lines[$lineNumber - 1]
     $match = [regex]::Match($line, '^(?<indent>\s*\*\s+)(?<text>\S.*)$')
-    if (-not $match.Success -or $line.Length -le 120) { return $false }
+    if (-not $match.Success -or $line.Length -le (Get-CommentWrapThreshold)) { return $false }
 
     $text = $match.Groups["text"].Value.Trim()
     return $null -ne (Find-ConservativeCommentSplitPoint -Text $text)

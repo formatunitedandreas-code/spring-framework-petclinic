@@ -393,6 +393,8 @@ try {
     $runNextBatchText = Get-Content (Join-Path $thresholdScriptRoot "run-next-batch.ps1") -Raw
     Assert-True -Condition ($runNextBatchText -match '\[string\] \$CandidatePocketPath = ""') -Name "run-next-batch accepts a prepared candidate pocket"
     Assert-True -Condition ($runNextBatchText -match '\[string\] \$PrBaseHead = ""') -Name "run-next-batch accepts an observed PR base head"
+    Assert-True -Condition ($runNextBatchText -match "Get-CommentWrapThreshold") -Name "run-next-batch derives comment wrap eligibility from lease threshold"
+    Assert-False -Condition ($runNextBatchText -match '\$line\.Length -le 120') -Name "run-next-batch does not hardcode the baseline comment wrap threshold"
     Assert-True -Condition ($runNextBatchText -match "Assert-BatchCandidateHasPreProductDiscoveryEvidence") -Name "run-next-batch requires pre-product evidence for every batched candidate"
     Assert-True -Condition ($runNextBatchText -match "Get-ThresholdCandidateDiscoveryEvidenceFromRevision") -Name "run-next-batch reads batch discovery evidence from PR base"
     Assert-True -Condition ($runNextBatchText -match "candidateDiscoveryEvidence") -Name "run-next-batch records per-candidate discovery evidence binding"
@@ -930,6 +932,17 @@ try {
     )
     Assert-True -Condition (Test-ThresholdJavaLineIsInsideTextBlock -Lines $javaTextBlockWithCommentDelimiterLines -LineNumber 5) -Name "java text block state ignores line-comment triple quote delimiter"
     Assert-False -Condition (Test-ThresholdJavaLineIsInsideTextBlock -Lines $javaTextBlockWithCommentDelimiterLines -LineNumber 8) -Name "java text block state closes after real text block delimiter"
+    $javaTextBlockWithUrlLiteralLines = @(
+        "class TextBlockCanary {",
+        "    static String url = `"http://x`"; static String body = `"`"`"",
+        "        /**",
+        "         * Text block content after a URL literal still remains inside the text block.",
+        "         */",
+        "    `"`"`";",
+        "}"
+    )
+    Assert-True -Condition (Test-ThresholdJavaLineIsInsideTextBlock -Lines $javaTextBlockWithUrlLiteralLines -LineNumber 4) -Name "java text block state ignores double slash inside string literal"
+    Assert-False -Condition (Test-ThresholdJavaLineIsInsideTextBlock -Lines $javaTextBlockWithUrlLiteralLines -LineNumber 7) -Name "java text block state closes after string-literal double slash canary"
 
     $textBlockPath = "src/main/java/org/example/TextBlockCanary.java"
     Write-CanaryFile -Path $textBlockPath -Lines $javaTextBlockLines
