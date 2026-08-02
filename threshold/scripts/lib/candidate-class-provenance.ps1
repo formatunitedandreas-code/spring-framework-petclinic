@@ -65,6 +65,35 @@ function Remove-ThresholdJavaLineCommentOutsideLiteral {
     return $Line
 }
 
+function Test-ThresholdJavaCharacterIsEscaped {
+    param([string] $Line, [int] $Index)
+
+    $backslashCount = 0
+    for ($i = $Index - 1; $i -ge 0; $i--) {
+        if ($Line[$i] -ne '\') {
+            break
+        }
+        $backslashCount++
+    }
+    return (($backslashCount % 2) -eq 1)
+}
+
+function Get-ThresholdJavaTextBlockDelimiterCount {
+    param([string] $Line)
+
+    $count = 0
+    for ($i = 0; $i -le ($Line.Length - 3); $i++) {
+        if ($Line[$i] -eq '"' -and
+            $Line[$i + 1] -eq '"' -and
+            $Line[$i + 2] -eq '"' -and
+            -not (Test-ThresholdJavaCharacterIsEscaped -Line $Line -Index $i)) {
+            $count++
+            $i += 2
+        }
+    }
+    return $count
+}
+
 function Get-ThresholdJavaTextBlockLineState {
     param([string[]] $Lines)
 
@@ -80,8 +109,8 @@ function Get-ThresholdJavaTextBlockLineState {
         if (-not $insideTextBlock) {
             $lexicalLine = Remove-ThresholdJavaLineCommentOutsideLiteral -Line $line
         }
-        $quoteMatches = [regex]::Matches($lexicalLine, '"""')
-        if (($quoteMatches.Count % 2) -eq 1) {
+        $delimiterCount = Get-ThresholdJavaTextBlockDelimiterCount -Line $lexicalLine
+        if (($delimiterCount % 2) -eq 1) {
             $insideTextBlock = -not $insideTextBlock
             if (-not $insideTextBlock) {
                 $states[$lineNumber] = $true

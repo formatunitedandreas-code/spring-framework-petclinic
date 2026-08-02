@@ -179,6 +179,40 @@ function Find-ConservativeCommentSplitPoint {
     return $null
 }
 
+function Test-BatchJavadocCommentLine {
+    param(
+        [string[]] $Lines,
+        [int] $Index,
+        [hashtable] $JavaTextBlockLineState = @{}
+    )
+
+    if ($Index -lt 0 -or $Index -ge $Lines.Count) {
+        return $false
+    }
+    if ($JavaTextBlockLineState.ContainsKey($Index + 1)) {
+        return $false
+    }
+
+    $insideJavadoc = $false
+    for ($i = 0; $i -le $Index; $i++) {
+        if ($JavaTextBlockLineState.ContainsKey($i + 1)) {
+            continue
+        }
+        $line = [string]$Lines[$i]
+        if (-not $insideJavadoc -and $line -match '^\s*/\*\*') {
+            $insideJavadoc = $true
+        }
+        if ($i -eq $Index) {
+            return $insideJavadoc
+        }
+        if ($insideJavadoc -and $line -match '\*/') {
+            $insideJavadoc = $false
+        }
+    }
+
+    return $false
+}
+
 function Apply-CommentWrapCleanup {
     param([pscustomobject] $Candidate)
 
@@ -194,6 +228,10 @@ function Apply-CommentWrapCleanup {
     $lines = Get-Content $path
     if ($lineNumber -lt 1 -or $lineNumber -gt $lines.Count) {
         throw "Candidate line '$lineNumber' is outside file range in $path."
+    }
+    $javaTextBlockLineState = Get-ThresholdJavaTextBlockLineState -Lines $lines
+    if (-not (Test-BatchJavadocCommentLine -Lines $lines -Index ($lineNumber - 1) -JavaTextBlockLineState $javaTextBlockLineState)) {
+        throw "Line '$lineNumber' is not inside a current Javadoc context in $path."
     }
 
     $line = $lines[$lineNumber - 1]
@@ -240,6 +278,8 @@ function Test-CommentWrapCandidateApplies {
     $lineNumber = [int]($member.Substring(5))
     $lines = Get-Content $path
     if ($lineNumber -lt 1 -or $lineNumber -gt $lines.Count) { return $false }
+    $javaTextBlockLineState = Get-ThresholdJavaTextBlockLineState -Lines $lines
+    if (-not (Test-BatchJavadocCommentLine -Lines $lines -Index ($lineNumber - 1) -JavaTextBlockLineState $javaTextBlockLineState)) { return $false }
 
     $line = $lines[$lineNumber - 1]
     $match = [regex]::Match($line, '^(?<indent>\s*\*\s+)(?<text>\S.*)$')

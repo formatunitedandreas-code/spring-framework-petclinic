@@ -166,8 +166,14 @@ if ($candidateProvenanceText -notmatch 'function Remove-ThresholdJavaLineComment
 if ($candidateProvenanceText -match '\.IndexOf\("//"\)') {
     $runtimeFindings += New-Finding -ReviewerId "threshold.runtime_literal_reviewer.v0_1" -Category "runtime_literal" -Severity "P1" -Title "Raw // detection can hide text-block delimiters" -AffectedPaths @("threshold/scripts/lib/candidate-class-provenance.ps1") -ViolatedPredicates @("java_line_comment_detection_respects_string_literals") -Description "A raw IndexOf(\"//\") can treat URL literals such as http://x as comments before a real text-block opener."
 }
+if ($candidateProvenanceText -notmatch 'Get-ThresholdJavaTextBlockDelimiterCount') {
+    $runtimeFindings += New-Finding -ReviewerId "threshold.runtime_literal_reviewer.v0_1" -Category "runtime_literal" -Severity "P1" -Title "Text-block delimiter parser does not reject escaped quote characters" -AffectedPaths @("threshold/scripts/lib/candidate-class-provenance.ps1") -ViolatedPredicates @("java_text_block_delimiters_must_be_unescaped") -Description "The text-block scanner must count only lexically valid, unescaped triple-quote delimiters."
+}
 if ($candidateTestText -notmatch 'java text block state ignores double slash inside string literal') {
     $runtimeFindings += New-Finding -ReviewerId "threshold.runtime_literal_reviewer.v0_1" -Category "runtime_literal" -Severity "P2" -Title "Missing URL-literal text-block regression" -AffectedPaths @("threshold/scripts/test-candidate-class-provenance.ps1") -ViolatedPredicates @("hostile_runtime_literal_fixture_present") -Description "The internal test corpus does not exercise a URL literal before a Java text-block opener."
+}
+if ($candidateTestText -notmatch 'java text block state ignores escaped triple quote characters') {
+    $runtimeFindings += New-Finding -ReviewerId "threshold.runtime_literal_reviewer.v0_1" -Category "runtime_literal" -Severity "P2" -Title "Missing escaped text-block delimiter regression" -AffectedPaths @("threshold/scripts/test-candidate-class-provenance.ps1") -ViolatedPredicates @("hostile_runtime_literal_fixture_present") -Description "The internal test corpus does not exercise escaped triple quote characters inside a Java text block."
 }
 if ($canaryCommentModelText -notmatch 'http://x') {
     $runtimeFindings += New-Finding -ReviewerId "threshold.runtime_literal_reviewer.v0_1" -Category "runtime_literal" -Severity "P2" -Title "Discovery Canary lacks URL-literal text-block hostile fixture" -AffectedPaths @("threshold/discovery-canaries/fixtures/src/main/java/org/springframework/samples/petclinic/model/CanaryCommentModel.java") -ViolatedPredicates @("discovery_canary_runtime_literal_surface_present") -Description "The Discovery Canary does not bind the URL-literal plus text-block delimiter surface."
@@ -180,8 +186,14 @@ if ($runNextBatchText -match '\$line\.Length -le 120') {
 if ($runNextBatchText -notmatch 'Get-CommentWrapThreshold') {
     $candidateFindings += New-Finding -ReviewerId "threshold.candidate_class_reviewer.v0_1" -Category "candidate_class" -Severity "P1" -Title "Batch runner does not bind active comment wrap threshold" -AffectedPaths @("threshold/scripts/run-next-batch.ps1") -ViolatedPredicates @("batch_comment_wrap_uses_discovery_threshold") -Description "The batch runner lacks a canonical threshold resolver for comment_wrap_cleanup."
 }
+if ($runNextBatchText -notmatch 'Test-BatchJavadocCommentLine') {
+    $candidateFindings += New-Finding -ReviewerId "threshold.candidate_class_reviewer.v0_1" -Category "candidate_class" -Severity "P2" -Title "Batch runner does not revalidate current Javadoc context" -AffectedPaths @("threshold/scripts/run-next-batch.ps1") -ViolatedPredicates @("batch_comment_wrap_revalidates_current_javadoc_context") -Description "Prepared batch candidates must be revalidated against the current file's Javadoc and text-block state before mutation."
+}
 if ($candidateTestText -notmatch 'run-next-batch derives comment wrap eligibility from lease threshold') {
     $candidateFindings += New-Finding -ReviewerId "threshold.candidate_class_reviewer.v0_1" -Category "candidate_class" -Severity "P2" -Title "Batch threshold coherence is not regression-tested" -AffectedPaths @("threshold/scripts/test-candidate-class-provenance.ps1") -ViolatedPredicates @("batch_comment_wrap_uses_discovery_threshold") -Description "The local reviewer cannot prove the batch runner remains aligned with discovery thresholds."
+}
+if ($candidateTestText -notmatch 'run-next-batch revalidates current Javadoc context for prepared candidates') {
+    $candidateFindings += New-Finding -ReviewerId "threshold.candidate_class_reviewer.v0_1" -Category "candidate_class" -Severity "P2" -Title "Missing batch Javadoc revalidation regression" -AffectedPaths @("threshold/scripts/test-candidate-class-provenance.ps1") -ViolatedPredicates @("batch_comment_wrap_revalidates_current_javadoc_context") -Description "The local reviewer cannot prove prepared batch candidates revalidate current Javadoc context."
 }
 
 $fixtureFindings = @()
@@ -202,8 +214,8 @@ if ($reviewSubject.headSha -ne $headSha -or [string]::IsNullOrWhiteSpace($review
 }
 
 $results = @(
-    (New-ReviewerResult -ReviewerId "threshold.runtime_literal_reviewer.v0_1" -Findings $runtimeFindings -CoverageClaims @("java_text_block_content_not_comment_wrap_candidate", "java_line_comment_detection_respects_string_literals", "ordinary_block_comment_not_promoted_as_javadoc")),
-    (New-ReviewerResult -ReviewerId "threshold.candidate_class_reviewer.v0_1" -Findings $candidateFindings -CoverageClaims @("candidate_class_provenance_chain_bound", "observed_diff_class_matches_candidate_class", "batch_comment_wrap_uses_discovery_threshold")),
+    (New-ReviewerResult -ReviewerId "threshold.runtime_literal_reviewer.v0_1" -Findings $runtimeFindings -CoverageClaims @("java_text_block_content_not_comment_wrap_candidate", "java_line_comment_detection_respects_string_literals", "java_text_block_delimiters_must_be_unescaped", "ordinary_block_comment_not_promoted_as_javadoc")),
+    (New-ReviewerResult -ReviewerId "threshold.candidate_class_reviewer.v0_1" -Findings $candidateFindings -CoverageClaims @("candidate_class_provenance_chain_bound", "observed_diff_class_matches_candidate_class", "batch_comment_wrap_uses_discovery_threshold", "batch_comment_wrap_revalidates_current_javadoc_context")),
     (New-ReviewerResult -ReviewerId "threshold.fixture_integrity_reviewer.v0_1" -Findings $fixtureFindings -CoverageClaims @("negative_fixture_reason_isolated", "missing_trainer_fixture_keeps_execution_mode_valid", "duplicate_required_class_counted_once")),
     (New-ReviewerResult -ReviewerId "threshold.scope_authority_reviewer.v0_1" -Findings $scopeFindings -CoverageClaims @("reviewer_authorizing_false", "internal_review_does_not_create_push_or_merge_authority")),
     (New-ReviewerResult -ReviewerId "threshold.evidence_causality_reviewer.v0_1" -Findings $evidenceFindings -CoverageClaims @("review_subject_exact_head_bound", "patch_digest_bound_to_base_and_head", "changed_path_digest_bound"))

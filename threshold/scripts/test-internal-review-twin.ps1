@@ -50,10 +50,12 @@ try {
 
     $libraryText = Get-Content -LiteralPath (Join-Path $repoRoot "threshold/scripts/lib/candidate-class-provenance.ps1") -Raw
     Assert-True -Condition ($libraryText -match "Remove-ThresholdJavaLineCommentOutsideLiteral") -Name "PR197 URL literal external finding is now locally covered"
+    Assert-True -Condition ($libraryText -match "Get-ThresholdJavaTextBlockDelimiterCount") -Name "PR197 escaped text-block delimiter external finding is now locally covered"
     Assert-False -Condition ($libraryText -match '\.IndexOf\("//"\)') -Name "raw double slash detection is blocked by local review predicate"
 
     $batchText = Get-Content -LiteralPath (Join-Path $repoRoot "threshold/scripts/run-next-batch.ps1") -Raw
     Assert-True -Condition ($batchText -match "Get-CommentWrapThreshold") -Name "PR197 batch threshold external finding is now locally covered"
+    Assert-True -Condition ($batchText -match "Test-BatchJavadocCommentLine") -Name "PR197 prepared batch Javadoc-context external finding is now locally covered"
     Assert-False -Condition ($batchText -match '\$line\.Length -le 120') -Name "hardcoded batch threshold is blocked by local review predicate"
 
     Write-Host "internalReviewTwinTests=passed"

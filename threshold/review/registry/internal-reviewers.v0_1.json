@@ -9,7 +9,8 @@
       "coveredPredicates": [
         "candidate_class_provenance_chain_bound",
         "observed_diff_class_matches_candidate_class",
-        "batch_comment_wrap_uses_discovery_threshold"
+        "batch_comment_wrap_uses_discovery_threshold",
+        "batch_comment_wrap_revalidates_current_javadoc_context"
       ]
     },
     {
@@ -27,6 +28,7 @@
       "coveredPredicates": [
         "java_text_block_content_not_comment_wrap_candidate",
         "java_line_comment_detection_respects_string_literals",
+        "java_text_block_delimiters_must_be_unescaped",
         "ordinary_block_comment_not_promoted_as_javadoc"
       ]
     },

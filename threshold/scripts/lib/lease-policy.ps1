@@ -125,6 +125,7 @@ function Test-ThresholdGovernancePolicyPath {
         $normalized -like "threshold/scripts/*" -or
         $normalized -like "threshold/gates/*" -or
         $normalized -like "threshold/policies/*" -or
+        $normalized -like "threshold/review/registry/*" -or
         $normalized -like "threshold/adapters/*" -or
         $normalized -like "threshold/capability-backlog/*" -or
         $normalized -like "threshold/authority/*" -or

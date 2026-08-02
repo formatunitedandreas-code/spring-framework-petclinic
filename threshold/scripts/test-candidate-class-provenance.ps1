@@ -395,6 +395,8 @@ try {
     Assert-True -Condition ($runNextBatchText -match '\[string\] \$PrBaseHead = ""') -Name "run-next-batch accepts an observed PR base head"
     Assert-True -Condition ($runNextBatchText -match "Get-CommentWrapThreshold") -Name "run-next-batch derives comment wrap eligibility from lease threshold"
     Assert-False -Condition ($runNextBatchText -match '\$line\.Length -le 120') -Name "run-next-batch does not hardcode the baseline comment wrap threshold"
+    Assert-True -Condition ($runNextBatchText -match "Test-BatchJavadocCommentLine") -Name "run-next-batch revalidates current Javadoc context for prepared candidates"
+    Assert-True -Condition ($runNextBatchText -match 'Get-ThresholdJavaTextBlockLineState -Lines \$lines') -Name "run-next-batch revalidates current text block state before applying comment wrap"
     Assert-True -Condition ($runNextBatchText -match "Assert-BatchCandidateHasPreProductDiscoveryEvidence") -Name "run-next-batch requires pre-product evidence for every batched candidate"
     Assert-True -Condition ($runNextBatchText -match "Get-ThresholdCandidateDiscoveryEvidenceFromRevision") -Name "run-next-batch reads batch discovery evidence from PR base"
     Assert-True -Condition ($runNextBatchText -match "candidateDiscoveryEvidence") -Name "run-next-batch records per-candidate discovery evidence binding"
@@ -943,6 +945,19 @@ try {
     )
     Assert-True -Condition (Test-ThresholdJavaLineIsInsideTextBlock -Lines $javaTextBlockWithUrlLiteralLines -LineNumber 4) -Name "java text block state ignores double slash inside string literal"
     Assert-False -Condition (Test-ThresholdJavaLineIsInsideTextBlock -Lines $javaTextBlockWithUrlLiteralLines -LineNumber 7) -Name "java text block state closes after string-literal double slash canary"
+    $javaTextBlockWithEscapedDelimiterLines = @(
+        "class TextBlockCanary {",
+        "    static String body = `"`"`"",
+        "        \`"\`"\`"",
+        "        /**",
+        "         * Text block content after escaped quote characters still remains inside the text block.",
+        "         */",
+        "    `"`"`";",
+        "    void normalize() {}",
+        "}"
+    )
+    Assert-True -Condition (Test-ThresholdJavaLineIsInsideTextBlock -Lines $javaTextBlockWithEscapedDelimiterLines -LineNumber 5) -Name "java text block state ignores escaped triple quote characters"
+    Assert-False -Condition (Test-ThresholdJavaLineIsInsideTextBlock -Lines $javaTextBlockWithEscapedDelimiterLines -LineNumber 8) -Name "java text block state closes after escaped delimiter canary"
 
     $textBlockPath = "src/main/java/org/example/TextBlockCanary.java"
     Write-CanaryFile -Path $textBlockPath -Lines $javaTextBlockLines
