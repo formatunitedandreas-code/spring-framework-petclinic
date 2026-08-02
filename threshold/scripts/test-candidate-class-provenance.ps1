@@ -1066,6 +1066,19 @@ try {
     )
     Assert-False -Condition (Test-ThresholdJavaLineIsJavadocCommentContent -Lines $javaJavadocSameLinePreformattedLines -Index 2 -JavaTextBlockLineState (Get-ThresholdJavaTextBlockLineState -Lines $javaJavadocSameLinePreformattedLines)) -Name "java javadoc lexical state rejects same-line preformatted Javadoc content"
     Assert-False -Condition (Test-ThresholdCommentWrapCandidateLine -Lines $javaJavadocSameLinePreformattedLines -Index 2 -CommentWrapThreshold 69 -JavaTextBlockLineState (Get-ThresholdJavaTextBlockLineState -Lines $javaJavadocSameLinePreformattedLines)) -Name "java comment wrap predicate rejects same-line preformatted Javadoc content"
+    $javaJavadocLineEndPreformattedLines = @(
+        "class JavadocCanary {",
+        "    /**",
+        "     * <pre",
+        "     * class=`"sql`">",
+        "     * SELECT id, first_name, last_name, telephone FROM owners WHERE last_name = ? ORDER BY last_name, first_name",
+        "     * </pre>",
+        "     */",
+        "    void normalize() {}",
+        "}"
+    )
+    Assert-False -Condition (Test-ThresholdJavaLineIsJavadocCommentContent -Lines $javaJavadocLineEndPreformattedLines -Index 4 -JavaTextBlockLineState (Get-ThresholdJavaTextBlockLineState -Lines $javaJavadocLineEndPreformattedLines)) -Name "java javadoc lexical state treats line-end pre tag as preformatted opener"
+    Assert-False -Condition (Test-ThresholdCommentWrapCandidateLine -Lines $javaJavadocLineEndPreformattedLines -Index 4 -CommentWrapThreshold 69 -JavaTextBlockLineState (Get-ThresholdJavaTextBlockLineState -Lines $javaJavadocLineEndPreformattedLines)) -Name "java comment wrap predicate rejects line-end pre tag preformatted content"
     $javaJavadocNoSplitLines = @(
         "class JavadocCanary {",
         "    /**",

@@ -269,8 +269,8 @@ function Test-ThresholdJavaLineIsJavadocCommentContent {
         foreach ($segment in $segments) {
             $line = [string]$segment
             $javadocLinePayload = ($line -replace '^\s*\*\s?', '')
-            $lineStartsPreformattedJavadoc = $javadocLinePayload -match '(?i)<pre(?:\s|>)'
-            $lineEndsPreformattedJavadoc = $javadocLinePayload -match '(?i)</pre>'
+            $lineStartsPreformattedJavadoc = $javadocLinePayload -match '(?i)<pre(?:\s|>|$)'
+            $lineEndsPreformattedJavadoc = $javadocLinePayload -match '(?i)</pre(?:\s|>|$)'
             $targetLineInsidePreformattedJavadoc = $insidePreformattedJavadoc -or $lineStartsPreformattedJavadoc
             $insideString = $false
             $insideChar = $false

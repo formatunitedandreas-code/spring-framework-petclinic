@@ -43,7 +43,8 @@
         "javadoc_target_line_scanned_through_terminator",
         "text_block_closing_suffix_comment_state_preserved",
         "javadoc_preformatted_content_not_comment_wrap_candidate",
-        "javadoc_same_line_preformatted_content_not_comment_wrap_candidate"
+        "javadoc_same_line_preformatted_content_not_comment_wrap_candidate",
+        "javadoc_line_end_pre_tag_starts_preformatted_content"
       ]
     },
     {
@@ -64,7 +65,8 @@
         "patch_digest_bound_to_base_and_head",
         "changed_path_digest_bound",
         "review_patch_bound_to_merge_base",
-        "review_forbidden_path_checks_include_rename_sources"
+        "review_forbidden_path_checks_include_rename_sources",
+        "review_changed_paths_use_nul_name_status"
       ]
     }
   ],
