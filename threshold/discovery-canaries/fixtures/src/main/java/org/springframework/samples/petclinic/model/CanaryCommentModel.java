@@ -9,6 +9,7 @@ package org.springframework.samples.petclinic.model;
  */
 class CanaryCommentModel {
 
+	// Mention """ before the real text block opener.
 	private static final String TEXT_BLOCK = """
 			/**
 			 * Text block content deliberately contains enough readable prose to look wrappable but must not be promoted as a Javadoc cleanup candidate

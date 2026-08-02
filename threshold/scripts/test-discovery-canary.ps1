@@ -488,7 +488,7 @@ $textBlockJavadocLikeCandidate = @(
         Where-Object {
             [string]$_.candidateClass -eq "comment_wrap_cleanup" -and
             [string]$_.file -like "*/CanaryCommentModel.java" -and
-            [string]$_.member -eq "line-14"
+            [string]$_.member -eq "line-15"
         }
 )
 if ($textBlockJavadocLikeCandidate.Count -ne 0) {

@@ -43,7 +43,14 @@ function Get-ThresholdJavaTextBlockLineState {
         if ($insideTextBlock) {
             $states[$lineNumber] = $true
         }
-        $quoteMatches = [regex]::Matches($line, '"""')
+        $lexicalLine = $line
+        if (-not $insideTextBlock) {
+            $lineCommentIndex = $line.IndexOf("//")
+            if ($lineCommentIndex -ge 0) {
+                $lexicalLine = $line.Substring(0, $lineCommentIndex)
+            }
+        }
+        $quoteMatches = [regex]::Matches($lexicalLine, '"""')
         if (($quoteMatches.Count % 2) -eq 1) {
             $insideTextBlock = -not $insideTextBlock
             if (-not $insideTextBlock) {

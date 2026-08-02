@@ -917,6 +917,19 @@ try {
     )
     Assert-True -Condition (Test-ThresholdJavaLineIsInsideTextBlock -Lines $javaTextBlockLines -LineNumber 3) -Name "java text block state marks interior tab line"
     Assert-False -Condition (Test-ThresholdJavaLineIsInsideTextBlock -Lines $javaTextBlockLines -LineNumber 6) -Name "java text block state leaves ordinary tab line outside"
+    $javaTextBlockWithCommentDelimiterLines = @(
+        "class TextBlockCanary {",
+        "    // Mention `"`"`" before the real text block opener.",
+        "    String query = `"`"`"",
+        "        /**",
+        "         * Text block content deliberately contains enough readable prose to look wrappable but must not be promoted as Javadoc.",
+        "         */",
+        "    `"`"`";",
+        "    void normalize() {}",
+        "}"
+    )
+    Assert-True -Condition (Test-ThresholdJavaLineIsInsideTextBlock -Lines $javaTextBlockWithCommentDelimiterLines -LineNumber 5) -Name "java text block state ignores line-comment triple quote delimiter"
+    Assert-False -Condition (Test-ThresholdJavaLineIsInsideTextBlock -Lines $javaTextBlockWithCommentDelimiterLines -LineNumber 8) -Name "java text block state closes after real text block delimiter"
 
     $textBlockPath = "src/main/java/org/example/TextBlockCanary.java"
     Write-CanaryFile -Path $textBlockPath -Lines $javaTextBlockLines
