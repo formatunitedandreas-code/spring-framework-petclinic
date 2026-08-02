@@ -110,6 +110,7 @@ if (Test-Path $tempPocket) {
     Remove-Item -LiteralPath $tempPocket -Force
 }
 
+try {
 $output = @(
     & $powerShellCommand -NoProfile -ExecutionPolicy Bypass -File "threshold/scripts/discover-candidates.ps1" `
         -LeasePath $LeasePath `
@@ -558,10 +559,6 @@ foreach ($property in @($expected.expectedTrainerDecisions.PSObject.Properties))
     }
 }
 
-if (Test-Path $tempRoot) {
-    Remove-Item -LiteralPath $tempRoot -Recurse -Force
-}
-
 $discoveryVisibilityMatched = ($missingRequiredCandidateClassCount -eq 0)
 $executionModeMatched = ($executionModeMismatchCount -eq 0)
 $trainerDecisionMatched = ($trainerDecisionMismatchCount -eq 0)
@@ -591,3 +588,9 @@ Write-Host "executionModeMismatchCount=$executionModeMismatchCount"
 Write-Host "trainerDecisionMismatchCount=$trainerDecisionMismatchCount"
 Write-Host "discoverableClasses=$($visibleClasses -join ',')"
 Write-Host "autoPatchableClasses=$($autoClasses -join ',')"
+}
+finally {
+    if (Test-Path $tempRoot) {
+        Remove-Item -LiteralPath $tempRoot -Recurse -Force
+    }
+}
