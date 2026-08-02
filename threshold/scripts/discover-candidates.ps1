@@ -461,14 +461,24 @@ function Find-ConservativeCommentSplitPoint {
 }
 
 function Test-JavadocCommentLine {
-    param([string[]] $Lines, [int] $Index)
+    param(
+        [string[]] $Lines,
+        [int] $Index,
+        [hashtable] $JavaTextBlockLineState = @{}
+    )
 
     if ($Index -lt 0 -or $Index -ge $Lines.Count) {
+        return $false
+    }
+    if ($JavaTextBlockLineState.ContainsKey($Index + 1)) {
         return $false
     }
 
     $insideJavadoc = $false
     for ($i = 0; $i -le $Index; $i++) {
+        if ($JavaTextBlockLineState.ContainsKey($i + 1)) {
+            continue
+        }
         $line = $Lines[$i]
         if (-not $insideJavadoc -and $line -match '^\s*/\*\*') {
             $insideJavadoc = $true
@@ -816,7 +826,7 @@ foreach ($file in $sourceFiles) {
         if ($line -notmatch '^\s*\*\s+\S') {
             continue
         }
-        if (-not (Test-JavadocCommentLine -Lines $lines -Index $i)) {
+        if (-not (Test-JavadocCommentLine -Lines $lines -Index $i -JavaTextBlockLineState $javaTextBlockLineState)) {
             continue
         }
         $commentText = ($line -replace '^\s*\*\s+', '')

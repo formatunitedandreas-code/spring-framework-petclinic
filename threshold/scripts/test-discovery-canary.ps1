@@ -269,7 +269,7 @@ if (-not $SkipInternalRegressions.IsPresent) {
         fixtureRoot = [string]$defaultExpected.fixtureRoot
         requiredDiscoverableCandidateClasses = @("comment_wrap_cleanup")
         expectedExecutionModes = [ordered]@{
-            comment_wrap_cleanup = "review_only"
+            comment_wrap_cleanup = "auto_patchable"
         }
         expectedTrainerDecisions = [ordered]@{}
         nonClaims = @("missing trainer expectation negative fixture")
@@ -482,6 +482,17 @@ $ordinaryBlockCommentCandidate = @(
 )
 if ($ordinaryBlockCommentCandidate.Count -ne 0) {
     throw "Discovery canary promoted ordinary block comment as Javadoc comment_wrap_cleanup."
+}
+$textBlockJavadocLikeCandidate = @(
+    $pocket.candidates |
+        Where-Object {
+            [string]$_.candidateClass -eq "comment_wrap_cleanup" -and
+            [string]$_.file -like "*/CanaryCommentModel.java" -and
+            [string]$_.member -eq "line-14"
+        }
+)
+if ($textBlockJavadocLikeCandidate.Count -ne 0) {
+    throw "Discovery canary promoted Java text block content as Javadoc comment_wrap_cleanup."
 }
 $unexpectedAutoPromotionCount = 0
 $missingRequiredCandidateClassCount = 0

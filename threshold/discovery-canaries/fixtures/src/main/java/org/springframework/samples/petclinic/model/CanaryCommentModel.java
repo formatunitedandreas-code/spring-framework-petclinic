@@ -8,4 +8,10 @@ package org.springframework.samples.petclinic.model;
  * Ordinary block comment deliberately contains enough readable prose to look wrappable but must not be promoted as a Javadoc cleanup candidate
  */
 class CanaryCommentModel {
+
+	private static final String TEXT_BLOCK = """
+			/**
+			 * Text block content deliberately contains enough readable prose to look wrappable but must not be promoted as a Javadoc cleanup candidate
+			 */
+			""";
 }
