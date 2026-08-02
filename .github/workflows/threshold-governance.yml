@@ -36,6 +36,10 @@ jobs:
         shell: pwsh
         run: pwsh -File threshold/scripts/test-pr-metadata-envelope.ps1
 
+      - name: Run Threshold local review simulation
+        shell: pwsh
+        run: pwsh -File threshold/scripts/test-local-review-simulation.ps1
+
       - name: Legacy inline Threshold governance checker
         if: ${{ false }}
         shell: pwsh

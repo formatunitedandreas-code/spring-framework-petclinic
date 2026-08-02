@@ -1,7 +1,7 @@
 {
   "schemaVersion": "threshold.petclinic.discovery-canary.v0.1",
   "fixtureRoot": "threshold/discovery-canaries/fixtures/src/main/java/org/springframework/samples/petclinic",
-  "requiredAutoPatchableCandidateClasses": [
+  "requiredDiscoverableCandidateClasses": [
     "comment_wrap_cleanup",
     "method_spacing_normalization",
     "repository_readability_cleanup",
@@ -10,8 +10,27 @@
     "annotation_attribute_wrap_cleanup",
     "leading_tab_indentation_cleanup"
   ],
+  "expectedExecutionModes": {
+    "annotation_attribute_wrap_cleanup": "auto_patchable",
+    "comment_wrap_cleanup": "review_only",
+    "leading_tab_indentation_cleanup": "review_only",
+    "method_spacing_normalization": "review_only",
+    "repository_readability_cleanup": "review_only",
+    "spring_data_query_concat_wrap_cleanup": "review_only",
+    "spring_data_query_wrap_cleanup": "review_only"
+  },
+  "expectedTrainerDecisions": {
+    "annotation_attribute_wrap_cleanup": "autoPatchable",
+    "comment_wrap_cleanup": "reviewOnly",
+    "leading_tab_indentation_cleanup": "reviewOnly",
+    "method_spacing_normalization": "reviewOnly",
+    "repository_readability_cleanup": "reviewOnly",
+    "spring_data_query_concat_wrap_cleanup": "reviewOnly",
+    "spring_data_query_wrap_cleanup": "reviewOnly"
+  },
   "nonClaims": [
     "canary verifies discovery visibility for known fixture patterns only",
+    "canary distinguishes discoverable classes from trainer-admitted auto_patchable execution",
     "canary does not prove all real repository candidates are found",
     "canary does not authorize any production source mutation"
   ]
