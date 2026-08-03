@@ -120,33 +120,52 @@ public abstract class OneToManyResultSetExtractor<R, C, K> implements ResultSetE
 
     public List<R> extractData(ResultSet rs) throws SQLException {
         List<R> results = new ArrayList<>();
-        int row = 0;
-        boolean more = rs.next();
-        if (more) {
-            row++;
-        }
+        int[] row = { 0 };
+        boolean more = moveToNextRow(rs, row);
         while (more) {
-            R root = rootMapper.mapRow(rs, row);
+            R root = rootMapper.mapRow(rs, row[0]);
             K primaryKey = mapPrimaryKey(rs);
             K foreignKey = mapForeignKey(rs);
             if (foreignKey != null) {
-                while (more && primaryKey.equals(foreignKey)) {
-                    addChild(root, childMapper.mapRow(rs, row));
-                    more = rs.next();
-                    if (more) {
-                        row++;
-                        foreignKey = mapForeignKey(rs);
-                    }
-                }
+                more = addChildrenForCurrentRoot(rs, row, root, primaryKey, foreignKey);
             }
             else {
-                more = rs.next();
-                if (more) {
-                    row++;
-                }
+                more = moveToNextRow(rs, row);
             }
             results.add(root);
         }
+        validateExpectedResults(results);
+        return results;
+    }
+
+    private boolean addChildrenForCurrentRoot(
+        ResultSet rs,
+        int[] row,
+        R root,
+        K primaryKey,
+        K foreignKey
+    ) throws SQLException {
+        boolean more = true;
+        K currentForeignKey = foreignKey;
+        while (more && primaryKey.equals(currentForeignKey)) {
+            addChild(root, childMapper.mapRow(rs, row[0]));
+            more = moveToNextRow(rs, row);
+            if (more) {
+                currentForeignKey = mapForeignKey(rs);
+            }
+        }
+        return more;
+    }
+
+    private boolean moveToNextRow(ResultSet rs, int[] row) throws SQLException {
+        boolean more = rs.next();
+        if (more) {
+            row[0]++;
+        }
+        return more;
+    }
+
+    private void validateExpectedResults(List<R> results) {
         if ((expectedResults == ExpectedResults.ONE_AND_ONLY_ONE || expectedResults == ExpectedResults.ONE_OR_NONE) &&
                 results.size() > 1) {
             throw new IncorrectResultSizeDataAccessException(1, results.size());
@@ -155,7 +174,6 @@ public abstract class OneToManyResultSetExtractor<R, C, K> implements ResultSetE
                 results.isEmpty()) {
             throw new IncorrectResultSizeDataAccessException(1, 0);
         }
-        return results;
     }
 
     /**
