@@ -31,9 +31,20 @@ function Get-LineEnding {
 }
 
 function Write-TextFile {
-    param([string] $Path, [string] $Content)
+    param(
+        [string] $Path,
+        [string] $Content,
+        [string] $LineEnding = "`n",
+        [bool] $EnsureTrailingNewline = $false
+    )
     $encoding = New-Object System.Text.UTF8Encoding $false
     $normalizedContent = $Content -replace "`r`n", "`n" -replace "`r", "`n"
+    if ($EnsureTrailingNewline -and -not $normalizedContent.EndsWith("`n", [System.StringComparison]::Ordinal)) {
+        $normalizedContent += "`n"
+    }
+    if ($LineEnding -eq "`r`n") {
+        $normalizedContent = $normalizedContent -replace "`n", "`r`n"
+    }
     [System.IO.File]::WriteAllText((Resolve-Path -LiteralPath $Path), $normalizedContent, $encoding)
 }
 
@@ -122,6 +133,28 @@ function Get-LeaseState {
     return Get-Content $StatePath -Raw | ConvertFrom-Json
 }
 
+function Get-LeaseIntScalarOrDefault {
+    param(
+        [string[]] $Lines,
+        [string] $Name,
+        [int] $DefaultValue
+    )
+
+    $match = $Lines | Where-Object { $_ -match "^\s*$([regex]::Escape($Name)):\s*(\d+)\s*$" } | Select-Object -First 1
+    if (-not $match) {
+        return $DefaultValue
+    }
+    return [int]($match -replace "^\s*$([regex]::Escape($Name)):\s*", "")
+}
+
+function Get-CommentWrapThreshold {
+    if (-not (Test-Path $LeasePath)) {
+        return 120
+    }
+    $leaseLines = @(Get-Content $LeasePath)
+    return Get-LeaseIntScalarOrDefault -Lines $leaseLines -Name "commentWrapThreshold" -DefaultValue 120
+}
+
 function Get-ApprovedBatchClasses {
     if (-not (Test-Path $GatePath)) { throw "Batch gate file not found: $GatePath" }
     $gate = Get-Content $GatePath -Raw | ConvertFrom-Json
@@ -138,25 +171,18 @@ function Get-SupportedBatchClasses {
 function Find-ConservativeCommentSplitPoint {
     param([string] $Text)
 
-    $minimumPrefix = 24
-    $preferredMaxIndex = [Math]::Min(112, $Text.Length - 1)
-    if ($preferredMaxIndex -lt $minimumPrefix) { return $null }
-
-    $spaceSplit = $Text.LastIndexOf(" ", $preferredMaxIndex)
-    if ($spaceSplit -ge $minimumPrefix -and $spaceSplit -lt ($Text.Length - 1)) {
-        return [pscustomobject]@{ Index = $spaceSplit; KeepDelimiter = $false }
-    }
-
-    foreach ($delimiter in @("/", "#", "?", "&", "-", ".", ":")) {
-        $splitIndex = $Text.LastIndexOf($delimiter, $preferredMaxIndex)
-        if ($splitIndex -ge $minimumPrefix -and $splitIndex -lt ($Text.Length - 1)) {
-            return [pscustomobject]@{ Index = $splitIndex; KeepDelimiter = $true }
-        }
-    }
-
-    return $null
+    return Find-ThresholdConservativeCommentSplitPoint -Text $Text
 }
 
+function Test-BatchJavadocCommentLine {
+    param(
+        [string[]] $Lines,
+        [int] $Index,
+        [hashtable] $JavaTextBlockLineState = @{}
+    )
+
+    return Test-ThresholdJavaLineIsJavadocCommentContent -Lines $Lines -Index $Index -JavaTextBlockLineState $JavaTextBlockLineState
+}
 function Apply-CommentWrapCleanup {
     param([pscustomobject] $Candidate)
 
@@ -173,10 +199,14 @@ function Apply-CommentWrapCleanup {
     if ($lineNumber -lt 1 -or $lineNumber -gt $lines.Count) {
         throw "Candidate line '$lineNumber' is outside file range in $path."
     }
+    $javaTextBlockLineState = Get-ThresholdJavaTextBlockLineState -Lines $lines
+    if (-not (Test-BatchJavadocCommentLine -Lines $lines -Index ($lineNumber - 1) -JavaTextBlockLineState $javaTextBlockLineState)) {
+        throw "Line '$lineNumber' is not inside a current Javadoc context in $path."
+    }
 
     $line = $lines[$lineNumber - 1]
     $match = [regex]::Match($line, '^(?<indent>\s*\*\s+)(?<text>\S.*)$')
-    if (-not $match.Success -or $line.Length -le 120) {
+    if (-not $match.Success -or $line.Length -le (Get-CommentWrapThreshold)) {
         throw "Line '$lineNumber' is not a supported long comment line in $path."
     }
 
@@ -202,8 +232,10 @@ function Apply-CommentWrapCleanup {
     if ($lineNumber -lt $lines.Count) { $updatedLines += $lines[$lineNumber..($lines.Count - 1)] }
 
     $originalText = Get-Content $path -Raw
-    $updatedText = $updatedLines -join (Get-LineEnding -Content $originalText)
-    Write-TextFile -Path $path -Content $updatedText
+    $lineEnding = Get-LineEnding -Content $originalText
+    $hadTrailingNewline = $originalText.EndsWith($lineEnding, [System.StringComparison]::Ordinal)
+    $updatedText = $updatedLines -join $lineEnding
+    Write-TextFile -Path $path -Content $updatedText -LineEnding $lineEnding -EnsureTrailingNewline:$hadTrailingNewline
 }
 
 function Test-CommentWrapCandidateApplies {
@@ -218,13 +250,10 @@ function Test-CommentWrapCandidateApplies {
     $lineNumber = [int]($member.Substring(5))
     $lines = Get-Content $path
     if ($lineNumber -lt 1 -or $lineNumber -gt $lines.Count) { return $false }
+    $javaTextBlockLineState = Get-ThresholdJavaTextBlockLineState -Lines $lines
+    if (-not (Test-BatchJavadocCommentLine -Lines $lines -Index ($lineNumber - 1) -JavaTextBlockLineState $javaTextBlockLineState)) { return $false }
 
-    $line = $lines[$lineNumber - 1]
-    $match = [regex]::Match($line, '^(?<indent>\s*\*\s+)(?<text>\S.*)$')
-    if (-not $match.Success -or $line.Length -le 120) { return $false }
-
-    $text = $match.Groups["text"].Value.Trim()
-    return $null -ne (Find-ConservativeCommentSplitPoint -Text $text)
+    return Test-ThresholdCommentWrapCandidateLine -Lines $lines -Index ($lineNumber - 1) -CommentWrapThreshold (Get-CommentWrapThreshold) -JavaTextBlockLineState $javaTextBlockLineState
 }
 
 function Invoke-DiscoveryCanary {
@@ -272,6 +301,7 @@ function Get-BatchCandidates {
     $sameClass = @($eligible | Where-Object { [string]$_.candidateClass -eq $firstClass })
     $selected = @()
     $selectedFiles = @()
+    $selectedLineCandidatePaths = New-Object System.Collections.Generic.HashSet[string]
     $processedCandidatePaths = New-Object System.Collections.Generic.HashSet[string]
     foreach ($candidate in @($pocket.candidates)) {
         $candidateId = [string]$candidate.candidateId
@@ -302,6 +332,13 @@ function Get-BatchCandidates {
             -not (Test-CommentWrapCandidateApplies -Candidate $candidate)) {
             Write-Host "skippedStaleCandidate=$($candidate.candidateId)"
             continue
+        }
+        if ([string]$candidate.candidateClass -eq "comment_wrap_cleanup" -and $candidateMember.StartsWith("line-")) {
+            if ($selectedLineCandidatePaths.Contains($path)) {
+                Write-Host "candidateSkippedReason=same_file_line_marker_rebinding_required:$candidateId"
+                continue
+            }
+            [void]$selectedLineCandidatePaths.Add($path)
         }
         if ($selectedFiles -notcontains $path) {
             $selectedFiles += $path

@@ -330,6 +330,14 @@ try {
     Assert-True -Condition ($runNextSliceText -match 'candidateSkippedReason=already_processed') -Name "run-next-slice reports already processed candidate suppression"
     Assert-True -Condition ($runNextSliceText -match 'processedCandidatePaths\.Contains\(\$path\)') -Name "run-next-slice only rebinding-skips line candidates on already processed paths"
     Assert-True -Condition ($runNextSliceText -match 'line_rebinding_required_after_prior_line_mutation_unknown_scope') -Name "run-next-slice fail-closes line rebinding when processed candidate path is unknown"
+    Assert-True -Condition ($runNextSliceText -match "Test-SliceJavadocCommentLine") -Name "run-next-slice revalidates current Javadoc context for prepared candidates"
+    Assert-True -Condition ($runNextSliceText -match "Get-ThresholdJavaTextBlockLineState") -Name "run-next-slice revalidates current text block state before applying comment wrap"
+    Assert-True -Condition ($runNextSliceText -match "Get-CommentWrapThreshold") -Name "run-next-slice revalidates active comment wrap threshold"
+    Assert-True -Condition ($runNextSliceText -match "comment_wrap_threshold_not_met") -Name "run-next-slice reports stale prepared comment candidates below threshold"
+    Assert-True -Condition ($runNextSliceText -match "Test-ThresholdCommentWrapCandidateLine") -Name "run-next-slice revalidates conservative comment split point before selection"
+    Assert-True -Condition ($runNextSliceText -match '\[bool\] \$EnsureTrailingNewline = \$false') -Name "run-next-slice write path binds trailing newline preservation"
+    Assert-True -Condition ($runNextSliceText -match '\$lineEnding = Get-LineEnding -Content \$originalText') -Name "run-next-slice write path binds source line ending preservation"
+    Assert-True -Condition ($runNextSliceText -match '\$hadTrailingNewline = \$originalText\.EndsWith\(\$lineEnding') -Name "run-next-slice preserves final newline when comment wrap rewrites file"
 
     $kgMaterializationText = Get-Content (Join-Path $thresholdScriptRoot "materialize-knowledge-graphs.ps1") -Raw
     $leasePolicyText = Get-Content (Join-Path $thresholdScriptRoot "lib/lease-policy.ps1") -Raw
@@ -393,6 +401,16 @@ try {
     $runNextBatchText = Get-Content (Join-Path $thresholdScriptRoot "run-next-batch.ps1") -Raw
     Assert-True -Condition ($runNextBatchText -match '\[string\] \$CandidatePocketPath = ""') -Name "run-next-batch accepts a prepared candidate pocket"
     Assert-True -Condition ($runNextBatchText -match '\[string\] \$PrBaseHead = ""') -Name "run-next-batch accepts an observed PR base head"
+    Assert-True -Condition ($runNextBatchText -match "Get-CommentWrapThreshold") -Name "run-next-batch derives comment wrap eligibility from lease threshold"
+    Assert-False -Condition ($runNextBatchText -match '\$line\.Length -le 120') -Name "run-next-batch does not hardcode the baseline comment wrap threshold"
+    Assert-True -Condition ($runNextBatchText -match "Test-BatchJavadocCommentLine") -Name "run-next-batch revalidates current Javadoc context for prepared candidates"
+    Assert-True -Condition ($runNextBatchText -match "Test-ThresholdCommentWrapCandidateLine") -Name "run-next-batch uses shared discovery comment wrap predicate"
+    Assert-True -Condition ($runNextBatchText -match '\[bool\] \$EnsureTrailingNewline = \$false') -Name "run-next-batch write path binds trailing newline preservation"
+    Assert-True -Condition ($runNextBatchText -match '\$hadTrailingNewline = \$originalText\.EndsWith\(\$lineEnding') -Name "run-next-batch preserves final newline when comment wrap rewrites file"
+    Assert-False -Condition ($runNextBatchText.Contains('foreach ($delimiter in @("/")')) -Name "run-next-batch does not add URL punctuation split delimiters"
+    Assert-True -Condition ($runNextBatchText -match 'Get-ThresholdJavaTextBlockLineState -Lines \$lines') -Name "run-next-batch revalidates current text block state before applying comment wrap"
+    Assert-True -Condition ($runNextBatchText -match "same_file_line_marker_rebinding_required") -Name "run-next-batch rejects same-file line marker candidates in one batch"
+    Assert-True -Condition ($runNextBatchText -match "selectedLineCandidatePaths") -Name "run-next-batch tracks selected line candidate paths"
     Assert-True -Condition ($runNextBatchText -match "Assert-BatchCandidateHasPreProductDiscoveryEvidence") -Name "run-next-batch requires pre-product evidence for every batched candidate"
     Assert-True -Condition ($runNextBatchText -match "Get-ThresholdCandidateDiscoveryEvidenceFromRevision") -Name "run-next-batch reads batch discovery evidence from PR base"
     Assert-True -Condition ($runNextBatchText -match "candidateDiscoveryEvidence") -Name "run-next-batch records per-candidate discovery evidence binding"
@@ -917,6 +935,280 @@ try {
     )
     Assert-True -Condition (Test-ThresholdJavaLineIsInsideTextBlock -Lines $javaTextBlockLines -LineNumber 3) -Name "java text block state marks interior tab line"
     Assert-False -Condition (Test-ThresholdJavaLineIsInsideTextBlock -Lines $javaTextBlockLines -LineNumber 6) -Name "java text block state leaves ordinary tab line outside"
+    $javaTextBlockWithCommentDelimiterLines = @(
+        "class TextBlockCanary {",
+        "    // Mention `"`"`" before the real text block opener.",
+        "    String query = `"`"`"",
+        "        /**",
+        "         * Text block content deliberately contains enough readable prose to look wrappable but must not be promoted as Javadoc.",
+        "         */",
+        "    `"`"`";",
+        "    void normalize() {}",
+        "}"
+    )
+    Assert-True -Condition (Test-ThresholdJavaLineIsInsideTextBlock -Lines $javaTextBlockWithCommentDelimiterLines -LineNumber 5) -Name "java text block state ignores line-comment triple quote delimiter"
+    Assert-False -Condition (Test-ThresholdJavaLineIsInsideTextBlock -Lines $javaTextBlockWithCommentDelimiterLines -LineNumber 8) -Name "java text block state closes after real text block delimiter"
+    $javaTextBlockWithUrlLiteralLines = @(
+        "class TextBlockCanary {",
+        "    static String url = `"http://x`"; static String body = `"`"`"",
+        "        /**",
+        "         * Text block content after a URL literal still remains inside the text block.",
+        "         */",
+        "    `"`"`";",
+        "}"
+    )
+    Assert-True -Condition (Test-ThresholdJavaLineIsInsideTextBlock -Lines $javaTextBlockWithUrlLiteralLines -LineNumber 4) -Name "java text block state ignores double slash inside string literal"
+    Assert-False -Condition (Test-ThresholdJavaLineIsInsideTextBlock -Lines $javaTextBlockWithUrlLiteralLines -LineNumber 7) -Name "java text block state closes after string-literal double slash canary"
+    $javaTextBlockWithEscapedDelimiterLines = @(
+        "class TextBlockCanary {",
+        "    static String body = `"`"`"",
+        "        \`"\`"\`"",
+        "        /**",
+        "         * Text block content after escaped quote characters still remains inside the text block.",
+        "         */",
+        "    `"`"`";",
+        "    void normalize() {}",
+        "}"
+    )
+    Assert-True -Condition (Test-ThresholdJavaLineIsInsideTextBlock -Lines $javaTextBlockWithEscapedDelimiterLines -LineNumber 5) -Name "java text block state ignores escaped triple quote characters"
+    Assert-False -Condition (Test-ThresholdJavaLineIsInsideTextBlock -Lines $javaTextBlockWithEscapedDelimiterLines -LineNumber 8) -Name "java text block state closes after escaped delimiter canary"
+    $javaTextBlockWithBlockCommentDelimiterLines = @(
+        "class TextBlockCanary {",
+        "    /* Mention `"`"`" before the real text block opener. */",
+        "    String query = `"`"`"",
+        "        /**",
+        "         * Text block content after a block-comment delimiter mention still remains inside the text block.",
+        "         */",
+        "    `"`"`";",
+        "    void normalize() {}",
+        "}"
+    )
+    Assert-True -Condition (Test-ThresholdJavaLineIsInsideTextBlock -Lines $javaTextBlockWithBlockCommentDelimiterLines -LineNumber 5) -Name "java text block state ignores block-comment triple quote delimiter"
+    Assert-False -Condition (Test-ThresholdJavaLineIsInsideTextBlock -Lines $javaTextBlockWithBlockCommentDelimiterLines -LineNumber 8) -Name "java text block state closes after block-comment delimiter canary"
+    $javaTextBlockWithUnicodeDelimiterLines = @(
+        "class TextBlockCanary {",
+        "    String query = \u0022\u0022\u0022",
+        "        /**",
+        "         * Text block content after unicode quote delimiters still remains inside the text block.",
+        "         */",
+        "    \u0022\u0022\u0022;",
+        "    void normalize() {}",
+        "}"
+    )
+    Assert-True -Condition (Test-ThresholdJavaLineIsInsideTextBlock -Lines $javaTextBlockWithUnicodeDelimiterLines -LineNumber 4) -Name "java text block state decodes unicode quote delimiters"
+    Assert-False -Condition (Test-ThresholdJavaLineIsInsideTextBlock -Lines $javaTextBlockWithUnicodeDelimiterLines -LineNumber 7) -Name "java text block state closes after unicode quote delimiter canary"
+    $javaTextBlockWithUnicodeLineTerminatorLines = @(
+        "class TextBlockCanary {",
+        "    // comment \u000a    String query = \u0022\u0022\u0022",
+        "        /**",
+        "         * Text block content after a Unicode-produced line terminator still remains inside the text block.",
+        "         */",
+        "    \u0022\u0022\u0022;",
+        "    void normalize() {}",
+        "}"
+    )
+    Assert-True -Condition (Test-ThresholdJavaLineIsInsideTextBlock -Lines $javaTextBlockWithUnicodeLineTerminatorLines -LineNumber 4) -Name "java text block state splits unicode-produced line terminators"
+    Assert-False -Condition (Test-ThresholdJavaLineIsInsideTextBlock -Lines $javaTextBlockWithUnicodeLineTerminatorLines -LineNumber 7) -Name "java text block state closes after unicode-produced line terminator canary"
+    Assert-True -Condition ((Convert-ThresholdJavaUnicodeEscapes -Line "\u000a// comment") -match "^`n// comment$") -Name "java unicode escape translation accepts eligible single backslash escape"
+    Assert-True -Condition ((Convert-ThresholdJavaUnicodeEscapes -Line "\\u000a// comment") -eq "\\u000a// comment") -Name "java unicode escape translation skips ineligible contiguous backslash escape"
+    $javaTextBlockWithIneligibleUnicodeEscapeLines = @(
+        "class TextBlockCanary {",
+        "    static String prefix = `"\\u000a //`"; static String body = `"`"`"",
+        "        /**",
+        "         * Text block content after an ineligible Unicode escape remains inside the text block.",
+        "         */",
+        "    `"`"`";",
+        "}"
+    )
+    Assert-True -Condition (Test-ThresholdJavaLineIsInsideTextBlock -Lines $javaTextBlockWithIneligibleUnicodeEscapeLines -LineNumber 4) -Name "java text block state ignores ineligible unicode line terminator escape"
+    Assert-False -Condition (Test-ThresholdJavaLineIsInsideTextBlock -Lines $javaTextBlockWithIneligibleUnicodeEscapeLines -LineNumber 7) -Name "java text block state closes after ineligible unicode escape canary"
+    $javaTextBlockWithPostCloseBlockCommentLines = @(
+        "class TextBlockCanary {",
+        "    String first = `"`"`"",
+        "        closed before the comment",
+        "    `"`"`"; /* comment starts after the text block closes",
+        "       Mention `"`"`" while still inside the block comment. */",
+        "    String second = `"`"`"",
+        "        /**",
+        "         * Text block content after a post-close block comment still remains inside the text block.",
+        "         */",
+        "    `"`"`";",
+        "    void normalize() {}",
+        "}"
+    )
+    Assert-False -Condition (Test-ThresholdJavaLineIsInsideTextBlock -Lines $javaTextBlockWithPostCloseBlockCommentLines -LineNumber 5) -Name "java text block state tracks block comment after closing delimiter"
+    Assert-True -Condition (Test-ThresholdJavaLineIsInsideTextBlock -Lines $javaTextBlockWithPostCloseBlockCommentLines -LineNumber 8) -Name "java text block state ignores post-close block-comment triple quote delimiter"
+    Assert-False -Condition (Test-ThresholdJavaLineIsInsideTextBlock -Lines $javaTextBlockWithPostCloseBlockCommentLines -LineNumber 11) -Name "java text block state closes after post-close block-comment canary"
+    $javaJavadocCommentLines = @(
+        "class JavadocCanary {",
+        "    /**",
+        "     * Real Javadoc content deliberately contains enough readable prose to remain eligible for comment wrapping.",
+        "     */",
+        "    void normalize() {}",
+        "}"
+    )
+    Assert-True -Condition (Test-ThresholdJavaLineIsJavadocCommentContent -Lines $javaJavadocCommentLines -Index 2 -JavaTextBlockLineState (Get-ThresholdJavaTextBlockLineState -Lines $javaJavadocCommentLines)) -Name "java javadoc lexical state accepts real Javadoc content"
+    Assert-True -Condition (Test-ThresholdCommentWrapCandidateLine -Lines $javaJavadocCommentLines -Index 2 -CommentWrapThreshold 69 -JavaTextBlockLineState (Get-ThresholdJavaTextBlockLineState -Lines $javaJavadocCommentLines)) -Name "java comment wrap predicate accepts real splittable Javadoc content"
+    $javaJavadocPreformattedLines = @(
+        "class JavadocCanary {",
+        "    /**",
+        "     * <pre>",
+        "     * SELECT id, first_name, last_name, telephone FROM owners WHERE last_name = ? ORDER BY last_name, first_name",
+        "     * </pre>",
+        "     */",
+        "    void normalize() {}",
+        "}"
+    )
+    Assert-False -Condition (Test-ThresholdJavaLineIsJavadocCommentContent -Lines $javaJavadocPreformattedLines -Index 3 -JavaTextBlockLineState (Get-ThresholdJavaTextBlockLineState -Lines $javaJavadocPreformattedLines)) -Name "java javadoc lexical state rejects preformatted Javadoc content"
+    Assert-False -Condition (Test-ThresholdCommentWrapCandidateLine -Lines $javaJavadocPreformattedLines -Index 3 -CommentWrapThreshold 69 -JavaTextBlockLineState (Get-ThresholdJavaTextBlockLineState -Lines $javaJavadocPreformattedLines)) -Name "java comment wrap predicate rejects preformatted Javadoc content"
+    $javaJavadocSameLinePreformattedLines = @(
+        "class JavadocCanary {",
+        "    /**",
+        "     * <pre>SELECT id, first_name, last_name, telephone FROM owners WHERE last_name = ? ORDER BY last_name, first_name</pre>",
+        "     */",
+        "    void normalize() {}",
+        "}"
+    )
+    Assert-False -Condition (Test-ThresholdJavaLineIsJavadocCommentContent -Lines $javaJavadocSameLinePreformattedLines -Index 2 -JavaTextBlockLineState (Get-ThresholdJavaTextBlockLineState -Lines $javaJavadocSameLinePreformattedLines)) -Name "java javadoc lexical state rejects same-line preformatted Javadoc content"
+    Assert-False -Condition (Test-ThresholdCommentWrapCandidateLine -Lines $javaJavadocSameLinePreformattedLines -Index 2 -CommentWrapThreshold 69 -JavaTextBlockLineState (Get-ThresholdJavaTextBlockLineState -Lines $javaJavadocSameLinePreformattedLines)) -Name "java comment wrap predicate rejects same-line preformatted Javadoc content"
+    $javaJavadocLineEndPreformattedLines = @(
+        "class JavadocCanary {",
+        "    /**",
+        "     * <pre",
+        "     * class=`"sql`">",
+        "     * SELECT id, first_name, last_name, telephone FROM owners WHERE last_name = ? ORDER BY last_name, first_name",
+        "     * </pre>",
+        "     */",
+        "    void normalize() {}",
+        "}"
+    )
+    Assert-False -Condition (Test-ThresholdJavaLineIsJavadocCommentContent -Lines $javaJavadocLineEndPreformattedLines -Index 4 -JavaTextBlockLineState (Get-ThresholdJavaTextBlockLineState -Lines $javaJavadocLineEndPreformattedLines)) -Name "java javadoc lexical state treats line-end pre tag as preformatted opener"
+    Assert-False -Condition (Test-ThresholdCommentWrapCandidateLine -Lines $javaJavadocLineEndPreformattedLines -Index 4 -CommentWrapThreshold 69 -JavaTextBlockLineState (Get-ThresholdJavaTextBlockLineState -Lines $javaJavadocLineEndPreformattedLines)) -Name "java comment wrap predicate rejects line-end pre tag preformatted content"
+    $javaJavadocPreTagSourceOrderLines = @(
+        "class JavadocCanary {",
+        "    /**",
+        "     * <pre>",
+        "     * SELECT id FROM owners",
+        "     * </pre><pre>",
+        "     * SELECT id, first_name, last_name, telephone FROM owners WHERE last_name = ? ORDER BY last_name, first_name",
+        "     * </pre>",
+        "     */",
+        "    void normalize() {}",
+        "}"
+    )
+    Assert-False -Condition (Test-ThresholdJavaLineIsJavadocCommentContent -Lines $javaJavadocPreTagSourceOrderLines -Index 5 -JavaTextBlockLineState (Get-ThresholdJavaTextBlockLineState -Lines $javaJavadocPreTagSourceOrderLines)) -Name "java javadoc lexical state preserves source-order pre tag transitions"
+    Assert-False -Condition (Test-ThresholdCommentWrapCandidateLine -Lines $javaJavadocPreTagSourceOrderLines -Index 5 -CommentWrapThreshold 69 -JavaTextBlockLineState (Get-ThresholdJavaTextBlockLineState -Lines $javaJavadocPreTagSourceOrderLines)) -Name "java comment wrap predicate rejects source-order pre tag content"
+    $javaJavadocInlineCodePreTagLines = @(
+        "class JavadocCanary {",
+        "    /**",
+        "     * <pre>",
+        "     * {@code </pre>}",
+        "     * SELECT id, first_name, last_name, telephone FROM owners WHERE last_name = ? ORDER BY last_name, first_name",
+        "     * </pre>",
+        "     */",
+        "    void normalize() {}",
+        "}"
+    )
+    Assert-False -Condition (Test-ThresholdJavaLineIsJavadocCommentContent -Lines $javaJavadocInlineCodePreTagLines -Index 4 -JavaTextBlockLineState (Get-ThresholdJavaTextBlockLineState -Lines $javaJavadocInlineCodePreTagLines)) -Name "java javadoc lexical state ignores pre markers inside inline code tags"
+    Assert-False -Condition (Test-ThresholdCommentWrapCandidateLine -Lines $javaJavadocInlineCodePreTagLines -Index 4 -CommentWrapThreshold 69 -JavaTextBlockLineState (Get-ThresholdJavaTextBlockLineState -Lines $javaJavadocInlineCodePreTagLines)) -Name "java comment wrap predicate rejects inline code pre tag content"
+    $javaJavadocInlineCodeBraceBalancedPreTagLines = @(
+        "class JavadocCanary {",
+        "    /**",
+        "     * <pre>",
+        "     * {@code if (x) { return; } </pre>}",
+        "     * SELECT id, first_name, last_name, telephone FROM owners WHERE last_name = ? ORDER BY last_name, first_name",
+        "     * </pre>",
+        "     */",
+        "    void normalize() {}",
+        "}"
+    )
+    Assert-False -Condition (Test-ThresholdJavaLineIsJavadocCommentContent -Lines $javaJavadocInlineCodeBraceBalancedPreTagLines -Index 4 -JavaTextBlockLineState (Get-ThresholdJavaTextBlockLineState -Lines $javaJavadocInlineCodeBraceBalancedPreTagLines)) -Name "java javadoc lexical state preserves inline tag brace balance"
+    Assert-False -Condition (Test-ThresholdCommentWrapCandidateLine -Lines $javaJavadocInlineCodeBraceBalancedPreTagLines -Index 4 -CommentWrapThreshold 69 -JavaTextBlockLineState (Get-ThresholdJavaTextBlockLineState -Lines $javaJavadocInlineCodeBraceBalancedPreTagLines)) -Name "java comment wrap predicate rejects inline code brace-balanced pre tag content"
+    $javaJavadocMultilineInlineCodePreTagLines = @(
+        "class JavadocCanary {",
+        "    /**",
+        "     * <pre>",
+        "     * {@code",
+        "     * </pre>",
+        "     * }",
+        "     * SELECT id, first_name, last_name, telephone FROM owners WHERE last_name = ? ORDER BY last_name, first_name",
+        "     * </pre>",
+        "     */",
+        "    void normalize() {}",
+        "}"
+    )
+    Assert-False -Condition (Test-ThresholdJavaLineIsJavadocCommentContent -Lines $javaJavadocMultilineInlineCodePreTagLines -Index 6 -JavaTextBlockLineState (Get-ThresholdJavaTextBlockLineState -Lines $javaJavadocMultilineInlineCodePreTagLines)) -Name "java javadoc lexical state preserves inline tag depth across lines"
+    Assert-False -Condition (Test-ThresholdCommentWrapCandidateLine -Lines $javaJavadocMultilineInlineCodePreTagLines -Index 6 -CommentWrapThreshold 69 -JavaTextBlockLineState (Get-ThresholdJavaTextBlockLineState -Lines $javaJavadocMultilineInlineCodePreTagLines)) -Name "java comment wrap predicate rejects multiline inline code pre tag content"
+    $javaJavadocHtmlCommentPreTagLines = @(
+        "class JavadocCanary {",
+        "    /**",
+        "     * <pre>",
+        "     * <!-- </pre> -->",
+        "     * SELECT id, first_name, last_name, telephone FROM owners WHERE last_name = ? ORDER BY last_name, first_name",
+        "     * </pre>",
+        "     */",
+        "    void normalize() {}",
+        "}"
+    )
+    Assert-False -Condition (Test-ThresholdJavaLineIsJavadocCommentContent -Lines $javaJavadocHtmlCommentPreTagLines -Index 4 -JavaTextBlockLineState (Get-ThresholdJavaTextBlockLineState -Lines $javaJavadocHtmlCommentPreTagLines)) -Name "java javadoc lexical state ignores pre markers inside HTML comments"
+    Assert-False -Condition (Test-ThresholdCommentWrapCandidateLine -Lines $javaJavadocHtmlCommentPreTagLines -Index 4 -CommentWrapThreshold 69 -JavaTextBlockLineState (Get-ThresholdJavaTextBlockLineState -Lines $javaJavadocHtmlCommentPreTagLines)) -Name "java comment wrap predicate rejects HTML comment pre tag content"
+    $javaJavadocHtmlCommentCarryoverLines = @(
+        "class JavadocCanary {",
+        "    /**",
+        "     * <pre><!-- comment",
+        "     * still commented </pre> -->",
+        "     * SELECT id, first_name, last_name, telephone FROM owners WHERE last_name = ? ORDER BY last_name, first_name",
+        "     * </pre>",
+        "     */",
+        "    void normalize() {}",
+        "}"
+    )
+    Assert-False -Condition (Test-ThresholdJavaLineIsJavadocCommentContent -Lines $javaJavadocHtmlCommentCarryoverLines -Index 4 -JavaTextBlockLineState (Get-ThresholdJavaTextBlockLineState -Lines $javaJavadocHtmlCommentCarryoverLines)) -Name "java javadoc lexical state preserves pre state from incoming HTML comment context"
+    Assert-False -Condition (Test-ThresholdCommentWrapCandidateLine -Lines $javaJavadocHtmlCommentCarryoverLines -Index 4 -CommentWrapThreshold 69 -JavaTextBlockLineState (Get-ThresholdJavaTextBlockLineState -Lines $javaJavadocHtmlCommentCarryoverLines)) -Name "java comment wrap predicate rejects HTML comment carryover pre tag content"
+    $javaJavadocNoSplitLines = @(
+        "class JavadocCanary {",
+        "    /**",
+        "     * https://example.invalid/petclinic/owners/search/results/detail/view/with/no/conservative/space/split/available",
+        "     */",
+        "    void normalize() {}",
+        "}"
+    )
+    Assert-False -Condition (Test-ThresholdCommentWrapCandidateLine -Lines $javaJavadocNoSplitLines -Index 2 -CommentWrapThreshold 69 -JavaTextBlockLineState (Get-ThresholdJavaTextBlockLineState -Lines $javaJavadocNoSplitLines)) -Name "java comment wrap predicate rejects Javadoc without conservative split point"
+    $javaOrdinaryCommentLines = @(
+        "class JavadocCanary {",
+        "    /*",
+        "     * Ordinary block comment content deliberately contains enough readable prose but is not Javadoc.",
+        "     */",
+        "}"
+    )
+    Assert-False -Condition (Test-ThresholdJavaLineIsJavadocCommentContent -Lines $javaOrdinaryCommentLines -Index 2 -JavaTextBlockLineState (Get-ThresholdJavaTextBlockLineState -Lines $javaOrdinaryCommentLines)) -Name "java javadoc lexical state rejects ordinary block comment content"
+    $javaNestedOrdinaryCommentLines = @(
+        "class JavadocCanary {",
+        "    /* Ordinary block comment starts before a nested marker.",
+        "     /**",
+        "     * Nested ordinary-comment content deliberately contains enough readable prose but is not Javadoc.",
+        "     */",
+        "}"
+    )
+    Assert-False -Condition (Test-ThresholdJavaLineIsJavadocCommentContent -Lines $javaNestedOrdinaryCommentLines -Index 3 -JavaTextBlockLineState (Get-ThresholdJavaTextBlockLineState -Lines $javaNestedOrdinaryCommentLines)) -Name "java javadoc lexical state rejects nested ordinary block-comment opener"
+    $javaJavadocTerminatorSuffixLines = @(
+        "class JavadocCanary {",
+        "    /**",
+        "     * Javadoc content closes here */ public void declarationAfterCommentTerminatorWithEnoughWordsToLookWrappable() {}",
+        "}"
+    )
+    Assert-False -Condition (Test-ThresholdJavaLineIsJavadocCommentContent -Lines $javaJavadocTerminatorSuffixLines -Index 2 -JavaTextBlockLineState (Get-ThresholdJavaTextBlockLineState -Lines $javaJavadocTerminatorSuffixLines)) -Name "java javadoc lexical state rejects target line with code after terminator"
+    $javaTextBlockCloseThenOrdinaryCommentLines = @(
+        "class JavadocCanary {",
+        "    String text = `"`"`"",
+        "        text block content",
+        "    `"`"`"; /* outer ordinary block starts after text block close",
+        "     /**",
+        "     * Nested ordinary-comment content after text-block suffix deliberately contains enough readable prose but is not Javadoc.",
+        "     */",
+        "}"
+    )
+    Assert-False -Condition (Test-ThresholdJavaLineIsJavadocCommentContent -Lines $javaTextBlockCloseThenOrdinaryCommentLines -Index 5 -JavaTextBlockLineState (Get-ThresholdJavaTextBlockLineState -Lines $javaTextBlockCloseThenOrdinaryCommentLines)) -Name "java javadoc lexical state preserves ordinary comment opened after text block close"
 
     $textBlockPath = "src/main/java/org/example/TextBlockCanary.java"
     Write-CanaryFile -Path $textBlockPath -Lines $javaTextBlockLines

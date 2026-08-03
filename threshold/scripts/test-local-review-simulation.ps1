@@ -137,10 +137,10 @@ Invoke-DiscoveryCanarySimulation `
         fixtureRoot = $simulationFixtureRoot
         requiredDiscoverableCandidateClasses = @("comment_wrap_cleanup", "comment_wrap_cleanup")
         expectedExecutionModes = [ordered]@{
-            comment_wrap_cleanup = "auto_patchable"
+            comment_wrap_cleanup = "review_only"
         }
         expectedTrainerDecisions = [ordered]@{
-            comment_wrap_cleanup = "autoPatchable"
+            comment_wrap_cleanup = "reviewOnly"
         }
         nonClaims = @("local review simulation for duplicate required mismatch counts")
     }) `

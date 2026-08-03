@@ -50,6 +50,28 @@ function Get-LineEnding {
     return "`n"
 }
 
+function Get-LeaseIntScalarOrDefault {
+    param(
+        [string[]] $Lines,
+        [string] $Name,
+        [int] $DefaultValue
+    )
+
+    $match = $Lines | Where-Object { $_ -match "^\s*$([regex]::Escape($Name)):\s*(\d+)\s*$" } | Select-Object -First 1
+    if (-not $match) {
+        return $DefaultValue
+    }
+    return [int]($match -replace "^\s*$([regex]::Escape($Name)):\s*", "")
+}
+
+function Get-CommentWrapThreshold {
+    if (-not (Test-Path $LeasePath)) {
+        return 120
+    }
+    $leaseLines = @(Get-Content $LeasePath)
+    return Get-LeaseIntScalarOrDefault -Lines $leaseLines -Name "commentWrapThreshold" -DefaultValue 120
+}
+
 function ConvertTo-ContentLineEndings {
     param(
         [string] $Text,
@@ -184,48 +206,34 @@ function Test-MethodOrAnnotationBoundaryLine {
     return $Line -match '^\s*(?:@|public\b|private\b|protected\b)'
 }
 
+function Test-SliceJavadocCommentLine {
+    param(
+        [string[]] $Lines,
+        [int] $Index,
+        [hashtable] $JavaTextBlockLineState = @{}
+    )
+
+    return Test-ThresholdJavaLineIsJavadocCommentContent -Lines $Lines -Index $Index -JavaTextBlockLineState $JavaTextBlockLineState
+}
 function Find-ConservativeCommentSplitPoint {
     param([string] $Text)
 
-    $minimumPrefix = 24
-    $minimumSegmentLength = 16
-    $preferredMaxIndex = [Math]::Min(112, $Text.Length - 1)
-    if ($preferredMaxIndex -lt $minimumPrefix) {
-        return $null
-    }
-
-    $spaceSplit = $preferredMaxIndex
-    while ($spaceSplit -ge $minimumPrefix) {
-        $spaceSplit = $Text.LastIndexOf(" ", $spaceSplit)
-        if ($spaceSplit -lt $minimumPrefix) {
-            break
-        }
-        $beforeSplit = $Text.Substring(0, $spaceSplit)
-        $lastInlineTagStart = $beforeSplit.LastIndexOf("{@")
-        $lastInlineTagEnd = $beforeSplit.LastIndexOf("}")
-        if ($lastInlineTagStart -gt $lastInlineTagEnd) {
-            $spaceSplit--
-            continue
-        }
-        if ($spaceSplit -lt ($Text.Length - 1) -and
-            $spaceSplit -ge $minimumSegmentLength -and
-            ($Text.Length - ($spaceSplit + 1)) -ge $minimumSegmentLength) {
-            return [pscustomobject]@{
-                Index = $spaceSplit
-                KeepDelimiter = $false
-            }
-        }
-        $spaceSplit--
-    }
-
-    return $null
+    return Find-ThresholdConservativeCommentSplitPoint -Text $Text
 }
 function Write-TextFile {
-    param([string] $Path, [string] $Content)
+    param(
+        [string] $Path,
+        [string] $Content,
+        [string] $LineEnding = "`n",
+        [bool] $EnsureTrailingNewline = $false
+    )
     $encoding = New-Object System.Text.UTF8Encoding $false
     $normalizedContent = $Content -replace "`r`n", "`n" -replace "`r", "`n"
-    if (-not $normalizedContent.EndsWith("`n")) {
-        $normalizedContent = "$normalizedContent`n"
+    if ($EnsureTrailingNewline -and -not $normalizedContent.EndsWith("`n", [System.StringComparison]::Ordinal)) {
+        $normalizedContent += "`n"
+    }
+    if ($LineEnding -eq "`r`n") {
+        $normalizedContent = $normalizedContent -replace "`n", "`r`n"
     }
     [System.IO.File]::WriteAllText((Resolve-Path -LiteralPath $Path), $normalizedContent, $encoding)
 }
@@ -325,8 +333,10 @@ function Apply-ReadableMethodSignatureWrap {
         $updatedLines += $lines[$lineNumber..($lines.Count - 1)]
     }
     $originalText = Get-Content $path -Raw
-    $updatedText = $updatedLines -join (Get-LineEnding -Content $originalText)
-    Write-TextFile -Path $path -Content $updatedText
+    $lineEnding = Get-LineEnding -Content $originalText
+    $hadTrailingNewline = $originalText.EndsWith($lineEnding, [System.StringComparison]::Ordinal)
+    $updatedText = $updatedLines -join $lineEnding
+    Write-TextFile -Path $path -Content $updatedText -LineEnding $lineEnding -EnsureTrailingNewline:$hadTrailingNewline
 
     Write-Host "appliedCandidate=$($Candidate.candidateId)"
     Write-Host "changedFile=$path"
@@ -782,8 +792,14 @@ function Get-NextCandidate {
                     $applicable = $false
                     break
                 }
-                if ($lines[$lineNumber - 1] -notmatch '^\s*\*\s+\S') {
+                $javaTextBlockLineState = Get-ThresholdJavaTextBlockLineState -Lines $lines
+                if (-not (Test-SliceJavadocCommentLine -Lines $lines -Index ($lineNumber - 1) -JavaTextBlockLineState $javaTextBlockLineState)) {
                     Write-Host "candidateSkippedReason=unsupported_comment_cleanup:$($candidate.candidateId)"
+                    $applicable = $false
+                    break
+                }
+                if (-not (Test-ThresholdCommentWrapCandidateLine -Lines $lines -Index ($lineNumber - 1) -CommentWrapThreshold (Get-CommentWrapThreshold) -JavaTextBlockLineState $javaTextBlockLineState)) {
+                    Write-Host "candidateSkippedReason=comment_wrap_threshold_not_met:$($candidate.candidateId)"
                     $applicable = $false
                     break
                 }
@@ -1487,9 +1503,14 @@ function Apply-CommentWrapCleanup {
         throw "Candidate line '$lineNumber' is outside file range in $path."
     }
 
+    $javaTextBlockLineState = Get-ThresholdJavaTextBlockLineState -Lines $lines
+    if (-not (Test-SliceJavadocCommentLine -Lines $lines -Index ($lineNumber - 1) -JavaTextBlockLineState $javaTextBlockLineState)) {
+        throw "Line '$lineNumber' is not inside a current Javadoc context in $path."
+    }
+
     $line = $lines[$lineNumber - 1]
     $match = [regex]::Match($line, '^(?<indent>\s*\*\s+)(?<text>\S.*)$')
-    if (-not $match.Success) {
+    if (-not $match.Success -or $line.Length -le (Get-CommentWrapThreshold)) {
         throw "Line '$lineNumber' is not a supported long comment line in $path."
     }
 

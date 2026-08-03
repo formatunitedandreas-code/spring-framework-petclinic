@@ -32,28 +32,514 @@ function Get-ThresholdStringSha256Lower {
     }
 }
 
+function Remove-ThresholdJavaLineCommentOutsideLiteral {
+    param([string] $Line)
+
+    $insideString = $false
+    $insideChar = $false
+    $escaped = $false
+    for ($i = 0; $i -lt $Line.Length; $i++) {
+        $ch = $Line[$i]
+        $next = if ($i + 1 -lt $Line.Length) { $Line[$i + 1] } else { [char]0 }
+
+        if ($escaped) {
+            $escaped = $false
+            continue
+        }
+        if (($insideString -or $insideChar) -and $ch -eq '\') {
+            $escaped = $true
+            continue
+        }
+        if (-not $insideChar -and $ch -eq '"') {
+            $insideString = -not $insideString
+            continue
+        }
+        if (-not $insideString -and $ch -eq "'") {
+            $insideChar = -not $insideChar
+            continue
+        }
+        if (-not $insideString -and -not $insideChar -and $ch -eq "/" -and $next -eq "/") {
+            return $Line.Substring(0, $i)
+        }
+    }
+    return $Line
+}
+
+function Remove-ThresholdJavaCommentsOutsideLiteral {
+    param(
+        [string] $Line,
+        [ref] $InsideBlockComment
+    )
+
+    $builder = [System.Text.StringBuilder]::new()
+    $insideString = $false
+    $insideChar = $false
+    $escaped = $false
+    for ($i = 0; $i -lt $Line.Length; $i++) {
+        $ch = $Line[$i]
+        $next = if ($i + 1 -lt $Line.Length) { $Line[$i + 1] } else { [char]0 }
+
+        if ([bool]$InsideBlockComment.Value) {
+            if ($ch -eq "*" -and $next -eq "/") {
+                $InsideBlockComment.Value = $false
+                $i++
+            }
+            continue
+        }
+
+        if ($escaped) {
+            [void]$builder.Append($ch)
+            $escaped = $false
+            continue
+        }
+        if (($insideString -or $insideChar) -and $ch -eq '\') {
+            [void]$builder.Append($ch)
+            $escaped = $true
+            continue
+        }
+        if (-not $insideChar -and $ch -eq '"') {
+            [void]$builder.Append($ch)
+            $insideString = -not $insideString
+            continue
+        }
+        if (-not $insideString -and $ch -eq "'") {
+            [void]$builder.Append($ch)
+            $insideChar = -not $insideChar
+            continue
+        }
+        if (-not $insideString -and -not $insideChar -and $ch -eq "/" -and $next -eq "/") {
+            break
+        }
+        if (-not $insideString -and -not $insideChar -and $ch -eq "/" -and $next -eq "*") {
+            $InsideBlockComment.Value = $true
+            $i++
+            continue
+        }
+        [void]$builder.Append($ch)
+    }
+    return $builder.ToString()
+}
+
+function Test-ThresholdJavaCharacterIsEscaped {
+    param([string] $Line, [int] $Index)
+
+    $backslashCount = 0
+    for ($i = $Index - 1; $i -ge 0; $i--) {
+        if ($Line[$i] -ne '\') {
+            break
+        }
+        $backslashCount++
+    }
+    return (($backslashCount % 2) -eq 1)
+}
+
+function Test-ThresholdJavaUnicodeEscapeBackslashIsEligible {
+    param([string] $Line, [int] $Index)
+
+    $precedingBackslashCount = 0
+    for ($i = $Index - 1; $i -ge 0; $i--) {
+        if ($Line[$i] -ne '\') {
+            break
+        }
+        $precedingBackslashCount++
+    }
+    return (($precedingBackslashCount % 2) -eq 0)
+}
+
+function Convert-ThresholdJavaUnicodeEscapes {
+    param([string] $Line)
+
+    $builder = [System.Text.StringBuilder]::new()
+    for ($i = 0; $i -lt $Line.Length; $i++) {
+        $ch = $Line[$i]
+        if ($ch -eq '\' -and
+            (Test-ThresholdJavaUnicodeEscapeBackslashIsEligible -Line $Line -Index $i) -and
+            ($i + 5) -lt $Line.Length -and
+            $Line[$i + 1] -eq 'u') {
+            $uIndex = $i + 1
+            while ($uIndex -lt $Line.Length -and $Line[$uIndex] -eq 'u') {
+                $uIndex++
+            }
+            if (($uIndex + 3) -lt $Line.Length) {
+                $hex = $Line.Substring($uIndex, 4)
+                if ($hex -match '^[0-9a-fA-F]{4}$') {
+                    [void]$builder.Append([string][char]([Convert]::ToInt32($hex, 16)))
+                    $i = $uIndex + 3
+                    continue
+                }
+            }
+        }
+        [void]$builder.Append($ch)
+    }
+    return $builder.ToString()
+}
+
+function Split-ThresholdJavaUnicodeTranslatedLine {
+    param([string] $Line)
+
+    $translated = Convert-ThresholdJavaUnicodeEscapes -Line $Line
+    return @([regex]::Split($translated, "\r\n|\r|\n"))
+}
+
+function Get-ThresholdJavaTextBlockDelimiterCount {
+    param([string] $Line)
+
+    return @(Get-ThresholdJavaTextBlockDelimiterStartIndexes -Line $Line).Count
+}
+
+function Get-ThresholdJavaTextBlockDelimiterStartIndexes {
+    param([string] $Line)
+
+    $indexes = New-Object System.Collections.Generic.List[int]
+    for ($i = 0; $i -le ($Line.Length - 3); $i++) {
+        if ($Line[$i] -eq '"' -and
+            $Line[$i + 1] -eq '"' -and
+            $Line[$i + 2] -eq '"' -and
+            -not (Test-ThresholdJavaCharacterIsEscaped -Line $Line -Index $i)) {
+            $indexes.Add($i)
+            $i += 2
+        }
+    }
+    return $indexes.ToArray()
+}
+
 function Get-ThresholdJavaTextBlockLineState {
     param([string[]] $Lines)
 
     $states = @{}
     $insideTextBlock = $false
+    $insideBlockComment = $false
     for ($i = 0; $i -lt $Lines.Count; $i++) {
         $lineNumber = $i + 1
-        $line = [string]$Lines[$i]
-        if ($insideTextBlock) {
-            $states[$lineNumber] = $true
-        }
-        $quoteMatches = [regex]::Matches($line, '"""')
-        if (($quoteMatches.Count % 2) -eq 1) {
-            $insideTextBlock = -not $insideTextBlock
-            if (-not $insideTextBlock) {
+        $segments = @(Split-ThresholdJavaUnicodeTranslatedLine -Line ([string]$Lines[$i]))
+        foreach ($segment in $segments) {
+            $line = [string]$segment
+            if ($insideTextBlock) {
                 $states[$lineNumber] = $true
+                $delimiterIndexes = @(Get-ThresholdJavaTextBlockDelimiterStartIndexes -Line $line)
+                if ($delimiterIndexes.Count -eq 0) {
+                    continue
+                }
+
+                $closingDelimiterIndex = [int]$delimiterIndexes[0]
+                $insideTextBlock = $false
+                $afterClosingDelimiterIndex = $closingDelimiterIndex + 3
+                if ($afterClosingDelimiterIndex -ge $line.Length) {
+                    continue
+                }
+
+                $suffix = $line.Substring($afterClosingDelimiterIndex)
+                $lexicalSuffix = Remove-ThresholdJavaCommentsOutsideLiteral -Line $suffix -InsideBlockComment ([ref]$insideBlockComment)
+                $suffixDelimiterCount = Get-ThresholdJavaTextBlockDelimiterCount -Line $lexicalSuffix
+                if (($suffixDelimiterCount % 2) -eq 1) {
+                    $insideTextBlock = $true
+                    $states[$lineNumber] = $true
+                }
+                continue
+            }
+            $lexicalLine = Remove-ThresholdJavaCommentsOutsideLiteral -Line $line -InsideBlockComment ([ref]$insideBlockComment)
+            $delimiterCount = Get-ThresholdJavaTextBlockDelimiterCount -Line $lexicalLine
+            if (($delimiterCount % 2) -eq 1) {
+                $insideTextBlock = -not $insideTextBlock
+                if (-not $insideTextBlock) {
+                    $states[$lineNumber] = $true
+                }
             }
         }
     }
     return $states
 }
 
+function Update-ThresholdJavadocPreformattedStateInSourceOrder {
+    param(
+        [bool] $InsidePreformattedJavadoc,
+        [string] $JavadocLinePayload,
+        [bool] $InsideJavadocHtmlComment = $false,
+        [int] $InlineTagDepth = 0
+    )
+
+    $scanResult = Get-ThresholdJavadocPreformattedTransitionScanResult `
+        -JavadocLinePayload $JavadocLinePayload `
+        -InsideHtmlComment $InsideJavadocHtmlComment `
+        -InlineTagDepth $InlineTagDepth
+    foreach ($transition in @($scanResult.Transitions)) {
+        if ($transition -eq "close") {
+            $InsidePreformattedJavadoc = $false
+            continue
+        }
+        if ($transition -eq "open") {
+            $InsidePreformattedJavadoc = $true
+        }
+    }
+    return [ordered]@{
+        InsidePreformattedJavadoc = $InsidePreformattedJavadoc
+        InsideJavadocHtmlComment = [bool]$scanResult.InsideHtmlComment
+        InlineTagDepth = [int]$scanResult.InlineTagDepth
+    }
+}
+
+function Get-ThresholdJavadocPreformattedTransitions {
+    param([string] $JavadocLinePayload)
+
+    $scanResult = Get-ThresholdJavadocPreformattedTransitionScanResult -JavadocLinePayload $JavadocLinePayload
+    return @($scanResult.Transitions)
+}
+
+function Get-ThresholdJavadocPreformattedTransitionScanResult {
+    param(
+        [string] $JavadocLinePayload,
+        [bool] $InsideHtmlComment = $false,
+        [int] $InlineTagDepth = 0
+    )
+
+    $transitions = New-Object System.Collections.Generic.List[string]
+    $payload = [string]$JavadocLinePayload
+    for ($i = 0; $i -lt $payload.Length; $i++) {
+        $remaining = $payload.Substring($i)
+
+        if ($InsideHtmlComment) {
+            if ($remaining -match '^-->') {
+                $InsideHtmlComment = $false
+                $i += 2
+            }
+            continue
+        }
+
+        $ch = $payload[$i]
+        $next = if (($i + 1) -lt $payload.Length) { $payload[$i + 1] } else { [char]0 }
+
+        if ($inlineTagDepth -gt 0) {
+            if ($ch -eq '{') {
+                $inlineTagDepth++
+                if ($next -eq '@') {
+                    $i++
+                }
+                continue
+            }
+            if ($ch -eq '}') {
+                $inlineTagDepth--
+            }
+            continue
+        }
+
+        if ($remaining -match '^<!--') {
+            $InsideHtmlComment = $true
+            $i += 3
+            continue
+        }
+
+        if ($ch -eq '{' -and $next -eq '@') {
+            $inlineTagDepth = 1
+            $i++
+            continue
+        }
+
+        if ($remaining -match '^(?i)</pre(?:\s|>|$)') {
+            $transitions.Add("close")
+            $i += $Matches[0].Length - 1
+            continue
+        }
+        if ($remaining -match '^(?i)<pre(?:\s|>|$)') {
+            $transitions.Add("open")
+            $i += $Matches[0].Length - 1
+            continue
+        }
+    }
+    return [ordered]@{
+        Transitions = @($transitions)
+        InsideHtmlComment = $InsideHtmlComment
+        InlineTagDepth = $inlineTagDepth
+    }
+}
+
+function Test-ThresholdJavaLineIsJavadocCommentContent {
+    param(
+        [string[]] $Lines,
+        [int] $Index,
+        [hashtable] $JavaTextBlockLineState = @{}
+    )
+
+    if ($Index -lt 0 -or $Index -ge $Lines.Count) { return $false }
+    if ($Lines[$Index] -notmatch '^\s*\*\s+\S') { return $false }
+
+    $insideJavadoc = $false
+    $insideOrdinaryBlockComment = $false
+    $insideTextBlock = $false
+    $insidePreformattedJavadoc = $false
+    $insideJavadocHtmlComment = $false
+    $javadocInlineTagDepth = 0
+    for ($i = 0; $i -le $Index; $i++) {
+        $segments = @(Split-ThresholdJavaUnicodeTranslatedLine -Line ([string]$Lines[$i]))
+        foreach ($segment in $segments) {
+            $line = [string]$segment
+            $javadocLinePayload = ($line -replace '^\s*\*\s?', '')
+            $incomingInsideJavadocHtmlComment = $insideJavadocHtmlComment
+            $incomingJavadocInlineTagDepth = $javadocInlineTagDepth
+            $preformattedScanResult = Get-ThresholdJavadocPreformattedTransitionScanResult `
+                -JavadocLinePayload $javadocLinePayload `
+                -InsideHtmlComment $incomingInsideJavadocHtmlComment `
+                -InlineTagDepth $incomingJavadocInlineTagDepth
+            $preformattedTransitions = @($preformattedScanResult.Transitions)
+            $lineStartsPreformattedJavadoc = $preformattedTransitions -contains "open"
+            $targetLineInsidePreformattedJavadoc = $insidePreformattedJavadoc -or $lineStartsPreformattedJavadoc
+            $insideString = $false
+            $insideChar = $false
+            $escaped = $false
+            for ($offset = 0; $offset -lt $line.Length; $offset++) {
+                $ch = $line[$offset]
+                $next = if ($offset + 1 -lt $line.Length) { $line[$offset + 1] } else { [char]0 }
+
+                if ($insideTextBlock) {
+                    if ($ch -eq '"' -and $next -eq '"' -and ($offset + 2) -lt $line.Length -and $line[$offset + 2] -eq '"' -and -not (Test-ThresholdJavaCharacterIsEscaped -Line $line -Index $offset)) {
+                        $insideTextBlock = $false
+                        $offset += 2
+                    }
+                    continue
+                }
+
+                if ($insideJavadoc) {
+                    if ($i -eq $Index -and $targetLineInsidePreformattedJavadoc) {
+                        return $false
+                    }
+                    if ($ch -eq '*' -and $next -eq '/') {
+                        $insideJavadoc = $false
+                        $insidePreformattedJavadoc = $false
+                        $insideJavadocHtmlComment = $false
+                        $javadocInlineTagDepth = 0
+                        $offset++
+                        if ($i -eq $Index) {
+                            $suffix = if ($offset + 1 -lt $line.Length) { $line.Substring($offset + 1) } else { '' }
+                            return [string]::IsNullOrWhiteSpace($suffix)
+                        }
+                    }
+                    elseif ($i -eq $Index) {
+                        continue
+                    }
+                    continue
+                }
+
+                if ($insideOrdinaryBlockComment) {
+                    if ($ch -eq '*' -and $next -eq '/') {
+                        $insideOrdinaryBlockComment = $false
+                        $offset++
+                    }
+                    continue
+                }
+
+                if ($escaped) {
+                    $escaped = $false
+                    continue
+                }
+                if (($insideString -or $insideChar) -and $ch -eq '\') {
+                    $escaped = $true
+                    continue
+                }
+                if (-not $insideChar -and $ch -eq '"') {
+                    if (-not $insideString -and $next -eq '"' -and ($offset + 2) -lt $line.Length -and $line[$offset + 2] -eq '"' -and -not (Test-ThresholdJavaCharacterIsEscaped -Line $line -Index $offset)) {
+                        $insideTextBlock = $true
+                        $offset += 2
+                        continue
+                    }
+                    $insideString = -not $insideString
+                    continue
+                }
+                if (-not $insideString -and $ch -eq "'") {
+                    $insideChar = -not $insideChar
+                    continue
+                }
+                if ($insideString -or $insideChar) {
+                    continue
+                }
+                if ($ch -eq '/' -and $next -eq '/') {
+                    break
+                }
+                if ($ch -eq '/' -and $next -eq '*') {
+                    if (($offset + 2) -lt $line.Length -and $line[$offset + 2] -eq '*') {
+                        $insideJavadoc = $true
+                        $insidePreformattedJavadoc = $false
+                        $insideJavadocHtmlComment = $false
+                    }
+                    else {
+                        $insideOrdinaryBlockComment = $true
+                    }
+                    $offset++
+                    continue
+                }
+            }
+            if ($insideJavadoc) {
+                $preformattedState = Update-ThresholdJavadocPreformattedStateInSourceOrder `
+                    -InsidePreformattedJavadoc $insidePreformattedJavadoc `
+                    -JavadocLinePayload $javadocLinePayload `
+                    -InsideJavadocHtmlComment $incomingInsideJavadocHtmlComment `
+                    -InlineTagDepth $incomingJavadocInlineTagDepth
+                $insidePreformattedJavadoc = [bool]$preformattedState.InsidePreformattedJavadoc
+                $insideJavadocHtmlComment = [bool]$preformattedState.InsideJavadocHtmlComment
+                $javadocInlineTagDepth = [int]$preformattedState.InlineTagDepth
+            }
+        }
+        if ($i -eq $Index) {
+            return $insideJavadoc -and -not $insideTextBlock -and -not $insideOrdinaryBlockComment
+        }
+    }
+
+    return $false
+}
+
+function Find-ThresholdConservativeCommentSplitPoint {
+    param([string] $Text)
+
+    $minimumPrefix = 24
+    $minimumSegmentLength = 16
+    $preferredMaxIndex = [Math]::Min(112, $Text.Length - 1)
+    if ($preferredMaxIndex -lt $minimumPrefix) {
+        return $null
+    }
+
+    $spaceSplit = $preferredMaxIndex
+    while ($spaceSplit -ge $minimumPrefix) {
+        $spaceSplit = $Text.LastIndexOf(" ", $spaceSplit)
+        if ($spaceSplit -lt $minimumPrefix) {
+            break
+        }
+        $beforeSplit = $Text.Substring(0, $spaceSplit)
+        $lastInlineTagStart = $beforeSplit.LastIndexOf("{@")
+        $lastInlineTagEnd = $beforeSplit.LastIndexOf("}")
+        if ($lastInlineTagStart -gt $lastInlineTagEnd) {
+            $spaceSplit--
+            continue
+        }
+        if ($spaceSplit -lt ($Text.Length - 1) -and
+            $spaceSplit -ge $minimumSegmentLength -and
+            ($Text.Length - ($spaceSplit + 1)) -ge $minimumSegmentLength) {
+            return [pscustomobject]@{
+                Index = $spaceSplit
+                KeepDelimiter = $false
+            }
+        }
+        $spaceSplit--
+    }
+
+    return $null
+}
+
+function Test-ThresholdCommentWrapCandidateLine {
+    param(
+        [string[]] $Lines,
+        [int] $Index,
+        [int] $CommentWrapThreshold,
+        [hashtable] $JavaTextBlockLineState = @{}
+    )
+
+    if (-not (Test-ThresholdJavaLineIsJavadocCommentContent -Lines $Lines -Index $Index -JavaTextBlockLineState $JavaTextBlockLineState)) {
+        return $false
+    }
+    $line = [string]$Lines[$Index]
+    $match = [regex]::Match($line, '^(?<indent>\s*\*\s+)(?<text>\S.*)$')
+    if (-not $match.Success -or $line.Length -le $CommentWrapThreshold) {
+        return $false
+    }
+    return $null -ne (Find-ThresholdConservativeCommentSplitPoint -Text $match.Groups["text"].Value.Trim())
+}
 function Test-ThresholdJavaLineIsInsideTextBlock {
     param([string[]] $Lines, [int] $LineNumber)
     if ($LineNumber -lt 1 -or $LineNumber -gt $Lines.Count) {

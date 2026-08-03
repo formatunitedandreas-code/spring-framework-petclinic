@@ -269,7 +269,7 @@ if (-not $SkipInternalRegressions.IsPresent) {
         fixtureRoot = [string]$defaultExpected.fixtureRoot
         requiredDiscoverableCandidateClasses = @("comment_wrap_cleanup")
         expectedExecutionModes = [ordered]@{
-            comment_wrap_cleanup = "review_only"
+            comment_wrap_cleanup = "auto_patchable"
         }
         expectedTrainerDecisions = [ordered]@{}
         nonClaims = @("missing trainer expectation negative fixture")
@@ -292,10 +292,10 @@ if (-not $SkipInternalRegressions.IsPresent) {
         fixtureRoot = [string]$defaultExpected.fixtureRoot
         requiredDiscoverableCandidateClasses = @("comment_wrap_cleanup")
         expectedExecutionModes = [ordered]@{
-            comment_wrap_cleanup = "review_only"
+            comment_wrap_cleanup = "auto_patchable"
         }
         expectedTrainerDecisions = [ordered]@{
-            comment_wrap_cleanup = "reviewOnly"
+            comment_wrap_cleanup = "autoPatchable"
             undiscovered_fixture_class = "reviewOnly"
         }
         nonClaims = @("extra trainer expectation negative fixture")
@@ -318,11 +318,11 @@ if (-not $SkipInternalRegressions.IsPresent) {
         fixtureRoot = [string]$defaultExpected.fixtureRoot
         requiredDiscoverableCandidateClasses = @("comment_wrap_cleanup")
         expectedExecutionModes = [ordered]@{
-            comment_wrap_cleanup = "review_only"
+            comment_wrap_cleanup = "auto_patchable"
             undiscovered_fixture_class = "review_only"
         }
         expectedTrainerDecisions = [ordered]@{
-            comment_wrap_cleanup = "reviewOnly"
+            comment_wrap_cleanup = "autoPatchable"
         }
         nonClaims = @("extra execution-mode expectation negative fixture")
     }
@@ -344,7 +344,7 @@ if (-not $SkipInternalRegressions.IsPresent) {
         fixtureRoot = [string]$defaultExpected.fixtureRoot
         requiredDiscoverableCandidateClasses = @("comment_wrap_cleanup")
         expectedExecutionModes = [ordered]@{
-            comment_wrap_cleanup = "auto_patchable"
+            comment_wrap_cleanup = "review_only"
         }
         expectedTrainerDecisions = [ordered]@{
             comment_wrap_cleanup = "reviewOnly"
@@ -382,10 +382,10 @@ if (-not $SkipInternalRegressions.IsPresent) {
         fixtureRoot = [string]$defaultExpected.fixtureRoot
         requiredDiscoverableCandidateClasses = @("comment_wrap_cleanup")
         expectedExecutionModes = [ordered]@{
-            comment_wrap_cleanup = "review_only"
+            comment_wrap_cleanup = "auto_patchable"
         }
         expectedTrainerDecisions = [ordered]@{
-            comment_wrap_cleanup = "autoPatchable"
+            comment_wrap_cleanup = "reviewOnly"
         }
         nonClaims = @("wrong trainer-decision count negative fixture")
     }
@@ -420,10 +420,10 @@ if (-not $SkipInternalRegressions.IsPresent) {
         fixtureRoot = [string]$defaultExpected.fixtureRoot
         requiredDiscoverableCandidateClasses = @("comment_wrap_cleanup", "comment_wrap_cleanup")
         expectedExecutionModes = [ordered]@{
-            comment_wrap_cleanup = "auto_patchable"
+            comment_wrap_cleanup = "review_only"
         }
         expectedTrainerDecisions = [ordered]@{
-            comment_wrap_cleanup = "autoPatchable"
+            comment_wrap_cleanup = "reviewOnly"
         }
         nonClaims = @("duplicate required-class count negative fixture")
     }
@@ -472,6 +472,33 @@ $autoClasses = @(
         ForEach-Object { [string]$_.candidateClass } |
         Sort-Object -Unique
 )
+$hostileCommentWrapMembers = @(
+    [pscustomobject]@{
+        Member = "line-8"
+        Description = "ordinary block comment"
+    },
+    [pscustomobject]@{
+        Member = "line-13"
+        Description = "nested ordinary block-comment Javadoc marker"
+    },
+    [pscustomobject]@{
+        Member = "line-20"
+        Description = "Java text block Javadoc-shaped content"
+    }
+)
+foreach ($hostileMember in $hostileCommentWrapMembers) {
+    $hostileCandidate = @(
+        $pocket.candidates |
+            Where-Object {
+                [string]$_.candidateClass -eq "comment_wrap_cleanup" -and
+                [string]$_.file -like "*/CanaryCommentModel.java" -and
+                [string]$_.member -eq [string]$hostileMember.Member
+            }
+    )
+    if ($hostileCandidate.Count -ne 0) {
+        throw "Discovery canary promoted $($hostileMember.Description) as Javadoc comment_wrap_cleanup. member=$($hostileMember.Member)"
+    }
+}
 $unexpectedAutoPromotionCount = 0
 $missingRequiredCandidateClassCount = 0
 $executionModeMismatchCount = 0
