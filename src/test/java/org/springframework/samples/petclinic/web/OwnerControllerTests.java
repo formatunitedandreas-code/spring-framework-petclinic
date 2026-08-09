@@ -210,7 +210,8 @@ class OwnerControllerTests {
             .param("telephone", "01616291589")
         )
             .andExpect(status().is3xxRedirection())
-            .andExpect(view().name("redirect:/owners/{ownerId}"));
+            .andExpect(view().name("redirect:/owners/{ownerId}"))
+            .andExpect(redirectedUrl("/owners/" + TEST_OWNER_ID));
     }
 
     @Test
