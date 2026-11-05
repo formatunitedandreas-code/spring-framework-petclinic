@@ -255,7 +255,7 @@ function Invoke-OwnedPullRequestMerge {
 
 function Invoke-WaveLifecycle {
     $output = @(
-        & powershell.exe -NoProfile -ExecutionPolicy Bypass -File "threshold/scripts/start-next-wave.ps1" -Phase FullLifecycle
+        & powershell.exe -NoProfile -ExecutionPolicy Bypass -File "threshold/scripts/start-next-wave.ps1" -Phase FullLifecycleWithPolicyHold -PreferBatch
     )
     foreach ($line in $output) {
         Write-Host $line

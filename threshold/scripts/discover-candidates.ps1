@@ -3,12 +3,16 @@ param(
     [string] $LeasePath = "threshold/leases/current.yaml",
     [string] $PocketPath = "threshold/candidate-pocket/current.json",
     [string] $GatePath = "threshold/gates/auto-patchable-candidate-classes.json",
+    [string] $TrainerReportPath = "threshold/trainer/training-report.json",
     [string] $SourceRoot = "src/main/java/org/springframework/samples/petclinic",
     [int] $Limit = 25
 )
 
 Set-StrictMode -Version Latest
 $ErrorActionPreference = "Stop"
+
+. (Join-Path $PSScriptRoot "lib/candidate-class-provenance.ps1")
+. (Join-Path $PSScriptRoot "lib/method-signature.ps1")
 
 function Get-LeaseScalar {
     param([string[]] $Lines, [string] $Name)
@@ -115,7 +119,14 @@ function Get-FirstRepositoryQueryExpression {
 
 function Is-CandidateAllowed {
     param([string] $CandidateClass, [string[]] $AllowedTypes)
-    return ($AllowedTypes.Count -eq 0) -or ($AllowedTypes -contains $CandidateClass)
+    $hasAllowedTypes = $false
+    foreach ($allowedType in @($AllowedTypes)) {
+        $hasAllowedTypes = $true
+        if ($allowedType -eq $CandidateClass) {
+            return $true
+        }
+    }
+    return -not $hasAllowedTypes
 }
 
 function Get-AutoPatchableGate {
@@ -140,6 +151,31 @@ function Test-CandidateClassGate {
     return $script:ApprovedAutoPatchableCandidateClasses.ContainsKey($CandidateClass)
 }
 
+function Get-TrainerDecisions {
+    param([string] $Path)
+
+    $decisions = @{}
+    if (-not (Test-Path $Path)) {
+        return $decisions
+    }
+
+    $report = Get-Content $Path -Raw | ConvertFrom-Json
+    foreach ($entry in @($report.decisions)) {
+        if ($entry.candidateClass -and $entry.decision) {
+            $decisions[[string]$entry.candidateClass] = $entry
+        }
+    }
+    return $decisions
+}
+
+function Get-TrainerDecision {
+    param([string] $CandidateClass)
+    if ($script:TrainerDecisions.ContainsKey($CandidateClass)) {
+        return [string]$script:TrainerDecisions[$CandidateClass].decision
+    }
+    return "reviewOnly"
+}
+
 function Add-Candidate {
     param(
         [hashtable] $Candidate,
@@ -153,11 +189,18 @@ function Add-Candidate {
     $Candidate.candidateClass = $CandidateClass
     $Candidate.autoPatchable = Test-AutoPatchableCandidate $Candidate $CandidateClass
     $Candidate.reviewOnly = -not $Candidate.autoPatchable
-    $Candidate.executionMode = if ($Candidate.autoPatchable) { "auto_patchable" } else { "review_only" }
+    $trainerDecision = Get-TrainerDecision -CandidateClass $CandidateClass
+    if ($trainerDecision -ne "autoPatchable") {
+        $Candidate.autoPatchable = $false
+        $Candidate.reviewOnly = $trainerDecision -ne "held"
+    }
+    $Candidate.executionMode = if ($Candidate.autoPatchable) { "auto_patchable" } elseif ($trainerDecision -eq "held") { "held" } else { "review_only" }
     $Candidate.gate = [ordered]@{
         required = $true
         approved = Test-CandidateClassGate $CandidateClass
         gatePath = ConvertTo-RepoPath $GatePath
+        trainerDecision = $trainerDecision
+        trainerReportPath = ConvertTo-RepoPath $TrainerReportPath
     }
     $Bucket.Add([pscustomobject]$Candidate)
 }
@@ -177,7 +220,10 @@ function Test-AutoPatchableCandidate {
         return $Candidate.ContainsKey("member") -and ([string]$Candidate.member).StartsWith("line-")
     }
     if ($CandidateClass -eq "method_signature_wrap_cleanup") {
-        return $Candidate.ContainsKey("member") -and ([string]$Candidate.member).StartsWith("line-")
+        return $Candidate.ContainsKey("member") -and
+            ([string]$Candidate.member).StartsWith("line-") -and
+            $Candidate.ContainsKey("parameterCount") -and
+            [int]$Candidate.parameterCount -ge 2
     }
     if ($CandidateClass -eq "repository_readability_cleanup") {
         if ($Candidate.ContainsKey("member") -and ([string]$Candidate.member).StartsWith("line-")) {
@@ -227,6 +273,12 @@ function Test-AutoPatchableCandidate {
             $Candidate.ContainsKey("bootstrapWrapPattern") -and
             [string]$Candidate.bootstrapWrapPattern -eq "string_argument_invocation_wrap"
     }
+    if ($CandidateClass -eq "annotation_attribute_wrap_cleanup") {
+        return $Candidate.ContainsKey("member") -and
+            ([string]$Candidate.member).StartsWith("line-") -and
+            $Candidate.ContainsKey("annotationArgumentCount") -and
+            [int]$Candidate.annotationArgumentCount -ge 2
+    }
     if ($CandidateClass -eq "leading_tab_indentation_cleanup") {
         return $Candidate.ContainsKey("member") -and
             ([string]$Candidate.member).StartsWith("line-") -and
@@ -235,23 +287,6 @@ function Test-AutoPatchableCandidate {
             [int]$Candidate.lineCount -le 40
     }
     return $false
-}
-
-function Test-WrappableMethodSignatureCandidateLine {
-    param([string] $Line)
-
-    $signatureMatch = [regex]::Match($Line, "^\s*(public|private|protected)\s+.+\(\s*(?<params>.*)\)\s*\{\s*$")
-    if (-not $signatureMatch.Success) {
-        return $false
-    }
-
-    $paramsRaw = $signatureMatch.Groups["params"].Value.Trim()
-    if ([string]::IsNullOrWhiteSpace($paramsRaw)) {
-        return $false
-    }
-
-    $parameters = @($paramsRaw -split "," | ForEach-Object { $_.Trim() } | Where-Object { -not [string]::IsNullOrWhiteSpace($_) })
-    return $parameters.Count -ge 2
 }
 
 function Test-SimpleStringConstantLine {
@@ -271,6 +306,11 @@ function Test-SimpleStringConstantWrapCandidateLine {
     $maxFirstSegmentLength = [Math]::Min(88, $value.Length - 1)
     $splitIndex = $value.LastIndexOf(" ", $maxFirstSegmentLength)
     return $splitIndex -ge 24 -and $splitIndex -lt ($value.Length - 1)
+}
+
+function Get-WrappableMethodSignatureParameterCount {
+    param([string] $Line)
+    return @(Get-WrappableMethodSignatureParameters -Line $Line).Count
 }
 
 function Test-SplitStringConstantLine {
@@ -298,6 +338,74 @@ function Test-BootstrapStringInvocationWrapCandidateLine {
     return $Line -match '^\s*[A-Za-z0-9_.]+\(\s*"[^"\\]+"\s*(,\s*"[^"\\]+"\s*)+\);\s*$'
 }
 
+function Split-TopLevelCommaArguments {
+    param([string] $Text)
+
+    $parts = New-Object System.Collections.Generic.List[string]
+    $start = 0
+    $depth = 0
+    $inString = $false
+    $escaped = $false
+
+    for ($i = 0; $i -lt $Text.Length; $i++) {
+        $char = $Text[$i]
+        if ($inString) {
+            if ($escaped) {
+                $escaped = $false
+                continue
+            }
+            if ($char -eq '\') {
+                $escaped = $true
+                continue
+            }
+            if ($char -eq '"') {
+                $inString = $false
+            }
+            continue
+        }
+
+        if ($char -eq '"') {
+            $inString = $true
+            continue
+        }
+        if ($char -eq '(' -or $char -eq '{' -or $char -eq '[') {
+            $depth++
+            continue
+        }
+        if ($char -eq ')' -or $char -eq '}' -or $char -eq ']') {
+            if ($depth -gt 0) { $depth-- }
+            continue
+        }
+        if ($char -eq ',' -and $depth -eq 0) {
+            $parts.Add($Text.Substring($start, $i - $start).Trim())
+            $start = $i + 1
+        }
+    }
+
+    $parts.Add($Text.Substring($start).Trim())
+    return @($parts.ToArray() | Where-Object { -not [string]::IsNullOrWhiteSpace($_) })
+}
+
+function Get-NamedAnnotationAttributeCount {
+    param([string] $Line)
+
+    $match = [regex]::Match($Line, '^\s*@(?<name>[A-Za-z][A-Za-z0-9_.]*)\((?<args>.+)\)\s*$')
+    if (-not $match.Success) {
+        return 0
+    }
+
+    $arguments = @(Split-TopLevelCommaArguments -Text $match.Groups["args"].Value)
+    if ($arguments.Count -lt 2) {
+        return 0
+    }
+    foreach ($argument in $arguments) {
+        if ($argument -notmatch '^[A-Za-z_][A-Za-z0-9_]*\s*=') {
+            return 0
+        }
+    }
+    return $arguments.Count
+}
+
 function Test-MethodOrAnnotationBoundaryLine {
     param([string] $Line)
     return $Line -match '^\s*(?:@|public\b|private\b|protected\b)'
@@ -306,38 +414,17 @@ function Test-MethodOrAnnotationBoundaryLine {
 function Find-ConservativeCommentSplitPoint {
     param([string] $Text)
 
-    $minimumPrefix = 24
-    $minimumSegmentLength = 16
-    $preferredMaxIndex = [Math]::Min(112, $Text.Length - 1)
-    if ($preferredMaxIndex -lt $minimumPrefix) {
-        return $null
-    }
+    return Find-ThresholdConservativeCommentSplitPoint -Text $Text
+}
 
-    $spaceSplit = $preferredMaxIndex
-    while ($spaceSplit -ge $minimumPrefix) {
-        $spaceSplit = $Text.LastIndexOf(" ", $spaceSplit)
-        if ($spaceSplit -lt $minimumPrefix) {
-            break
-        }
-        $beforeSplit = $Text.Substring(0, $spaceSplit)
-        $lastInlineTagStart = $beforeSplit.LastIndexOf("{@")
-        $lastInlineTagEnd = $beforeSplit.LastIndexOf("}")
-        if ($lastInlineTagStart -gt $lastInlineTagEnd) {
-            $spaceSplit--
-            continue
-        }
-        if ($spaceSplit -lt ($Text.Length - 1) -and
-            $spaceSplit -ge $minimumSegmentLength -and
-            ($Text.Length - ($spaceSplit + 1)) -ge $minimumSegmentLength) {
-            return [pscustomobject]@{
-                Index = $spaceSplit
-                KeepDelimiter = $false
-            }
-        }
-        $spaceSplit--
-    }
+function Test-JavadocCommentLine {
+    param(
+        [string[]] $Lines,
+        [int] $Index,
+        [hashtable] $JavaTextBlockLineState = @{}
+    )
 
-    return $null
+    return Test-ThresholdJavaLineIsJavadocCommentContent -Lines $Lines -Index $Index -JavaTextBlockLineState $JavaTextBlockLineState
 }
 function Parse-MethodBlocks {
     param([string[]] $Lines)
@@ -396,6 +483,7 @@ $springDataQueryThreshold = Get-LeaseIntScalarOrDefault -Lines $leaseLines -Name
 $repositoryMethodLengthThreshold = Get-LeaseIntScalarOrDefault -Lines $leaseLines -Name "repositoryMethodLengthThreshold" -DefaultValue 8
 $utilityMethodLengthThreshold = Get-LeaseIntScalarOrDefault -Lines $leaseLines -Name "utilityMethodLengthThreshold" -DefaultValue 8
 $script:ApprovedAutoPatchableCandidateClasses = Get-AutoPatchableGate -Path $GatePath
+$script:TrainerDecisions = Get-TrainerDecisions -Path $TrainerReportPath
 
 $sourceFiles = @(
     Get-ChildItem $SourceRoot -Recurse -Filter "*.java" |
@@ -418,12 +506,13 @@ foreach ($file in $sourceFiles) {
     elseif ($path -like "*/model/*") { $layerScore = 6 }
     elseif ($path -like "*/web/*") { $layerScore = 5 }
     elseif ($path -like "*/util/*") { $layerScore = 5 }
+    $javaTextBlockLineState = Get-ThresholdJavaTextBlockLineState -Lines $lines
 
     # Heuristic 0: normalize a small contiguous block of leading tab indentation.
     $tabBlockStart = $null
     $tabBlockLength = 0
     for ($i = 0; $i -lt $lines.Count; $i++) {
-        if ($lines[$i] -match "^\t+\S") {
+        if ($lines[$i] -match "^\t+\S" -and -not $javaTextBlockLineState.ContainsKey($i + 1)) {
             if ($null -eq $tabBlockStart) {
                 $tabBlockStart = $i
             }
@@ -490,27 +579,46 @@ foreach ($file in $sourceFiles) {
         }
     }
     if ($longLines.Count -gt 0) {
-        $member = "line-$($longLines[0])"
-        $candidateLine = $lines[$longLines[0] - 1]
+        $member = $null
         $candidateClass = $null
-        if (Test-SimpleStringConstantWrapCandidateLine $candidateLine) {
-            $candidateClass = if ($path -like "*/repository/*") { "repository_readability_cleanup" } else { "string_constant_wrap_cleanup" }
-        }
-        elseif (Test-WrappableMethodSignatureCandidateLine -Line $candidateLine) {
-            $candidateClass = "method_signature_wrap_cleanup"
+        $parameterCount = 0
+        foreach ($longLine in $longLines) {
+            $candidateLine = $lines[$longLine - 1]
+            if (Test-SimpleStringConstantWrapCandidateLine $candidateLine) {
+                $member = "line-$longLine"
+                if ($path -like "*/repository/*") {
+                    $candidateClass = "repository_readability_cleanup"
+                }
+                else {
+                    $candidateClass = "string_constant_wrap_cleanup"
+                }
+                break
+            }
+            $currentParameterCount = Get-WrappableMethodSignatureParameterCount $candidateLine
+            if ($currentParameterCount -ge 2) {
+                $member = "line-$longLine"
+                $candidateClass = "method_signature_wrap_cleanup"
+                $parameterCount = $currentParameterCount
+                break
+            }
         }
     }
     if ($longLines.Count -gt 0 -and $candidateClass) {
         $score = 30 + 30 + 20 + 10 + $layerScore
-        Add-Candidate -CandidateClass $candidateClass -AllowedTypes $allowedCandidateTypes -Bucket $candidates -Candidate ([ordered]@{
-            candidateId = New-CandidateId $path $candidateClass $member
+        $candidateMember = if ($candidateClass -eq "repository_readability_cleanup") { "$member-long-line-wrap" } else { $member }
+        $candidate = [ordered]@{
+            candidateId = New-CandidateId $path $candidateClass $candidateMember
             score = $score
             file = $path
             member = $member
-                    expectedDiffSummary = "Wrap a long constant or method signature readability line without changing behavior."
-                    estimatedChangedLines = [Math]::Min(8, $longLines.Count * 2)
-                    tieBreak = [ordered]@{ layerScore = $layerScore; path = $path; member = $member }
-                })
+            expectedDiffSummary = "Wrap a long constant or method signature readability line without changing behavior."
+            estimatedChangedLines = [Math]::Min(8, $longLines.Count * 2)
+            tieBreak = [ordered]@{ layerScore = $layerScore; path = $path; member = $member }
+        }
+        if ($candidateClass -eq "method_signature_wrap_cleanup") {
+            $candidate.parameterCount = $parameterCount
+        }
+        Add-Candidate -CandidateClass $candidateClass -AllowedTypes $allowedCandidateTypes -Bucket $candidates -Candidate $candidate
     }
 
     # Heuristic 3a: top-level bootstrap invocation readability cleanup.
@@ -535,6 +643,29 @@ foreach ($file in $sourceFiles) {
                 tieBreak = [ordered]@{ layerScore = 4; path = $path; member = $member }
             })
         }
+    }
+
+    # Heuristic 3b: format-only wrap for single-line annotations with named attributes.
+    for ($i = 0; $i -lt $lines.Count; $i++) {
+        if ($lines[$i].Length -le $longLineThreshold) {
+            continue
+        }
+        $annotationArgumentCount = Get-NamedAnnotationAttributeCount -Line $lines[$i]
+        if ($annotationArgumentCount -lt 2) {
+            continue
+        }
+
+        $member = "line-$($i + 1)"
+        Add-Candidate -CandidateClass "annotation_attribute_wrap_cleanup" -AllowedTypes $allowedCandidateTypes -Bucket $candidates -Candidate ([ordered]@{
+            candidateId = New-CandidateId $path "annotation_attribute_wrap_cleanup" $member
+            score = 30 + 30 + 20 + 10 + $layerScore
+            file = $path
+            member = $member
+            annotationArgumentCount = $annotationArgumentCount
+            expectedDiffSummary = "Wrap a long annotation attribute list without changing behavior."
+            estimatedChangedLines = [Math]::Min(8, $annotationArgumentCount + 2)
+            tieBreak = [ordered]@{ layerScore = $layerScore; path = $path; member = $member }
+        })
     }
 
     # Heuristic 3b: Spring Data JPA query annotation readability cleanup.
@@ -604,7 +735,7 @@ foreach ($file in $sourceFiles) {
             $constantMatch = [regex]::Match($lines[$i], '^\s*private static final String (?<name>[A-Z0-9_]+) =')
             $constantName = if ($constantMatch.Success) { $constantMatch.Groups["name"].Value } else { $null }
             Add-Candidate -CandidateClass "repository_readability_cleanup" -AllowedTypes $allowedCandidateTypes -Bucket $candidates -Candidate ([ordered]@{
-                candidateId = New-CandidateId $path "repository_readability_cleanup" $member
+                candidateId = New-CandidateId $path "repository_readability_cleanup" "$member-split-string-continuation"
                 score = 30 + 30 + 20 + 18 + $layerScore
                 file = $path
                 member = $member
@@ -621,14 +752,7 @@ foreach ($file in $sourceFiles) {
     # Heuristic 4: tiny spacing normalization between adjacent methods.
     for ($i = 0; $i -lt $lines.Count; $i++) {
         $line = $lines[$i]
-        if ($line.Length -le $commentWrapThreshold) {
-            continue
-        }
-        if ($line -notmatch '^\s*\*\s+\S') {
-            continue
-        }
-        $commentText = ($line -replace '^\s*\*\s+', '')
-        if (-not (Find-ConservativeCommentSplitPoint -Text $commentText)) {
+        if (-not (Test-ThresholdCommentWrapCandidateLine -Lines $lines -Index $i -CommentWrapThreshold $commentWrapThreshold -JavaTextBlockLineState $javaTextBlockLineState)) {
             continue
         }
         $member = "line-$($i + 1)"
@@ -683,6 +807,7 @@ foreach ($file in $sourceFiles) {
                     score = 30 + 30 + 20 + 10 + $layerScore
                     file = $path
                     member = $member
+                    spacingAction = "insert_blank_line"
                     expectedDiffSummary = "Insert a blank line between adjacent methods '$($currentMethod.Name)' and '$($nextMethod.Name)'."
                     estimatedChangedLines = 1
                     tieBreak = [ordered]@{ layerScore = $layerScore; path = $path; member = "$($currentMethod.Name)-$($nextMethod.Name)" }
@@ -770,8 +895,8 @@ foreach ($file in $sourceFiles) {
             if ($methodLineCount -gt $utilityMethodLengthThreshold -and (($hasTryFinally -and $hasStopWatch) -or $hasSynchronized -or $hasStopWatch)) {
                 $utilityPattern = if ($hasStopWatch) { "stopwatch_start_helper" } else { "synchronized_helper" }
                 $helperName = if ($hasStopWatch) { "startInvocationStopWatch" } else { "recordInvocation" }
-                if ($content -match "private\s+StopWatch\s+$([regex]::Escape($helperName))\s*\(" -or
-                    $content -match "private\s+[\w<>]+\s+$([regex]::Escape($helperName))\s*\(") {
+                if ($content -match "private\s+(?:synchronized\s+)?StopWatch\s+$([regex]::Escape($helperName))\s*\(" -or
+                    $content -match "private\s+(?:synchronized\s+)?[\w<>]+\s+$([regex]::Escape($helperName))\s*\(") {
                     continue
                 }
                 Add-Candidate -CandidateClass "utility_readability_cleanup" -AllowedTypes $allowedCandidateTypes -Bucket $candidates -Candidate ([ordered]@{
@@ -883,7 +1008,9 @@ $pocket = [ordered]@{
         method = "static-heuristic-scan"
         sourceRoot = ConvertTo-RepoPath $SourceRoot
         gatePath = ConvertTo-RepoPath $GatePath
+        trainerReportPath = ConvertTo-RepoPath $TrainerReportPath
         approvedAutoPatchableCandidateClasses = @($script:ApprovedAutoPatchableCandidateClasses.Keys | Sort-Object)
+        trainerDecisionClasses = @($script:TrainerDecisions.Keys | Sort-Object)
         scannedFiles = $sourceFiles.Count
         ranking = @(
             "score descending",

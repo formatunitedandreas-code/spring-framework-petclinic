@@ -9,7 +9,8 @@
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
+ * express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
@@ -26,10 +27,12 @@ import org.springframework.samples.petclinic.model.PetType;
 import org.springframework.samples.petclinic.service.ClinicService;
 
 /**
- * Instructs Spring MVC on how to parse and print elements of type 'PetType'.
+ * Instructs Spring MVC on how to parse and print elements
+ * of type 'PetType'.
  * Starting from Spring
  * 3.0, Formatters have
- * come as an improvement in comparison to legacy PropertyEditors. See the
+ * come as an improvement in comparison to legacy
+ * PropertyEditors. See the
  * following links for
  * more details: - The
  * Spring ref doc: http://static.springsource.org/spring/docs/current/spring-framework-reference/html/

@@ -9,7 +9,8 @@
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
+ * express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
@@ -19,11 +20,13 @@ import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
 
 /**
- * Controller used to showcase what happens when an exception is thrown
+ * Controller used to showcase what happens when an
+ * exception is thrown
  *
  * @author Michael Isvy
  *         <p/>
- *         Also see how the bean of type 'SimpleMappingExceptionResolver' has
+ *         Also see how the bean of type
+ *         'SimpleMappingExceptionResolver' has
  *         been declared inside
  *         /WEB-INF/mvc-core-config.xml
  */

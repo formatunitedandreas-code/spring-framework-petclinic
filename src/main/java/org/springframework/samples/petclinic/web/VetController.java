@@ -9,7 +9,8 @@
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
+ * express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
@@ -37,15 +38,19 @@ public class VetController {
 
     private static final String MODEL_ATTRIBUTE_VETS = "vets";
     private static final String VIEWS_VET_LIST = "vets/vetList";
+    private static final String VETS_PATH = "/vets";
+    private static final String VETS_JSON_PATH = "/vets.json";
+    private static final String VETS_XML_PATH = "/vets.xml";
     private final ClinicService clinicService;
 
     public VetController(ClinicService clinicService) {
         this.clinicService = clinicService;
     }
 
-    @GetMapping("/vets")
+    @GetMapping(VETS_PATH)
     public String showVetList(Map<String, Object> model) {
-        // Here we are returning an object of type 'Vets' rather than a
+        // Here we are returning an object of type
+        // 'Vets' rather than a
         // collection of Vet objects
         // so it is simpler for Object-Xml mapping
         addVetsToModel(model);
@@ -56,20 +61,27 @@ public class VetController {
         model.put(MODEL_ATTRIBUTE_VETS, getVets());
     }
 
-    @GetMapping(value = "/vets.json", produces = MediaType.APPLICATION_JSON_VALUE)
+    @GetMapping(
+        value = VETS_JSON_PATH,
+        produces = MediaType.APPLICATION_JSON_VALUE
+    )
     @ResponseBody
     public Vets showJsonVetList() {
         return getVets();
     }
 
-    @GetMapping(value = "/vets.xml", produces = MediaType.APPLICATION_XML_VALUE)
+    @GetMapping(
+        value = VETS_XML_PATH,
+        produces = MediaType.APPLICATION_XML_VALUE
+    )
     @ResponseBody
     public Vets showXmlVetList() {
         return getVets();
     }
 
     private Vets getVets() {
-        // Here we are returning an object of type 'Vets' rather than a
+        // Here we are returning an object of type
+        // 'Vets' rather than a
         // collection of Vet objects
         // so it is simpler for JSon/Object mapping
         return createVets(this.clinicService.findVets());

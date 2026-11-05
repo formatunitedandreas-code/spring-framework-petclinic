@@ -7,11 +7,17 @@ param(
     [int] $MaxSlicesPerBatch = 3,
     [int] $MaxFilesPerBatch = 3,
     [int] $MaxChangedLinesPerBatch = 120,
+    [string] $CandidatePocketPath = "",
+    [string] $PrBaseHead = "",
+    [string] $DiscoveryEvidenceRoot = "threshold/discovery-evidence",
+    [switch] $RequirePreProductDiscoveryEvidence,
     [switch] $SkipMavenTest
 )
 
 Set-StrictMode -Version Latest
 $ErrorActionPreference = "Stop"
+
+. (Join-Path $PSScriptRoot "lib/candidate-class-provenance.ps1")
 
 function ConvertTo-RepoPath {
     param([string] $Path)
@@ -25,9 +31,20 @@ function Get-LineEnding {
 }
 
 function Write-TextFile {
-    param([string] $Path, [string] $Content)
+    param(
+        [string] $Path,
+        [string] $Content,
+        [string] $LineEnding = "`n",
+        [bool] $EnsureTrailingNewline = $false
+    )
     $encoding = New-Object System.Text.UTF8Encoding $false
     $normalizedContent = $Content -replace "`r`n", "`n" -replace "`r", "`n"
+    if ($EnsureTrailingNewline -and -not $normalizedContent.EndsWith("`n", [System.StringComparison]::Ordinal)) {
+        $normalizedContent += "`n"
+    }
+    if ($LineEnding -eq "`r`n") {
+        $normalizedContent = $normalizedContent -replace "`n", "`r`n"
+    }
     [System.IO.File]::WriteAllText((Resolve-Path -LiteralPath $Path), $normalizedContent, $encoding)
 }
 
@@ -35,6 +52,57 @@ function Get-FileSha256 {
     param([string] $Path)
     if (-not (Test-Path $Path)) { throw "File not found for hashing: $Path" }
     return (Get-FileHash -Algorithm SHA256 -LiteralPath $Path).Hash
+}
+
+function Get-GitBlobSha256 {
+    param([string] $Revision, [string] $Path)
+
+    $repoPath = ConvertTo-RepoPath $Path
+    $previousErrorActionPreference = $ErrorActionPreference
+    $ErrorActionPreference = "Continue"
+    & git cat-file -e "$Revision`:$repoPath" 2>$null
+    $exists = $LASTEXITCODE -eq 0
+    $ErrorActionPreference = $previousErrorActionPreference
+    if (-not $exists) {
+        throw "Git blob not found for hashing: $Revision`:$repoPath"
+    }
+
+    $spec = "$Revision`:$repoPath"
+    $processInfo = [System.Diagnostics.ProcessStartInfo]::new()
+    $processInfo.FileName = "git"
+    $argumentListProperty = $processInfo.GetType().GetProperty("ArgumentList")
+    if ($null -ne $argumentListProperty) {
+        [void] $processInfo.ArgumentList.Add("cat-file")
+        [void] $processInfo.ArgumentList.Add("blob")
+        [void] $processInfo.ArgumentList.Add($spec)
+    }
+    else {
+        $escapedSpec = $spec.Replace('"', '\"')
+        $processInfo.Arguments = "cat-file blob `"$escapedSpec`""
+    }
+    $processInfo.RedirectStandardOutput = $true
+    $processInfo.RedirectStandardError = $true
+    $processInfo.UseShellExecute = $false
+
+    $process = [System.Diagnostics.Process]::Start($processInfo)
+    $sha256 = [System.Security.Cryptography.SHA256]::Create()
+    $buffer = [byte[]]::new(8192)
+    try {
+        while (($read = $process.StandardOutput.BaseStream.Read($buffer, 0, $buffer.Length)) -gt 0) {
+            [void] $sha256.TransformBlock($buffer, 0, $read, $null, 0)
+        }
+        [void] $sha256.TransformFinalBlock($buffer, 0, 0)
+        $stderr = $process.StandardError.ReadToEnd()
+        $process.WaitForExit()
+        if ($process.ExitCode -ne 0) {
+            throw "Failed to hash git blob: $spec. $stderr"
+        }
+        return ([System.BitConverter]::ToString($sha256.Hash) -replace "-", "").ToLowerInvariant()
+    }
+    finally {
+        $sha256.Dispose()
+        $process.Dispose()
+    }
 }
 
 function Assert-CleanWorktree {
@@ -65,6 +133,28 @@ function Get-LeaseState {
     return Get-Content $StatePath -Raw | ConvertFrom-Json
 }
 
+function Get-LeaseIntScalarOrDefault {
+    param(
+        [string[]] $Lines,
+        [string] $Name,
+        [int] $DefaultValue
+    )
+
+    $match = $Lines | Where-Object { $_ -match "^\s*$([regex]::Escape($Name)):\s*(\d+)\s*$" } | Select-Object -First 1
+    if (-not $match) {
+        return $DefaultValue
+    }
+    return [int]($match -replace "^\s*$([regex]::Escape($Name)):\s*", "")
+}
+
+function Get-CommentWrapThreshold {
+    if (-not (Test-Path $LeasePath)) {
+        return 120
+    }
+    $leaseLines = @(Get-Content $LeasePath)
+    return Get-LeaseIntScalarOrDefault -Lines $leaseLines -Name "commentWrapThreshold" -DefaultValue 120
+}
+
 function Get-ApprovedBatchClasses {
     if (-not (Test-Path $GatePath)) { throw "Batch gate file not found: $GatePath" }
     $gate = Get-Content $GatePath -Raw | ConvertFrom-Json
@@ -74,28 +164,25 @@ function Get-ApprovedBatchClasses {
     return @($gate.batchReceiptMode.approvedCandidateClasses | ForEach-Object { [string]$_.candidateClass })
 }
 
+function Get-SupportedBatchClasses {
+    return @("comment_wrap_cleanup")
+}
+
 function Find-ConservativeCommentSplitPoint {
     param([string] $Text)
 
-    $minimumPrefix = 24
-    $preferredMaxIndex = [Math]::Min(112, $Text.Length - 1)
-    if ($preferredMaxIndex -lt $minimumPrefix) { return $null }
-
-    $spaceSplit = $Text.LastIndexOf(" ", $preferredMaxIndex)
-    if ($spaceSplit -ge $minimumPrefix -and $spaceSplit -lt ($Text.Length - 1)) {
-        return [pscustomobject]@{ Index = $spaceSplit; KeepDelimiter = $false }
-    }
-
-    foreach ($delimiter in @("/", "#", "?", "&", "-", ".", ":")) {
-        $splitIndex = $Text.LastIndexOf($delimiter, $preferredMaxIndex)
-        if ($splitIndex -ge $minimumPrefix -and $splitIndex -lt ($Text.Length - 1)) {
-            return [pscustomobject]@{ Index = $splitIndex; KeepDelimiter = $true }
-        }
-    }
-
-    return $null
+    return Find-ThresholdConservativeCommentSplitPoint -Text $Text
 }
 
+function Test-BatchJavadocCommentLine {
+    param(
+        [string[]] $Lines,
+        [int] $Index,
+        [hashtable] $JavaTextBlockLineState = @{}
+    )
+
+    return Test-ThresholdJavaLineIsJavadocCommentContent -Lines $Lines -Index $Index -JavaTextBlockLineState $JavaTextBlockLineState
+}
 function Apply-CommentWrapCleanup {
     param([pscustomobject] $Candidate)
 
@@ -112,10 +199,14 @@ function Apply-CommentWrapCleanup {
     if ($lineNumber -lt 1 -or $lineNumber -gt $lines.Count) {
         throw "Candidate line '$lineNumber' is outside file range in $path."
     }
+    $javaTextBlockLineState = Get-ThresholdJavaTextBlockLineState -Lines $lines
+    if (-not (Test-BatchJavadocCommentLine -Lines $lines -Index ($lineNumber - 1) -JavaTextBlockLineState $javaTextBlockLineState)) {
+        throw "Line '$lineNumber' is not inside a current Javadoc context in $path."
+    }
 
     $line = $lines[$lineNumber - 1]
     $match = [regex]::Match($line, '^(?<indent>\s*\*\s+)(?<text>\S.*)$')
-    if (-not $match.Success -or $line.Length -le 120) {
+    if (-not $match.Success -or $line.Length -le (Get-CommentWrapThreshold)) {
         throw "Line '$lineNumber' is not a supported long comment line in $path."
     }
 
@@ -141,8 +232,10 @@ function Apply-CommentWrapCleanup {
     if ($lineNumber -lt $lines.Count) { $updatedLines += $lines[$lineNumber..($lines.Count - 1)] }
 
     $originalText = Get-Content $path -Raw
-    $updatedText = $updatedLines -join (Get-LineEnding -Content $originalText)
-    Write-TextFile -Path $path -Content $updatedText
+    $lineEnding = Get-LineEnding -Content $originalText
+    $hadTrailingNewline = $originalText.EndsWith($lineEnding, [System.StringComparison]::Ordinal)
+    $updatedText = $updatedLines -join $lineEnding
+    Write-TextFile -Path $path -Content $updatedText -LineEnding $lineEnding -EnsureTrailingNewline:$hadTrailingNewline
 }
 
 function Test-CommentWrapCandidateApplies {
@@ -157,13 +250,10 @@ function Test-CommentWrapCandidateApplies {
     $lineNumber = [int]($member.Substring(5))
     $lines = Get-Content $path
     if ($lineNumber -lt 1 -or $lineNumber -gt $lines.Count) { return $false }
+    $javaTextBlockLineState = Get-ThresholdJavaTextBlockLineState -Lines $lines
+    if (-not (Test-BatchJavadocCommentLine -Lines $lines -Index ($lineNumber - 1) -JavaTextBlockLineState $javaTextBlockLineState)) { return $false }
 
-    $line = $lines[$lineNumber - 1]
-    $match = [regex]::Match($line, '^(?<indent>\s*\*\s+)(?<text>\S.*)$')
-    if (-not $match.Success -or $line.Length -le 120) { return $false }
-
-    $text = $match.Groups["text"].Value.Trim()
-    return $null -ne (Find-ConservativeCommentSplitPoint -Text $text)
+    return Test-ThresholdCommentWrapCandidateLine -Lines $lines -Index ($lineNumber - 1) -CommentWrapThreshold (Get-CommentWrapThreshold) -JavaTextBlockLineState $javaTextBlockLineState
 }
 
 function Invoke-DiscoveryCanary {
@@ -174,27 +264,21 @@ function Invoke-DiscoveryCanary {
 }
 
 function New-CandidatePocket {
-    $head = (& git rev-parse HEAD).Trim()
-    $path = Join-Path ([System.IO.Path]::GetTempPath()) "threshold-batch-candidate-pocket-$head.json"
-    if (Test-Path $path) { Remove-Item -LiteralPath $path -Force }
-
-    $discoveryOutput = @(& powershell.exe -NoProfile -ExecutionPolicy Bypass -File "threshold/scripts/discover-candidates.ps1" `
-        -LeasePath $LeasePath `
-        -GatePath $GatePath `
-        -PocketPath $path `
-        -Limit 100)
-    if ($LASTEXITCODE -ne 0) { throw "Candidate discovery failed." }
-    foreach ($line in $discoveryOutput) {
-        Write-Host $line
+    if (-not [string]::IsNullOrWhiteSpace($CandidatePocketPath)) {
+        if (-not (Test-Path $CandidatePocketPath)) {
+            throw "Prepared candidate pocket not found for batch execution: $CandidatePocketPath"
+        }
+        return $CandidatePocketPath
     }
-    if (-not (Test-Path $path)) { throw "Candidate discovery produced no pocket." }
-    return $path
+
+    throw "Batch execution requires a prepared candidate pocket with pre-product discovery evidence before mutation."
 }
 
 function Get-BatchCandidates {
     param(
         [string] $PocketPath,
-        [string[]] $ApprovedBatchClasses
+        [string[]] $ApprovedBatchClasses,
+        [string[]] $ProcessedCandidateIds = @()
     )
 
     $pocket = Get-Content $PocketPath -Raw | ConvertFrom-Json
@@ -203,6 +287,7 @@ function Get-BatchCandidates {
             Where-Object {
                 [int]$_.score -ge $MinScore -and
                 $_.autoPatchable -eq $true -and
+                ($ProcessedCandidateIds -notcontains [string]$_.candidateId) -and
                 $ApprovedBatchClasses -contains [string]$_.candidateClass
             }
     )
@@ -216,14 +301,44 @@ function Get-BatchCandidates {
     $sameClass = @($eligible | Where-Object { [string]$_.candidateClass -eq $firstClass })
     $selected = @()
     $selectedFiles = @()
+    $selectedLineCandidatePaths = New-Object System.Collections.Generic.HashSet[string]
+    $processedCandidatePaths = New-Object System.Collections.Generic.HashSet[string]
+    foreach ($candidate in @($pocket.candidates)) {
+        $candidateId = [string]$candidate.candidateId
+        if ($ProcessedCandidateIds -notcontains $candidateId) {
+            continue
+        }
+        if ($candidate.PSObject.Properties["file"] -and $candidate.file) {
+            [void]$processedCandidatePaths.Add((ConvertTo-RepoPath $candidate.file))
+        }
+    }
 
     foreach ($candidate in $sameClass) {
         $path = ConvertTo-RepoPath $candidate.file
         if (-not (Test-Path $path)) { continue }
+        $candidateId = [string]$candidate.candidateId
+        $candidateMember = if ($candidate.PSObject.Properties["member"]) { [string]$candidate.member } else { "" }
+        if ($ProcessedCandidateIds.Count -gt 0 -and $candidateMember.StartsWith("line-")) {
+            if ($processedCandidatePaths.Count -eq 0) {
+                Write-Host "candidateSkippedReason=line_rebinding_required_after_prior_line_mutation_unknown_scope:$candidateId"
+                continue
+            }
+            if ($processedCandidatePaths.Contains($path)) {
+                Write-Host "candidateSkippedReason=line_rebinding_required_after_prior_line_mutation:$candidateId"
+                continue
+            }
+        }
         if ([string]$candidate.candidateClass -eq "comment_wrap_cleanup" -and
             -not (Test-CommentWrapCandidateApplies -Candidate $candidate)) {
             Write-Host "skippedStaleCandidate=$($candidate.candidateId)"
             continue
+        }
+        if ([string]$candidate.candidateClass -eq "comment_wrap_cleanup" -and $candidateMember.StartsWith("line-")) {
+            if ($selectedLineCandidatePaths.Contains($path)) {
+                Write-Host "candidateSkippedReason=same_file_line_marker_rebinding_required:$candidateId"
+                continue
+            }
+            [void]$selectedLineCandidatePaths.Add($path)
         }
         if ($selectedFiles -notcontains $path) {
             $selectedFiles += $path
@@ -234,6 +349,61 @@ function Get-BatchCandidates {
     }
 
     return $selected
+}
+
+function Assert-BatchCandidateHasPreProductDiscoveryEvidence {
+    param(
+        [pscustomobject] $Candidate,
+        [string] $PocketPath,
+        [string] $ObservedPrBaseHead
+    )
+
+    if ([string]::IsNullOrWhiteSpace($ObservedPrBaseHead)) {
+        throw "Batch execution requires PrBaseHead with pre-product discovery evidence before mutation."
+    }
+
+    $pocket = Get-Content $PocketPath -Raw | ConvertFrom-Json
+    $discoverySourceHead = [string](Get-ThresholdJsonProperty $pocket "preProductDiscoverySourceHead" "")
+    if ([string]::IsNullOrWhiteSpace($discoverySourceHead)) {
+        $discoverySourceHead = [string](Get-ThresholdJsonProperty $pocket "generatedFromHead" "")
+    }
+    if ([string]::IsNullOrWhiteSpace($discoverySourceHead)) {
+        throw "Prepared candidate pocket is missing discovery source head for batch execution."
+    }
+    if (-not (Test-ThresholdCommitIsAncestor -Ancestor $discoverySourceHead -Descendant $ObservedPrBaseHead)) {
+        throw "Batch discovery source head is not an ancestor of PR base head. source=$discoverySourceHead prBase=$ObservedPrBaseHead"
+    }
+
+    $candidateId = [string]$Candidate.candidateId
+    $evidencePath = Get-ThresholdCandidateDiscoveryEvidencePath -DiscoveryEvidenceRoot $DiscoveryEvidenceRoot -CandidateId $candidateId -BaseHead $discoverySourceHead
+    $evidenceAtPrBase = Get-ThresholdCandidateDiscoveryEvidenceFromRevision -Revision $ObservedPrBaseHead -Path $evidencePath
+    if ($null -eq $evidenceAtPrBase) {
+        throw "Pre-product discovery evidence is required before batch execution. candidateId=$candidateId path=$evidencePath prBase=$ObservedPrBaseHead"
+    }
+    $evidenceDigest = Get-ThresholdCandidateDiscoveryEvidenceDigest -DiscoveryEvidence $evidenceAtPrBase
+    if ([string]$evidenceDigest -ne [string](Get-ThresholdJsonProperty $evidenceAtPrBase "discoveryEvidenceDigest" "")) {
+        throw "Pre-product discovery evidence digest mismatch before batch execution. candidateId=$candidateId path=$evidencePath"
+    }
+
+    foreach ($field in @("candidateId", "candidateClass")) {
+        if ([string](Get-ThresholdJsonProperty $evidenceAtPrBase $field "") -ne [string](Get-ThresholdJsonProperty $Candidate $field "")) {
+            throw "Pre-product discovery evidence candidate $field mismatch before batch execution. candidateId=$candidateId path=$evidencePath"
+        }
+    }
+    if ([string](Get-ThresholdJsonProperty $evidenceAtPrBase "candidatePath" "") -ne [string](ConvertTo-RepoPath $Candidate.file)) {
+        throw "Pre-product discovery evidence candidatePath mismatch before batch execution. candidateId=$candidateId path=$evidencePath"
+    }
+    if ([string](Get-ThresholdJsonProperty $evidenceAtPrBase "candidateMember" "") -ne [string]$Candidate.member) {
+        throw "Pre-product discovery evidence candidateMember mismatch before batch execution. candidateId=$candidateId path=$evidencePath"
+    }
+
+    return [ordered]@{
+        discoveryEvidencePath = ConvertTo-RepoPath $evidencePath
+        discoveryEvidenceDigest = $evidenceDigest
+        discoverySourceHead = $discoverySourceHead
+        prBaseHead = $ObservedPrBaseHead
+        immutableDiscoveryEvidencePresent = $true
+    }
 }
 
 function Get-ChangedLineCount {
@@ -272,10 +442,20 @@ if ([int]$state.remainingBudget.candidates -le 0 -or [int]$state.remainingBudget
     throw "No batch budget remains in $StatePath."
 }
 
-$approvedBatchClasses = Get-ApprovedBatchClasses
+$approvedBatchClasses = @(Get-ApprovedBatchClasses | Where-Object { (Get-SupportedBatchClasses) -contains $_ })
+if (-not $approvedBatchClasses) {
+    Write-Host "ready_no_supported_batch_classes_verified"
+    exit 0
+}
 Invoke-DiscoveryCanary
+Write-Host "batchPreProductDiscoveryEvidenceRequired=true"
+Write-Host "batchPreProductDiscoveryEvidencePolicy=all batch executions require prepared discovery evidence before file mutation"
 $pocketPath = New-CandidatePocket
-$candidates = @(Get-BatchCandidates -PocketPath $pocketPath -ApprovedBatchClasses $approvedBatchClasses)
+$processedCandidateIds = @()
+if ($state.PSObject.Properties.Name -contains "processedCandidateIds") {
+    $processedCandidateIds = @($state.processedCandidateIds | ForEach-Object { [string]$_ } | Where-Object { -not [string]::IsNullOrWhiteSpace($_) })
+}
+$candidates = @(Get-BatchCandidates -PocketPath $pocketPath -ApprovedBatchClasses $approvedBatchClasses -ProcessedCandidateIds $processedCandidateIds)
 if (-not $candidates -or $candidates.Count -eq 0) {
     exit 0
 }
@@ -285,16 +465,34 @@ if ($candidates.Count -gt $allowedCandidateBudget) {
     $candidates = @($candidates | Select-Object -First $allowedCandidateBudget)
 }
 
+$candidateDiscoveryEvidenceById = @{}
+foreach ($candidate in $candidates) {
+    $candidateId = [string]$candidate.candidateId
+    if ([string]::IsNullOrWhiteSpace($candidateId)) {
+        throw "Batch candidate is missing candidateId before mutation."
+    }
+    if ($candidateDiscoveryEvidenceById.ContainsKey($candidateId)) {
+        throw "Duplicate batch candidateId before mutation: $candidateId"
+    }
+    $candidateDiscoveryEvidenceById[$candidateId] = Assert-BatchCandidateHasPreProductDiscoveryEvidence `
+        -Candidate $candidate `
+        -PocketPath $pocketPath `
+        -ObservedPrBaseHead $PrBaseHead
+}
+
 $baseHead = (& git rev-parse HEAD).Trim()
 $batchId = "threshold-batch-$($baseHead.Substring(0, 12))-$((Get-Date).ToUniversalTime().ToString("yyyyMMddTHHmmssZ"))"
 $candidateReceipts = New-Object System.Collections.Generic.List[object]
 
 try {
     foreach ($candidate in $candidates) {
+        $candidateId = [string]$candidate.candidateId
         $candidateClass = [string]$candidate.candidateClass
         if ($candidateClass -ne "comment_wrap_cleanup") {
             throw "Batch executor does not support candidate class '$candidateClass'."
         }
+
+        $candidateDiscoveryEvidence = $candidateDiscoveryEvidenceById[$candidateId]
 
         $path = ConvertTo-RepoPath $candidate.file
         $beforeHash = Get-FileSha256 -Path $path
@@ -305,7 +503,7 @@ try {
         }
 
         $candidateReceipts.Add([ordered]@{
-            candidateId = [string]$candidate.candidateId
+            candidateId = $candidateId
             candidateClass = $candidateClass
             file = $path
             member = [string]$candidate.member
@@ -314,6 +512,7 @@ try {
             expectedDiffSummary = [string]$candidate.expectedDiffSummary
             gateApproved = $true
             executionMode = "batched_auto_patchable"
+            candidateDiscoveryEvidence = $candidateDiscoveryEvidence
         }) | Out-Null
     }
 
@@ -351,7 +550,7 @@ try {
         schemaVersion = "threshold.petclinic.batch-receipt.v0.1"
         batchId = $batchId
         leaseId = [string]$state.leaseId
-        leaseDigest = (Get-FileSha256 -Path $LeasePath).ToLowerInvariant()
+        leaseDigest = Get-GitBlobSha256 -Revision "HEAD" -Path $LeasePath
         branch = [string]$state.branch
         baseHead = $baseHead
         sourceCommit = $sourceCommit
@@ -389,12 +588,25 @@ try {
     $state.currentHead = $sourceCommit
     $state.currentSourceHead = $sourceCommit
     $state.candidatesProcessed = [int]$state.candidatesProcessed + $candidateReceipts.Count
+    foreach ($candidateReceipt in $candidateReceipts) {
+        $processedId = [string]$candidateReceipt.candidateId
+        if (-not [string]::IsNullOrWhiteSpace($processedId) -and $processedCandidateIds -notcontains $processedId) {
+            $processedCandidateIds += $processedId
+        }
+    }
+    $state | Add-Member -NotePropertyName "processedCandidateIds" -NotePropertyValue @($processedCandidateIds) -Force
     $state.commitsCreated = [int]$state.commitsCreated + 1
     $state.remainingBudget.candidates = $remainingCandidates
     $state.remainingBudget.commits = $remainingCommits
     $state.lastReceipt = ConvertTo-RepoPath $receiptPath
     if ($remainingCandidates -eq 0 -or $remainingCommits -eq 0) {
-        $state.terminalState = "budget_exhausted"
+        $state.terminalState = "budget_exhausted_verified"
+        if ($state.PSObject.Properties["terminalReason"]) {
+            $state.terminalReason = "remaining candidate or commit budget is exhausted after batch validation passed"
+        }
+        else {
+            $state | Add-Member -NotePropertyName "terminalReason" -NotePropertyValue "remaining candidate or commit budget is exhausted after batch validation passed"
+        }
     }
     $state.updatedAt = (Get-Date).ToUniversalTime().ToString("o")
     $state | ConvertTo-Json -Depth 10 | Set-Content $StatePath
