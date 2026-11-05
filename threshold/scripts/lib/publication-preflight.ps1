@@ -118,13 +118,14 @@ function Assert-StringArray {
 function Get-PublicationStopFromFailedConstraints {
     param([string[]] $FailedConstraintIds)
 
-    if ($FailedConstraintIds -contains "publication-branch-binding") { return "stop_authority_mismatch=branchRef" }
-    if ($FailedConstraintIds -contains "publication-head-binding") { return "stop_authority_mismatch=headSha" }
-    if ($FailedConstraintIds -contains "publication-authority-expiry") { return "stop_authority_expired" }
-    if ($FailedConstraintIds -contains "publication-authority-unconsumed" -or $FailedConstraintIds -contains "publication-authority-consumption-id-unused") {
+    if ($FailedConstraintIds -contains "publication-branch-binding" -or $FailedConstraintIds -contains "one-shot-authority-branch-binding") { return "stop_authority_mismatch=branchRef" }
+    if ($FailedConstraintIds -contains "publication-head-binding" -or $FailedConstraintIds -contains "one-shot-authority-head-binding") { return "stop_authority_mismatch=headSha" }
+    if ($FailedConstraintIds -contains "publication-authority-expiry" -or $FailedConstraintIds -contains "one-shot-authority-not-expired") { return "stop_authority_expired" }
+    if ($FailedConstraintIds -contains "publication-authority-unconsumed" -or $FailedConstraintIds -contains "publication-authority-consumption-id-unused" -or
+        $FailedConstraintIds -contains "one-shot-authority-unconsumed" -or $FailedConstraintIds -contains "one-shot-authority-consumption-id-unused") {
         return "stop_authority_consumed"
     }
-    if ($FailedConstraintIds -contains "publication-action-binding" -or $FailedConstraintIds -contains "one-shot-authority-action-binding") { return "stop_authority_mismatch=action" }
+    if ($FailedConstraintIds -contains "publication-action-binding" -or $FailedConstraintIds -contains "one-shot-authority-action-binding" -or $FailedConstraintIds -contains "publication-action-scope") { return "stop_authority_mismatch=action" }
     if ($FailedConstraintIds -contains "publication-authority-present") { return "stop_authority_missing" }
     return "stop_authority_invalid"
 }

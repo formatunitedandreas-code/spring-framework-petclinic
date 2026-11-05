@@ -75,6 +75,31 @@ try {
     foreach ($effect in @("localExperiment", "localCommit", "merge", "reviewDecision")) {
         if ($positiveResult.effectDecisions.$effect.allowed -ne $false) { throw "Publication fixture granted another write effect: $effect" }
     }
+    foreach ($case in @(
+        @{ name = "expired"; expected = "stop_authority_expired" },
+        @{ name = "consumed"; expected = "stop_authority_consumed" },
+        @{ name = "wrong-branch"; expected = "stop_authority_mismatch=branchRef" }
+    )) {
+        $caseInput = $positiveJson | ConvertFrom-Json
+        switch ($case.name) {
+            "expired" { $caseInput.authority.expiresAt = "2026-11-04T23:59:30.000Z" }
+            "consumed" { $caseInput.context.consumedConsumptionIds = @($caseInput.authority.consumptionId) }
+            "wrong-branch" { $caseInput.authority.branchRef = "fixture-wrong-branch" }
+        }
+        $caseJson = $caseInput | ConvertTo-Json -Depth 100 -Compress
+        $caseDigest = Get-CanonicalPublicationInputDigest -CliPath $cliPath -InputJson $caseJson
+        [System.IO.File]::WriteAllText($inputPath, $caseJson, [System.Text.UTF8Encoding]::new($false))
+        $caseOutput = @(& node $cliPath validate-publication-authority --input $inputPath)
+        $caseCode = $LASTEXITCODE
+        $caseResult = ConvertFrom-SingleJsonDocument -Text ($caseOutput -join "`n")
+        Assert-CorePublicationAuthorityResult -Result $caseResult -ExpectedHead $head -ExpectedInputDigest $caseDigest
+        if ($caseCode -ne 2 -or $caseResult.valid -ne $false -or $caseResult.effectDecisions.publication.allowed -ne $false) {
+            throw "Invalid offline authority was not denied: $($case.name)"
+        }
+        $stop = Get-PublicationStopFromFailedConstraints -FailedConstraintIds @($caseResult.effectDecisions.publication.failedConstraintIds)
+        if ($stop -cne $case.expected) { throw "Typed constraint diagnostic mismatch: $($case.name), $stop" }
+        Write-Host "publicationCoreDeniedDiagnostic=$($case.name):passed"
+    }
     Write-Host "publicationCoreContract=passed_positive_and_denied"
     Write-Host "runtimeAuthority=NONE"
     Write-Host "executionAuthorized=false"
