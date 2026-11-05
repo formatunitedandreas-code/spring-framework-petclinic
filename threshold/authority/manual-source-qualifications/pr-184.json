@@ -1,0 +1,30 @@
+{
+  "schemaVersion": "threshold.finite_manual_source.v1",
+  "repository": "formatunitedandreas-code/spring-framework-petclinic",
+  "qualificationId": "pr184-current-user-directed-source-v1",
+  "sourcePullRequest": 184,
+  "candidateOnly": true,
+  "freshCiRequired": true,
+  "independentExactHeadReviewRequired": true,
+  "historicalAdmission": "HOLD_MISSING_ORIGINAL_QUALIFICATION",
+  "historicalValidationReasserted": false,
+  "runtimeAuthority": "NONE",
+  "executionAuthorized": false,
+  "learningEligible": false,
+  "proposalCommit": "c0c5717f934dd40200ef43ef4ec7b8981c7bef4e",
+  "proposalPath": "threshold/docs/source-requalification/pr-184/proposal.json",
+  "proposalSha256": "9bdc1e7de44e26a9ed977e30bdc38284a85f478eeb95dc146267bbb5f07d2ed4",
+  "proposalBase": "49c5fcbdb7db5a2bba0b7f23133cff2d60e642d2",
+  "witnessHead": "45128d9e3877f8254bc68cb99d212b3eed8d4d8c",
+  "allowedFiles": [
+    "src/main/java/org/springframework/samples/petclinic/repository/jdbc/OneToManyResultSetExtractor.java",
+    "src/test/java/org/springframework/samples/petclinic/repository/jdbc/OneToManyResultSetExtractorTests.java"
+  ],
+  "requiredTestInputs": [
+    "src",
+    "pom.xml",
+    ".mvn",
+    "mvnw",
+    "mvnw.cmd"
+  ]
+}
