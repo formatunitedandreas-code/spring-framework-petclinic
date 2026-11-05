@@ -292,7 +292,7 @@ if (mode === "multi-json") {
 }
 "@
     [System.IO.File]::WriteAllText(
-        [System.IO.Path]::GetFullPath($cliPath),
+        $ExecutionContext.SessionState.Path.GetUnresolvedProviderPathFromPSPath($cliPath),
         $script,
         [System.Text.UTF8Encoding]::new($false)
     )
@@ -317,6 +317,27 @@ function Invoke-WithStubCoreMode {
     }
 }
 
+# Publication is deliberately forbidden from a detached checkout. Test the
+# production consumer in a separate repository with a real branch, including CI.
+$originalLocation = Get-Location
+$fixtureRoot = Join-Path ([System.IO.Path]::GetTempPath()) ("threshold-publication-" + [guid]::NewGuid().ToString("N"))
+$policySource = Join-Path $PSScriptRoot "../policies"
+New-Item -ItemType Directory -Path $fixtureRoot | Out-Null
+try {
+    Set-Location $fixtureRoot
+    & git init --initial-branch=main | Out-Null
+    if ($LASTEXITCODE -ne 0) { throw "publication_fixture_init_failed" }
+    & git config user.email "threshold-fixture@example.invalid"
+    & git config user.name "Threshold Fixture"
+    & git config core.longpaths true
+    & git remote add origin https://github.com/example/publication-fixture.git
+    New-Item -ItemType Directory threshold/policies -Force | Out-Null
+    Copy-Item -Path (Join-Path $policySource "*.yaml") -Destination threshold/policies
+    & git add threshold/policies
+    & git commit -m "Publication fixture base" | Out-Null
+    if ($LASTEXITCODE -ne 0) { throw "publication_fixture_commit_failed" }
+    & git update-ref refs/remotes/origin/main HEAD
+    $BaseRef = "main"
 $runtimeRoot = "threshold/runtime/publication-preflight-fixtures"
 $authorityPath = "$runtimeRoot/publication-authority.json"
 $consumedPath = "$runtimeRoot/consumed-authorities.json"
@@ -472,3 +493,10 @@ catch {
 
 Remove-Item -Recurse -Force $runtimeRoot
 Write-Host "publicationPreflightFixtures=passed"
+
+}
+finally {
+    Set-Location $originalLocation
+    # This invocation created this exact absolute directory for fixture use.
+    Remove-Item -LiteralPath $fixtureRoot -Recurse -Force
+}

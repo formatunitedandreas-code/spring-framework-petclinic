@@ -135,7 +135,9 @@ function Test-ThresholdPathPattern {
     $normalizedPath = $Path -replace "\\", "/"
     $normalizedPattern = $Pattern -replace "\\", "/"
     if ($normalizedPattern.EndsWith("/**")) {
-        return $normalizedPath.StartsWith($normalizedPattern.Substring(0, $normalizedPattern.Length - 3), [System.StringComparison]::OrdinalIgnoreCase)
+        $prefix = $normalizedPattern.Substring(0, $normalizedPattern.Length - 3)
+        return $normalizedPath.Equals($prefix, [System.StringComparison]::OrdinalIgnoreCase) -or
+            $normalizedPath.StartsWith($prefix + "/", [System.StringComparison]::OrdinalIgnoreCase)
     }
     if (-not $normalizedPattern.Contains("*")) {
         return $normalizedPath -eq $normalizedPattern
@@ -144,27 +146,43 @@ function Test-ThresholdPathPattern {
     return $normalizedPath -match "^$escaped$"
 }
 
-function Get-ThresholdChangedLineCount {
-    param(
-        [string] $BaseRef,
-        [string[]] $RunEvidence
-    )
+function Get-ThresholdSemanticDiffBase {
+    param([string] $BaseRef)
+    $bases = @(& git merge-base $BaseRef HEAD)
+    if ($LASTEXITCODE -ne 0 -or $bases.Count -ne 1 -or [string]::IsNullOrWhiteSpace($bases[0])) {
+        throw "semantic_file_economy_base_unavailable=$BaseRef"
+    }
+    return ([string]$bases[0]).Trim()
+}
 
-    $changedLines = 0
-    $lineStats = @(git diff --numstat "$BaseRef...HEAD" -- threshold/runs)
-    foreach ($line in $lineStats) {
-        $parts = ([string]$line) -split "\s+"
-        foreach ($index in @(0, 1)) {
-            if ($parts[$index] -match "^\d+$") {
-                $changedLines += [int]$parts[$index]
+function Get-ThresholdChangedLineCount {
+    param([string] $BaseRef, [string[]] $RunEvidence)
+    $diffBase = Get-ThresholdSemanticDiffBase -BaseRef $BaseRef
+    $lineCounts = [System.Collections.Generic.Dictionary[string,int]]::new([System.StringComparer]::Ordinal)
+    # Index and worktree can contain different versions of one path. Each must
+    # fit the budget; their maximum counts that path once without losing either.
+    foreach ($mode in @("worktree", "index")) {
+        if ($mode -eq "index") { $lineStats = @(& git diff --cached --numstat $diffBase -- threshold/runs) }
+        else { $lineStats = @(& git diff --numstat $diffBase -- threshold/runs) }
+        if ($LASTEXITCODE -ne 0) { throw "semantic_file_economy_diff_failed=$mode" }
+        foreach ($line in $lineStats) {
+            $parts = ([string]$line) -split "`t", 3
+            if ($parts.Count -ne 3 -or $parts[0] -notmatch '^\d+$' -or $parts[1] -notmatch '^\d+$') {
+                throw "semantic_file_economy_binary_or_invalid_evidence"
             }
+            $count = [int]$parts[0] + [int]$parts[1]
+            $path = [string]$parts[2]
+            if (-not $lineCounts.ContainsKey($path) -or $count -gt $lineCounts[$path]) { $lineCounts[$path] = $count }
         }
     }
-    $tracked = @(& git ls-files -- threshold/runs)
-    foreach ($path in $RunEvidence) {
-        if ($tracked -contains $path) { continue }
-        if (-not (Test-Path $path)) { continue }
-        $changedLines += @(Get-Content $path).Count
+    $changedLines = 0
+    foreach ($count in $lineCounts.Values) { $changedLines += [int]$count }
+    $untracked = @(& git ls-files --others --exclude-standard -- threshold/runs)
+    if ($LASTEXITCODE -ne 0) { throw "semantic_file_economy_untracked_query_failed" }
+    foreach ($path in $untracked) {
+        if ($RunEvidence -cnotcontains $path) { continue }
+        if (-not (Test-Path -LiteralPath $path -PathType Leaf)) { throw "semantic_file_economy_untracked_file_missing=$path" }
+        $changedLines += @(Get-Content -LiteralPath $path).Count
     }
     return $changedLines
 }
@@ -182,10 +200,15 @@ function Assert-ThresholdSemanticEvidenceFileEconomy {
     $policy = Get-ThresholdFileEconomyPolicy -PolicyPath $PolicyPath
     if ($MaximumEvidenceFiles -le 0) { $MaximumEvidenceFiles = [int]$policy.MaximumEvidenceFiles }
     if ($MaximumEvidenceChangedLines -le 0) { $MaximumEvidenceChangedLines = [int]$policy.MaximumEvidenceChangedLines }
-    $changed = @(
-        @(& git diff --name-only "$BaseRef...HEAD") +
-        @(& git ls-files --others --exclude-standard)
-    ) | Where-Object { -not [string]::IsNullOrWhiteSpace($_) } | Sort-Object -Unique
+    $diffBase = Get-ThresholdSemanticDiffBase -BaseRef $BaseRef
+    $worktreePaths = @(& git diff --name-only $diffBase)
+    if ($LASTEXITCODE -ne 0) { throw "semantic_file_economy_worktree_query_failed" }
+    $indexPaths = @(& git diff --cached --name-only $diffBase)
+    if ($LASTEXITCODE -ne 0) { throw "semantic_file_economy_index_query_failed" }
+    $untrackedPaths = @(& git ls-files --others --exclude-standard)
+    if ($LASTEXITCODE -ne 0) { throw "semantic_file_economy_untracked_query_failed" }
+    $changed = @($worktreePaths + $indexPaths + $untrackedPaths) |
+        Where-Object { -not [string]::IsNullOrWhiteSpace($_) } | Sort-Object -CaseSensitive -Unique
     $forbidden = @($changed | Where-Object {
         $path = $_
         @($policy.ForbiddenInPullRequest | Where-Object { Test-ThresholdPathPattern -Path $path -Pattern $_ }).Count -gt 0
@@ -207,17 +230,17 @@ function Assert-ThresholdSemanticEvidenceFileEconomy {
     }
 
     foreach ($path in $runEvidence) {
-        if ($path -notmatch "^threshold/runs/[^/]+/(twin-delta|aggregate-receipt|evidence-digests)\.json$") {
+        if ($path -cnotmatch "^threshold/runs/[^/]+/(twin-delta|aggregate-receipt|evidence-digests)\.json$") {
             throw "unexpected_semantic_run_evidence=$path"
         }
     }
 
     if ($RequireCompleteRunEvidence) {
-        $runIds = @($runEvidence | ForEach-Object { ($_ -split "/")[2] } | Sort-Object -Unique)
+        $runIds = @($runEvidence | ForEach-Object { ($_ -split "/")[2] } | Sort-Object -CaseSensitive -Unique)
         foreach ($runId in $runIds) {
             foreach ($fileName in @($policy.RequiredFiles)) {
                 $requiredPath = "threshold/runs/$runId/$fileName"
-                if ($runEvidence -notcontains $requiredPath) {
+                if ($runEvidence -cnotcontains $requiredPath) {
                     throw "semantic_file_economy_missing_required_file=$requiredPath"
                 }
             }

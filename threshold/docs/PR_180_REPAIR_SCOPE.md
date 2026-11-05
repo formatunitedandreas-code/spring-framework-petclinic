@@ -3,7 +3,9 @@
 This source repair preserves current main's independent candidate-class admission,
 active knowledge graphs, trainer projection, and discovery canary. The original
 branch's obsolete snapshots and synthetic candidate benefit/cost/budget passes are
-excluded. Unmeasured benefit, cost, and budget sufficiency remain UNKNOWN. Earlier
+excluded. Automatically invented tested-head/timestamp metadata is also excluded;
+the existing source-bound receipt generator remains unchanged. Unmeasured benefit,
+cost, and budget sufficiency remain UNKNOWN. Earlier
 review-request documents describe the original proposal, not current qualification.
 
 Publication preflight consumes the canonical Threshold Core CLI. It obtains an
@@ -11,6 +13,11 @@ expected input digest from `digest-publication-authority-input --stdin`, using t
 original in-memory UTF-8 JSON, and compares the validator's exact digest, head,
 publication effect, Boolean permission, disposition, and constraint arrays. Missing
 CLI support fails closed. Diagnostic reason labels do not grant permission.
+
+`test-publication-core-contract.ps1 -ThresholdCorePath <built-core>` checks the real
+producer/consumer digest contract with Unicode input and a missing-authority case
+that must remain denied. Transport and malformed-result fixtures run independently
+in disposable repositories, including detached GitHub Actions checkouts.
 
 The optional preflight does not replace normal source receipts or discovery,
 lease, candidate-class, and PR-base provenance checks. An aggregate receipt's

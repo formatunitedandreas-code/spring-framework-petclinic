@@ -30,6 +30,10 @@ jobs:
         shell: pwsh
         run: ./threshold/scripts/test-branch-range-validation-fixtures.ps1
 
+      - name: Verify staged and working semantic evidence limits
+        shell: pwsh
+        run: ./threshold/scripts/test-semantic-file-economy-fixtures.ps1
+
       - name: Fetch pull request base
         run: git fetch origin ${{ github.base_ref }}:refs/remotes/origin/${{ github.base_ref }}
 
