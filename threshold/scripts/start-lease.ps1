@@ -9,6 +9,8 @@ param(
     [int] $MaxFilesPerCandidate = 1,
     [int] $MaxChangedLinesPerCandidate = 80,
     [int] $MaxRepairAttemptsPerCandidate = 1,
+    [string] $BranchName = "",
+    [string] $BaseRef = "origin/main",
     [switch] $DraftPrAllowed
 )
 
@@ -20,7 +22,8 @@ function ConvertTo-RepoPath {
     return ($Path -replace "\\", "/").Trim()
 }
 
-$branch = (& git branch --show-current).Trim()
+$observedBranch = (& git branch --show-current).Trim()
+$branch = if ([string]::IsNullOrWhiteSpace($BranchName)) { $observedBranch } else { $BranchName }
 if ([string]::IsNullOrWhiteSpace($branch)) {
     throw "Unable to determine current git branch."
 }
@@ -46,7 +49,7 @@ leaseName: $LeaseName
 repository: $((Get-Location).Path)
 branch: $branch
 baseRemote: origin
-baseRef: origin/main
+baseRef: $BaseRef
 startHead: $head
 headPolicy: descendantOfStartHead
 scopeExpansionTier: 0
@@ -90,6 +93,8 @@ allowedPaths:
   - threshold/receipts/*.json
   - threshold/lease-state/*.json
   - threshold/candidate-pocket/*.json
+  - threshold/discovery-evidence/*.json
+  - threshold/discovery-evidence/**/*.json
   - threshold/discovery-canaries/**/*.java
   - threshold/discovery-canaries/*.json
   - threshold/gates/*.json
@@ -160,6 +165,7 @@ $state = [ordered]@{
     currentHead = $head
     currentSourceHead = $head
     candidatesProcessed = 0
+    processedCandidateIds = @()
     commitsCreated = 0
     remainingBudget = [ordered]@{
         candidates = $MaxCandidatesThisRun

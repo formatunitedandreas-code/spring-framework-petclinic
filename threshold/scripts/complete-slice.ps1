@@ -10,6 +10,9 @@ param(
     [string] $CommitMessage,
     [string[]] $AllowedPath = @(),
     [string] $ReceiptRoot = "threshold/receipts",
+    [string] $CandidatePocketPath = "threshold/candidate-pocket/current.json",
+    [string] $PrBaseHead = "",
+    [string] $BaseRef = "",
     [switch] $CompactEvidence,
     [switch] $SkipMavenTest
 )
@@ -18,6 +21,7 @@ Set-StrictMode -Version Latest
 $ErrorActionPreference = "Stop"
 
 . (Join-Path $PSScriptRoot "lib/runtime-paths.ps1")
+. (Join-Path $PSScriptRoot "lib/candidate-class-provenance.ps1")
 
 $runtimePaths = Get-ThresholdRuntimePaths
 if ([string]::IsNullOrWhiteSpace($LeasePath)) {
@@ -48,8 +52,73 @@ function Get-SurefireTotals {
     return $totals
 }
 
+function Get-LeaseScalarOrDefault {
+    param([string[]] $Lines, [string] $Name, [string] $DefaultValue = "")
+    $match = $Lines | Where-Object { $_ -match "^\s*$([regex]::Escape($Name)):\s*(.+?)\s*$" } | Select-Object -First 1
+    if (-not $match) { return $DefaultValue }
+    return ($match -replace "^\s*$([regex]::Escape($Name)):\s*", "").Trim()
+}
+
+function Get-GitRemotes {
+    $remotes = @(& git remote 2>$null | Where-Object { -not [string]::IsNullOrWhiteSpace($_) })
+    if ($LASTEXITCODE -ne 0) { return @() }
+    return @($remotes | ForEach-Object { ([string]$_).Trim() } | Where-Object { $_ -ne "" })
+}
+
+function Resolve-GitRefWithOriginFallback {
+    param([string] $Ref)
+
+    if ([string]::IsNullOrWhiteSpace($Ref)) { return "" }
+    $trimmedRef = $Ref.Trim()
+    $candidateRefs = New-Object System.Collections.Generic.List[string]
+    $remotes = @(Get-GitRemotes)
+    $remoteQualified = $false
+    if ($trimmedRef -match "^([^/]+)/(.+)$") {
+        $remoteQualified = $remotes -contains $Matches[1]
+    }
+
+    if ($trimmedRef -match "^[0-9a-f]{40}$" -or $trimmedRef -like "refs/*" -or $remoteQualified) {
+        $candidateRefs.Add($trimmedRef)
+    }
+    else {
+        $candidateRefs.Add("origin/$trimmedRef")
+        $candidateRefs.Add($trimmedRef)
+    }
+
+    foreach ($candidateRef in @($candidateRefs | Select-Object -Unique)) {
+        $resolved = (& git rev-parse $candidateRef 2>$null)
+        if ($LASTEXITCODE -eq 0 -and -not [string]::IsNullOrWhiteSpace([string]$resolved)) {
+            return [string]($resolved.Trim())
+        }
+    }
+    return ""
+}
+
+function Resolve-PrBaseHead {
+    param([string] $PrBaseHead, [string] $BaseRef, [string] $LeasePath)
+    if (-not [string]::IsNullOrWhiteSpace($PrBaseHead)) {
+        return [string]$PrBaseHead
+    }
+    if (-not [string]::IsNullOrWhiteSpace($env:THRESHOLD_PR_BASE_HEAD)) {
+        return [string]$env:THRESHOLD_PR_BASE_HEAD
+    }
+    $effectiveBaseRef = $BaseRef
+    if ([string]::IsNullOrWhiteSpace($effectiveBaseRef)) {
+        $leaseLines = Get-Content $LeasePath
+        $effectiveBaseRef = Get-LeaseScalarOrDefault -Lines $leaseLines -Name "baseRef"
+    }
+    if (-not [string]::IsNullOrWhiteSpace($effectiveBaseRef)) {
+        return Resolve-GitRefWithOriginFallback -Ref $effectiveBaseRef
+    }
+    return ""
+}
+
 if (-not (Test-Path $LeasePath)) { throw "Lease file not found: $LeasePath" }
 if (-not (Test-Path $StatePath)) { throw "Lease state file not found: $StatePath. Run threshold/scripts/start-lease.ps1 first." }
+$observedPrBaseHead = Resolve-PrBaseHead -PrBaseHead $PrBaseHead -BaseRef $BaseRef -LeasePath $LeasePath
+if ([string]::IsNullOrWhiteSpace($observedPrBaseHead)) {
+    throw "Unable to resolve independent PR base head for receipt recording."
+}
 
 $state = Get-Content $StatePath -Raw | ConvertFrom-Json
 if ([int]$state.remainingBudget.candidates -le 0) { throw "No candidate budget remains in $StatePath." }
@@ -83,6 +152,36 @@ if ($SkipMavenTest.IsPresent) { $validateArgs += "-SkipMavenTest" }
 if ($LASTEXITCODE -ne 0) { throw "Threshold slice validation failed." }
 
 $baseHead = (& git rev-parse HEAD).Trim()
+if (-not (Test-ThresholdCommitIsAncestor -Ancestor $observedPrBaseHead -Descendant $baseHead)) {
+    throw "Product slice must descend from the independently observed PR base head. prBaseHead=$observedPrBaseHead currentHead=$baseHead"
+}
+$candidatePocket = if (Test-Path $CandidatePocketPath) { Get-Content -LiteralPath $CandidatePocketPath -Raw | ConvertFrom-Json } else { $null }
+$discoverySourceHead = if ($null -ne $candidatePocket) { [string](Get-ThresholdJsonProperty $candidatePocket "preProductDiscoverySourceHead" "") } else { "" }
+if ([string]::IsNullOrWhiteSpace($discoverySourceHead) -and $null -ne $candidatePocket) {
+    $discoverySourceHead = [string](Get-ThresholdJsonProperty $candidatePocket "generatedFromHead" "")
+}
+if ([string]::IsNullOrWhiteSpace($discoverySourceHead)) {
+    $discoverySourceHead = $observedPrBaseHead
+}
+if (-not (Test-ThresholdCommitIsAncestor -Ancestor $discoverySourceHead -Descendant $observedPrBaseHead)) {
+    throw "Discovery evidence source head must be an ancestor of the independently observed PR base head. discoverySourceHead=$discoverySourceHead prBaseHead=$observedPrBaseHead"
+}
+$discoveryEvidencePath = Get-ThresholdCandidateDiscoveryEvidencePath -DiscoveryEvidenceRoot "threshold/discovery-evidence" -CandidateId $CandidateId -BaseHead $discoverySourceHead
+$discoveryEvidence = Get-ThresholdCandidateDiscoveryEvidenceFromPath -Path $discoveryEvidencePath
+if ($null -eq $discoveryEvidence) {
+    throw "Pre-product discovery evidence is required before complete-slice. path=$discoveryEvidencePath candidateId=$CandidateId prBaseHead=$observedPrBaseHead"
+}
+$discoveryEvidenceDigest = Get-ThresholdCandidateDiscoveryEvidenceDigest -DiscoveryEvidence $discoveryEvidence
+if ([string]$discoveryEvidenceDigest -ne [string]$discoveryEvidence.discoveryEvidenceDigest) {
+    throw "Pre-product discovery evidence digest mismatch: $discoveryEvidencePath"
+}
+if ([string]$discoveryEvidence.candidateId -ne $CandidateId) {
+    throw "Pre-product discovery evidence candidate mismatch: path=$discoveryEvidencePath expected=$CandidateId actual=$($discoveryEvidence.candidateId)"
+}
+$discoveryEvidenceStatus = @(& git status --porcelain -- $discoveryEvidencePath)
+if ($discoveryEvidenceStatus) {
+    throw "Pre-product discovery evidence is not clean at PR base: $discoveryEvidencePath"
+}
 foreach ($path in $changedPaths) {
     & git add -- $path
     if ($LASTEXITCODE -ne 0) { throw "Failed to stage changed path: $path" }
@@ -102,6 +201,7 @@ $validationCommand = if ($SkipMavenTest.IsPresent) { "git diff --check" } else {
     -CandidateId $CandidateId `
     -CandidateClass $CandidateClass `
     -BaseHead $baseHead `
+    -PrBaseHead $observedPrBaseHead `
     -CommitHash $sourceCommit `
     -DiffSummary $CommitMessage `
     -ValidationCommand $validationCommand `
@@ -112,6 +212,8 @@ $validationCommand = if ($SkipMavenTest.IsPresent) { "git diff --check" } else {
     -Skipped $totals.skipped `
     -ReceiptMaterialization "post-commit" `
     -ReceiptRoot $ReceiptRoot `
+    -CandidatePocketPath $CandidatePocketPath `
+    -DiscoveryEvidencePath $discoveryEvidencePath `
     -PerCommitValidationLogAvailable `
     -UpdateState
 if ($LASTEXITCODE -ne 0) { throw "Receipt recording failed for source commit $sourceCommit." }
@@ -121,11 +223,15 @@ if ($CompactEvidence.IsPresent) {
     Write-Host "candidateId=$CandidateId"
     Write-Host "sourceCommit=$sourceCommit"
     Write-Host "baseHead=$baseHead"
+    Write-Host "prBaseHead=$observedPrBaseHead"
     exit 0
 }
 
-$trackedReceiptChanges = @(& git diff --name-only | Where-Object { $_ -like "$ReceiptRoot/*" -or $_ -eq $StatePath })
-$untrackedReceiptChanges = @(& git ls-files --others --exclude-standard $ReceiptRoot | Where-Object { $_ -like "$ReceiptRoot/*" })
+$trackedReceiptChanges = @(& git diff --name-only | Where-Object { $_ -like "$ReceiptRoot/*" -or $_ -eq $StatePath -or $_ -like "threshold/discovery-evidence/*" })
+$untrackedReceiptChanges = @(
+    @(& git ls-files --others --exclude-standard $ReceiptRoot | Where-Object { $_ -like "$ReceiptRoot/*" }) +
+    @(& git ls-files --others --exclude-standard "threshold/discovery-evidence" | Where-Object { $_ -like "threshold/discovery-evidence/*" })
+)
 $receiptChanges = @($trackedReceiptChanges + $untrackedReceiptChanges | Select-Object -Unique)
 if (-not $receiptChanges) {
     throw "Receipt recording produced no receipt/state changes."
@@ -150,3 +256,4 @@ Write-Host "candidateId=$CandidateId"
 Write-Host "sourceCommit=$sourceCommit"
 Write-Host "receiptCommit=$receiptCommit"
 Write-Host "baseHead=$baseHead"
+Write-Host "prBaseHead=$observedPrBaseHead"

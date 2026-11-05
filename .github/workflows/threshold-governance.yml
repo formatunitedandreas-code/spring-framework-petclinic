@@ -2,7 +2,9 @@ name: Threshold governance
 
 on:
   pull_request:
-    branches: [main]
+    branches:
+      - main
+      - 'threshold-governed-refactor-demo-*-discovery-base'
     types: [opened, synchronize, reopened, edited, ready_for_review]
 
 jobs:
@@ -13,8 +15,15 @@ jobs:
         with:
           fetch-depth: 0
 
+      - name: Verify method signature candidate filtering
+        shell: pwsh
+        run: pwsh -File threshold/scripts/test-method-signature-candidate-filter.ps1
+
       - name: Fetch pull request base
         run: git fetch origin ${{ github.base_ref }}:refs/remotes/origin/${{ github.base_ref }}
+
+      - name: Verify inert historical-import boundaries
+        run: python3 -B threshold/scripts/test_historical_imports.py
 
       - name: Verify Threshold lease, receipts, state, and merge authority
         shell: pwsh
@@ -30,9 +39,17 @@ jobs:
             exit 1
           }
 
+      - name: Verify committed receipt digest consistency
+        shell: pwsh
+        run: pwsh -File threshold/scripts/test-receipt-digest-consistency.ps1
+
       - name: Verify Threshold PR metadata envelope fixtures
         shell: pwsh
         run: pwsh -File threshold/scripts/test-pr-metadata-envelope.ps1
+
+      - name: Run Threshold local review simulation
+        shell: pwsh
+        run: pwsh -File threshold/scripts/test-local-review-simulation.ps1
 
       - name: Legacy inline Threshold governance checker
         if: ${{ false }}
@@ -296,7 +313,8 @@ jobs:
       - name: Verify Threshold capability and fidelity knowledge graphs
         env:
           THRESHOLD_RECEIPT_TREEISH: ${{ github.event.pull_request.head.sha }}
+          THRESHOLD_PR_BASE_HEAD: ${{ github.event.pull_request.base.sha }}
         shell: pwsh
         run: |
           $ErrorActionPreference = "Stop"
-          pwsh -File threshold/scripts/test-kg-governance.ps1
+          pwsh -File threshold/scripts/test-kg-governance.ps1 -BaseRef "${{ github.base_ref }}"
