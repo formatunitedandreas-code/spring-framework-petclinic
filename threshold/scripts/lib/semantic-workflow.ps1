@@ -179,11 +179,12 @@ function Invoke-ThresholdSemanticGitRaw {
 }
 
 function Get-ThresholdSemanticDiffArguments {
-    param([string] $DiffBase, [switch] $Index, [switch] $Numstat)
+    param([string] $DiffBase, [switch] $Index, [switch] $Committed, [switch] $Numstat)
     $arguments = @("diff", "--no-renames", "--no-ext-diff", "--no-textconv", "--no-relative", "--ignore-submodules=none", "-z")
     if ($Index.IsPresent) { $arguments += "--cached" }
     $arguments += if ($Numstat.IsPresent) { "--numstat" } else { "--name-only" }
     $arguments += $DiffBase
+    if ($Committed.IsPresent) { $arguments += "HEAD" }
     if ($Numstat.IsPresent) { $arguments += @("--", "threshold/runs") }
     return $arguments
 }
@@ -201,10 +202,11 @@ function Get-ThresholdChangedLineCount {
     param([string] $BaseRef, [string[]] $RunEvidence)
     $diffBase = Get-ThresholdSemanticDiffBase -BaseRef $BaseRef
     $lineCounts = [System.Collections.Generic.Dictionary[string,int]]::new([System.StringComparer]::Ordinal)
-    # Index and worktree can contain different versions of one path. Each must
-    # fit the budget; their maximum counts that path once without losing either.
-    foreach ($mode in @("worktree", "index")) {
-        $arguments = Get-ThresholdSemanticDiffArguments -DiffBase $diffBase -Index:($mode -eq "index") -Numstat
+    # HEAD, index and worktree can contain different versions of one path. Each
+    # must fit the budget; their maximum counts that path once without hiding a
+    # committed change that has been restored to base in both mutable planes.
+    foreach ($mode in @("committed", "worktree", "index")) {
+        $arguments = Get-ThresholdSemanticDiffArguments -DiffBase $diffBase -Index:($mode -eq "index") -Committed:($mode -eq "committed") -Numstat
         $raw = Invoke-ThresholdSemanticGitRaw -Arguments $arguments
         $lineStats = @($raw -split [char]0 | Where-Object { $_ -ne "" })
         foreach ($line in $lineStats) {
@@ -243,13 +245,15 @@ function Assert-ThresholdSemanticEvidenceFileEconomy {
     if ($MaximumEvidenceFiles -le 0) { $MaximumEvidenceFiles = [int]$policy.MaximumEvidenceFiles }
     if ($MaximumEvidenceChangedLines -le 0) { $MaximumEvidenceChangedLines = [int]$policy.MaximumEvidenceChangedLines }
     $diffBase = Get-ThresholdSemanticDiffBase -BaseRef $BaseRef
+    $committedRaw = Invoke-ThresholdSemanticGitRaw -Arguments (Get-ThresholdSemanticDiffArguments -DiffBase $diffBase -Committed)
     $worktreeRaw = Invoke-ThresholdSemanticGitRaw -Arguments (Get-ThresholdSemanticDiffArguments -DiffBase $diffBase)
     $indexRaw = Invoke-ThresholdSemanticGitRaw -Arguments (Get-ThresholdSemanticDiffArguments -DiffBase $diffBase -Index)
     $untrackedRaw = Invoke-ThresholdSemanticGitRaw -Arguments @("ls-files", "--full-name", "-z", "--others", "--exclude-standard")
+    $committedPaths = @($committedRaw -split [char]0 | Where-Object { $_ -ne "" })
     $worktreePaths = @($worktreeRaw -split [char]0 | Where-Object { $_ -ne "" })
     $indexPaths = @($indexRaw -split [char]0 | Where-Object { $_ -ne "" })
     $untrackedPaths = @($untrackedRaw -split [char]0 | Where-Object { $_ -ne "" })
-    $changed = @($worktreePaths + $indexPaths + $untrackedPaths) |
+    $changed = @($committedPaths + $worktreePaths + $indexPaths + $untrackedPaths) |
         Where-Object { -not [string]::IsNullOrWhiteSpace($_) } | Sort-Object -CaseSensitive -Unique
     $forbidden = @($changed | Where-Object {
         $path = $_

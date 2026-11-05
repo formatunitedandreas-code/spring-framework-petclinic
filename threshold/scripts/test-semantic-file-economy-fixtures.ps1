@@ -52,6 +52,15 @@ try {
     }
     Invoke-FixtureGit @("reset", "--hard", $base)
 
+    "committed forbidden" | Set-Content threshold/lease-state/current-run.json
+    Invoke-FixtureGit @("add", "threshold/lease-state/current-run.json")
+    Invoke-FixtureGit @("commit", "-m", "fixture committed forbidden path")
+    Invoke-FixtureGit @("restore", "--source=$base", "--staged", "--worktree", "--", "threshold/lease-state/current-run.json")
+    Assert-EconomyStop "committed-forbidden-index-and-worktree-restored" "semantic_file_economy_breach" {
+        Assert-ThresholdSemanticEvidenceFileEconomy -BaseRef $base
+    }
+    Invoke-FixtureGit @("reset", "--hard", $base)
+
     Invoke-FixtureGit @("mv", "threshold/runtime/original.txt", "apparently-safe.txt")
     Assert-EconomyStop "forbidden-rename-source" "semantic_file_economy_breach" {
         Assert-ThresholdSemanticEvidenceFileEconomy -BaseRef $base
@@ -96,6 +105,16 @@ try {
     Assert-ThresholdSemanticEvidenceFileEconomy -BaseRef $base -MaximumEvidenceChangedLines 3 -RequireCompleteRunEvidence
     if ((Get-ThresholdChangedLineCount -BaseRef $base -RunEvidence $evidence) -ne 3) {
         throw "committed_and_worktree_evidence_double_counted"
+    }
+    @("{}", "{}", "{}", "{}") | Set-Content $evidence[0]
+    Invoke-FixtureGit @("add", $evidence[0])
+    Invoke-FixtureGit @("commit", "-m", "fixture committed oversized evidence")
+    Invoke-FixtureGit @("restore", "--source=$base", "--staged", "--worktree", "--", "threshold/runs")
+    if ((Get-ThresholdChangedLineCount -BaseRef $base -RunEvidence $evidence) -ne 6) {
+        throw "committed_oversized_evidence_hidden_by_index_and_worktree_restoration"
+    }
+    Assert-EconomyStop "committed-oversized-index-and-worktree-restored" "changed_line_breach" {
+        Assert-ThresholdSemanticEvidenceFileEconomy -BaseRef $base -MaximumEvidenceChangedLines 3
     }
     Invoke-FixtureGit @("reset", "--hard", $base)
     foreach ($name in $unusualNames) {
