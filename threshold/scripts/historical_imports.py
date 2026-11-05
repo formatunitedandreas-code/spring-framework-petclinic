@@ -12,7 +12,7 @@ import sys
 
 PREFIX = "threshold/runs/historical-imports/"
 SCHEMA = "threshold.historical_import.v1"
-ARCHIVE_ATTRIBUTES = b"* -text\n"
+ARCHIVE_ATTRIBUTES = b"* -text\noriginal.diff -diff\nblobs/*.bin -diff\n"
 HEX40 = re.compile(r"[0-9a-f]{40}\Z")
 LITERALS = {
     "schemaVersion": SCHEMA,
@@ -188,7 +188,8 @@ def capture(repo: Path, original, original_target, number):
                     originalTargetBase=original_target, originalMergeBase=base,
                     originalDiff={"path": "original.diff", "sha256": digest(original_diff)},
                     changes=records)
-    (output / "manifest.json").write_text(json.dumps(manifest, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
+    (output / "manifest.json").write_text(json.dumps(manifest, indent=2, ensure_ascii=False) + "\n",
+                                         encoding="utf-8", newline="\n")
     return directory
 
 
