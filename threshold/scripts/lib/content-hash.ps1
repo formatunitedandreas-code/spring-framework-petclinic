@@ -19,6 +19,7 @@ function Get-ThresholdGitBlobSha256 {
     $spec = "$Revision`:$repoPath"
     $processInfo = [System.Diagnostics.ProcessStartInfo]::new()
     $processInfo.FileName = "git"
+    $processInfo.WorkingDirectory = (Get-Location).ProviderPath
     $argumentListProperty = $processInfo.GetType().GetProperty("ArgumentList")
     if ($null -ne $argumentListProperty) {
         [void] $processInfo.ArgumentList.Add("cat-file")
@@ -51,5 +52,28 @@ function Get-ThresholdGitBlobSha256 {
     finally {
         $sha256.Dispose()
         $process.Dispose()
+    }
+}
+
+function Assert-ThresholdReceiptLeaseDigest {
+    param(
+        [Parameter(Mandatory = $true)][pscustomobject] $Receipt,
+        [Parameter(Mandatory = $true)][string] $LeasePath,
+        [Parameter(Mandatory = $true)][string] $ReceiptCommit
+    )
+    if (-not $Receipt.leaseDigest) { throw "Receipt is missing leaseDigest." }
+    $revision = $ReceiptCommit
+    if ($Receipt.PSObject.Properties["leaseDigestRevision"]) {
+        $revision = [string]$Receipt.leaseDigestRevision
+        $sourceCommit = if ($Receipt.PSObject.Properties["commitHash"]) { [string]$Receipt.commitHash } elseif ($Receipt.PSObject.Properties["sourceCommit"]) { [string]$Receipt.sourceCommit } else { "" }
+        if ($revision -cnotmatch '^[0-9a-f]{40}$' -or $revision -cne $sourceCommit) {
+            throw "Receipt leaseDigestRevision must bind its exact source commit."
+        }
+        & git merge-base --is-ancestor $revision $ReceiptCommit
+        if ($LASTEXITCODE -ne 0) { throw "Receipt lease digest source revision is not an ancestor of its receipt commit." }
+    }
+    $expectedDigest = Get-ThresholdGitBlobSha256 -Revision $revision -Path $LeasePath
+    if ([string]::IsNullOrWhiteSpace($expectedDigest) -or [string]$Receipt.leaseDigest -ne $expectedDigest) {
+        throw "Receipt leaseDigest mismatch at revision $revision."
     }
 }

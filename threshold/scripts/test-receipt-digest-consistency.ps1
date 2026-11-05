@@ -4,6 +4,7 @@ param()
 Set-StrictMode -Version Latest
 $ErrorActionPreference = "Stop"
 . (Join-Path $PSScriptRoot "lib/candidate-class-provenance.ps1")
+. (Join-Path $PSScriptRoot "lib/content-hash.ps1")
 
 $originalLocation = Get-Location
 $tempRoot = Join-Path ([System.IO.Path]::GetTempPath()) ("threshold-receipt-digest-" + [guid]::NewGuid().ToString("N"))
@@ -139,6 +140,28 @@ try {
         throw "receipt leaseDigest unexpectedly matched CRLF worktree digest"
     }
 
+    & git add -- $receiptPath
+    & git commit -m "Materialize source-bound receipt after metadata drift" | Out-Null
+    if ($LASTEXITCODE -ne 0) { throw "receipt commit failed" }
+    $receiptCommit = (& git rev-parse HEAD).Trim()
+    Assert-ThresholdReceiptLeaseDigest -Receipt $receipt -LeasePath $leasePath -ReceiptCommit $receiptCommit
+    if ([string]$receipt.leaseDigestRevision -cne $sourceCommit) { throw "Receipt revision must be the requested source commit" }
+
+    $legacy = $receipt | ConvertTo-Json -Depth 30 | ConvertFrom-Json
+    $legacy.PSObject.Properties.Remove("leaseDigestRevision")
+    $legacy.leaseDigest = Get-ThresholdGitBlobSha256 -Revision $receiptCommit -Path $leasePath
+    Assert-ThresholdReceiptLeaseDigest -Receipt $legacy -LeasePath $leasePath -ReceiptCommit $receiptCommit
+
+    foreach ($tamper in @("sourceDigestWithoutRevision", "foreignRevision")) {
+        $bad = $receipt | ConvertTo-Json -Depth 30 | ConvertFrom-Json
+        if ($tamper -eq "sourceDigestWithoutRevision") { $bad.PSObject.Properties.Remove("leaseDigestRevision") }
+        else { $bad.leaseDigestRevision = $receiptCommit }
+        $rejected = $false
+        try { Assert-ThresholdReceiptLeaseDigest -Receipt $bad -LeasePath $leasePath -ReceiptCommit $receiptCommit }
+        catch { $rejected = $true }
+        if (-not $rejected) { throw "Invalid receipt digest binding accepted: $tamper" }
+    }
+    Write-Host "passed=production validator accepts explicit source revision and legacy receipt revision, rejects tampering"
     Write-Host "passed=receipt leaseDigest uses committed blob digest"
     Write-Host "thresholdReceiptDigestConsistency=passed"
 }

@@ -9,6 +9,7 @@ Set-StrictMode -Version Latest
 $ErrorActionPreference = "Stop"
 
 . (Join-Path $PSScriptRoot "lib/lease-policy.ps1")
+. (Join-Path $PSScriptRoot "lib/content-hash.ps1")
 . (Join-Path $PSScriptRoot "lib/pr-metadata-envelope.ps1")
 . (Join-Path $PSScriptRoot "lib/candidate-class-provenance.ps1")
 
@@ -641,14 +642,8 @@ function Get-ReceiptCommit {
 function Assert-ReceiptLeaseDigestMatchesReceiptCommit {
     param([string] $ReceiptPath, [pscustomobject] $Receipt)
 
-    if (-not $Receipt.leaseDigest) {
-        throw "Receipt is missing leaseDigest: $ReceiptPath"
-    }
     $receiptCommit = Get-ReceiptCommit -ReceiptPath $ReceiptPath
-    $receiptLeaseDigest = Get-CommitPathBlobSha256 -Commit $receiptCommit -Path $LeasePath
-    if ([string] $Receipt.leaseDigest -ne $receiptLeaseDigest) {
-        throw "Receipt leaseDigest mismatch for $ReceiptPath at receipt commit $receiptCommit."
-    }
+    Assert-ThresholdReceiptLeaseDigest -Receipt $Receipt -LeasePath $LeasePath -ReceiptCommit $receiptCommit
 }
 
 if (-not (Test-Path $LeasePath)) {

@@ -141,6 +141,7 @@ $receipt = [ordered]@{
     candidateId = $CandidateId
     leaseName = $leaseName
     leaseDigest = $leaseDigest
+    leaseDigestRevision = $CommitHash
     branch = $branch
     candidateClass = $CandidateClass
     leaseStartHead = $leaseStartHead

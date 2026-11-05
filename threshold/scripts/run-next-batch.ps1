@@ -495,6 +495,7 @@ try {
         batchId = $batchId
         leaseId = [string]$state.leaseId
         leaseDigest = Get-ThresholdGitBlobSha256 -Revision $sourceCommit -Path $LeasePath
+        leaseDigestRevision = $sourceCommit
         branch = [string]$state.branch
         baseHead = $baseHead
         sourceCommit = $sourceCommit
