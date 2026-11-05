@@ -9,7 +9,8 @@
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
+ * express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
@@ -102,7 +103,10 @@ public class PetController {
     }
 
     @GetMapping(value = PET_EDIT_PATH)
-    public String initUpdateForm(@PathVariable("petId") int petId, ModelMap model) {
+    public String initUpdateForm(
+        @PathVariable("petId") int petId,
+        ModelMap model
+    ) {
         addPetToModelForUpdate(petId, model);
         return VIEWS_PETS_CREATE_OR_UPDATE_FORM;
     }
@@ -112,7 +116,12 @@ public class PetController {
     }
 
     @PostMapping(value = PET_EDIT_PATH)
-    public String processUpdateForm(@Valid Pet pet, BindingResult result, Owner owner, ModelMap model) {
+    public String processUpdateForm(
+        @Valid Pet pet,
+        BindingResult result,
+        Owner owner,
+        ModelMap model
+    ) {
         return savePetFormResult(owner, pet, result, model, false);
     }
 
@@ -121,7 +130,13 @@ public class PetController {
         this.clinicService.savePet(pet);
     }
 
-    private String savePetFormResult(Owner owner, Pet pet, BindingResult result, ModelMap model, boolean duplicate) {
+    private String savePetFormResult(
+        Owner owner,
+        Pet pet,
+        BindingResult result,
+        ModelMap model,
+        boolean duplicate
+    ) {
         if (duplicate) {
             result.rejectValue("name", "duplicate", "already exists");
         }

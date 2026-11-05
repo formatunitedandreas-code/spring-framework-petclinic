@@ -1,0 +1,30 @@
+{
+  "schemaVersion": "threshold.petclinic.phase2.receipt.v0.1",
+  "runId": "p2-14-owner-search-before-after-readout-20260717T193300Z",
+  "phaseId": "P2-14",
+  "repository": "C:\\dev\\spring-framework-petclinic",
+  "repositorySlug": "formatunitedandreas-code/spring-framework-petclinic",
+  "branch": "agent/owner-search-before-after-readout",
+  "inputHead": "f5b6c63eabe4b34af67cc8d38cd0df32373a58bf",
+  "baseHead": "f5b6c63eabe4b34af67cc8d38cd0df32373a58bf",
+  "outputHead": "pending_local_commit",
+  "lane": "product_refactor",
+  "feature": "owner_search_vertical_refactoring",
+  "candidateClass": "owner_search_before_after_readout",
+  "effectClasses": [
+    "authority_activation",
+    "branch_start",
+    "local_evidence_update"
+  ],
+  "scopeMatch": true,
+  "priorPhase": "P2-13",
+  "priorPullRequest": 117,
+  "priorMergeCommit": "f5b6c63eabe4b34af67cc8d38cd0df32373a58bf",
+  "publicationPerformed": false,
+  "mergePerformed": false,
+  "releasePerformed": false,
+  "deploymentPerformed": false,
+  "humanReviewRequired": true,
+  "outcome": "authority_active_branch_started",
+  "stopReasons": []
+}

@@ -1,0 +1,56 @@
+{
+  "schemaVersion": "threshold.petclinic.phase2.receipt.v0.1",
+  "runId": "p2-10-owner-search-compatibility-path-20260717T194000Z",
+  "phaseId": "P2-10",
+  "repository": "C:\\dev\\spring-framework-petclinic",
+  "branch": "agent/owner-search-compatibility-path",
+  "inputHead": "8087dfcd68dba6736e99a066b399b1d4a1ea2aa3",
+  "baseHead": "8087dfcd68dba6736e99a066b399b1d4a1ea2aa3",
+  "outputHead": "pending_local_commit",
+  "lane": "product_refactor",
+  "feature": "owner_search_vertical_refactoring",
+  "candidateClass": "owner_search_compatibility_path",
+  "effectClasses": [
+    "compatibility_path_readout",
+    "local_evidence_update"
+  ],
+  "scopeMatch": true,
+  "compatibilityMethod": "ClinicService.findOwnerByLastName remains unchanged and delegates to OwnerRepository.findByLastName",
+  "remainingCallers": [
+    "src/test/java/org/springframework/samples/petclinic/service/AbstractClinicServiceTests.java",
+    "src/test/java/org/springframework/samples/petclinic/service/AbstractOwnerSearchContractTests.java",
+    "src/test/java/org/springframework/samples/petclinic/service/AbstractOwnerSearchQueryMeasurementTests.java"
+  ],
+  "productionCallersRemaining": false,
+  "deprecationStatus": "not_deprecated",
+  "plannedRemovalCondition": "separate authorized API-removal or deprecation phase after all entity-search contracts are replaced or accepted as legacy",
+  "validation": {
+    "gitDiffCheck": "pass",
+    "clinicServiceProfileTests": {
+      "command": ".\\mvnw.cmd \"-Dtest=ClinicServiceJdbcTests,ClinicServiceJpaTests,ClinicServiceSpringDataJpaTests\" test",
+      "testsRun": 33,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    "ownerControllerTests": {
+      "command": ".\\mvnw.cmd -Dtest=OwnerControllerTests test",
+      "testsRun": 14,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    }
+  },
+  "behaviorEquivalent": true,
+  "profileParityVerified": true,
+  "queryBudgetVerified": false,
+  "architectureRulesVerified": false,
+  "fullSuitePassed": false,
+  "publicationPerformed": false,
+  "mergePerformed": false,
+  "releasePerformed": false,
+  "deploymentPerformed": false,
+  "humanReviewRequired": true,
+  "outcome": "validated_local_change_pending_commit",
+  "stopReasons": []
+}

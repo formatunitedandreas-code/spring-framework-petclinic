@@ -17,6 +17,8 @@
 
     <context:component-scan
         base-package="org.springframework.samples.petclinic.service"/>
+    <context:component-scan
+        base-package="org.springframework.samples.petclinic.owner.application"/>
 
     <!-- Configurer that replaces ${...} placeholders with values from a properties file -->
     <!-- (in this case, JDBC-related settings for the JPA EntityManager definition below) -->
@@ -79,6 +81,7 @@
         </bean>
 
         <context:component-scan base-package="org.springframework.samples.petclinic.repository.jdbc"/>
+        <context:component-scan base-package="org.springframework.samples.petclinic.owner.adapter.jdbc"/>
     </beans>
 
     <beans profile="jpa">
@@ -89,9 +92,12 @@
             PersistenceExceptions will be auto-translated due to @Repository.
         -->
         <context:component-scan base-package="org.springframework.samples.petclinic.repository.jpa"/>
+        <context:component-scan base-package="org.springframework.samples.petclinic.owner.adapter.jpa"/>
     </beans>
 
     <beans profile="spring-data-jpa">
         <jpa:repositories base-package="org.springframework.samples.petclinic.repository.springdatajpa"/>
+        <jpa:repositories base-package="org.springframework.samples.petclinic.owner.adapter.springdata"/>
+        <context:component-scan base-package="org.springframework.samples.petclinic.owner.adapter.springdata"/>
     </beans>
 </beans>

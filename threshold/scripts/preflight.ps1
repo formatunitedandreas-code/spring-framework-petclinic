@@ -8,6 +8,7 @@ Set-StrictMode -Version Latest
 $ErrorActionPreference = "Stop"
 
 . (Join-Path $PSScriptRoot "lib/runtime-paths.ps1")
+. (Join-Path $PSScriptRoot "lib/lease-policy.ps1")
 
 $runtimePaths = Get-ThresholdRuntimePaths
 if ([string]::IsNullOrWhiteSpace($LeasePath)) {
@@ -67,10 +68,6 @@ if (-not (Test-Path $LeasePath)) {
 
 $leaseLines = Get-Content $LeasePath
 $expectedBranch = Get-LeaseScalar $leaseLines "branch"
-$startHead = Get-LeaseScalar $leaseLines "startHead"
-$headPolicy = Get-LeaseScalar $leaseLines "headPolicy"
-$allowedPaths = Get-LeaseList $leaseLines "allowedPaths"
-$forbiddenPaths = Get-LeaseList $leaseLines "forbiddenPaths"
 
 $currentBranch = (& git branch --show-current).Trim()
 if ($currentBranch -ne $expectedBranch) {
@@ -78,15 +75,7 @@ if ($currentBranch -ne $expectedBranch) {
 }
 
 $currentHead = (& git rev-parse HEAD).Trim()
-if ($headPolicy -eq "exactStartHead" -and $currentHead -ne $startHead) {
-    throw "HEAD mismatch. Expected '$startHead', got '$currentHead'."
-}
-if ($headPolicy -eq "descendantOfStartHead") {
-    & git merge-base --is-ancestor $startHead HEAD
-    if ($LASTEXITCODE -ne 0) {
-        throw "HEAD '$currentHead' is not a descendant of lease startHead '$startHead'."
-    }
-}
+Assert-ThresholdHeadPolicy -LeaseLines $leaseLines -LeasePath $LeasePath -CurrentHead $currentHead -CurrentBranch $currentBranch
 
 $statusLines = & git status --porcelain
 if (-not $AllowDirty -and $statusLines) {
@@ -102,24 +91,7 @@ if ($untrackedPaths) {
     $changedPaths = @($changedPaths + $untrackedPaths | Select-Object -Unique)
 }
 
-foreach ($path in $changedPaths) {
-    $isAllowed = $false
-    foreach ($pattern in $allowedPaths) {
-        if (Test-PathAgainstPattern $path $pattern) {
-            $isAllowed = $true
-            break
-        }
-    }
-    if (-not $isAllowed) {
-        throw "Changed path is outside lease allowlist: $path"
-    }
-
-    foreach ($pattern in $forbiddenPaths) {
-        if (Test-PathAgainstPattern $path $pattern) {
-            throw "Changed path is forbidden by lease: $path"
-        }
-    }
-}
+Assert-ThresholdChangedPathsAllowed -LeaseLines $leaseLines -ChangedPaths $changedPaths
 
 Write-Host "Threshold preflight passed"
 Write-Host "branch=$currentBranch"

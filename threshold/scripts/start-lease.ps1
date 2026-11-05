@@ -9,6 +9,8 @@ param(
     [int] $MaxFilesPerCandidate = 1,
     [int] $MaxChangedLinesPerCandidate = 80,
     [int] $MaxRepairAttemptsPerCandidate = 1,
+    [string] $BranchName = "",
+    [string] $BaseRef = "origin/main",
     [switch] $DraftPrAllowed
 )
 
@@ -20,7 +22,8 @@ function ConvertTo-RepoPath {
     return ($Path -replace "\\", "/").Trim()
 }
 
-$branch = (& git branch --show-current).Trim()
+$observedBranch = (& git branch --show-current).Trim()
+$branch = if ([string]::IsNullOrWhiteSpace($BranchName)) { $observedBranch } else { $BranchName }
 if ([string]::IsNullOrWhiteSpace($branch)) {
     throw "Unable to determine current git branch."
 }
@@ -46,7 +49,7 @@ leaseName: $LeaseName
 repository: $((Get-Location).Path)
 branch: $branch
 baseRemote: origin
-baseRef: origin/main
+baseRef: $BaseRef
 startHead: $head
 headPolicy: descendantOfStartHead
 scopeExpansionTier: 0
@@ -55,6 +58,7 @@ commentWrapThreshold: 120
 springDataQueryThreshold: 80
 repositoryMethodLengthThreshold: 8
 utilityMethodLengthThreshold: 8
+minScore: 70
 
 budget:
   maxCandidatesThisRun: $MaxCandidatesThisRun
@@ -89,9 +93,12 @@ allowedPaths:
   - threshold/receipts/*.json
   - threshold/lease-state/*.json
   - threshold/candidate-pocket/*.json
+  - threshold/discovery-evidence/*.json
+  - threshold/discovery-evidence/**/*.json
   - threshold/discovery-canaries/**/*.java
   - threshold/discovery-canaries/*.json
   - threshold/gates/*.json
+  - threshold/capability-backlog/*.json
   - threshold/lanes/*.yaml
   - threshold/scripts/*.ps1
   - .github/workflows/threshold-governance.yml
@@ -104,10 +111,8 @@ forbiddenPaths:
   - .github/dependabot.yml
 
 allowedCandidateTypes:
-  - private_helper_extraction_for_readability
   - redundant_local_variable_simplification
   - duplicate_literal_local_constant_extraction
-  - controller_branch_readability_decomposition
   - method_signature_wrap_cleanup
   - repository_readability_cleanup
   - spring_data_query_wrap_cleanup
@@ -117,11 +122,11 @@ allowedCandidateTypes:
   - string_constant_wrap_cleanup
   - utility_readability_cleanup
   - application_bootstrap_readability_cleanup
+  - annotation_attribute_wrap_cleanup
   - leading_tab_indentation_cleanup
   - comment_wrap_cleanup
   - line_comment_wrap_cleanup
   - method_spacing_normalization
-  - threshold_governance_artifact_update
 
 forbiddenActions:
   - push_to_upstream
@@ -160,6 +165,7 @@ $state = [ordered]@{
     currentHead = $head
     currentSourceHead = $head
     candidatesProcessed = 0
+    processedCandidateIds = @()
     commitsCreated = 0
     remainingBudget = [ordered]@{
         candidates = $MaxCandidatesThisRun

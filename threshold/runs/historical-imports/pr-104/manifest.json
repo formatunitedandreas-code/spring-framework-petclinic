@@ -1,0 +1,144 @@
+{
+  "schemaVersion": "threshold.historical_import.v1",
+  "disposition": "historical_only",
+  "historicalValidationReasserted": false,
+  "runtimeAuthority": "NONE",
+  "executionAuthorized": false,
+  "authorityCreated": false,
+  "qualificationGranted": false,
+  "pullRequest": 104,
+  "originalHead": "322d19cb59cc37b7e4c0f570edd82eba4c5df554",
+  "originalTargetBase": "a30441d214fd955496d347e1182fdfb4ba6f68c6",
+  "originalMergeBase": "d3de2a2ac4aae75d3868ee0462cdbfcb50d9bf1f",
+  "originalDiff": {
+    "path": "original.diff",
+    "sha256": "481fe33ba7f429fa324ed4d7bb2fa201b37bd4c449b87d742124460e757cc923"
+  },
+  "changes": [
+    {
+      "path": "src/main/java/org/springframework/samples/petclinic/PetclinicInitializer.java",
+      "before": {
+        "mode": "100644",
+        "blob": "5fcd494b1c9a6c3183fda441d25d3c12a2c7f475",
+        "archive": "blobs/000000-before.bin",
+        "sha256": "40be1b1c7a00fd5c342900bd7f0075fc27601b2f6ca8063cf34d921acf089e6c"
+      },
+      "after": {
+        "mode": "100644",
+        "blob": "9b2dd739f4a0cbe551639ee1e67e03617f13a225",
+        "archive": "blobs/000000-after.bin",
+        "sha256": "8d0eef3121bd047d6b56ef127beae747862829c4acc213b7c8f1c407b693ba19"
+      }
+    },
+    {
+      "path": "src/main/java/org/springframework/samples/petclinic/web/VisitController.java",
+      "before": {
+        "mode": "100644",
+        "blob": "b5472013299caff8f3cce3ee96114fd2742257b7",
+        "archive": "blobs/000001-before.bin",
+        "sha256": "05697779a3e5f542f5f214202108494b1027dce4602250a353d960b4907a2bf0"
+      },
+      "after": {
+        "mode": "100644",
+        "blob": "337e3418241a84b6d0fc9f8a213cf00355c32fa7",
+        "archive": "blobs/000001-after.bin",
+        "sha256": "45923b40de563200ebee56c0bee466433f541a86223ffe86a633ebe57412bb9b"
+      }
+    },
+    {
+      "path": "threshold/candidate-pocket/current.json",
+      "before": {
+        "mode": "100644",
+        "blob": "0fe450f5bdfd78eb0eeab41618ce05136bd51cfa",
+        "archive": "blobs/000002-before.bin",
+        "sha256": "11d7d92867a01da9910f9ea6878913b63f97a6ed1f8240caf24abc2095bfedd4"
+      },
+      "after": {
+        "mode": "100644",
+        "blob": "032b77359fb5e8fd23e1ec3177c98acea5783d80",
+        "archive": "blobs/000002-after.bin",
+        "sha256": "b2d711c5df4c777a0b6c2f54994a455155583265f6ddb1a9e9624560f8218abd"
+      }
+    },
+    {
+      "path": "threshold/lease-state/current-run.json",
+      "before": {
+        "mode": "100644",
+        "blob": "66d75d945b7da18473873a8838a168e175592bbf",
+        "archive": "blobs/000003-before.bin",
+        "sha256": "cd17de3d4dc3b8d4c3bc6cf4a1fee843d8f8460037a3dd8605d038b6acfa079b"
+      },
+      "after": {
+        "mode": "100644",
+        "blob": "125b89f215b538fed1ad6b2b7b3fa93b1a0cba40",
+        "archive": "blobs/000003-after.bin",
+        "sha256": "0689afe7b73d33df67a33d080496432195a972eaf29334b24163665fac6e1351"
+      }
+    },
+    {
+      "path": "threshold/leases/current.yaml",
+      "before": {
+        "mode": "100644",
+        "blob": "7bd7b45fde628310ab7dc22839bc8852b7437e37",
+        "archive": "blobs/000004-before.bin",
+        "sha256": "8f7d2243cd042b577389d23ec90553deea9fa85a5b6681bff9f3ac211faca84a"
+      },
+      "after": {
+        "mode": "100644",
+        "blob": "c9855bc92bd6e307aeb42cd926e930db1a1dfeb6",
+        "archive": "blobs/000004-after.bin",
+        "sha256": "0d916fcd19ce74e73b6df41fcefab8c30271b420157c7b92899209e9839b71cf"
+      }
+    },
+    {
+      "path": "threshold/receipts/src-main-java-org-springframework-samples-petclinic-petclinicinitializer-java-comment-wrap-cleanup-line-29-bb343d9659a6.json",
+      "before": null,
+      "after": {
+        "mode": "100644",
+        "blob": "aa209afc54ce8699263c756c1d5672090f579204",
+        "archive": "blobs/000005-after.bin",
+        "sha256": "53de5b206319f77e22e9a9f342aeae728a5f6d27b2277f0c76fcaf77fc22f1d9"
+      }
+    },
+    {
+      "path": "threshold/receipts/src-main-java-org-springframework-samples-petclinic-petclinicinitializer-java-line-comment-wrap-cleanup-line-82-2fa81f813d34.json",
+      "before": null,
+      "after": {
+        "mode": "100644",
+        "blob": "f7671761235703eaebfb04f5606be5bab8ea2e9c",
+        "archive": "blobs/000006-after.bin",
+        "sha256": "360170eb5f82ea3b4e434becadcf01ace5c420baa31e06f6b7b9af39c94dc471"
+      }
+    },
+    {
+      "path": "threshold/receipts/src-main-java-org-springframework-samples-petclinic-web-visitcontroller-java-comment-wrap-cleanup-line-59-ba7fdf6278d5.json",
+      "before": null,
+      "after": {
+        "mode": "100644",
+        "blob": "de7c7b0a667ca01034a89edac4a58aa0925ffe81",
+        "archive": "blobs/000007-after.bin",
+        "sha256": "8f7a622359026f6f0b7af4a03479f11fd9a7406f590aea2036d01e8abdcd1728"
+      }
+    },
+    {
+      "path": "threshold/receipts/src-main-java-org-springframework-samples-petclinic-web-visitcontroller-java-line-comment-wrap-cleanup-line-77-324e3cb5f884.json",
+      "before": null,
+      "after": {
+        "mode": "100644",
+        "blob": "06dd3a7bea33673b96c14db5b2eb2363aa095301",
+        "archive": "blobs/000008-after.bin",
+        "sha256": "ff763f05116de90cc957187a38859c8438c6734807bd3ee6dc821aec682a241b"
+      }
+    },
+    {
+      "path": "threshold/receipts/src-main-java-org-springframework-samples-petclinic-web-visitcontroller-java-line-comment-wrap-cleanup-line-84-3aaf174e5e33.json",
+      "before": null,
+      "after": {
+        "mode": "100644",
+        "blob": "5cf919897a563115602a12aa52772ceecc489d43",
+        "archive": "blobs/000009-after.bin",
+        "sha256": "954eb25cd37caae63f182a17f1ef028a55883296c6581a24f4dc8f1850f4995f"
+      }
+    }
+  ]
+}
