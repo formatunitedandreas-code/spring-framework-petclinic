@@ -146,10 +146,52 @@ function Test-ThresholdPathPattern {
     return $normalizedPath -match "^$escaped$"
 }
 
+function Invoke-ThresholdSemanticGitRaw {
+    param([string[]] $Arguments)
+    $start = [System.Diagnostics.ProcessStartInfo]::new()
+    $start.FileName = "git"
+    $start.WorkingDirectory = (Get-Location).ProviderPath
+    $start.UseShellExecute = $false
+    $start.CreateNoWindow = $true
+    $start.RedirectStandardOutput = $true
+    $start.RedirectStandardError = $true
+    if ($null -ne $start.GetType().GetProperty("ArgumentList")) {
+        foreach ($argument in $Arguments) { [void]$start.ArgumentList.Add($argument) }
+    }
+    else {
+        # This helper receives fixed options, a validated object ID, and fixed paths.
+        $start.Arguments = ($Arguments | ForEach-Object { '"' + $_ + '"' }) -join " "
+    }
+    $process = [System.Diagnostics.Process]::new()
+    $process.StartInfo = $start
+    $stream = [System.IO.MemoryStream]::new()
+    try {
+        if (-not $process.Start()) { throw "semantic_file_economy_git_start_failed" }
+        $errorTask = $process.StandardError.ReadToEndAsync()
+        $process.StandardOutput.BaseStream.CopyTo($stream)
+        $process.WaitForExit()
+        $stderr = $errorTask.GetAwaiter().GetResult()
+        if ($process.ExitCode -ne 0) { throw "semantic_file_economy_git_query_failed=$stderr" }
+        # Paths that cannot be decoded losslessly are not acceptable evidence paths.
+        return [System.Text.UTF8Encoding]::new($false, $true).GetString($stream.ToArray())
+    }
+    finally { $stream.Dispose(); $process.Dispose() }
+}
+
+function Get-ThresholdSemanticDiffArguments {
+    param([string] $DiffBase, [switch] $Index, [switch] $Numstat)
+    $arguments = @("diff", "--no-renames", "--no-ext-diff", "--no-textconv", "--no-relative", "--ignore-submodules=none", "-z")
+    if ($Index.IsPresent) { $arguments += "--cached" }
+    $arguments += if ($Numstat.IsPresent) { "--numstat" } else { "--name-only" }
+    $arguments += $DiffBase
+    if ($Numstat.IsPresent) { $arguments += @("--", "threshold/runs") }
+    return $arguments
+}
+
 function Get-ThresholdSemanticDiffBase {
     param([string] $BaseRef)
     $bases = @(& git merge-base $BaseRef HEAD)
-    if ($LASTEXITCODE -ne 0 -or $bases.Count -ne 1 -or [string]::IsNullOrWhiteSpace($bases[0])) {
+    if ($LASTEXITCODE -ne 0 -or $bases.Count -ne 1 -or ([string]$bases[0]).Trim() -cnotmatch '^[0-9a-f]{40}$') {
         throw "semantic_file_economy_base_unavailable=$BaseRef"
     }
     return ([string]$bases[0]).Trim()
@@ -162,9 +204,9 @@ function Get-ThresholdChangedLineCount {
     # Index and worktree can contain different versions of one path. Each must
     # fit the budget; their maximum counts that path once without losing either.
     foreach ($mode in @("worktree", "index")) {
-        if ($mode -eq "index") { $lineStats = @(& git diff --cached --numstat $diffBase -- threshold/runs) }
-        else { $lineStats = @(& git diff --numstat $diffBase -- threshold/runs) }
-        if ($LASTEXITCODE -ne 0) { throw "semantic_file_economy_diff_failed=$mode" }
+        $arguments = Get-ThresholdSemanticDiffArguments -DiffBase $diffBase -Index:($mode -eq "index") -Numstat
+        $raw = Invoke-ThresholdSemanticGitRaw -Arguments $arguments
+        $lineStats = @($raw -split [char]0 | Where-Object { $_ -ne "" })
         foreach ($line in $lineStats) {
             $parts = ([string]$line) -split "`t", 3
             if ($parts.Count -ne 3 -or $parts[0] -notmatch '^\d+$' -or $parts[1] -notmatch '^\d+$') {
@@ -177,8 +219,8 @@ function Get-ThresholdChangedLineCount {
     }
     $changedLines = 0
     foreach ($count in $lineCounts.Values) { $changedLines += [int]$count }
-    $untracked = @(& git ls-files --others --exclude-standard -- threshold/runs)
-    if ($LASTEXITCODE -ne 0) { throw "semantic_file_economy_untracked_query_failed" }
+    $untrackedRaw = Invoke-ThresholdSemanticGitRaw -Arguments @("ls-files", "--full-name", "-z", "--others", "--exclude-standard", "--", "threshold/runs")
+    $untracked = @($untrackedRaw -split [char]0 | Where-Object { $_ -ne "" })
     foreach ($path in $untracked) {
         if ($RunEvidence -cnotcontains $path) { continue }
         if (-not (Test-Path -LiteralPath $path -PathType Leaf)) { throw "semantic_file_economy_untracked_file_missing=$path" }
@@ -201,12 +243,12 @@ function Assert-ThresholdSemanticEvidenceFileEconomy {
     if ($MaximumEvidenceFiles -le 0) { $MaximumEvidenceFiles = [int]$policy.MaximumEvidenceFiles }
     if ($MaximumEvidenceChangedLines -le 0) { $MaximumEvidenceChangedLines = [int]$policy.MaximumEvidenceChangedLines }
     $diffBase = Get-ThresholdSemanticDiffBase -BaseRef $BaseRef
-    $worktreePaths = @(& git diff --name-only $diffBase)
-    if ($LASTEXITCODE -ne 0) { throw "semantic_file_economy_worktree_query_failed" }
-    $indexPaths = @(& git diff --cached --name-only $diffBase)
-    if ($LASTEXITCODE -ne 0) { throw "semantic_file_economy_index_query_failed" }
-    $untrackedPaths = @(& git ls-files --others --exclude-standard)
-    if ($LASTEXITCODE -ne 0) { throw "semantic_file_economy_untracked_query_failed" }
+    $worktreeRaw = Invoke-ThresholdSemanticGitRaw -Arguments (Get-ThresholdSemanticDiffArguments -DiffBase $diffBase)
+    $indexRaw = Invoke-ThresholdSemanticGitRaw -Arguments (Get-ThresholdSemanticDiffArguments -DiffBase $diffBase -Index)
+    $untrackedRaw = Invoke-ThresholdSemanticGitRaw -Arguments @("ls-files", "--full-name", "-z", "--others", "--exclude-standard")
+    $worktreePaths = @($worktreeRaw -split [char]0 | Where-Object { $_ -ne "" })
+    $indexPaths = @($indexRaw -split [char]0 | Where-Object { $_ -ne "" })
+    $untrackedPaths = @($untrackedRaw -split [char]0 | Where-Object { $_ -ne "" })
     $changed = @($worktreePaths + $indexPaths + $untrackedPaths) |
         Where-Object { -not [string]::IsNullOrWhiteSpace($_) } | Sort-Object -CaseSensitive -Unique
     $forbidden = @($changed | Where-Object {

@@ -22,6 +22,7 @@ jobs:
       - name: Verify typed publication input binding and diagnostics boundary
         shell: pwsh
         run: |
+          ./threshold/scripts/test-fixture-directory.ps1
           ./threshold/scripts/test-publication-preflight-fixtures.ps1
           ./threshold/scripts/test-publication-consumption-state.ps1
           ./threshold/scripts/test-publication-toctou-isolated-fixture.ps1

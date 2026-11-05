@@ -6,6 +6,7 @@ param(
 
 Set-StrictMode -Version Latest
 $ErrorActionPreference = "Stop"
+. (Join-Path $PSScriptRoot "lib/test-fixture-directory.ps1")
 
 function Get-GitFirstLine {
     param([string[]] $GitArgs)
@@ -320,9 +321,9 @@ function Invoke-WithStubCoreMode {
 # Publication is deliberately forbidden from a detached checkout. Test the
 # production consumer in a separate repository with a real branch, including CI.
 $originalLocation = Get-Location
-$fixtureRoot = Join-Path ([System.IO.Path]::GetTempPath()) ("threshold-publication-" + [guid]::NewGuid().ToString("N"))
+$ownedFixture = New-ThresholdOwnedFixtureDirectory -Prefix "threshold-publication"
+$fixtureRoot = $ownedFixture.Path
 $policySource = Join-Path $PSScriptRoot "../policies"
-New-Item -ItemType Directory -Path $fixtureRoot | Out-Null
 try {
     Set-Location $fixtureRoot
     & git init --initial-branch=main | Out-Null
@@ -341,7 +342,6 @@ try {
 $runtimeRoot = "threshold/runtime/publication-preflight-fixtures"
 $authorityPath = "$runtimeRoot/publication-authority.json"
 $consumedPath = "$runtimeRoot/consumed-authorities.json"
-if (Test-Path $runtimeRoot) { Remove-Item -Recurse -Force $runtimeRoot }
 New-Item -ItemType Directory -Path $runtimeRoot | Out-Null
 $stubCorePath = New-StubCore -Root (Join-Path $runtimeRoot "stub-core")
 
@@ -492,7 +492,6 @@ catch {
     Write-Host "publicationPreflightFixture=interference-finding-visible"
 }
 
-Remove-Item -Recurse -Force $runtimeRoot
 Write-Host "publicationPreflightFixtures=passed"
 $global:LASTEXITCODE = 0 # The final denied authority is an expected negative case.
 
@@ -500,5 +499,5 @@ $global:LASTEXITCODE = 0 # The final denied authority is an expected negative ca
 finally {
     Set-Location $originalLocation
     # This invocation created this exact absolute directory for fixture use.
-    Remove-Item -LiteralPath $fixtureRoot -Recurse -Force
+    Remove-ThresholdOwnedFixtureDirectory -Fixture $ownedFixture
 }

@@ -3,6 +3,7 @@ param()
 
 Set-StrictMode -Version Latest
 $ErrorActionPreference = "Stop"
+. (Join-Path $PSScriptRoot "lib/test-fixture-directory.ps1")
 
 . (Join-Path $PSScriptRoot "lib/branch-range-validation.ps1")
 
@@ -43,9 +44,8 @@ function Assert-ThrowsLike {
 }
 
 $originalLocation = Get-Location
-$runtimeRoot = Join-Path $originalLocation "threshold/runtime/branch-range-fixtures"
-if (Test-Path $runtimeRoot) { Remove-Item -Recurse -Force $runtimeRoot }
-New-Item -ItemType Directory -Path $runtimeRoot | Out-Null
+$ownedFixture = New-ThresholdOwnedFixtureDirectory -Prefix "threshold-branch-range"
+$runtimeRoot = $ownedFixture.Path
 
 try {
     Set-Location $runtimeRoot
@@ -91,7 +91,7 @@ try {
 }
 finally {
     Set-Location $originalLocation
-    if (Test-Path $runtimeRoot) { Remove-Item -Recurse -Force $runtimeRoot }
+    Remove-ThresholdOwnedFixtureDirectory -Fixture $ownedFixture
 }
 
 Write-Host "branchRangeValidationFixtures=passed"

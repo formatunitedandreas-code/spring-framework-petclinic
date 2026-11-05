@@ -33,7 +33,7 @@ $fileEconomyText = Get-Content (Join-Path $PSScriptRoot "lib/semantic-workflow.p
 if ($fileEconomyText -notmatch "semantic_file_economy_missing_required_file") {
     throw "semantic_file_economy_required_file_check_missing"
 }
-if ($fileEconomyText -notmatch "git ls-files --others --exclude-standard") {
+if ($fileEconomyText -notmatch "Invoke-ThresholdSemanticGitRaw") {
     throw "semantic_file_economy_untracked_run_evidence_check_missing"
 }
 if ($fileEconomyText -notmatch "Get-ThresholdFileEconomyPolicy") {

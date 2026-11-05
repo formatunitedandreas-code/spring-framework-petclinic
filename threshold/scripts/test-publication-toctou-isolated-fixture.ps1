@@ -3,6 +3,7 @@ param()
 
 Set-StrictMode -Version Latest
 $ErrorActionPreference = "Stop"
+. (Join-Path $PSScriptRoot "lib/test-fixture-directory.ps1")
 
 function Get-GitFirstLine {
     param([string[]] $GitArgs)
@@ -55,9 +56,8 @@ function Write-Utf8NoBom {
 . (Join-Path $PSScriptRoot "lib/publication-preflight.ps1")
 
 $originalLocation = Get-Location
-$runtimeRoot = Join-Path $originalLocation "threshold/runtime/publication-toctou-isolated-fixture"
-if (Test-Path $runtimeRoot) { Remove-Item -Recurse -Force $runtimeRoot }
-New-Item -ItemType Directory -Path $runtimeRoot | Out-Null
+$ownedFixture = New-ThresholdOwnedFixtureDirectory -Prefix "threshold-toctou"
+$runtimeRoot = $ownedFixture.Path
 
 try {
     Set-Location $runtimeRoot
@@ -107,7 +107,7 @@ process.stdout.write(JSON.stringify({
 }
 finally {
     Set-Location $originalLocation
-    if (Test-Path $runtimeRoot) { Remove-Item -Recurse -Force $runtimeRoot }
+    Remove-ThresholdOwnedFixtureDirectory -Fixture $ownedFixture
 }
 
 Write-Host "publicationToctouIsolatedFixture=passed"
