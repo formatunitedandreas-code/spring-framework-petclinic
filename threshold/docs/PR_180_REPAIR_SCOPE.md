@@ -18,12 +18,20 @@ strings. Missing or malformed ledgers and legacy authority-ID records remain
 UNKNOWN and stop preflight; this repair does not introduce a ledger writer.
 
 `test-publication-core-contract.ps1 -ThresholdCorePath <built-core>` checks the real
-producer/consumer digest contract with Unicode input and a missing-authority case
-that must remain denied. Transport and malformed-result fixtures run independently
+producer/consumer digest contract with Unicode input, an offline positive
+publication decision, and typed missing/expired/consumed/wrong-branch denials.
+Other write effects remain denied; the fixture performs no publication.
+Transport and malformed-result fixtures run independently
 in disposable repositories, including detached GitHub Actions checkouts.
 
-The optional preflight does not replace normal source receipts or discovery,
+The optional preflight runs before the separately accepted finite source-candidate
+and inert historical-import routes. Their candidate-only and historical-only
+boundaries remain unchanged. It does not replace normal source receipts or discovery,
 lease, candidate-class, and PR-base provenance checks. An aggregate receipt's
 self-reported validation Boolean cannot cover a source commit. The source repair
 grants no runtime authority, execution, cohort activation, publication, or merge
 permission. A source review or transport fixture is not evidence of those effects.
+
+Historical-import tests isolate their owned Git repositories from the caller's
+`GITHUB_EVENT_PATH`, without changing that caller's environment. Explicit finite
+event fixtures and production event validation remain unchanged.
