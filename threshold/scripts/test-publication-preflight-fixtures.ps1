@@ -353,6 +353,7 @@ Assert-ThrowsLike -Name "missing-authority" -Pattern "stop_authority_missing" -S
 }
 
 Write-Authority -Path $authorityPath
+@{ consumedConsumptionIds = @() } | ConvertTo-Json -Depth 4 | Set-Content -Path $consumedPath -Encoding UTF8
 Invoke-Preflight -AuthorityPath $authorityPath -ConsumedAuthorityPath $consumedPath -ReviewHead $head -CorePath $stubCorePath | Out-Null
 Write-Host "publicationPreflightFixture=valid-authority-passed"
 
@@ -410,7 +411,7 @@ Assert-ThrowsLike -Name "consumed-authority" -Pattern "stop_authority_consumed" 
         Invoke-Preflight -AuthorityPath $authorityPath -ConsumedAuthorityPath $consumedPath -ReviewHead $head -CorePath $stubCorePath
     }
 }
-Remove-Item -Force $consumedPath
+@{ consumedConsumptionIds = @() } | ConvertTo-Json -Depth 4 | Set-Content -Path $consumedPath -Encoding UTF8
 
 Write-Authority -Path $authorityPath
 Assert-ThrowsLike -Name "stale-review-head" -Pattern "stop_review_stale_head" -ScriptBlock {
@@ -493,6 +494,7 @@ catch {
 
 Remove-Item -Recurse -Force $runtimeRoot
 Write-Host "publicationPreflightFixtures=passed"
+$global:LASTEXITCODE = 0 # The final denied authority is an expected negative case.
 
 }
 finally {

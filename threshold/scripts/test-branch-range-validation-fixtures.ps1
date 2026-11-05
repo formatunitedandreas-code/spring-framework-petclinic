@@ -95,3 +95,4 @@ finally {
 }
 
 Write-Host "branchRangeValidationFixtures=passed"
+$global:LASTEXITCODE = 0 # Expected native Git failures above are successful negative cases.

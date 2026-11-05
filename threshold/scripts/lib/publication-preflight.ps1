@@ -26,16 +26,24 @@ function Get-FileSha256 {
 
 function Get-ConsumedAuthorityIds {
     param([string] $Path)
-
-    if (-not (Test-Path $Path)) { return @() }
-    $json = Get-Content $Path -Raw | ConvertFrom-Json
-    if ($json.PSObject.Properties["consumedAuthorityIds"]) {
-        return @($json.consumedAuthorityIds | ForEach-Object { [string]$_ })
+    if (-not (Test-Path -LiteralPath $Path -PathType Leaf)) {
+        throw "stop_consumption_state_unknown=missing_ledger"
     }
-    if ($json.PSObject.Properties["consumedConsumptionIds"]) {
-        return @($json.consumedConsumptionIds | ForEach-Object { [string]$_ })
+    try { $json = ConvertFrom-SingleJsonDocument -Text (Get-Content -LiteralPath $Path -Raw) }
+    catch { throw "stop_consumption_state_unknown=malformed_ledger" }
+    if (Test-JsonProperty -Object $json -Name "consumedAuthorityIds") {
+        throw "stop_consumption_state_unknown=authority_ids_are_not_consumption_ids"
     }
-    return @()
+    try {
+        Assert-AllowedJsonProperties -Object $json -AllowedNames @("schemaVersion", "consumedConsumptionIds") -Context "consumption_ledger"
+        Assert-StringArray -Object $json -Name "consumedConsumptionIds" -Context "consumption_ledger"
+    }
+    catch { throw "stop_consumption_state_unknown=invalid_consumption_ids" }
+    $seen = [System.Collections.Generic.HashSet[string]]::new([System.StringComparer]::Ordinal)
+    foreach ($id in $json.consumedConsumptionIds) {
+        if (-not $seen.Add($id)) { throw "stop_consumption_state_unknown=duplicate_consumption_id" }
+    }
+    return @($json.consumedConsumptionIds)
 }
 
 function Get-PolicyDigest {
@@ -64,7 +72,7 @@ function Get-JsonPropertyOrNull {
     if ($Object -is [System.Collections.IDictionary] -and $Object.Contains($Name)) {
         return $Object[$Name]
     }
-    if ($Object.PSObject.Properties.Name -contains $Name) {
+    if (@($Object.PSObject.Properties | ForEach-Object { $_.Name }) -ccontains $Name) {
         return $Object.$Name
     }
     return $null
@@ -77,14 +85,14 @@ function Test-JsonProperty {
     if ($Object -is [System.Collections.IDictionary]) {
         return $Object.Contains($Name)
     }
-    return $Object.PSObject.Properties.Name -contains $Name
+    return @($Object.PSObject.Properties | ForEach-Object { $_.Name }) -ccontains $Name
 }
 
 function Assert-AllowedJsonProperties {
     param([object] $Object, [string[]] $AllowedNames, [string] $Context)
 
-    foreach ($property in @($Object.PSObject.Properties.Name)) {
-        if ($AllowedNames -notcontains [string]$property) {
+    foreach ($property in @($Object.PSObject.Properties | ForEach-Object { $_.Name })) {
+        if ($AllowedNames -cnotcontains [string]$property) {
             throw "stop_authority_validator_unavailable=${Context}_unknown_field=$property"
         }
     }
@@ -187,6 +195,8 @@ function Assert-CorePublicationAuthorityResult {
     Assert-AllowedJsonProperties -Object $effectDecisions -AllowedNames @(
         "observe",
         "localExperiment",
+        "localCommit",
+        "reviewDecision",
         "shadowIntegration",
         "publication",
         "merge"

@@ -101,6 +101,7 @@ process.stdout.write(JSON.stringify({
         New-Item -ItemType Directory -Path (Split-Path -Parent $targetCli) -Force | Out-Null
         Copy-Item -LiteralPath $cliPath -Destination $targetCli
         Write-Utf8NoBom "authority.json" '{}'
+        Write-Utf8NoBom "consumed.json" '{"consumedConsumptionIds":[]}'
         Invoke-CanonicalPublicationAuthorityValidation -Path "authority.json" -RepositoryRef "fixture" -Branch "main" -SubjectRef "fixture" -Head $ReviewHead -WorkorderDigest "fixture" -PolicyDigest "fixture"
     }
 }

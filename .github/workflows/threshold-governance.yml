@@ -23,6 +23,7 @@ jobs:
         shell: pwsh
         run: |
           ./threshold/scripts/test-publication-preflight-fixtures.ps1
+          ./threshold/scripts/test-publication-consumption-state.ps1
           ./threshold/scripts/test-publication-toctou-isolated-fixture.ps1
           ./threshold/scripts/audit-publication-reason-boundary.ps1 -CheckOnly
 
