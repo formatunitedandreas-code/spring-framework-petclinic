@@ -11,6 +11,8 @@ param(
 Set-StrictMode -Version Latest
 $ErrorActionPreference = "Stop"
 
+. (Join-Path $PSScriptRoot "lib/candidate-class-provenance.ps1")
+
 function Get-LeaseScalar {
     param([string[]] $Lines, [string] $Name)
     $match = $Lines | Where-Object { $_ -match "^\s*$([regex]::Escape($Name)):\s*(.+?)\s*$" } | Select-Object -First 1
@@ -424,38 +426,17 @@ function Test-MethodOrAnnotationBoundaryLine {
 function Find-ConservativeCommentSplitPoint {
     param([string] $Text)
 
-    $minimumPrefix = 24
-    $minimumSegmentLength = 16
-    $preferredMaxIndex = [Math]::Min(112, $Text.Length - 1)
-    if ($preferredMaxIndex -lt $minimumPrefix) {
-        return $null
-    }
+    return Find-ThresholdConservativeCommentSplitPoint -Text $Text
+}
 
-    $spaceSplit = $preferredMaxIndex
-    while ($spaceSplit -ge $minimumPrefix) {
-        $spaceSplit = $Text.LastIndexOf(" ", $spaceSplit)
-        if ($spaceSplit -lt $minimumPrefix) {
-            break
-        }
-        $beforeSplit = $Text.Substring(0, $spaceSplit)
-        $lastInlineTagStart = $beforeSplit.LastIndexOf("{@")
-        $lastInlineTagEnd = $beforeSplit.LastIndexOf("}")
-        if ($lastInlineTagStart -gt $lastInlineTagEnd) {
-            $spaceSplit--
-            continue
-        }
-        if ($spaceSplit -lt ($Text.Length - 1) -and
-            $spaceSplit -ge $minimumSegmentLength -and
-            ($Text.Length - ($spaceSplit + 1)) -ge $minimumSegmentLength) {
-            return [pscustomobject]@{
-                Index = $spaceSplit
-                KeepDelimiter = $false
-            }
-        }
-        $spaceSplit--
-    }
+function Test-JavadocCommentLine {
+    param(
+        [string[]] $Lines,
+        [int] $Index,
+        [hashtable] $JavaTextBlockLineState = @{}
+    )
 
-    return $null
+    return Test-ThresholdJavaLineIsJavadocCommentContent -Lines $Lines -Index $Index -JavaTextBlockLineState $JavaTextBlockLineState
 }
 function Parse-MethodBlocks {
     param([string[]] $Lines)
@@ -537,12 +518,13 @@ foreach ($file in $sourceFiles) {
     elseif ($path -like "*/model/*") { $layerScore = 6 }
     elseif ($path -like "*/web/*") { $layerScore = 5 }
     elseif ($path -like "*/util/*") { $layerScore = 5 }
+    $javaTextBlockLineState = Get-ThresholdJavaTextBlockLineState -Lines $lines
 
     # Heuristic 0: normalize a small contiguous block of leading tab indentation.
     $tabBlockStart = $null
     $tabBlockLength = 0
     for ($i = 0; $i -lt $lines.Count; $i++) {
-        if ($lines[$i] -match "^\t+\S") {
+        if ($lines[$i] -match "^\t+\S" -and -not $javaTextBlockLineState.ContainsKey($i + 1)) {
             if ($null -eq $tabBlockStart) {
                 $tabBlockStart = $i
             }
@@ -782,14 +764,7 @@ foreach ($file in $sourceFiles) {
     # Heuristic 4: tiny spacing normalization between adjacent methods.
     for ($i = 0; $i -lt $lines.Count; $i++) {
         $line = $lines[$i]
-        if ($line.Length -le $commentWrapThreshold) {
-            continue
-        }
-        if ($line -notmatch '^\s*\*\s+\S') {
-            continue
-        }
-        $commentText = ($line -replace '^\s*\*\s+', '')
-        if (-not (Find-ConservativeCommentSplitPoint -Text $commentText)) {
+        if (-not (Test-ThresholdCommentWrapCandidateLine -Lines $lines -Index $i -CommentWrapThreshold $commentWrapThreshold -JavaTextBlockLineState $javaTextBlockLineState)) {
             continue
         }
         $member = "line-$($i + 1)"
@@ -844,6 +819,7 @@ foreach ($file in $sourceFiles) {
                     score = 30 + 30 + 20 + 10 + $layerScore
                     file = $path
                     member = $member
+                    spacingAction = "insert_blank_line"
                     expectedDiffSummary = "Insert a blank line between adjacent methods '$($currentMethod.Name)' and '$($nextMethod.Name)'."
                     estimatedChangedLines = 1
                     tieBreak = [ordered]@{ layerScore = $layerScore; path = $path; member = "$($currentMethod.Name)-$($nextMethod.Name)" }

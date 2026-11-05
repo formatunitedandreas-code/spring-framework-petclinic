@@ -1,0 +1,25 @@
+{
+    "schemaVersion":  "threshold.petclinic.lease-state.v0.2",
+    "invocationId":  "owned-autonomous-refactor-branch-wave-v0_automation-20260716T075745Z",
+    "leaseId":  "owned-autonomous-refactor-branch-wave-v0_automation",
+    "mode":  "local_refactor",
+    "branch":  "threshold-governed-refactor-demo-79",
+    "startHead":  "d76489d2ee0ef038e87e41475326ef27ada716cc",
+    "currentHead":  "7e385e21231e0a2425667483e381e2ba60d4805d",
+    "currentSourceHead":  "d76489d2ee0ef038e87e41475326ef27ada716cc",
+    "candidatesProcessed":  0,
+    "commitsCreated":  0,
+    "remainingBudget":  {
+                            "candidates":  5,
+                            "commits":  5,
+                            "repairAttempts":  1
+                        },
+    "lastReceipt":  null,
+    "terminalState":  "ready_no_candidates_verified",
+    "updatedAt":  "2026-07-16T07:57:59.3477386Z",
+    "scopeExpansionTier":  2,
+    "scopeExpansionReason":  "fresh_wave_candidate_shortage",
+    "scopeExpansionAppliedAt":  "2026-07-16T07:57:50.8963190Z",
+    "terminalReason":  "no applicable autoPatchable candidates after discovery canary passed",
+    "discoveryCanaryLastPassedAt":  "2026-07-16T07:57:59.3441898Z"
+}

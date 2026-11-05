@@ -53,14 +53,14 @@
                                                "public_compliance_claim"
                                            ],
                       "allowedPathCount":  22,
-                      "trainerDecision":  "autoPatchable"
+                      "trainerDecision":  "reviewOnly"
                   },
                   {
                       "id":  "capability:comment_wrap_cleanup",
                       "candidateClass":  "comment_wrap_cleanup",
                       "allowedByLease":  true,
                       "approvedByGate":  true,
-                      "pilotAutoPatchableAtF2":  false,
+                      "pilotAutoPatchableAtF2":  true,
                       "discoveredByRunner":  true,
                       "executableByRunner":  true,
                       "batchExecutable":  true,
@@ -77,7 +77,7 @@
                                                "public_compliance_claim"
                                            ],
                       "allowedPathCount":  22,
-                      "trainerDecision":  "reviewOnly"
+                      "trainerDecision":  "autoPatchable"
                   },
                   {
                       "id":  "capability:duplicate_literal_local_constant_extraction",
@@ -101,7 +101,7 @@
                                                "public_compliance_claim"
                                            ],
                       "allowedPathCount":  22,
-                      "trainerDecision":  "autoPatchable"
+                      "trainerDecision":  "reviewOnly"
                   },
                   {
                       "id":  "capability:leading_tab_indentation_cleanup",
@@ -125,7 +125,7 @@
                                                "public_compliance_claim"
                                            ],
                       "allowedPathCount":  22,
-                      "trainerDecision":  "autoPatchable"
+                      "trainerDecision":  "reviewOnly"
                   },
                   {
                       "id":  "capability:line_comment_wrap_cleanup",
@@ -149,7 +149,7 @@
                                                "public_compliance_claim"
                                            ],
                       "allowedPathCount":  22,
-                      "trainerDecision":  "autoPatchable"
+                      "trainerDecision":  "reviewOnly"
                   },
                   {
                       "id":  "capability:method_signature_wrap_cleanup",
@@ -173,7 +173,7 @@
                                                "public_compliance_claim"
                                            ],
                       "allowedPathCount":  22,
-                      "trainerDecision":  "autoPatchable"
+                      "trainerDecision":  "reviewOnly"
                   },
                   {
                       "id":  "capability:method_spacing_normalization",
@@ -197,7 +197,7 @@
                                                "public_compliance_claim"
                                            ],
                       "allowedPathCount":  22,
-                      "trainerDecision":  "autoPatchable"
+                      "trainerDecision":  "reviewOnly"
                   },
                   {
                       "id":  "capability:model_readability_cleanup",
@@ -221,7 +221,7 @@
                                                "public_compliance_claim"
                                            ],
                       "allowedPathCount":  22,
-                      "trainerDecision":  "autoPatchable"
+                      "trainerDecision":  "reviewOnly"
                   },
                   {
                       "id":  "capability:owner_search_adapter_contract_baseline",
@@ -245,7 +245,7 @@
                                                "public_compliance_claim"
                                            ],
                       "allowedPathCount":  22,
-                      "trainerDecision":  "reviewOnly"
+                      "trainerDecision":  "held"
                   },
                   {
                       "id":  "capability:owner_search_architecture_rules",
@@ -269,7 +269,7 @@
                                                "public_compliance_claim"
                                            ],
                       "allowedPathCount":  22,
-                      "trainerDecision":  "reviewOnly"
+                      "trainerDecision":  "held"
                   },
                   {
                       "id":  "capability:owner_search_before_after_readout",
@@ -293,7 +293,7 @@
                                                "public_compliance_claim"
                                            ],
                       "allowedPathCount":  22,
-                      "trainerDecision":  "reviewOnly"
+                      "trainerDecision":  "held"
                   },
                   {
                       "id":  "capability:owner_search_behavior_baseline",
@@ -317,7 +317,7 @@
                                                "public_compliance_claim"
                                            ],
                       "allowedPathCount":  22,
-                      "trainerDecision":  "reviewOnly"
+                      "trainerDecision":  "held"
                   },
                   {
                       "id":  "capability:owner_search_compatibility_path",
@@ -341,7 +341,7 @@
                                                "public_compliance_claim"
                                            ],
                       "allowedPathCount":  22,
-                      "trainerDecision":  "reviewOnly"
+                      "trainerDecision":  "held"
                   },
                   {
                       "id":  "capability:owner_search_controller_migration",
@@ -365,7 +365,7 @@
                                                "public_compliance_claim"
                                            ],
                       "allowedPathCount":  22,
-                      "trainerDecision":  "reviewOnly"
+                      "trainerDecision":  "held"
                   },
                   {
                       "id":  "capability:owner_search_explicit_fetch_plans",
@@ -389,7 +389,7 @@
                                                "public_compliance_claim"
                                            ],
                       "allowedPathCount":  22,
-                      "trainerDecision":  "reviewOnly"
+                      "trainerDecision":  "held"
                   },
                   {
                       "id":  "capability:owner_search_full_validation_matrix",
@@ -413,7 +413,7 @@
                                                "public_compliance_claim"
                                            ],
                       "allowedPathCount":  22,
-                      "trainerDecision":  "reviewOnly"
+                      "trainerDecision":  "held"
                   },
                   {
                       "id":  "capability:owner_search_jdbc_adapter",
@@ -437,7 +437,7 @@
                                                "public_compliance_claim"
                                            ],
                       "allowedPathCount":  22,
-                      "trainerDecision":  "reviewOnly"
+                      "trainerDecision":  "held"
                   },
                   {
                       "id":  "capability:owner_search_jpa_adapter",
@@ -461,7 +461,7 @@
                                                "public_compliance_claim"
                                            ],
                       "allowedPathCount":  22,
-                      "trainerDecision":  "reviewOnly"
+                      "trainerDecision":  "held"
                   },
                   {
                       "id":  "capability:owner_search_query_measurement_baseline",
@@ -485,7 +485,7 @@
                                                "public_compliance_claim"
                                            ],
                       "allowedPathCount":  22,
-                      "trainerDecision":  "reviewOnly"
+                      "trainerDecision":  "held"
                   },
                   {
                       "id":  "capability:owner_search_spring_data_jpa_adapter",
@@ -509,7 +509,7 @@
                                                "public_compliance_claim"
                                            ],
                       "allowedPathCount":  22,
-                      "trainerDecision":  "reviewOnly"
+                      "trainerDecision":  "held"
                   },
                   {
                       "id":  "capability:private_helper_extraction_for_readability",
@@ -581,7 +581,7 @@
                                                "public_compliance_claim"
                                            ],
                       "allowedPathCount":  22,
-                      "trainerDecision":  "autoPatchable"
+                      "trainerDecision":  "reviewOnly"
                   },
                   {
                       "id":  "capability:repository_readability_cleanup",
@@ -605,7 +605,7 @@
                                                "public_compliance_claim"
                                            ],
                       "allowedPathCount":  22,
-                      "trainerDecision":  "autoPatchable"
+                      "trainerDecision":  "reviewOnly"
                   },
                   {
                       "id":  "capability:split_string_constant_normalization",
@@ -629,7 +629,7 @@
                                                "public_compliance_claim"
                                            ],
                       "allowedPathCount":  22,
-                      "trainerDecision":  "autoPatchable"
+                      "trainerDecision":  "reviewOnly"
                   },
                   {
                       "id":  "capability:spring_data_query_concat_wrap_cleanup",
@@ -653,7 +653,7 @@
                                                "public_compliance_claim"
                                            ],
                       "allowedPathCount":  22,
-                      "trainerDecision":  "autoPatchable"
+                      "trainerDecision":  "reviewOnly"
                   },
                   {
                       "id":  "capability:spring_data_query_wrap_cleanup",
@@ -677,7 +677,7 @@
                                                "public_compliance_claim"
                                            ],
                       "allowedPathCount":  22,
-                      "trainerDecision":  "autoPatchable"
+                      "trainerDecision":  "reviewOnly"
                   },
                   {
                       "id":  "capability:string_constant_wrap_cleanup",
@@ -725,7 +725,7 @@
                                                "public_compliance_claim"
                                            ],
                       "allowedPathCount":  22,
-                      "trainerDecision":  "reviewOnly"
+                      "trainerDecision":  "held"
                   },
                   {
                       "id":  "capability:threshold_governance_artifact_update",
@@ -773,7 +773,7 @@
                                                "public_compliance_claim"
                                            ],
                       "allowedPathCount":  22,
-                      "trainerDecision":  "reviewOnly"
+                      "trainerDecision":  "held"
                   },
                   {
                       "id":  "capability:utility_readability_cleanup",
@@ -797,7 +797,7 @@
                                                "public_compliance_claim"
                                            ],
                       "allowedPathCount":  22,
-                      "trainerDecision":  "autoPatchable"
+                      "trainerDecision":  "reviewOnly"
                   }
               ],
     "edges":  [
@@ -967,5 +967,5 @@
                       "to":  "fidelity:utility_readability_cleanup"
                   }
               ],
-    "semanticDigest":  "443fb8c04d2c0e7fe4e8c38fb1374557c630f7d0f974459e194ddbf9309bdb8a"
+    "semanticDigest":  "154c3bd6629e1bf0e9c93887475bb1911431dc8b89d45d7dd3fc65393fa2e874"
 }

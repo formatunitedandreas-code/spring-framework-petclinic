@@ -4,6 +4,7 @@ param(
     [string] $StatePath = "",
     [string] $PocketPath = "",
     [string] $GatePath = "",
+    [string] $PrBaseHead = "",
     [int] $MinScore = 70,
     [string] $ReceiptRoot = "threshold/receipts",
     [switch] $CompactEvidence,
@@ -14,6 +15,7 @@ Set-StrictMode -Version Latest
 $ErrorActionPreference = "Stop"
 
 . (Join-Path $PSScriptRoot "lib/runtime-paths.ps1")
+. (Join-Path $PSScriptRoot "lib/candidate-class-provenance.ps1")
 
 $runtimePaths = Get-ThresholdRuntimePaths
 if ([string]::IsNullOrWhiteSpace($LeasePath)) {
@@ -46,6 +48,28 @@ function Get-LineEnding {
     param([string] $Content)
     if ($Content.Contains("`r`n")) { return "`r`n" }
     return "`n"
+}
+
+function Get-LeaseIntScalarOrDefault {
+    param(
+        [string[]] $Lines,
+        [string] $Name,
+        [int] $DefaultValue
+    )
+
+    $match = $Lines | Where-Object { $_ -match "^\s*$([regex]::Escape($Name)):\s*(\d+)\s*$" } | Select-Object -First 1
+    if (-not $match) {
+        return $DefaultValue
+    }
+    return [int]($match -replace "^\s*$([regex]::Escape($Name)):\s*", "")
+}
+
+function Get-CommentWrapThreshold {
+    if (-not (Test-Path $LeasePath)) {
+        return 120
+    }
+    $leaseLines = @(Get-Content $LeasePath)
+    return Get-LeaseIntScalarOrDefault -Lines $leaseLines -Name "commentWrapThreshold" -DefaultValue 120
 }
 
 function ConvertTo-ContentLineEndings {
@@ -182,48 +206,34 @@ function Test-MethodOrAnnotationBoundaryLine {
     return $Line -match '^\s*(?:@|public\b|private\b|protected\b)'
 }
 
+function Test-SliceJavadocCommentLine {
+    param(
+        [string[]] $Lines,
+        [int] $Index,
+        [hashtable] $JavaTextBlockLineState = @{}
+    )
+
+    return Test-ThresholdJavaLineIsJavadocCommentContent -Lines $Lines -Index $Index -JavaTextBlockLineState $JavaTextBlockLineState
+}
 function Find-ConservativeCommentSplitPoint {
     param([string] $Text)
 
-    $minimumPrefix = 24
-    $minimumSegmentLength = 16
-    $preferredMaxIndex = [Math]::Min(112, $Text.Length - 1)
-    if ($preferredMaxIndex -lt $minimumPrefix) {
-        return $null
-    }
-
-    $spaceSplit = $preferredMaxIndex
-    while ($spaceSplit -ge $minimumPrefix) {
-        $spaceSplit = $Text.LastIndexOf(" ", $spaceSplit)
-        if ($spaceSplit -lt $minimumPrefix) {
-            break
-        }
-        $beforeSplit = $Text.Substring(0, $spaceSplit)
-        $lastInlineTagStart = $beforeSplit.LastIndexOf("{@")
-        $lastInlineTagEnd = $beforeSplit.LastIndexOf("}")
-        if ($lastInlineTagStart -gt $lastInlineTagEnd) {
-            $spaceSplit--
-            continue
-        }
-        if ($spaceSplit -lt ($Text.Length - 1) -and
-            $spaceSplit -ge $minimumSegmentLength -and
-            ($Text.Length - ($spaceSplit + 1)) -ge $minimumSegmentLength) {
-            return [pscustomobject]@{
-                Index = $spaceSplit
-                KeepDelimiter = $false
-            }
-        }
-        $spaceSplit--
-    }
-
-    return $null
+    return Find-ThresholdConservativeCommentSplitPoint -Text $Text
 }
 function Write-TextFile {
-    param([string] $Path, [string] $Content)
+    param(
+        [string] $Path,
+        [string] $Content,
+        [string] $LineEnding = "`n",
+        [bool] $EnsureTrailingNewline = $false
+    )
     $encoding = New-Object System.Text.UTF8Encoding $false
     $normalizedContent = $Content -replace "`r`n", "`n" -replace "`r", "`n"
-    if (-not $normalizedContent.EndsWith("`n")) {
-        $normalizedContent = "$normalizedContent`n"
+    if ($EnsureTrailingNewline -and -not $normalizedContent.EndsWith("`n", [System.StringComparison]::Ordinal)) {
+        $normalizedContent += "`n"
+    }
+    if ($LineEnding -eq "`r`n") {
+        $normalizedContent = $normalizedContent -replace "`n", "`r`n"
     }
     [System.IO.File]::WriteAllText((Resolve-Path -LiteralPath $Path), $normalizedContent, $encoding)
 }
@@ -323,8 +333,10 @@ function Apply-ReadableMethodSignatureWrap {
         $updatedLines += $lines[$lineNumber..($lines.Count - 1)]
     }
     $originalText = Get-Content $path -Raw
-    $updatedText = $updatedLines -join (Get-LineEnding -Content $originalText)
-    Write-TextFile -Path $path -Content $updatedText
+    $lineEnding = Get-LineEnding -Content $originalText
+    $hadTrailingNewline = $originalText.EndsWith($lineEnding, [System.StringComparison]::Ordinal)
+    $updatedText = $updatedLines -join $lineEnding
+    Write-TextFile -Path $path -Content $updatedText -LineEnding $lineEnding -EnsureTrailingNewline:$hadTrailingNewline
 
     Write-Host "appliedCandidate=$($Candidate.candidateId)"
     Write-Host "changedFile=$path"
@@ -488,7 +500,12 @@ function Resolve-ExecutionPocket {
     $executionPocketPath = $PocketPath
     if (Test-Path $PocketPath) {
         $pocket = Get-Content $PocketPath -Raw | ConvertFrom-Json
-        if ($pocket.generatedFromHead -eq $head -and @($pocket.candidates).Count -gt 0) {
+        $generatedFromHead = [string](Get-ThresholdJsonProperty $pocket "generatedFromHead" "")
+        $preProductDiscoverySourceHead = [string](Get-ThresholdJsonProperty $pocket "preProductDiscoverySourceHead" "")
+        $evidenceSourceHead = if (-not [string]::IsNullOrWhiteSpace($preProductDiscoverySourceHead)) { $preProductDiscoverySourceHead } else { $generatedFromHead }
+        if (-not [string]::IsNullOrWhiteSpace($evidenceSourceHead) -and
+            (Test-ThresholdCommitIsAncestor -Ancestor $evidenceSourceHead -Descendant $head) -and
+            @($pocket.candidates).Count -gt 0) {
             return $executionPocketPath
         }
     }
@@ -507,7 +524,8 @@ function Resolve-ExecutionPocket {
 function Get-NextCandidate {
     param(
         [string] $PocketPath,
-        [int] $MinScore
+        [int] $MinScore,
+        [string[]] $ProcessedCandidateIds = @()
     )
 
     if (-not (Test-Path $PocketPath)) {
@@ -527,10 +545,37 @@ function Get-NextCandidate {
         return $null
     }
 
+    $processedCandidatePaths = New-Object System.Collections.Generic.HashSet[string]
+    foreach ($processedCandidate in $allCandidates) {
+        $processedCandidateId = [string]$processedCandidate.candidateId
+        if ($ProcessedCandidateIds -notcontains $processedCandidateId) {
+            continue
+        }
+        if ($processedCandidate.PSObject.Properties["file"] -and $processedCandidate.file) {
+            [void]$processedCandidatePaths.Add((ConvertTo-RepoPath $processedCandidate.file))
+        }
+    }
+
     $applicableCandidates = New-Object System.Collections.Generic.List[object]
     foreach ($candidate in $allCandidates) {
+        $candidateId = [string]$candidate.candidateId
+        if ($ProcessedCandidateIds -contains $candidateId) {
+            Write-Host "candidateSkippedReason=already_processed:$candidateId"
+            continue
+        }
         if (-not $candidate.file) { continue }
         $path = ConvertTo-RepoPath $candidate.file
+        $candidateMember = if ($candidate.PSObject.Properties["member"]) { [string]$candidate.member } else { "" }
+        if ($ProcessedCandidateIds.Count -gt 0 -and $candidateMember.StartsWith("line-")) {
+            if ($processedCandidatePaths.Count -eq 0) {
+                Write-Host "candidateSkippedReason=line_rebinding_required_after_prior_line_mutation_unknown_scope:$candidateId"
+                continue
+            }
+            if ($processedCandidatePaths.Contains($path)) {
+                Write-Host "candidateSkippedReason=line_rebinding_required_after_prior_line_mutation:$candidateId"
+                continue
+            }
+        }
         if (-not (Test-Path $path)) {
             Write-Host "candidateSkippedReason=missing_file:$($candidate.candidateId)"
             continue
@@ -539,6 +584,10 @@ function Get-NextCandidate {
         $content = Get-Content $path -Raw
         $candidateClass = [string]$candidate.candidateClass
         $applicable = $true
+        if (-not (Test-ThresholdCandidateClassHasIndependentDiffClassifier -CandidateClass $candidateClass)) {
+            Write-Host "candidateSkippedReason=missing_independent_diff_classifier:$($candidate.candidateId)"
+            continue
+        }
 
         switch ($candidateClass) {
             "duplicate_literal_local_constant_extraction" {
@@ -743,8 +792,14 @@ function Get-NextCandidate {
                     $applicable = $false
                     break
                 }
-                if ($lines[$lineNumber - 1] -notmatch '^\s*\*\s+\S') {
+                $javaTextBlockLineState = Get-ThresholdJavaTextBlockLineState -Lines $lines
+                if (-not (Test-SliceJavadocCommentLine -Lines $lines -Index ($lineNumber - 1) -JavaTextBlockLineState $javaTextBlockLineState)) {
                     Write-Host "candidateSkippedReason=unsupported_comment_cleanup:$($candidate.candidateId)"
+                    $applicable = $false
+                    break
+                }
+                if (-not (Test-ThresholdCommentWrapCandidateLine -Lines $lines -Index ($lineNumber - 1) -CommentWrapThreshold (Get-CommentWrapThreshold) -JavaTextBlockLineState $javaTextBlockLineState)) {
+                    Write-Host "candidateSkippedReason=comment_wrap_threshold_not_met:$($candidate.candidateId)"
                     $applicable = $false
                     break
                 }
@@ -1448,9 +1503,14 @@ function Apply-CommentWrapCleanup {
         throw "Candidate line '$lineNumber' is outside file range in $path."
     }
 
+    $javaTextBlockLineState = Get-ThresholdJavaTextBlockLineState -Lines $lines
+    if (-not (Test-SliceJavadocCommentLine -Lines $lines -Index ($lineNumber - 1) -JavaTextBlockLineState $javaTextBlockLineState)) {
+        throw "Line '$lineNumber' is not inside a current Javadoc context in $path."
+    }
+
     $line = $lines[$lineNumber - 1]
     $match = [regex]::Match($line, '^(?<indent>\s*\*\s+)(?<text>\S.*)$')
-    if (-not $match.Success) {
+    if (-not $match.Success -or $line.Length -le (Get-CommentWrapThreshold)) {
         throw "Line '$lineNumber' is not a supported long comment line in $path."
     }
 
@@ -1740,7 +1800,11 @@ if ([int]$state.remainingBudget.candidates -le 0 -or [int]$state.remainingBudget
 Invoke-DiscoveryCanary -LeasePath $LeasePath -GatePath $GatePath
 $executionPocketPath = Resolve-ExecutionPocket -PocketPath $PocketPath -LeasePath $LeasePath -GatePath $GatePath
 
-$candidate = Get-NextCandidate -PocketPath $executionPocketPath -MinScore $MinScore
+$processedCandidateIds = @()
+if ($state.PSObject.Properties.Name -contains "processedCandidateIds") {
+    $processedCandidateIds = @($state.processedCandidateIds | ForEach-Object { [string]$_ } | Where-Object { -not [string]::IsNullOrWhiteSpace($_) })
+}
+$candidate = Get-NextCandidate -PocketPath $executionPocketPath -MinScore $MinScore -ProcessedCandidateIds $processedCandidateIds
 if (-not $candidate) {
     Set-LeaseTerminalState -StatePath $StatePath -TerminalState "ready_no_candidates_verified" -Reason "no applicable autoPatchable candidates after discovery canary passed"
     exit 0
@@ -1839,8 +1903,12 @@ $completeSliceArgs = @(
     "-CandidateClass", $candidate.candidateClass,
     "-CommitMessage", $commitMessage,
     "-AllowedPath", $candidate.file,
-    "-ReceiptRoot", $ReceiptRoot
+    "-ReceiptRoot", $ReceiptRoot,
+    "-CandidatePocketPath", $executionPocketPath
 )
+if (-not [string]::IsNullOrWhiteSpace($PrBaseHead)) {
+    $completeSliceArgs += @("-PrBaseHead", $PrBaseHead)
+}
 if ($CompactEvidence.IsPresent) {
     $completeSliceArgs += "-CompactEvidence"
 }
