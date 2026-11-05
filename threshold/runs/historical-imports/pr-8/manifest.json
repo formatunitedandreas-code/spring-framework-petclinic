@@ -1,0 +1,34 @@
+{
+  "schemaVersion": "threshold.historical_import.v1",
+  "disposition": "historical_only",
+  "historicalValidationReasserted": false,
+  "runtimeAuthority": "NONE",
+  "executionAuthorized": false,
+  "authorityCreated": false,
+  "qualificationGranted": false,
+  "pullRequest": 8,
+  "originalHead": "58ef68e55ba5d90a7682c712e40e46e9f613baab",
+  "originalTargetBase": "a30441d214fd955496d347e1182fdfb4ba6f68c6",
+  "originalMergeBase": "4e4c7eba92c80d35e8244f8526828680f0a25922",
+  "originalDiff": {
+    "path": "original.diff",
+    "sha256": "3c284491ed9bc1760633db3e1018368f254f62fd1a0ecee6c7cc04b4ffe727bb"
+  },
+  "changes": [
+    {
+      "path": ".github/workflows/maven-build-pull-request.yml",
+      "before": {
+        "mode": "100644",
+        "blob": "dbafa179e034b58d499192286867fca379c2c68a",
+        "archive": "blobs/000000-before.bin",
+        "sha256": "6c50d409ae5151150daa260ca0b4aba72025f2783e8256b2906619a60a1e8707"
+      },
+      "after": {
+        "mode": "100644",
+        "blob": "f263c0989c7155f3cf909fae802f1cf1b6b8e60b",
+        "archive": "blobs/000000-after.bin",
+        "sha256": "76b9342456026309cf8ac8b9c97f555e3eb1e76a42f848e64e77738f85c1ba83"
+      }
+    }
+  ]
+}

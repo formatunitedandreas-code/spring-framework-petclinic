@@ -1,0 +1,50 @@
+﻿{
+    "candidateClass":  "redundant_local_variable_simplification",
+    "branch":  "threshold-governed-refactor-demo-4",
+    "receiptMaterialization":  "prospective",
+    "changedFiles":  [
+                         {
+                             "beforeSha256":  "202F40F25131D091A20EED123215CBAF0DBD1EB3D6A58ECE1D471A84244334C1",
+                             "path":  "src/main/java/org/springframework/samples/petclinic/repository/jdbc/JdbcPetRepositoryImpl.java",
+                             "afterSha256":  "354400A9FD54A746C98D6525A2902837AC3005F3DDFBBC20EB36A98F664CAEEB"
+                         }
+                     ],
+    "validation":  {
+                       "skipped":  0,
+                       "errors":  0,
+                       "testsRun":  75,
+                       "command":  "\\.\\\\mvnw.cmd test",
+                       "result":  "BUILD SUCCESS",
+                       "failures":  0,
+                       "diffCheck":  "passed"
+                   },
+    "diffSummary":  "Simplify JdbcPetRepositoryImpl.findById by inlining the temporary Owner variable into the getById call.",
+    "nonClaims":  [
+                      "no push in candidate slice",
+                      "no PR update in candidate slice",
+                      "no upstream interaction",
+                      "no pom.xml change",
+                      "no dependency change",
+                      "no src/test change",
+                      "no merge",
+                      "no release",
+                      "no deploy",
+                      "no public readiness claim",
+                      "no public correctness claim",
+                      "no public security claim",
+                      "no public compliance claim"
+                  ],
+    "branchFinalValidationPassed":  true,
+    "diffStat":  {
+                     "filesChanged":  1,
+                     "deletions":  2,
+                     "insertions":  5
+                 },
+    "perCommitValidationLogAvailable":  true,
+    "baseHead":  "2af8d6e174faf243c3d7631a96f266f927fb3583",
+    "commitHash":  "fb59db1e3d9d536b091618bb03219c20b53f979a",
+    "leaseName":  "petclinic-threshold-governed-refactor-lease-v1",
+    "schemaVersion":  "threshold.petclinic.slice-receipt.v0.2",
+    "candidateId":  "petclinic-jdbc-pet-findbyid-lookup-inline",
+    "leaseStartHead":  "a703491cc707d6f0de9fcfd30719bfa278a74df8"
+}

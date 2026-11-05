@@ -1,0 +1,78 @@
+{
+  "runId": "owner-search-p2-01-behavior-baseline-20260717T123037Z",
+  "repository": "spring-petclinic/spring-framework-petclinic",
+  "localPath": "C:\\dev\\spring-framework-petclinic",
+  "phaseId": "P2-01",
+  "lane": "product_refactor",
+  "feature": "owner_search_vertical_refactoring",
+  "inputHead": "00ab52faa60f82115ac034be8ead6a6c0e92892e",
+  "inputDigest": {
+    "branch": "main",
+    "productSourceHead": "04f7e344e51ed6c75e9e3062ebc8ee7fa9415b1c",
+    "originMain": "04f7e344e51ed6c75e9e3062ebc8ee7fa9415b1c",
+    "inputHeadOriginMainDistance": "1 0",
+    "activeGrant": "p2-01-owner-search-product-refactor"
+  },
+  "allowedPaths": [
+    "src/test/java/org/springframework/samples/petclinic/**",
+    "threshold/docs/**",
+    "threshold/receipts/**",
+    "threshold/lease-state/**",
+    "threshold/leases/**"
+  ],
+  "expectedEffect": "Add Owner Search behavior characterization tests without production changes.",
+  "changedPaths": [
+    "src/test/java/org/springframework/samples/petclinic/web/OwnerControllerTests.java",
+    "threshold/docs/OWNER_SEARCH_BEHAVIOR_BASELINE_V0_1.md",
+    "threshold/receipts/owner-search-p2-01-behavior-baseline-20260717T123037Z.json"
+  ],
+  "validationCommands": [
+    "git diff --check",
+    "$env:JAVA_HOME='C:\\Program Files\\Java\\jdk-17'; .\\mvnw.cmd -Dtest=OwnerControllerTests test"
+  ],
+  "validationResults": {
+    "gitDiffCheck": "passed",
+    "ownerControllerTests": {
+      "testsRun": 14,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "result": "passed"
+    }
+  },
+  "outputHead": "0c9421c69107398ebe2460321bf2db758dc43b43",
+  "outcome": "behavior_baseline_recorded",
+  "stopReasons": [],
+  "receiptRef": "threshold/receipts/owner-search-p2-01-behavior-baseline-20260717T123037Z.json",
+  "effectClasses": [
+    "R2_REVERSIBLE_LOCAL_MUTATION"
+  ],
+  "candidateClass": "owner_search_behavior_baseline",
+  "scopeMatch": true,
+  "testEvidence": {
+    "behaviorParityBaseline": "OwnerControllerTests passed"
+  },
+  "queryEvidence": {
+    "executed": false,
+    "reason": "P2-01 does not measure query counts"
+  },
+  "architectureEvidence": {
+    "executed": false,
+    "reason": "P2-01 does not introduce architecture rules"
+  },
+  "unresolvedAmbiguity": [
+    "JSP rendering is characterized through controller model contract in this phase; full server-side rendered HTML verification remains for later phases if needed."
+  ],
+  "recommendedDisposition": "admitted_for_next_local_phase",
+  "behaviorEquivalent": true,
+  "profileParityVerified": false,
+  "queryBudgetVerified": false,
+  "architectureRulesVerified": false,
+  "fullSuitePassed": false,
+  "localCommit": "0c9421c69107398ebe2460321bf2db758dc43b43",
+  "publicationPerformed": false,
+  "mergePerformed": false,
+  "releasePerformed": false,
+  "deploymentPerformed": false,
+  "humanReviewRequired": true
+}

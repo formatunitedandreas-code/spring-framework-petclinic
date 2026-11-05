@@ -1,0 +1,18 @@
+schemaVersion: threshold.target-twin-policy.v0.1
+authorityFlags:
+  execute: false
+  commit: false
+  push: false
+  merge: false
+guardian:
+  capabilityPreservationRequired: true
+  behaviorPreservationRequired: true
+  dependencyPolicyRequired: true
+  evidenceSufficiencyRequired: true
+  transitionFeasibilityRequired: true
+stopConditions:
+  - stop_target_loses_capability
+  - stop_target_invents_capability
+  - stop_target_dependency_violation
+  - stop_missing_behavior_lock
+  - stop_twin_delta_not_reversible

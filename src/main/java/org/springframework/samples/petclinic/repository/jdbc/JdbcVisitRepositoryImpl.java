@@ -7,10 +7,13 @@
  *
  *      http://www.apache.org/licenses/LICENSE-2.0
  *
- * Unless required by applicable law or agreed to in writing, software
+ * Unless required by applicable law or agreed to in
+ * writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
+ * express or implied.
+ * See the License for the specific language
+ * governing permissions and
  * limitations under the License.
  */
 package org.springframework.samples.petclinic.repository.jdbc;
@@ -26,7 +29,8 @@ import javax.sql.DataSource;
 import java.util.List;
 
 /**
- * A simple JDBC-based implementation of the {@link VisitRepository} interface.
+ * A simple JDBC-based implementation of the
+ * {@link VisitRepository} interface.
  *
  * @author Ken Krebs
  * @author Juergen Hoeller
@@ -39,36 +43,48 @@ import java.util.List;
 @Repository
 public class JdbcVisitRepositoryImpl implements VisitRepository {
 
+    private static final String ID = "id";
+
+
+    private static final String FIND_PET_BY_ID_SQL = "SELECT id, name, birth_date, type_id, owner_id FROM pets WHERE "
+        + "id=:id";
+
+    private static final String FIND_VISITS_BY_PET_ID_SQL = "SELECT id as visit_id, visit_date, description FROM visits WHERE "
+        + "pet_id=:id";
+
     private final JdbcClient jdbcClient;
 
     private final SimpleJdbcInsert insertVisit;
 
-    public JdbcVisitRepositoryImpl(DataSource dataSource, JdbcClient jdbcClient) {
+    public JdbcVisitRepositoryImpl(
+        DataSource dataSource,
+        JdbcClient jdbcClient
+    ) {
         this.jdbcClient = jdbcClient;
 
         this.insertVisit = new SimpleJdbcInsert(dataSource)
             .withTableName("visits")
-            .usingGeneratedKeyColumns("id");
+            .usingGeneratedKeyColumns(ID);
     }
-
 
     @Override
     public void save(Visit visit) {
         if (!visit.isNew()) {
             throw new UnsupportedOperationException("Visit update not supported");
         }
-        Number newKey = this.insertVisit.executeAndReturnKey(
-            createVisitParameterSource(visit));
-        visit.setId(newKey.intValue());
+        visit.setId(this.insertVisit.executeAndReturnKey(
+            createVisitParameterSource(visit)).intValue());
     }
 
 
     /**
-     * Creates a {@link MapSqlParameterSource} based on data values from the supplied {@link Visit} instance.
+     * Creates a {@link MapSqlParameterSource} based on data values
+     * from the supplied
+     * {@link Visit} instance.
      */
     private MapSqlParameterSource createVisitParameterSource(Visit visit) {
         return new MapSqlParameterSource()
-            .addValue("id", visit.getId())
+            .addValue(ID, visit.getId())
             .addValue("visit_date", visit.getDate())
             .addValue("description", visit.getDescription())
             .addValue("pet_id", visit.getPet().getId());
@@ -76,23 +92,41 @@ public class JdbcVisitRepositoryImpl implements VisitRepository {
 
     @Override
     public List<Visit> findByPetId(Integer petId) {
-        JdbcPet pet = this.jdbcClient
-            .sql("SELECT id, name, birth_date, type_id, owner_id FROM pets WHERE id=:id")
-            .param("id", petId)
-            .query(new JdbcPetRowMapper())
-            .single();
+        JdbcPet pet = findPetById(petId);
+        List<Visit> visits = findVisitsByPetId(petId);
 
-        List<Visit> visits = this.jdbcClient
-            .sql("SELECT id as visit_id, visit_date, description FROM visits WHERE pet_id=:id")
-            .param("id", petId)
-            .query(new JdbcVisitRowMapper())
-            .list();
-
-        for (Visit visit: visits) {
-            visit.setPet(pet);
-        }
+        attachPetToVisits(visits, pet);
 
         return visits;
+    }
+
+    private JdbcPet findPetById(Integer petId) {
+        return this.jdbcClient
+            .sql(FIND_PET_BY_ID_SQL)
+            .param(ID, petId)
+            .query(new JdbcPetRowMapper())
+            .single();
+    }
+
+    private List<Visit> findVisitsByPetId(Integer petId) {
+        return this.jdbcClient
+            .sql(FIND_VISITS_BY_PET_ID_SQL)
+            .param(ID, petId)
+            .query(new JdbcVisitRowMapper())
+            .list();
+    }
+
+    private void attachPetToVisits(
+        List<Visit> visits,
+        JdbcPet pet
+    ) {
+        for (Visit visit : visits) {
+            attachPetToVisit(visit, pet);
+        }
+    }
+
+    private void attachPetToVisit(Visit visit, JdbcPet pet) {
+        visit.setPet(pet);
     }
 
 }

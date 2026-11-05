@@ -1,0 +1,124 @@
+{
+  "schemaVersion": "threshold.historical_import.v1",
+  "disposition": "historical_only",
+  "historicalValidationReasserted": false,
+  "runtimeAuthority": "NONE",
+  "executionAuthorized": false,
+  "authorityCreated": false,
+  "qualificationGranted": false,
+  "pullRequest": 121,
+  "originalHead": "bd6a3f057d14509cea02317f6307099bdd856772",
+  "originalTargetBase": "e826b904ea25ad8ca1a37cd9fd3e095daa73e982",
+  "originalMergeBase": "56b5559825f492c718949ab23c1605e9a010223c",
+  "originalDiff": {
+    "path": "original.diff",
+    "sha256": "2410332c6336bf78203f42ff544c5d58b207937aa3c6a25bf0f5cd8c3988e104"
+  },
+  "changes": [
+    {
+      "path": "src/main/java/org/springframework/samples/petclinic/owner/adapter/jdbc/JdbcOwnerSearchQuery.java",
+      "before": {
+        "mode": "100644",
+        "blob": "20840985541c66fb4988e54ffa661ad09a1a10e5",
+        "archive": "blobs/000000-before.bin",
+        "sha256": "b9d28d5fbc899ca3cdf60d89b26d1c420691087a34b84191a089d435b8278240"
+      },
+      "after": {
+        "mode": "100644",
+        "blob": "4598bfc521768837e217615689cfc0937a9abd67",
+        "archive": "blobs/000000-after.bin",
+        "sha256": "8459fbbeda91cbb5dd15fcf81b31a9af884c2f23878c480c45a4c1c4d9e157c8"
+      }
+    },
+    {
+      "path": "src/main/java/org/springframework/samples/petclinic/owner/adapter/jpa/JpaOwnerSearchQuery.java",
+      "before": {
+        "mode": "100644",
+        "blob": "92780497d4d7beec5cf3ebd9de1bf4bea64b4b67",
+        "archive": "blobs/000001-before.bin",
+        "sha256": "9bd904740bbe298085197e65024438ee354631ed35dee485d3d57301fcd75e6e"
+      },
+      "after": {
+        "mode": "100644",
+        "blob": "10c9d0c85fd9b641e41a69a26873c5aa61b193d7",
+        "archive": "blobs/000001-after.bin",
+        "sha256": "41a0a06013586f25800230983f681e503ac26decc36758b23cb57c6d705ddb0c"
+      }
+    },
+    {
+      "path": "threshold/candidate-pocket/current.json",
+      "before": {
+        "mode": "100644",
+        "blob": "772b27ed4971d1ecf4f3140232e75ad565889c41",
+        "archive": "blobs/000002-before.bin",
+        "sha256": "43593f59094fd3a8bb1fa0cb3671e28e1e65b3c2b56d87ea06763df7cfc20c73"
+      },
+      "after": {
+        "mode": "100644",
+        "blob": "148309e972b934546c639db3ae1f652e522ca162",
+        "archive": "blobs/000002-after.bin",
+        "sha256": "376836c7b5ef89d46c6711e1dc890e5f6e8788aa5b816fa9fc0f70bd269b618f"
+      }
+    },
+    {
+      "path": "threshold/lease-state/current-run.json",
+      "before": {
+        "mode": "100644",
+        "blob": "aed26932064146ca4ee3bceb317192299287733f",
+        "archive": "blobs/000003-before.bin",
+        "sha256": "edd25eb7b2defd1de4390ca4424849b210089b59bc945b01b7c4542f005b70d2"
+      },
+      "after": {
+        "mode": "100644",
+        "blob": "63f8c2a7813c02a5999d22b9ca738e6b6a336d50",
+        "archive": "blobs/000003-after.bin",
+        "sha256": "263e1703579c7a82211b3dfe2728a0ca9bc55afbd6adc0febf3579f6ecbd0f7b"
+      }
+    },
+    {
+      "path": "threshold/leases/current.yaml",
+      "before": {
+        "mode": "100644",
+        "blob": "7c76fb8ef96d6b392a541c58216f77494ec76a41",
+        "archive": "blobs/000004-before.bin",
+        "sha256": "38cbed388125dffb72ef512bbe9ec2e4ac8cdaf93d11741112d61b7484161109"
+      },
+      "after": {
+        "mode": "100644",
+        "blob": "91d81fa9bb0cdda90c3dd690370549a79177ed76",
+        "archive": "blobs/000004-after.bin",
+        "sha256": "a3b5b6907c08d31d32d52331dc6399ba4c730a9cfc340147233d9445c583bd6b"
+      }
+    },
+    {
+      "path": "threshold/receipts/src-main-java-org-springframework-samples-petclinic-owner-adapter-jdbc-jdbcownersearchquery-java-duplicate-literal-local-constant-extraction-owner-id-a2d13e96a698.json",
+      "before": null,
+      "after": {
+        "mode": "100644",
+        "blob": "0c06e9e3a8b689e12343bb4c98b0da374a1412c5",
+        "archive": "blobs/000005-after.bin",
+        "sha256": "8e2d832a165bc961e00889dfdd04acfb9d8642db1d516c73fec80195d7f4c78f"
+      }
+    },
+    {
+      "path": "threshold/receipts/src-main-java-org-springframework-samples-petclinic-owner-adapter-jpa-jpaownersearchquery-java-duplicate-literal-local-constant-extraction-lastname-a24d112a2771.json",
+      "before": null,
+      "after": {
+        "mode": "100644",
+        "blob": "55fae55526073fa3f5b99f459b76c3fb71c5c585",
+        "archive": "blobs/000006-after.bin",
+        "sha256": "113b08109a1118b8aed277f4a3586b8524a2c767a8a103c1bfb1ff3344de8fa6"
+      }
+    },
+    {
+      "path": "threshold/receipts/src-main-java-org-springframework-samples-petclinic-owner-adapter-jpa-jpaownersearchquery-java-duplicate-literal-local-constant-extraction-ownerid-9dc5fb4eff79.json",
+      "before": null,
+      "after": {
+        "mode": "100644",
+        "blob": "9d6dc0eb12b65a0ca294789d6d95f9a1877e3d8b",
+        "archive": "blobs/000007-after.bin",
+        "sha256": "0be08365daa0f4a1d8f7b6d788f6fe46bf218c2d4fa64aa5e21630a5fe90c14f"
+      }
+    }
+  ]
+}

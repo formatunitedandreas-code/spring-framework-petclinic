@@ -7,10 +7,13 @@
  *
  *      http://www.apache.org/licenses/LICENSE-2.0
  *
- * Unless required by applicable law or agreed to in writing, software
+ * Unless required by applicable law or agreed to in
+ * writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
+ * express or implied.
+ * See the License for the specific language
+ * governing permissions and
  * limitations under the License.
  */
 package org.springframework.samples.petclinic.repository.jdbc;
@@ -23,14 +26,13 @@ import org.springframework.samples.petclinic.repository.VetRepository;
 import org.springframework.samples.petclinic.util.EntityUtils;
 import org.springframework.stereotype.Repository;
 
-import java.sql.ResultSet;
-import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
 /**
- * A simple JDBC-based implementation of the {@link VetRepository} interface.
+ * A simple JDBC-based implementation of the
+ * {@link VetRepository} interface.
  *
  * @author Ken Krebs
  * @author Juergen Hoeller
@@ -43,6 +45,14 @@ import java.util.List;
  */
 @Repository
 public class JdbcVetRepositoryImpl implements VetRepository {
+
+    private static final String FIND_ALL_SQL = "SELECT id, first_name, last_name FROM vets ORDER BY last_name, "
+        + "first_name";
+
+    private static final String GET_SPECIALTY_IDS_FOR_SQL = "SELECT specialty_id FROM vet_specialties WHERE "
+        + "vet_id=?";
+
+    private static final String FIND_ALL_SQL_INLINE_SQL = "SELECT id, name FROM specialties";
 
     private final JdbcClient jdbcClient;
 
@@ -57,33 +67,36 @@ public class JdbcVetRepositoryImpl implements VetRepository {
     public Collection<Vet> findAll() {
         // Retrieve the list of all vets.
         List<Vet> vets = new ArrayList<>(this.jdbcClient.sql(
-                "SELECT id, first_name, last_name FROM vets ORDER BY last_name,first_name")
+            FIND_ALL_SQL)
             .query(BeanPropertyRowMapper.newInstance(Vet.class))
             .list());
 
         // Retrieve the list of all possible specialties.
-        final List<Specialty> specialties = this.jdbcClient.sql("SELECT id, name FROM specialties")
+        final List<Specialty> specialties = this.jdbcClient.sql(FIND_ALL_SQL_INLINE_SQL)
             .query(BeanPropertyRowMapper.newInstance(Specialty.class))
             .list();
 
         // Build each vet's list of specialties.
         for (Vet vet : vets) {
-            final List<Integer> vetSpecialtiesIds = this.jdbcClient.sql(
-                    "SELECT specialty_id FROM vet_specialties WHERE vet_id=?")
-                .param(vet.getId())
-                .query(
-                    new BeanPropertyRowMapper<Integer>() {
-                        @Override
-                        public Integer mapRow(ResultSet rs, int row) throws SQLException {
-                            return rs.getInt(1);
-                        }
-                    }
-                ).list();
-            for (int specialtyId : vetSpecialtiesIds) {
-                Specialty specialty = EntityUtils.getById(specialties, Specialty.class, specialtyId);
-                vet.addSpecialty(specialty);
-            }
+            addSpecialtiesToVet(vet, specialties);
         }
         return vets;
+    }
+
+    private void addSpecialtiesToVet(
+        Vet vet,
+        List<Specialty> specialties
+    ) {
+        for (int specialtyId : getSpecialtyIdsFor(vet)) {
+            Specialty specialty = EntityUtils.getById(specialties, Specialty.class, specialtyId);
+            vet.addSpecialty(specialty);
+        }
+    }
+
+    private List<Integer> getSpecialtyIdsFor(Vet vet) {
+        return this.jdbcClient.sql(GET_SPECIALTY_IDS_FOR_SQL)
+            .param(vet.getId())
+            .query((rs, row) -> rs.getInt(1))
+            .list();
     }
 }

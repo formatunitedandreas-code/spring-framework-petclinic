@@ -1,0 +1,50 @@
+{
+    "schemaVersion":  "threshold.petclinic.slice-receipt.v0.2",
+    "candidateId":  "petclinic-jpa-owner-query-formatting-wrap",
+    "leaseName":  "petclinic-threshold-governed-refactor-lease-v1",
+    "branch":  "threshold-governed-refactor-demo-4",
+    "candidateClass":  "repository_readability_cleanup",
+    "leaseStartHead":  "4e4c7eba92c80d35e8244f8526828680f0a25922",
+    "baseHead":  "ae7391a31fa7f8b9b37e698e3073057d14d9b2ed",
+    "commitHash":  "9fa5b214043ca39977dc2e4addca517d46613284",
+    "receiptMaterialization":  "prospective",
+    "perCommitValidationLogAvailable":  true,
+    "branchFinalValidationPassed":  true,
+    "changedFiles":  [
+                         {
+                             "path":  "src/main/java/org/springframework/samples/petclinic/repository/jpa/JpaOwnerRepositoryImpl.java",
+                             "beforeSha256":  "c9668a1a7383146262a54d50bba7fbd67683464326e62bbb0628cb920e41573e",
+                             "afterSha256":  "e00443a870a42744d78e675f58271c12baeff605c5893f804e4f191f75d505f4"
+                         }
+                     ],
+    "diffSummary":  "Wrap createQuery call in findById without changing query text",
+    "diffStat":  {
+                     "filesChanged":  1,
+                     "insertions":  2,
+                     "deletions":  1
+                 },
+    "validation":  {
+                       "diffCheck":  "passed",
+                       "command":  "powershell -ExecutionPolicy Bypass -File threshold\\scripts\\validate-slice.ps1",
+                       "result":  "Threshold slice validation passed; BUILD SUCCESS; Tests run: 75; Failures: 0; Errors: 0; Skipped: 0",
+                       "testsRun":  75,
+                       "failures":  0,
+                       "errors":  0,
+                       "skipped":  0
+                   },
+    "nonClaims":  [
+                      "no push in candidate slice",
+                      "no PR update in candidate slice",
+                      "no upstream interaction",
+                      "no pom.xml change",
+                      "no dependency change",
+                      "no src/test change",
+                      "no merge",
+                      "no release",
+                      "no deploy",
+                      "no public readiness claim",
+                      "no public correctness claim",
+                      "no public security claim",
+                      "no public compliance claim"
+                  ]
+}

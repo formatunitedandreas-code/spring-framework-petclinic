@@ -1,0 +1,51 @@
+{
+    "schemaVersion":  "threshold.petclinic.slice-receipt.v0.2",
+    "candidateId":  "src-main-java-org-springframework-samples-petclinic-model-pettype-java-comment-wrap-cleanup-line-12",
+    "leaseName":  "owned-autonomous-refactor-branch-wave-v0_automation",
+    "leaseDigest":  "2584c104d2a7f7cffdc314fd3f3c47fcabd5f1ad89232e272cf49278077d44bb",
+    "branch":  "threshold-governed-refactor-demo-176",
+    "candidateClass":  "comment_wrap_cleanup",
+    "leaseStartHead":  "cf12a52a96e3ce5d8060c767251e1665ea92b8cf",
+    "baseHead":  "81051b9fb78fd8ab5903465a779012ad898b7bba",
+    "commitHash":  "4aa57717edc7de7a9494c71d20c1b7368ba9f3aa",
+    "receiptMaterialization":  "post-commit",
+    "perCommitValidationLogAvailable":  true,
+    "branchFinalValidationPassed":  false,
+    "changedFiles":  [
+                         {
+                             "path":  "src/main/java/org/springframework/samples/petclinic/model/PetType.java",
+                             "beforeSha256":  "0396fc31b5ec441ea1f9028f7ecbcf677db19ce7178ea0d38bdee399e78a3e7d",
+                             "afterSha256":  "a983a3b7f3f4fd882e89410d0073a851d10a3a716ecc98877ac3efe30f731da6"
+                         }
+                     ],
+    "diffSummary":  "Refactor PetClinic Wrap one long Javadoc comment line without changing so",
+    "diffStat":  {
+                     "filesChanged":  1,
+                     "insertions":  2,
+                     "deletions":  1
+                 },
+    "validation":  {
+                       "diffCheck":  "passed",
+                       "command":  ".\\mvnw.cmd test",
+                       "result":  "BUILD SUCCESS",
+                       "testsRun":  119,
+                       "failures":  0,
+                       "errors":  0,
+                       "skipped":  0
+                   },
+    "nonClaims":  [
+                      "no push in candidate slice",
+                      "no PR update in candidate slice",
+                      "no upstream interaction",
+                      "no pom.xml change",
+                      "no dependency change",
+                      "no src/test change",
+                      "no merge",
+                      "no release",
+                      "no deploy",
+                      "no public readiness claim",
+                      "no public correctness claim",
+                      "no public security claim",
+                      "no public compliance claim"
+                  ]
+}

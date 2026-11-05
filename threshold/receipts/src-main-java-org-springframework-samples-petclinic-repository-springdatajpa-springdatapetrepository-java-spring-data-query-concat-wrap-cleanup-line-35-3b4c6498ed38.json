@@ -1,0 +1,50 @@
+{
+    "schemaVersion":  "threshold.petclinic.slice-receipt.v0.2",
+    "candidateId":  "src-main-java-org-springframework-samples-petclinic-repository-springdatajpa-springdatapetrepository-java-spring-data-query-concat-wrap-cleanup-line-35",
+    "leaseName":  "owned-autonomous-refactor-branch-wave-v0_automation",
+    "branch":  "threshold-governed-refactor-demo-148",
+    "candidateClass":  "spring_data_query_concat_wrap_cleanup",
+    "leaseStartHead":  "38583bd670c75af3c22d1e3d5c195d2c70289529",
+    "baseHead":  "d3118373930c8f1dd6433c69cedf11266723df73",
+    "commitHash":  "3b4c6498ed3851dc917d01b100299286def086a0",
+    "receiptMaterialization":  "post-commit",
+    "perCommitValidationLogAvailable":  true,
+    "branchFinalValidationPassed":  false,
+    "changedFiles":  [
+                         {
+                             "path":  "src/main/java/org/springframework/samples/petclinic/repository/springdatajpa/SpringDataPetRepository.java",
+                             "beforeSha256":  "e470969a0a347c94d1393eeef1fbbf184eccb591b496eca3b77fc90d09db2a1c",
+                             "afterSha256":  "409cff32c95717535073c9416bbcc0c96479dcffcd95cfb72af644bda3906618"
+                         }
+                     ],
+    "diffSummary":  "Refactor PetClinic Normalize a concatenated Spring Data @Query annotation",
+    "diffStat":  {
+                     "filesChanged":  1,
+                     "insertions":  2,
+                     "deletions":  1
+                 },
+    "validation":  {
+                       "diffCheck":  "passed",
+                       "command":  ".\\mvnw.cmd test",
+                       "result":  "BUILD SUCCESS",
+                       "testsRun":  75,
+                       "failures":  0,
+                       "errors":  0,
+                       "skipped":  0
+                   },
+    "nonClaims":  [
+                      "no push in candidate slice",
+                      "no PR update in candidate slice",
+                      "no upstream interaction",
+                      "no pom.xml change",
+                      "no dependency change",
+                      "no src/test change",
+                      "no merge",
+                      "no release",
+                      "no deploy",
+                      "no public readiness claim",
+                      "no public correctness claim",
+                      "no public security claim",
+                      "no public compliance claim"
+                  ]
+}

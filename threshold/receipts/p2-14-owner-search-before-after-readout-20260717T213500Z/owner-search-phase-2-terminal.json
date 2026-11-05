@@ -1,0 +1,18 @@
+{
+  "runId": "p2-14-owner-search-before-after-readout-20260717T213500Z",
+  "repository": "formatunitedandreas-code/spring-framework-petclinic",
+  "baseHead": "04f7e344e51ed6c75e9e3062ebc8ee7fa9415b1c",
+  "finalHead": "f5b6c63eabe4b34af67cc8d38cd0df32373a58bf",
+  "lane": "product_refactor",
+  "feature": "owner_search_vertical_refactoring",
+  "behaviorEquivalent": true,
+  "profileParityVerified": true,
+  "queryBudgetVerified": true,
+  "architectureRulesVerified": false,
+  "fullSuitePassed": true,
+  "publicationPerformed": false,
+  "mergePerformed": false,
+  "releasePerformed": false,
+  "deploymentPerformed": false,
+  "humanReviewRequired": true
+}
