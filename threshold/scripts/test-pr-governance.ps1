@@ -9,6 +9,7 @@ Set-StrictMode -Version Latest
 $ErrorActionPreference = "Stop"
 
 . (Join-Path $PSScriptRoot "lib/lease-policy.ps1")
+. (Join-Path $PSScriptRoot "lib/historical-import.ps1")
 . (Join-Path $PSScriptRoot "lib/content-hash.ps1")
 . (Join-Path $PSScriptRoot "lib/pr-metadata-envelope.ps1")
 . (Join-Path $PSScriptRoot "lib/candidate-class-provenance.ps1")
@@ -660,6 +661,15 @@ $expectedBaseRef = Get-LeaseScalar $leaseLines "baseRef"
 $mergeAllowed = Get-LeaseScalar $leaseLines "mergeAllowed"
 $forbiddenActions = @(Get-ThresholdLeaseList -Lines $leaseLines -Name "forbiddenActions")
 $resolvedBaseRefForGit = Resolve-BaseRefForGit -Ref $BaseRef
+if (Test-ThresholdInertHistoricalImport -BaseRef $resolvedBaseRefForGit) {
+    Write-Host 'thresholdHistoricalImportOnly=true'
+    Write-Host 'sourceCommitReceiptCoverage=historical_only_not_reasserted'
+    Write-Host 'activeTreeChanged=false'
+    Write-Host 'historicalValidationReasserted=false'
+    Write-Host 'RuntimeAuthority=NONE'
+    Write-Host 'ExecutionAuthorized=false'
+    exit 0
+}
 $prVisibleBaseRef = ConvertTo-PrVisibleBaseRef -Ref $BaseRef
 $expectedPrVisibleBaseRef = ConvertTo-PrVisibleBaseRef -Ref $expectedBaseRef -ObservedPrBaseRef $prVisibleBaseRef
 $remoteIndependentExpectedBaseRef = ConvertTo-RemoteIndependentLeaseBaseRef -Ref $expectedBaseRef
