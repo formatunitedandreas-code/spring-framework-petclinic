@@ -63,6 +63,16 @@ try {
     Invoke-Git -GitArgs @("commit", "-m", "clean branch change") | Out-Null
     Assert-ThresholdBranchRangeDiffClean -BaseRef "main"
     Write-Host "branchRangeFixture=clean-range-passed"
+    Assert-ThresholdBranchRangeDiffClean -BaseRef ((& git rev-parse origin/main).Trim())
+    "unstaged whitespace  " | Set-Content -Path "feature.txt" -Encoding UTF8
+    Assert-ThrowsLike -Name "uncommitted-whitespace-error" -Pattern "worktree_diff_check_failed" -ScriptBlock {
+        Assert-ThresholdBranchRangeDiffClean -BaseRef "main"
+    }
+    Invoke-Git -GitArgs @("add", "feature.txt") | Out-Null
+    Assert-ThrowsLike -Name "staged-whitespace-error" -Pattern "index_diff_check_failed" -ScriptBlock {
+        Assert-ThresholdBranchRangeDiffClean -BaseRef "main"
+    }
+    Invoke-Git -GitArgs @("reset", "--hard", "HEAD") | Out-Null
 
     Invoke-Git -GitArgs @("switch", "main") | Out-Null
     Invoke-Git -GitArgs @("switch", "-c", "topic-whitespace") | Out-Null

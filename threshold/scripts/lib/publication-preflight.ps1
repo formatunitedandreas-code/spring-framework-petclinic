@@ -250,7 +250,7 @@ function Get-CanonicalPublicationInputDigest {
         $result = ConvertFrom-SingleJsonDocument -Text $output
         Assert-AllowedJsonProperties -Object $result -AllowedNames @("inputDigest") -Context "input_digest_result"
         $digest = [string](Get-JsonPropertyOrNull -Object $result -Name "inputDigest")
-        if ($digest -notmatch "^[0-9a-f]{64}$") {
+        if ($digest -cnotmatch "^[0-9a-f]{64}$") {
             throw "stop_authority_validator_unavailable=canonical_input_digest_invalid"
         }
         return $digest
@@ -376,7 +376,7 @@ function Assert-PublicationPreflight {
     if ($ReviewDecision -ne "APPROVED") {
         throw "stop_review_missing=publication preflight requires independent approval"
     }
-    if ($OpenP1P2Count -gt 0) {
+    if ($OpenP1P2Count -ne 0) {
         throw "stop_open_p1_p2_findings=$OpenP1P2Count"
     }
 
@@ -401,4 +401,3 @@ function Assert-PublicationPreflight {
     Write-Host "publicationValidatedPushRef=git push origin ${actionHead}:refs/heads/<targetBranch>"
     Write-Host "publicationPreflight=passed"
 }
-

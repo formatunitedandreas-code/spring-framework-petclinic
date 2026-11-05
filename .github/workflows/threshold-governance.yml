@@ -19,6 +19,17 @@ jobs:
         shell: pwsh
         run: pwsh -File threshold/scripts/test-method-signature-candidate-filter.ps1
 
+      - name: Verify typed publication input binding and diagnostics boundary
+        shell: pwsh
+        run: |
+          ./threshold/scripts/test-publication-preflight-fixtures.ps1
+          ./threshold/scripts/test-publication-toctou-isolated-fixture.ps1
+          ./threshold/scripts/audit-publication-reason-boundary.ps1 -CheckOnly
+
+      - name: Verify committed, staged, and working branch whitespace checks
+        shell: pwsh
+        run: ./threshold/scripts/test-branch-range-validation-fixtures.ps1
+
       - name: Fetch pull request base
         run: git fetch origin ${{ github.base_ref }}:refs/remotes/origin/${{ github.base_ref }}
 
