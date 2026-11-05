@@ -1,0 +1,38 @@
+{
+  "schemaVersion": "threshold.petclinic.phase2.receipt.v0.1",
+  "runId": "p2-11-owner-search-architecture-rules-20260717T200500Z",
+  "phaseId": "P2-11",
+  "repository": "C:\\dev\\spring-framework-petclinic",
+  "branch": "agent/owner-search-architecture-rules",
+  "inputHead": "4031228a8d86566097d0f933085e03c0d7d2a7a4",
+  "baseHead": "4031228a8d86566097d0f933085e03c0d7d2a7a4",
+  "outputHead": "pending_local_commit",
+  "lane": "product_refactor",
+  "feature": "owner_search_vertical_refactoring",
+  "candidateClass": "owner_search_architecture_rules",
+  "effectClasses": [
+    "architecture_readout",
+    "packet_preparation_only",
+    "local_evidence_update"
+  ],
+  "scopeMatch": true,
+  "archUnitPresent": false,
+  "dependencyAdded": false,
+  "activeArchitectureTestsAdded": false,
+  "architectureRulesVerified": false,
+  "architectureReadoutPrepared": true,
+  "validation": {
+    "dependencyScan": "archunit_not_present",
+    "staticImportScan": "pass",
+    "gitDiffCheck": "pass"
+  },
+  "publicationPerformed": false,
+  "mergePerformed": false,
+  "releasePerformed": false,
+  "deploymentPerformed": false,
+  "humanReviewRequired": true,
+  "outcome": "packet_preparation_only",
+  "stopReasons": [
+    "new_dependency_not_covered_by_scope"
+  ]
+}

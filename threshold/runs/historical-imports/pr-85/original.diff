@@ -1,0 +1,183 @@
+diff --git a/src/main/java/org/springframework/samples/petclinic/model/Owner.java b/src/main/java/org/springframework/samples/petclinic/model/Owner.java
+index 6af35985c34bc07b0be9c354dae33affa9f6d3fa..2a74b8736f50bd647d1d08674d99cec10dad3caa 100644
+--- a/src/main/java/org/springframework/samples/petclinic/model/Owner.java
++++ b/src/main/java/org/springframework/samples/petclinic/model/Owner.java
+@@ -152,15 +152,17 @@ public class Owner extends Person {
+ 
+     @Override
+     public String toString() {
+-        return new ToStringCreator(this)
++        return appendOwnerToStringFields(new ToStringCreator(this)).toString();
++    }
+ 
++    private ToStringCreator appendOwnerToStringFields(ToStringCreator toStringCreator) {
++        return toStringCreator
+             .append("id", this.getId())
+             .append("new", this.isNew())
+             .append("lastName", this.getLastName())
+             .append("firstName", this.getFirstName())
+             .append(ADDRESS, this.address)
+             .append(CITY, this.city)
+-            .append(TELEPHONE, this.telephone)
+-            .toString();
++            .append(TELEPHONE, this.telephone);
+     }
+ }
+diff --git a/threshold/candidate-pocket/current.json b/threshold/candidate-pocket/current.json
+index a106ddea24eb96ad09aa9b205ca33d70bd1311fe..1b639dcc2704cf8c3beb87873c574546f8fecec8 100644
+--- a/threshold/candidate-pocket/current.json
++++ b/threshold/candidate-pocket/current.json
+@@ -1,9 +1,9 @@
+ {
+     "schemaVersion":  "threshold.petclinic.candidate-pocket.v0.2",
+     "leaseName":  "owned-autonomous-refactor-branch-wave-v0_automation",
+-    "branch":  "threshold-governed-refactor-demo-108",
+-    "generatedFromHead":  "a3b25d73cf8096bbef5d425f407ffccf1334046e",
+-    "generatedAt":  "2026-07-16T19:14:36.0335963Z",
++    "branch":  "threshold-governed-refactor-demo-110",
++    "generatedFromHead":  "d039ca6fe980313d93c5945de2729c015e399d48",
++    "generatedAt":  "2026-07-16T20:16:48.2060940Z",
+     "discovery":  {
+                       "method":  "static-heuristic-scan",
+                       "sourceRoot":  "src/main/java/org/springframework/samples/petclinic",
+@@ -15,6 +15,7 @@
+                                                                     "line_comment_wrap_cleanup",
+                                                                     "method_signature_wrap_cleanup",
+                                                                     "method_spacing_normalization",
++                                                                    "model_readability_cleanup",
+                                                                     "private_helper_extraction_for_readability",
+                                                                     "redundant_local_variable_simplification",
+                                                                     "repository_readability_cleanup",
+@@ -33,11 +34,11 @@
+                                       "member lexical"
+                                   ],
+                       "thresholds":  {
+-                                         "longLineThreshold":  92,
+-                                         "commentWrapThreshold":  96,
+-                                         "springDataQueryThreshold":  60,
+-                                         "repositoryMethodLengthThreshold":  5,
+-                                         "utilityMethodLengthThreshold":  5
++                                         "longLineThreshold":  120,
++                                         "commentWrapThreshold":  120,
++                                         "springDataQueryThreshold":  80,
++                                         "repositoryMethodLengthThreshold":  8,
++                                         "utilityMethodLengthThreshold":  8
+                                      },
+                       "allowedCandidateTypes":  [
+                                                     "private_helper_extraction_for_readability",
+@@ -60,10 +61,32 @@
+                                                 ]
+                   },
+     "candidates":  [
+-
++                       {
++                           "tieBreak":  {
++                                            "layerScore":  6,
++                                            "path":  "src/main/java/org/springframework/samples/petclinic/model/Owner.java",
++                                            "member":  "toString"
++                                        },
++                           "gate":  {
++                                        "required":  true,
++                                        "approved":  true,
++                                        "gatePath":  "threshold/gates/auto-patchable-candidate-classes.json"
++                                    },
++                           "score":  98,
++                           "autoPatchable":  true,
++                           "member":  "line-154",
++                           "helperName":  "appendOwnerToStringFields",
++                           "executionMode":  "auto_patchable",
++                           "file":  "src/main/java/org/springframework/samples/petclinic/model/Owner.java",
++                           "candidateId":  "src-main-java-org-springframework-samples-petclinic-model-owner-java-model-readability-cleanup-tostring",
++                           "expectedDiffSummary":  "Extract the model toString append chain from \u0027Owner\u0027 into a private helper.",
++                           "candidateClass":  "model_readability_cleanup",
++                           "estimatedChangedLines":  12,
++                           "reviewOnly":  false
++                       }
+                    ],
+-    "nextRecommendedCandidateId":  null,
+-    "nextAutoPatchableCandidateId":  null,
++    "nextRecommendedCandidateId":  "src-main-java-org-springframework-samples-petclinic-model-owner-java-model-readability-cleanup-tostring",
++    "nextAutoPatchableCandidateId":  "src-main-java-org-springframework-samples-petclinic-model-owner-java-model-readability-cleanup-tostring",
+     "nonClaims":  [
+                       "candidate pocket is not an implementation claim",
+                       "candidate pocket does not claim behavior preservation until slice validation passes",
+diff --git a/threshold/lease-state/current-run.json b/threshold/lease-state/current-run.json
+index b38aa4174eb5385443da9dc4e14ae5752acbcc9b..defd5d0b74e6a74da6d877b02025d0d9078fe321 100644
+--- a/threshold/lease-state/current-run.json
++++ b/threshold/lease-state/current-run.json
+@@ -1,12 +1,12 @@
+ {
+     "schemaVersion":  "threshold.petclinic.lease-state.v0.2",
+-    "invocationId":  "owned-autonomous-refactor-branch-wave-v0_automation-20260716T191423Z",
++    "invocationId":  "owned-autonomous-refactor-branch-wave-v0_automation-20260716T201516Z",
+     "leaseId":  "owned-autonomous-refactor-branch-wave-v0_automation",
+     "mode":  "local_refactor",
+-    "branch":  "threshold-governed-refactor-demo-108",
+-    "startHead":  "a3b25d73cf8096bbef5d425f407ffccf1334046e",
+-    "currentHead":  "a3b25d73cf8096bbef5d425f407ffccf1334046e",
+-    "currentSourceHead":  "a3b25d73cf8096bbef5d425f407ffccf1334046e",
++    "branch":  "threshold-governed-refactor-demo-110",
++    "startHead":  "d039ca6fe980313d93c5945de2729c015e399d48",
++    "currentHead":  "e5c456248467e50eab854dfe88b0df98e65facbf",
++    "currentSourceHead":  "e5c456248467e50eab854dfe88b0df98e65facbf",
+     "candidatesProcessed":  0,
+     "commitsCreated":  0,
+     "remainingBudget":  {
+@@ -16,10 +16,9 @@
+                         },
+     "lastReceipt":  null,
+     "terminalState":  "ready_no_candidates_verified",
+-    "updatedAt":  "2026-07-16T19:14:37.0699519Z",
+-    "scopeExpansionTier":  2,
+-    "scopeExpansionReason":  "fresh_wave_candidate_shortage",
+-    "scopeExpansionAppliedAt":  "2026-07-16T19:14:33.7198097Z",
+-    "runtimeObservedHead":  "a3b25d73cf8096bbef5d425f407ffccf1334046e",
+-    "runtimeObservedAt":  "2026-07-16T19:14:37.0635189Z"
++    "updatedAt":  "2026-07-16T20:24:25.5718466Z",
++    "terminalReason":  "no applicable autoPatchable candidates after discovery canary passed",
++    "discoveryCanaryLastPassedAt":  "2026-07-16T20:23:24.3541796Z",
++    "runtimeObservedHead":  "e5c456248467e50eab854dfe88b0df98e65facbf",
++    "runtimeObservedAt":  "2026-07-16T20:24:25.5623101Z"
+ }
+diff --git a/threshold/leases/current.yaml b/threshold/leases/current.yaml
+index e2eac3adcadafca2afa38284497d4710bf2912c3..9b038294406972eaaab3ada4730d4130805f9755 100644
+--- a/threshold/leases/current.yaml
++++ b/threshold/leases/current.yaml
+@@ -1,16 +1,16 @@
+ leaseName: owned-autonomous-refactor-branch-wave-v0_automation
+ repository: C:\dev\spring-framework-petclinic
+-branch: threshold-governed-refactor-demo-108
++branch: threshold-governed-refactor-demo-110
+ baseRemote: origin
+ baseRef: origin/main
+-startHead: a3b25d73cf8096bbef5d425f407ffccf1334046e
++startHead: d039ca6fe980313d93c5945de2729c015e399d48
+ headPolicy: descendantOfStartHead
+-scopeExpansionTier: 2
+-longLineThreshold: 92
+-commentWrapThreshold: 96
+-springDataQueryThreshold: 60
+-repositoryMethodLengthThreshold: 5
+-utilityMethodLengthThreshold: 5
++scopeExpansionTier: 0
++longLineThreshold: 120
++commentWrapThreshold: 120
++springDataQueryThreshold: 80
++repositoryMethodLengthThreshold: 8
++utilityMethodLengthThreshold: 8
+ 
+ budget:
+   maxCandidatesThisRun: 5
+diff --git a/threshold/scripts/discover-candidates.ps1 b/threshold/scripts/discover-candidates.ps1
+index 4cd07a43755e3b4f3b3a0f253a433b1c213282f5..f178abebd92f1a690ca49ca8bc93fe38ad19760c 100644
+--- a/threshold/scripts/discover-candidates.ps1
++++ b/threshold/scripts/discover-candidates.ps1
+@@ -750,7 +750,7 @@ foreach ($file in $sourceFiles) {
+                 continue
+             }
+ 
+-            $className = Split-Path -Path $path -LeafBase
++            $className = [System.IO.Path]::GetFileNameWithoutExtension($path)
+             $helperName = "append$($className)ToStringFields"
+             if ($content -match "private\s+ToStringCreator\s+$([regex]::Escape($helperName))\s*\(") {
+                 continue

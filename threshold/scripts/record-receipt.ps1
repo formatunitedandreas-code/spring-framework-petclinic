@@ -6,6 +6,7 @@ param(
     [string] $CandidateId,
     [string] $CandidateClass = "threshold_governance_artifact_update",
     [string] $BaseHead = "",
+    [string] $PrBaseHead = "",
     [string] $CommitHash = "",
     [string[]] $AllowedPath = @(),
     [string] $DiffSummary = "",
@@ -16,6 +17,12 @@ param(
     [int] $Errors = 0,
     [int] $Skipped = 0,
     [string] $ReceiptMaterialization = "prospective",
+    [string] $ReceiptRoot = "threshold/receipts",
+    [string] $CandidatePocketPath = "threshold/candidate-pocket/current.json",
+    [string] $DiscoveryEvidenceRoot = "threshold/discovery-evidence",
+    [string] $DiscoveryEvidencePath = "",
+    [string] $ExecutorCandidateClass = "",
+    [string] $LearningProjectionClass = "",
     [switch] $PerCommitValidationLogAvailable,
     [switch] $BranchFinalValidationPassed,
     [switch] $UpdateState,
@@ -24,6 +31,9 @@ param(
 
 Set-StrictMode -Version Latest
 $ErrorActionPreference = "Stop"
+
+. (Join-Path $PSScriptRoot "lib/candidate-class-provenance.ps1")
+. (Join-Path $PSScriptRoot "lib/content-hash.ps1")
 
 function Get-LeaseScalar {
     param([string[]] $Lines, [string] $Name, [string] $Default = "")
@@ -38,17 +48,6 @@ function Get-LeaseScalar {
 function Get-CommitParent {
     param([string] $Commit)
     return (& git rev-parse "$Commit^").Trim()
-}
-
-function Get-GitBlobSha256 {
-    param([string] $Revision, [string] $Path)
-    & git cat-file -e "$Revision`:$Path" 2>$null
-    if ($LASTEXITCODE -ne 0) { return $null }
-    $content = (& git show "$Revision`:$Path") -join "`n"
-    $bytes = [System.Text.Encoding]::UTF8.GetBytes($content)
-    $sha = [System.Security.Cryptography.SHA256]::Create()
-    try { return ($sha.ComputeHash($bytes) | ForEach-Object { $_.ToString("x2") }) -join "" }
-    finally { $sha.Dispose() }
 }
 
 function ConvertTo-RepoPath {
@@ -66,6 +65,12 @@ $leaseStartHead = Get-LeaseScalar $leaseLines "startHead"
 if ([string]::IsNullOrWhiteSpace($CommitHash)) { $CommitHash = (& git rev-parse HEAD).Trim() }
 if ([string]::IsNullOrWhiteSpace($BaseHead)) { $BaseHead = Get-CommitParent $CommitHash }
 if ([string]::IsNullOrWhiteSpace($DiffSummary)) { $DiffSummary = ((& git show --format=%s --no-patch $CommitHash) -join " ").Trim() }
+if ([string]::IsNullOrWhiteSpace($ExecutorCandidateClass)) { $ExecutorCandidateClass = $CandidateClass }
+if ([string]::IsNullOrWhiteSpace($LearningProjectionClass)) { $LearningProjectionClass = $CandidateClass }
+$leaseDigest = Get-ThresholdGitBlobSha256 -Revision $CommitHash -Path (ConvertTo-RepoPath $LeasePath)
+if ([string]::IsNullOrWhiteSpace($leaseDigest)) {
+    throw "Could not compute committed lease blob digest for $LeasePath at $CommitHash"
+}
 
 $changedPaths = @(& git diff --name-only "$BaseHead..$CommitHash" | Where-Object { -not [string]::IsNullOrWhiteSpace($_) })
 if (-not $changedPaths) { throw "No changed files detected for commit range $BaseHead..$CommitHash" }
@@ -83,8 +88,8 @@ $changedFiles = @()
 foreach ($path in $changedPaths) {
     $changedFiles += [ordered]@{
         path = ConvertTo-RepoPath $path
-        beforeSha256 = Get-GitBlobSha256 $BaseHead $path
-        afterSha256 = Get-GitBlobSha256 $CommitHash $path
+        beforeSha256 = Get-ThresholdGitBlobSha256 $BaseHead $path
+        afterSha256 = Get-ThresholdGitBlobSha256 $CommitHash $path
     }
 }
 
@@ -115,10 +120,28 @@ $nonClaims = @(
     "no public compliance claim"
 )
 
+$candidateClassProvenance = New-ThresholdCandidateClassProvenance `
+    -CandidateId $CandidateId `
+    -GrantedCandidateClass $CandidateClass `
+    -ExecutorCandidateClass $ExecutorCandidateClass `
+    -ReceiptCandidateClass $CandidateClass `
+    -LearningProjectionClass $LearningProjectionClass `
+    -BaseHead $BaseHead `
+    -PrBaseHead $PrBaseHead `
+    -CommitHash $CommitHash `
+    -CandidatePocketPath $CandidatePocketPath `
+    -DiscoveryEvidenceRoot $DiscoveryEvidenceRoot `
+    -DiscoveryEvidencePath $DiscoveryEvidencePath
+if (-not $candidateClassProvenance.candidateClassProvenanceMatched) {
+    throw "candidateClassProvenanceMatched=false candidateId=$CandidateId observedDiffClass=$($candidateClassProvenance.independentlyObservedDiffClass) candidateClass=$CandidateClass"
+}
+
 $receipt = [ordered]@{
     schemaVersion = "threshold.petclinic.slice-receipt.v0.2"
     candidateId = $CandidateId
     leaseName = $leaseName
+    leaseDigest = $leaseDigest
+    leaseDigestRevision = $CommitHash
     branch = $branch
     candidateClass = $CandidateClass
     leaseStartHead = $leaseStartHead
@@ -130,11 +153,12 @@ $receipt = [ordered]@{
     changedFiles = $changedFiles
     diffSummary = $DiffSummary
     diffStat = [ordered]@{ filesChanged = $changedFiles.Count; insertions = $insertions; deletions = $deletions }
+    candidateClassProvenance = $candidateClassProvenance
     validation = [ordered]@{ diffCheck = "passed"; command = $ValidationCommand; result = $ValidationResult; testsRun = $TestsRun; failures = $Failures; errors = $Errors; skipped = $Skipped }
     nonClaims = $nonClaims
 }
 
-$outDir = "threshold/receipts"
+$outDir = $ReceiptRoot
 if (-not (Test-Path $outDir)) { New-Item -ItemType Directory -Path $outDir | Out-Null }
 $safeCandidateId = $CandidateId -replace "[^A-Za-z0-9_.-]", "-"
 $shortCommit = $CommitHash.Substring(0, [Math]::Min(12, $CommitHash.Length))
@@ -145,9 +169,17 @@ if (-not $DryRun) { $receipt | ConvertTo-Json -Depth 12 | Set-Content $outPath }
 if ($UpdateState -and -not $DryRun) {
     $stateDir = Split-Path $StatePath -Parent
     if (-not (Test-Path $stateDir)) { New-Item -ItemType Directory -Path $stateDir | Out-Null }
+    $terminalReason = $null
     if (Test-Path $StatePath) {
         $state = Get-Content $StatePath -Raw | ConvertFrom-Json
         $candidatesProcessed = [int]$state.candidatesProcessed + 1
+        $processedCandidateIds = @()
+        if ($state.PSObject.Properties.Name -contains "processedCandidateIds") {
+            $processedCandidateIds = @($state.processedCandidateIds | ForEach-Object { [string]$_ } | Where-Object { -not [string]::IsNullOrWhiteSpace($_) })
+        }
+        if ($processedCandidateIds -notcontains [string]$CandidateId) {
+            $processedCandidateIds += [string]$CandidateId
+        }
         $commitsCreated = [int]$state.commitsCreated + 1
         $remainingCandidates = [Math]::Max(0, [int]$state.remainingBudget.candidates - 1)
         $remainingCommits = [Math]::Max(0, [int]$state.remainingBudget.commits - 1)
@@ -161,12 +193,17 @@ if ($UpdateState -and -not $DryRun) {
         else {
             $stateBranch = $branch
         }
+        if ($state.PSObject.Properties.Name -contains "terminalReason") {
+            $terminalReason = [string]$state.terminalReason
+        }
         if ($remainingCandidates -eq 0 -or $remainingCommits -eq 0) {
-            $terminalState = "budget_exhausted"
+            $terminalState = "budget_exhausted_verified"
+            $terminalReason = "remaining candidate or commit budget is exhausted after slice validation passed"
         }
     }
     else {
         $candidatesProcessed = 1
+        $processedCandidateIds = @([string]$CandidateId)
         $commitsCreated = 1
         $remainingCandidates = 0
         $remainingCommits = 0
@@ -186,11 +223,15 @@ if ($UpdateState -and -not $DryRun) {
         currentHead = $CommitHash
         currentSourceHead = $CommitHash
         candidatesProcessed = $candidatesProcessed
+        processedCandidateIds = @($processedCandidateIds)
         commitsCreated = $commitsCreated
         remainingBudget = [ordered]@{ candidates = $remainingCandidates; commits = $remainingCommits; repairAttempts = $remainingRepairs }
         lastReceipt = ConvertTo-RepoPath $outPath
         terminalState = $terminalState
         updatedAt = (Get-Date).ToUniversalTime().ToString("o")
+    }
+    if (-not [string]::IsNullOrWhiteSpace($terminalReason)) {
+        $newState.terminalReason = $terminalReason
     }
     $newState | ConvertTo-Json -Depth 8 | Set-Content $StatePath
 }

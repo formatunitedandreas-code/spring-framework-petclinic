@@ -1,0 +1,51 @@
+{
+    "schemaVersion":  "threshold.petclinic.slice-receipt.v0.2",
+    "candidateId":  "src-main-java-org-springframework-samples-petclinic-web-petvalidator-java-method-signature-wrap-cleanup-line-70",
+    "leaseName":  "owned-autonomous-refactor-branch-wave-v0_automation",
+    "leaseDigest":  "32667f118a5b31b7fd353f54dc5b2c3fc88c4f77b312224a4cb8b0c7045f5ed9",
+    "branch":  "threshold-governed-refactor-demo-180",
+    "candidateClass":  "method_signature_wrap_cleanup",
+    "leaseStartHead":  "4e125dff357757d3692a469323f12212d0e53342",
+    "baseHead":  "27427e7193cf78bceb78e847d4d4fbb49269f8e8",
+    "commitHash":  "55a9cb41ba8e217f86d8b26c68833dae5016f37f",
+    "receiptMaterialization":  "post-commit",
+    "perCommitValidationLogAvailable":  true,
+    "branchFinalValidationPassed":  false,
+    "changedFiles":  [
+                         {
+                             "path":  "src/main/java/org/springframework/samples/petclinic/web/PetValidator.java",
+                             "beforeSha256":  "ce9a71f3544b0c4550575669af17d30f7d18d1d0ef9c90a04f874101d39d25d5",
+                             "afterSha256":  "eb3b9a311195a3bcefeb52faa7950d2a9583e6d42eeced4fd318bdbe89f9883c"
+                         }
+                     ],
+    "diffSummary":  "Refactor PetClinic Wrap a long constant or method signature readability l",
+    "diffStat":  {
+                     "filesChanged":  1,
+                     "insertions":  4,
+                     "deletions":  1
+                 },
+    "validation":  {
+                       "diffCheck":  "passed",
+                       "command":  ".\\mvnw.cmd test",
+                       "result":  "BUILD SUCCESS",
+                       "testsRun":  119,
+                       "failures":  0,
+                       "errors":  0,
+                       "skipped":  0
+                   },
+    "nonClaims":  [
+                      "no push in candidate slice",
+                      "no PR update in candidate slice",
+                      "no upstream interaction",
+                      "no pom.xml change",
+                      "no dependency change",
+                      "no src/test change",
+                      "no merge",
+                      "no release",
+                      "no deploy",
+                      "no public readiness claim",
+                      "no public correctness claim",
+                      "no public security claim",
+                      "no public compliance claim"
+                  ]
+}

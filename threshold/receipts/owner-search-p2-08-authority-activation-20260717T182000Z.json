@@ -1,0 +1,20 @@
+{
+  "runId": "owner-search-p2-08-authority-activation-20260717T182000Z",
+  "repository": "spring-petclinic/spring-framework-petclinic",
+  "localPath": "C:\\dev\\spring-framework-petclinic",
+  "phaseId": "P2-08",
+  "lane": "product_refactor",
+  "feature": "owner_search_vertical_refactoring",
+  "decision": "active",
+  "authoritySource": "user_one_shot_grant_2026-07-17-p2-08",
+  "installedLease": "p2-08-owner-search-spring-data-jpa-adapter",
+  "branch": "agent/owner-search-spring-data-jpa-adapter",
+  "head": "c153e309cacd620f37e35059dfaee5c8735e9fea",
+  "originMain": "c153e309cacd620f37e35059dfaee5c8735e9fea",
+  "priorMergedPullRequest": {
+    "number": 111,
+    "mergeCommit": "c153e309cacd620f37e35059dfaee5c8735e9fea",
+    "mergedAt": "2026-07-17T16:03:58Z"
+  },
+  "recommendedNextAction": "Implement Spring Data JPA OwnerSearchQuery adapter."
+}

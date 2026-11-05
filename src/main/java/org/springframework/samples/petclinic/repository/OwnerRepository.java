@@ -9,7 +9,8 @@
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
+ * express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
@@ -21,9 +22,12 @@ import org.springframework.samples.petclinic.model.BaseEntity;
 import org.springframework.samples.petclinic.model.Owner;
 
 /**
- * Repository class for <code>Owner</code> domain objects All method names are compliant with
+ * Repository class for <code>Owner</code> domain objects
+ * All method names
+ * are compliant with
  * Spring Data naming
- * conventions so this interface can easily be extended for Spring Data See here:
+ * conventions so this interface can easily be extended for
+ * Spring Data See here:
  * http://static.springsource.org/spring-data/jpa/docs/current/reference/html/
  * jpa.repositories.html#jpa.query-methods.query-creation
  *
@@ -35,13 +39,15 @@ import org.springframework.samples.petclinic.model.Owner;
 public interface OwnerRepository {
 
     /**
-     * Retrieve <code>Owner</code>s from the data store by last name, returning all
+     * Retrieve <code>Owner</code>s from the data store by last
+     * name, returning all
      * owners whose last
      * name <i>starts</i>
      * with the given name.
      *
      * @param lastName Value to search for
-     * @return a <code>Collection</code> of matching <code>Owner</code>s (or an empty
+     * @return a <code>Collection</code> of matching
+     * <code>Owner</code>s (or an empty
      * <code>Collection</code> if none
      * found)
      */
@@ -58,7 +64,8 @@ public interface OwnerRepository {
 
 
     /**
-     * Save an <code>Owner</code> to the data store, either inserting or updating it.
+     * Save an <code>Owner</code> to the data store, either
+     * inserting or updating it.
      *
      * @param owner the <code>Owner</code> to save
      * @see BaseEntity#isNew
