@@ -2,13 +2,22 @@
 param(
     [string] $BaseRef = "main",
     [string] $LeasePath = "threshold/leases/current.yaml",
-    [string] $StatePath = "threshold/lease-state/current-run.json"
+    [string] $StatePath = "threshold/lease-state/current-run.json",
+    [switch] $PublicationPreflight,
+    [string] $AuthorityPath = "threshold/runtime/authority/publication-authority.json",
+    [string] $ConsumedAuthorityPath = "threshold/runtime/authority/consumed-authorities.json",
+    [string] $ThresholdCorePath = $env:THRESHOLD_CORE_PATH,
+    [string] $ReviewHead = "",
+    [string] $ReviewDecision = "",
+    [int] $OpenP1P2Count = 0
 )
 
 Set-StrictMode -Version Latest
 $ErrorActionPreference = "Stop"
 
 . (Join-Path $PSScriptRoot "lib/lease-policy.ps1")
+. (Join-Path $PSScriptRoot "lib/publication-preflight.ps1")
+. (Join-Path $PSScriptRoot "lib/semantic-workflow.ps1")
 . (Join-Path $PSScriptRoot "lib/historical-import.ps1")
 . (Join-Path $PSScriptRoot "lib/finite-manual-source.ps1")
 . (Join-Path $PSScriptRoot "lib/content-hash.ps1")
@@ -662,6 +671,11 @@ $expectedBaseRef = Get-LeaseScalar $leaseLines "baseRef"
 $mergeAllowed = Get-LeaseScalar $leaseLines "mergeAllowed"
 $forbiddenActions = @(Get-ThresholdLeaseList -Lines $leaseLines -Name "forbiddenActions")
 $resolvedBaseRefForGit = Resolve-BaseRefForGit -Ref $BaseRef
+if ($PublicationPreflight.IsPresent) {
+    $publicationChangedPaths = @(& git diff --name-only "$resolvedBaseRefForGit...HEAD")
+    if ($LASTEXITCODE -ne 0) { throw "stop_authority_validator_unavailable=publication_diff_unavailable" }
+    Assert-PublicationPreflight -ChangedPaths $publicationChangedPaths
+}
 if (Test-ThresholdFiniteManualSourceCandidate -BaseRef $resolvedBaseRefForGit) {
     Write-Host 'thresholdFiniteCurrentSourceCandidate=true'
     Write-Host 'sourceCommitReceiptCoverage=current_manual_only_historical_not_reasserted'
@@ -688,6 +702,10 @@ $remoteIndependentExpectedBaseRef = ConvertTo-RemoteIndependentLeaseBaseRef -Ref
 
 $preCommitWorktreeMode = $false
 $changedPaths = @(git diff --name-only "$resolvedBaseRefForGit...HEAD")
+$semanticRunEvidencePaths = @($changedPaths | Where-Object { $_ -match "^threshold/runs/[^/]+/(twin-delta|aggregate-receipt|evidence-digests)\.json$" })
+if ($semanticRunEvidencePaths.Count -gt 0) {
+    Assert-ThresholdSemanticEvidenceFileEconomy -BaseRef $resolvedBaseRefForGit -RequireCompleteRunEvidence
+}
 if ($changedPaths.Count -eq 0) {
     $changedPaths = @(git diff --name-only HEAD)
     $preCommitWorktreeMode = $changedPaths.Count -gt 0

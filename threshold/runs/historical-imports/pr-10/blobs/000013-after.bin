@@ -1,0 +1,50 @@
+{
+    "schemaVersion": "threshold.petclinic.slice-receipt.v0.2",
+    "candidateId": "src-main-java-org-springframework-samples-petclinic-repository-petrepository-java-comment-wrap-cleanup-line-26",
+    "leaseName": "petclinic-threshold-governed-refactor-lease-v16",
+    "branch": "threshold-governed-refactor-demo-7",
+    "candidateClass": "comment_wrap_cleanup",
+    "leaseStartHead": "8956652a7f0a8549f02b8b7ca6149b71c52da137",
+    "baseHead": "6d800390519876fbfb3bc8bd342a274576c88287",
+    "commitHash": "1113a7ba4be6389d259017fd182ac4d1e164124b",
+    "receiptMaterialization": "post-commit",
+    "perCommitValidationLogAvailable": true,
+    "branchFinalValidationPassed": false,
+    "changedFiles": [
+        {
+            "path": "src/main/java/org/springframework/samples/petclinic/repository/PetRepository.java",
+            "beforeSha256": "C6BB1AB9D17068A7E4C812AABC7B060CF3BA0891FFB3989BD152D8C0BA5508CC",
+            "afterSha256": "3AB8CF397A4918B400C55E9ECF8364DE664D47A2FC9016B2F7940608A224B249"
+        }
+    ],
+    "diffSummary": "Refactor PetClinic Wrap one long Javadoc comment line without changing so",
+    "diffStat": {
+        "filesChanged": 1,
+        "insertions": 2,
+        "deletions": 1
+    },
+    "validation": {
+        "diffCheck": "passed",
+        "command": ".\\mvnw.cmd test",
+        "result": "BUILD SUCCESS",
+        "testsRun": 75,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+    },
+    "nonClaims": [
+        "no push in candidate slice",
+        "no PR update in candidate slice",
+        "no upstream interaction",
+        "no pom.xml change",
+        "no dependency change",
+        "no src/test change",
+        "no merge",
+        "no release",
+        "no deploy",
+        "no public readiness claim",
+        "no public correctness claim",
+        "no public security claim",
+        "no public compliance claim"
+    ]
+}

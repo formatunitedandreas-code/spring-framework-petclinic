@@ -1,0 +1,1273 @@
+diff --git a/src/main/java/org/springframework/samples/petclinic/repository/springdatajpa/SpringDataOwnerRepository.java b/src/main/java/org/springframework/samples/petclinic/repository/springdatajpa/SpringDataOwnerRepository.java
+index 7c1324f0c58b68e2132675541c47e98f2874d3a1..1041e095e919bd4110d9d5905d8c28c4a86e828f 100644
+--- a/src/main/java/org/springframework/samples/petclinic/repository/springdatajpa/SpringDataOwnerRepository.java
++++ b/src/main/java/org/springframework/samples/petclinic/repository/springdatajpa/SpringDataOwnerRepository.java
+@@ -40,4 +40,4 @@ public interface SpringDataOwnerRepository extends OwnerRepository, Repository<O
+     @Query("SELECT owner FROM Owner owner left join fetch owner.pets WHERE owner.id " +
+         "=:id")
+     Owner findById(@Param("id") int id);
+-}
++}
+\ No newline at end of file
+diff --git a/threshold/receipts/src-main-java-org-springframework-samples-petclinic-petclinicinitializer-java-comment-wrap-cleanup-line-29-e5208aa2100f.json b/threshold/receipts/src-main-java-org-springframework-samples-petclinic-petclinicinitializer-java-comment-wrap-cleanup-line-29-e5208aa2100f.json
+new file mode 100644
+index 0000000000000000000000000000000000000000..f7f17303bf3607fa512f1df2f99534f237febd97
+--- /dev/null
++++ b/threshold/receipts/src-main-java-org-springframework-samples-petclinic-petclinicinitializer-java-comment-wrap-cleanup-line-29-e5208aa2100f.json
+@@ -0,0 +1,50 @@
++{
++    "schemaVersion":  "threshold.petclinic.slice-receipt.v0.2",
++    "candidateId":  "src-main-java-org-springframework-samples-petclinic-petclinicinitializer-java-comment-wrap-cleanup-line-29",
++    "leaseName":  "petclinic-threshold-governed-refactor-lease-v16",
++    "branch":  "threshold-governed-refactor-demo-7",
++    "candidateClass":  "comment_wrap_cleanup",
++    "leaseStartHead":  "2eccedf853e26b5bb68e20c6672969fe73848206",
++    "baseHead":  "d09981c5cfb909787edf5d2a4bc88745e5b3d113",
++    "commitHash":  "e5208aa2100fd88ec57b8d07e73e201100a743e4",
++    "receiptMaterialization":  "post-commit",
++    "perCommitValidationLogAvailable":  true,
++    "branchFinalValidationPassed":  false,
++    "changedFiles":  [
++                         {
++                             "path":  "src/main/java/org/springframework/samples/petclinic/PetclinicInitializer.java",
++                             "beforeSha256":  "bcb5331d7e4843b9cb5b3a44019e93e0cf11a818208b07fb4d0bfb6aca809846",
++                             "afterSha256":  "a7331ee28c7da091c31a29732b52abf149db0d6d7252c96fd96a084a6fa84c6a"
++                         }
++                     ],
++    "diffSummary":  "Refactor PetClinic Wrap one long Javadoc comment line without changing so",
++    "diffStat":  {
++                     "filesChanged":  1,
++                     "insertions":  3,
++                     "deletions":  2
++                 },
++    "validation":  {
++                       "diffCheck":  "passed",
++                       "command":  ".\\mvnw.cmd test",
++                       "result":  "BUILD SUCCESS",
++                       "testsRun":  75,
++                       "failures":  0,
++                       "errors":  0,
++                       "skipped":  0
++                   },
++    "nonClaims":  [
++                      "no push in candidate slice",
++                      "no PR update in candidate slice",
++                      "no upstream interaction",
++                      "no pom.xml change",
++                      "no dependency change",
++                      "no src/test change",
++                      "no merge",
++                      "no release",
++                      "no deploy",
++                      "no public readiness claim",
++                      "no public correctness claim",
++                      "no public security claim",
++                      "no public compliance claim"
++                  ]
++}
+diff --git a/threshold/receipts/src-main-java-org-springframework-samples-petclinic-repository-jdbc-jdbcownerrepositoryimpl-java-comment-wrap-cleanup-line-109-cc35d235b394.json b/threshold/receipts/src-main-java-org-springframework-samples-petclinic-repository-jdbc-jdbcownerrepositoryimpl-java-comment-wrap-cleanup-line-109-cc35d235b394.json
+new file mode 100644
+index 0000000000000000000000000000000000000000..db3419777f4f03cc1c9d6160535ea4bc2b5c3bb4
+--- /dev/null
++++ b/threshold/receipts/src-main-java-org-springframework-samples-petclinic-repository-jdbc-jdbcownerrepositoryimpl-java-comment-wrap-cleanup-line-109-cc35d235b394.json
+@@ -0,0 +1,50 @@
++{
++    "schemaVersion":  "threshold.petclinic.slice-receipt.v0.2",
++    "candidateId":  "src-main-java-org-springframework-samples-petclinic-repository-jdbc-jdbcownerrepositoryimpl-java-comment-wrap-cleanup-line-109",
++    "leaseName":  "petclinic-threshold-governed-refactor-lease-v16",
++    "branch":  "threshold-governed-refactor-demo-7",
++    "candidateClass":  "comment_wrap_cleanup",
++    "leaseStartHead":  "8956652a7f0a8549f02b8b7ca6149b71c52da137",
++    "baseHead":  "57c6ba46bbcbf30a74d2cdb7c7d43c39aa866975",
++    "commitHash":  "cc35d235b394ebf0a8c15231a5d80c1e4f47cf70",
++    "receiptMaterialization":  "post-commit",
++    "perCommitValidationLogAvailable":  true,
++    "branchFinalValidationPassed":  false,
++    "changedFiles":  [
++                         {
++                             "path":  "src/main/java/org/springframework/samples/petclinic/repository/jdbc/JdbcOwnerRepositoryImpl.java",
++                             "beforeSha256":  "b45c3b838fcb21b57661e143fa750350b3e50c405ac2d5eb4fb29cf7488dcbec",
++                             "afterSha256":  "5d07e0c7fe47c23ced6ca90c67be41376cc0d2c207601b989e17514e5eaecde7"
++                         }
++                     ],
++    "diffSummary":  "Refactor PetClinic Wrap one long Javadoc comment line without changing so",
++    "diffStat":  {
++                     "filesChanged":  1,
++                     "insertions":  3,
++                     "deletions":  2
++                 },
++    "validation":  {
++                       "diffCheck":  "passed",
++                       "command":  ".\\mvnw.cmd test",
++                       "result":  "BUILD SUCCESS",
++                       "testsRun":  75,
++                       "failures":  0,
++                       "errors":  0,
++                       "skipped":  0
++                   },
++    "nonClaims":  [
++                      "no push in candidate slice",
++                      "no PR update in candidate slice",
++                      "no upstream interaction",
++                      "no pom.xml change",
++                      "no dependency change",
++                      "no src/test change",
++                      "no merge",
++                      "no release",
++                      "no deploy",
++                      "no public readiness claim",
++                      "no public correctness claim",
++                      "no public security claim",
++                      "no public compliance claim"
++                  ]
++}
+diff --git a/threshold/receipts/src-main-java-org-springframework-samples-petclinic-repository-jdbc-jdbcownerrepositoryimpl-java-comment-wrap-cleanup-line-94-989f768e3de8.json b/threshold/receipts/src-main-java-org-springframework-samples-petclinic-repository-jdbc-jdbcownerrepositoryimpl-java-comment-wrap-cleanup-line-94-989f768e3de8.json
+new file mode 100644
+index 0000000000000000000000000000000000000000..bfc809b46c97bc6e0e542fa36e218838ef222d03
+--- /dev/null
++++ b/threshold/receipts/src-main-java-org-springframework-samples-petclinic-repository-jdbc-jdbcownerrepositoryimpl-java-comment-wrap-cleanup-line-94-989f768e3de8.json
+@@ -0,0 +1,50 @@
++{
++    "schemaVersion":  "threshold.petclinic.slice-receipt.v0.2",
++    "candidateId":  "src-main-java-org-springframework-samples-petclinic-repository-jdbc-jdbcownerrepositoryimpl-java-comment-wrap-cleanup-line-94",
++    "leaseName":  "petclinic-threshold-governed-refactor-lease-v16",
++    "branch":  "threshold-governed-refactor-demo-7",
++    "candidateClass":  "comment_wrap_cleanup",
++    "leaseStartHead":  "8956652a7f0a8549f02b8b7ca6149b71c52da137",
++    "baseHead":  "4dee7647a5594a905add77707c39238a6f13e324",
++    "commitHash":  "989f768e3de820262ca1eeab3a093c7d87180b84",
++    "receiptMaterialization":  "post-commit",
++    "perCommitValidationLogAvailable":  true,
++    "branchFinalValidationPassed":  false,
++    "changedFiles":  [
++                         {
++                             "path":  "src/main/java/org/springframework/samples/petclinic/repository/jdbc/JdbcOwnerRepositoryImpl.java",
++                             "beforeSha256":  "5d07e0c7fe47c23ced6ca90c67be41376cc0d2c207601b989e17514e5eaecde7",
++                             "afterSha256":  "c05a4a589143ca856e037556d68cdf041edd33c0edfec0b1098e86ff463889f6"
++                         }
++                     ],
++    "diffSummary":  "Refactor PetClinic Wrap one long Javadoc comment line without changing so",
++    "diffStat":  {
++                     "filesChanged":  1,
++                     "insertions":  2,
++                     "deletions":  1
++                 },
++    "validation":  {
++                       "diffCheck":  "passed",
++                       "command":  ".\\mvnw.cmd test",
++                       "result":  "BUILD SUCCESS",
++                       "testsRun":  75,
++                       "failures":  0,
++                       "errors":  0,
++                       "skipped":  0
++                   },
++    "nonClaims":  [
++                      "no push in candidate slice",
++                      "no PR update in candidate slice",
++                      "no upstream interaction",
++                      "no pom.xml change",
++                      "no dependency change",
++                      "no src/test change",
++                      "no merge",
++                      "no release",
++                      "no deploy",
++                      "no public readiness claim",
++                      "no public correctness claim",
++                      "no public security claim",
++                      "no public compliance claim"
++                  ]
++}
+diff --git a/threshold/receipts/src-main-java-org-springframework-samples-petclinic-repository-jdbc-jdbcvetrepositoryimpl-java-repository-readability-cleanup-line-45-182681ff1ac3.json b/threshold/receipts/src-main-java-org-springframework-samples-petclinic-repository-jdbc-jdbcvetrepositoryimpl-java-repository-readability-cleanup-line-45-182681ff1ac3.json
+new file mode 100644
+index 0000000000000000000000000000000000000000..1e52f6f2748b795ef42081083660f1ce37f66007
+--- /dev/null
++++ b/threshold/receipts/src-main-java-org-springframework-samples-petclinic-repository-jdbc-jdbcvetrepositoryimpl-java-repository-readability-cleanup-line-45-182681ff1ac3.json
+@@ -0,0 +1,50 @@
++{
++    "schemaVersion":  "threshold.petclinic.slice-receipt.v0.2",
++    "candidateId":  "src-main-java-org-springframework-samples-petclinic-repository-jdbc-jdbcvetrepositoryimpl-java-repository-readability-cleanup-line-45",
++    "leaseName":  "petclinic-threshold-governed-refactor-lease-v16",
++    "branch":  "threshold-governed-refactor-demo-7",
++    "candidateClass":  "repository_readability_cleanup",
++    "leaseStartHead":  "00a58b69e266b475ab72386527a1af40419fdac2",
++    "baseHead":  "63fae9b8d9a322a2fc8bc3d8a39d9807cb5644be",
++    "commitHash":  "182681ff1ac39fc0c646eedc83ad6bb5e6ccebc7",
++    "receiptMaterialization":  "post-commit",
++    "perCommitValidationLogAvailable":  true,
++    "branchFinalValidationPassed":  false,
++    "changedFiles":  [
++                         {
++                             "path":  "src/main/java/org/springframework/samples/petclinic/repository/jdbc/JdbcVetRepositoryImpl.java",
++                             "beforeSha256":  "c9bc53be04d88e4b6da1b64f731ea1e0027fc6b38a50e8f3978a5ebd7622827a",
++                             "afterSha256":  "62e2ce4f6e8294613347bf3c3a1734e5804f3edd9665248ea0117bb5e2c84f94"
++                         }
++                     ],
++    "diffSummary":  "Refactor PetClinic Normalize a split repository string constant into a ca",
++    "diffStat":  {
++                     "filesChanged":  1,
++                     "insertions":  2,
++                     "deletions":  2
++                 },
++    "validation":  {
++                       "diffCheck":  "passed",
++                       "command":  ".\\mvnw.cmd test",
++                       "result":  "BUILD SUCCESS",
++                       "testsRun":  75,
++                       "failures":  0,
++                       "errors":  0,
++                       "skipped":  0
++                   },
++    "nonClaims":  [
++                      "no push in candidate slice",
++                      "no PR update in candidate slice",
++                      "no upstream interaction",
++                      "no pom.xml change",
++                      "no dependency change",
++                      "no src/test change",
++                      "no merge",
++                      "no release",
++                      "no deploy",
++                      "no public readiness claim",
++                      "no public correctness claim",
++                      "no public security claim",
++                      "no public compliance claim"
++                  ]
++}
+diff --git a/threshold/receipts/src-main-java-org-springframework-samples-petclinic-repository-jdbc-jdbcvisitrepositoryimpl-java-repository-readability-cleanup-line-45-f1bd68772513.json b/threshold/receipts/src-main-java-org-springframework-samples-petclinic-repository-jdbc-jdbcvisitrepositoryimpl-java-repository-readability-cleanup-line-45-f1bd68772513.json
+new file mode 100644
+index 0000000000000000000000000000000000000000..85c9b38dc17fe183ce05aa5155f5aa62b146dfbf
+--- /dev/null
++++ b/threshold/receipts/src-main-java-org-springframework-samples-petclinic-repository-jdbc-jdbcvisitrepositoryimpl-java-repository-readability-cleanup-line-45-f1bd68772513.json
+@@ -0,0 +1,50 @@
++{
++    "schemaVersion":  "threshold.petclinic.slice-receipt.v0.2",
++    "candidateId":  "src-main-java-org-springframework-samples-petclinic-repository-jdbc-jdbcvisitrepositoryimpl-java-repository-readability-cleanup-line-45",
++    "leaseName":  "petclinic-threshold-governed-refactor-lease-v16",
++    "branch":  "threshold-governed-refactor-demo-7",
++    "candidateClass":  "repository_readability_cleanup",
++    "leaseStartHead":  "00a58b69e266b475ab72386527a1af40419fdac2",
++    "baseHead":  "fa635a721948fc7a904ccf9da935a93e8d2454f9",
++    "commitHash":  "f1bd687725136def76f368358643dcb40bcf318f",
++    "receiptMaterialization":  "post-commit",
++    "perCommitValidationLogAvailable":  true,
++    "branchFinalValidationPassed":  false,
++    "changedFiles":  [
++                         {
++                             "path":  "src/main/java/org/springframework/samples/petclinic/repository/jdbc/JdbcVisitRepositoryImpl.java",
++                             "beforeSha256":  "4ad7cad234725da0fa5d143c5ffc5f90ab10476af715b85393e668caffe34a99",
++                             "afterSha256":  "8afe5bc8b0d170100ca37f584435a8c8bb2db194d074f6f37d24a48d7a5a226d"
++                         }
++                     ],
++    "diffSummary":  "Refactor PetClinic Normalize a split repository string constant into a ca",
++    "diffStat":  {
++                     "filesChanged":  1,
++                     "insertions":  2,
++                     "deletions":  2
++                 },
++    "validation":  {
++                       "diffCheck":  "passed",
++                       "command":  ".\\mvnw.cmd test",
++                       "result":  "BUILD SUCCESS",
++                       "testsRun":  75,
++                       "failures":  0,
++                       "errors":  0,
++                       "skipped":  0
++                   },
++    "nonClaims":  [
++                      "no push in candidate slice",
++                      "no PR update in candidate slice",
++                      "no upstream interaction",
++                      "no pom.xml change",
++                      "no dependency change",
++                      "no src/test change",
++                      "no merge",
++                      "no release",
++                      "no deploy",
++                      "no public readiness claim",
++                      "no public correctness claim",
++                      "no public security claim",
++                      "no public compliance claim"
++                  ]
++}
+diff --git a/threshold/receipts/src-main-java-org-springframework-samples-petclinic-repository-jdbc-jdbcvisitrepositoryimpl-java-repository-readability-cleanup-line-48-33113980058e.json b/threshold/receipts/src-main-java-org-springframework-samples-petclinic-repository-jdbc-jdbcvisitrepositoryimpl-java-repository-readability-cleanup-line-48-33113980058e.json
+new file mode 100644
+index 0000000000000000000000000000000000000000..b11e6ebd9f90f06892fda822daabbb606d0b2391
+--- /dev/null
++++ b/threshold/receipts/src-main-java-org-springframework-samples-petclinic-repository-jdbc-jdbcvisitrepositoryimpl-java-repository-readability-cleanup-line-48-33113980058e.json
+@@ -0,0 +1,50 @@
++{
++    "schemaVersion":  "threshold.petclinic.slice-receipt.v0.2",
++    "candidateId":  "src-main-java-org-springframework-samples-petclinic-repository-jdbc-jdbcvisitrepositoryimpl-java-repository-readability-cleanup-line-48",
++    "leaseName":  "petclinic-threshold-governed-refactor-lease-v16",
++    "branch":  "threshold-governed-refactor-demo-7",
++    "candidateClass":  "repository_readability_cleanup",
++    "leaseStartHead":  "00a58b69e266b475ab72386527a1af40419fdac2",
++    "baseHead":  "ef418566ff7a13312c766024565dc67a59137c4a",
++    "commitHash":  "33113980058e2a955a84a359834c672a75a70a10",
++    "receiptMaterialization":  "post-commit",
++    "perCommitValidationLogAvailable":  true,
++    "branchFinalValidationPassed":  false,
++    "changedFiles":  [
++                         {
++                             "path":  "src/main/java/org/springframework/samples/petclinic/repository/jdbc/JdbcVisitRepositoryImpl.java",
++                             "beforeSha256":  "8afe5bc8b0d170100ca37f584435a8c8bb2db194d074f6f37d24a48d7a5a226d",
++                             "afterSha256":  "7904a0a55c60266b2d76a9c519e76a423404e540f4d60bcaf7eed7e956695d01"
++                         }
++                     ],
++    "diffSummary":  "Refactor PetClinic Normalize a split repository string constant into a ca",
++    "diffStat":  {
++                     "filesChanged":  1,
++                     "insertions":  2,
++                     "deletions":  2
++                 },
++    "validation":  {
++                       "diffCheck":  "passed",
++                       "command":  ".\\mvnw.cmd test",
++                       "result":  "BUILD SUCCESS",
++                       "testsRun":  75,
++                       "failures":  0,
++                       "errors":  0,
++                       "skipped":  0
++                   },
++    "nonClaims":  [
++                      "no push in candidate slice",
++                      "no PR update in candidate slice",
++                      "no upstream interaction",
++                      "no pom.xml change",
++                      "no dependency change",
++                      "no src/test change",
++                      "no merge",
++                      "no release",
++                      "no deploy",
++                      "no public readiness claim",
++                      "no public correctness claim",
++                      "no public security claim",
++                      "no public compliance claim"
++                  ]
++}
+diff --git a/threshold/receipts/src-main-java-org-springframework-samples-petclinic-repository-jdbc-onetomanyresultsetextractor-java-comment-wrap-cleanup-line-41-d0f39fb2f778.json b/threshold/receipts/src-main-java-org-springframework-samples-petclinic-repository-jdbc-onetomanyresultsetextractor-java-comment-wrap-cleanup-line-41-d0f39fb2f778.json
+new file mode 100644
+index 0000000000000000000000000000000000000000..e8ebb39cd22d7e5d89df51aca843384732cdad8b
+--- /dev/null
++++ b/threshold/receipts/src-main-java-org-springframework-samples-petclinic-repository-jdbc-onetomanyresultsetextractor-java-comment-wrap-cleanup-line-41-d0f39fb2f778.json
+@@ -0,0 +1,50 @@
++{
++    "schemaVersion":  "threshold.petclinic.slice-receipt.v0.2",
++    "candidateId":  "src-main-java-org-springframework-samples-petclinic-repository-jdbc-onetomanyresultsetextractor-java-comment-wrap-cleanup-line-41",
++    "leaseName":  "petclinic-threshold-governed-refactor-lease-v16",
++    "branch":  "threshold-governed-refactor-demo-7",
++    "candidateClass":  "comment_wrap_cleanup",
++    "leaseStartHead":  "8956652a7f0a8549f02b8b7ca6149b71c52da137",
++    "baseHead":  "d7a0f70c70b98634b688408e1cae2865756d6e6f",
++    "commitHash":  "d0f39fb2f778040b7d9b669521eac5de84208d2b",
++    "receiptMaterialization":  "post-commit",
++    "perCommitValidationLogAvailable":  true,
++    "branchFinalValidationPassed":  false,
++    "changedFiles":  [
++                         {
++                             "path":  "src/main/java/org/springframework/samples/petclinic/repository/jdbc/OneToManyResultSetExtractor.java",
++                             "beforeSha256":  "d55b4297318afd85a4f026a4f4b51321079687fa884adbbdd77fe93e66c44ce7",
++                             "afterSha256":  "e971e23fe111f96fdb9a4ebb938273f2a22403102f5e88fca28b2379f290a07b"
++                         }
++                     ],
++    "diffSummary":  "Refactor PetClinic Wrap one long Javadoc comment line without changing so",
++    "diffStat":  {
++                     "filesChanged":  1,
++                     "insertions":  3,
++                     "deletions":  2
++                 },
++    "validation":  {
++                       "diffCheck":  "passed",
++                       "command":  ".\\mvnw.cmd test",
++                       "result":  "BUILD SUCCESS",
++                       "testsRun":  75,
++                       "failures":  0,
++                       "errors":  0,
++                       "skipped":  0
++                   },
++    "nonClaims":  [
++                      "no push in candidate slice",
++                      "no PR update in candidate slice",
++                      "no upstream interaction",
++                      "no pom.xml change",
++                      "no dependency change",
++                      "no src/test change",
++                      "no merge",
++                      "no release",
++                      "no deploy",
++                      "no public readiness claim",
++                      "no public correctness claim",
++                      "no public security claim",
++                      "no public compliance claim"
++                  ]
++}
+diff --git a/threshold/receipts/src-main-java-org-springframework-samples-petclinic-repository-jpa-jpaownerrepositoryimpl-java-repository-readability-cleanup-line-38-315c5301e39e.json b/threshold/receipts/src-main-java-org-springframework-samples-petclinic-repository-jpa-jpaownerrepositoryimpl-java-repository-readability-cleanup-line-38-315c5301e39e.json
+new file mode 100644
+index 0000000000000000000000000000000000000000..2b66285f2db43731307221995497914c722946d7
+--- /dev/null
++++ b/threshold/receipts/src-main-java-org-springframework-samples-petclinic-repository-jpa-jpaownerrepositoryimpl-java-repository-readability-cleanup-line-38-315c5301e39e.json
+@@ -0,0 +1,50 @@
++{
++    "schemaVersion":  "threshold.petclinic.slice-receipt.v0.2",
++    "candidateId":  "src-main-java-org-springframework-samples-petclinic-repository-jpa-jpaownerrepositoryimpl-java-repository-readability-cleanup-line-38",
++    "leaseName":  "petclinic-threshold-governed-refactor-lease-v16",
++    "branch":  "threshold-governed-refactor-demo-7",
++    "candidateClass":  "repository_readability_cleanup",
++    "leaseStartHead":  "00a58b69e266b475ab72386527a1af40419fdac2",
++    "baseHead":  "9063c167a10a2fe8ab13fe54aac5cf750d6014ab",
++    "commitHash":  "315c5301e39edb469b7bbc0789a4b0c124666f07",
++    "receiptMaterialization":  "post-commit",
++    "perCommitValidationLogAvailable":  true,
++    "branchFinalValidationPassed":  false,
++    "changedFiles":  [
++                         {
++                             "path":  "src/main/java/org/springframework/samples/petclinic/repository/jpa/JpaOwnerRepositoryImpl.java",
++                             "beforeSha256":  "7cd89cff3b322e6932a52ecc981eec410424f15af8957d7fb73f2a9d638e2c74",
++                             "afterSha256":  "d3daea10792ec18a3de952ee2be0d77bae1d762ebe964dced9e1c6c178128a96"
++                         }
++                     ],
++    "diffSummary":  "Refactor PetClinic Normalize a split repository string constant into a ca",
++    "diffStat":  {
++                     "filesChanged":  1,
++                     "insertions":  2,
++                     "deletions":  2
++                 },
++    "validation":  {
++                       "diffCheck":  "passed",
++                       "command":  ".\\mvnw.cmd test",
++                       "result":  "BUILD SUCCESS",
++                       "testsRun":  75,
++                       "failures":  0,
++                       "errors":  0,
++                       "skipped":  0
++                   },
++    "nonClaims":  [
++                      "no push in candidate slice",
++                      "no PR update in candidate slice",
++                      "no upstream interaction",
++                      "no pom.xml change",
++                      "no dependency change",
++                      "no src/test change",
++                      "no merge",
++                      "no release",
++                      "no deploy",
++                      "no public readiness claim",
++                      "no public correctness claim",
++                      "no public security claim",
++                      "no public compliance claim"
++                  ]
++}
+diff --git a/threshold/receipts/src-main-java-org-springframework-samples-petclinic-repository-jpa-jpaownerrepositoryimpl-java-repository-readability-cleanup-line-41-823d5de7720b.json b/threshold/receipts/src-main-java-org-springframework-samples-petclinic-repository-jpa-jpaownerrepositoryimpl-java-repository-readability-cleanup-line-41-823d5de7720b.json
+new file mode 100644
+index 0000000000000000000000000000000000000000..1c7156ef6ebd3ca97c39bd36af922dbb5ca392ce
+--- /dev/null
++++ b/threshold/receipts/src-main-java-org-springframework-samples-petclinic-repository-jpa-jpaownerrepositoryimpl-java-repository-readability-cleanup-line-41-823d5de7720b.json
+@@ -0,0 +1,50 @@
++{
++    "schemaVersion":  "threshold.petclinic.slice-receipt.v0.2",
++    "candidateId":  "src-main-java-org-springframework-samples-petclinic-repository-jpa-jpaownerrepositoryimpl-java-repository-readability-cleanup-line-41",
++    "leaseName":  "petclinic-threshold-governed-refactor-lease-v17",
++    "branch":  "threshold-governed-refactor-demo-7",
++    "candidateClass":  "repository_readability_cleanup",
++    "leaseStartHead":  "7b359bacfcad3e96a69f5177dceb2415ac09e75a",
++    "baseHead":  "6d6b19fb178fd42c6d1f7b0285bd638fd7bd170e",
++    "commitHash":  "823d5de7720bb231992282b2fba3cf6ac688fc78",
++    "receiptMaterialization":  "post-commit",
++    "perCommitValidationLogAvailable":  true,
++    "branchFinalValidationPassed":  false,
++    "changedFiles":  [
++                         {
++                             "path":  "src/main/java/org/springframework/samples/petclinic/repository/jpa/JpaOwnerRepositoryImpl.java",
++                             "beforeSha256":  "d3daea10792ec18a3de952ee2be0d77bae1d762ebe964dced9e1c6c178128a96",
++                             "afterSha256":  "13ace10a197b1f1a90c4617cd87925a0a4db379f3b36429c1cb76ffee1509b99"
++                         }
++                     ],
++    "diffSummary":  "Refactor PetClinic Normalize a split repository string constant into a ca",
++    "diffStat":  {
++                     "filesChanged":  1,
++                     "insertions":  2,
++                     "deletions":  2
++                 },
++    "validation":  {
++                       "diffCheck":  "passed",
++                       "command":  ".\\mvnw.cmd test",
++                       "result":  "BUILD SUCCESS",
++                       "testsRun":  75,
++                       "failures":  0,
++                       "errors":  0,
++                       "skipped":  0
++                   },
++    "nonClaims":  [
++                      "no push in candidate slice",
++                      "no PR update in candidate slice",
++                      "no upstream interaction",
++                      "no pom.xml change",
++                      "no dependency change",
++                      "no src/test change",
++                      "no merge",
++                      "no release",
++                      "no deploy",
++                      "no public readiness claim",
++                      "no public correctness claim",
++                      "no public security claim",
++                      "no public compliance claim"
++                  ]
++}
+diff --git a/threshold/receipts/src-main-java-org-springframework-samples-petclinic-repository-jpa-jpavetrepositoryimpl-java-repository-readability-cleanup-line-37-008ca9001e4d.json b/threshold/receipts/src-main-java-org-springframework-samples-petclinic-repository-jpa-jpavetrepositoryimpl-java-repository-readability-cleanup-line-37-008ca9001e4d.json
+new file mode 100644
+index 0000000000000000000000000000000000000000..29920a5c7304c5c37b39792fec93a51f77a188b0
+--- /dev/null
++++ b/threshold/receipts/src-main-java-org-springframework-samples-petclinic-repository-jpa-jpavetrepositoryimpl-java-repository-readability-cleanup-line-37-008ca9001e4d.json
+@@ -0,0 +1,50 @@
++{
++    "schemaVersion":  "threshold.petclinic.slice-receipt.v0.2",
++    "candidateId":  "src-main-java-org-springframework-samples-petclinic-repository-jpa-jpavetrepositoryimpl-java-repository-readability-cleanup-line-37",
++    "leaseName":  "petclinic-threshold-governed-refactor-lease-v17",
++    "branch":  "threshold-governed-refactor-demo-7",
++    "candidateClass":  "repository_readability_cleanup",
++    "leaseStartHead":  "7b359bacfcad3e96a69f5177dceb2415ac09e75a",
++    "baseHead":  "d1268b3de10508141d0ff5f846fa2a93999f236a",
++    "commitHash":  "008ca9001e4d4abab4bd06b7d227267401d36b72",
++    "receiptMaterialization":  "post-commit",
++    "perCommitValidationLogAvailable":  true,
++    "branchFinalValidationPassed":  false,
++    "changedFiles":  [
++                         {
++                             "path":  "src/main/java/org/springframework/samples/petclinic/repository/jpa/JpaVetRepositoryImpl.java",
++                             "beforeSha256":  "ee83730e37a440197c09f038773e449cce8cc4b7b63f1c429781311ad2b5dd4f",
++                             "afterSha256":  "b25e184846b0504a51580e45941808a6a2bdbb89cfebb779bb363d54f877bdd0"
++                         }
++                     ],
++    "diffSummary":  "Refactor PetClinic Normalize a split repository string constant into a ca",
++    "diffStat":  {
++                     "filesChanged":  1,
++                     "insertions":  3,
++                     "deletions":  3
++                 },
++    "validation":  {
++                       "diffCheck":  "passed",
++                       "command":  ".\\mvnw.cmd test",
++                       "result":  "BUILD SUCCESS",
++                       "testsRun":  75,
++                       "failures":  0,
++                       "errors":  0,
++                       "skipped":  0
++                   },
++    "nonClaims":  [
++                      "no push in candidate slice",
++                      "no PR update in candidate slice",
++                      "no upstream interaction",
++                      "no pom.xml change",
++                      "no dependency change",
++                      "no src/test change",
++                      "no merge",
++                      "no release",
++                      "no deploy",
++                      "no public readiness claim",
++                      "no public correctness claim",
++                      "no public security claim",
++                      "no public compliance claim"
++                  ]
++}
+diff --git a/threshold/receipts/src-main-java-org-springframework-samples-petclinic-repository-ownerrepository-java-comment-wrap-cleanup-line-25-c10cce1d19cd.json b/threshold/receipts/src-main-java-org-springframework-samples-petclinic-repository-ownerrepository-java-comment-wrap-cleanup-line-25-c10cce1d19cd.json
+new file mode 100644
+index 0000000000000000000000000000000000000000..247c024ca9a59f0c034d140587b4cabafd906c7a
+--- /dev/null
++++ b/threshold/receipts/src-main-java-org-springframework-samples-petclinic-repository-ownerrepository-java-comment-wrap-cleanup-line-25-c10cce1d19cd.json
+@@ -0,0 +1,50 @@
++{
++    "schemaVersion":  "threshold.petclinic.slice-receipt.v0.2",
++    "candidateId":  "src-main-java-org-springframework-samples-petclinic-repository-ownerrepository-java-comment-wrap-cleanup-line-25",
++    "leaseName":  "petclinic-threshold-governed-refactor-lease-v16",
++    "branch":  "threshold-governed-refactor-demo-7",
++    "candidateClass":  "comment_wrap_cleanup",
++    "leaseStartHead":  "8956652a7f0a8549f02b8b7ca6149b71c52da137",
++    "baseHead":  "e473a90c602dc48082919b62aba10c2ee1cd8634",
++    "commitHash":  "c10cce1d19cdd27630547777c78da3c0848d2778",
++    "receiptMaterialization":  "post-commit",
++    "perCommitValidationLogAvailable":  true,
++    "branchFinalValidationPassed":  false,
++    "changedFiles":  [
++                         {
++                             "path":  "src/main/java/org/springframework/samples/petclinic/repository/OwnerRepository.java",
++                             "beforeSha256":  "02ee8fd1456b1677114d35f16d04ed3bab4b8f0a23a08856684a99b5a6144fc3",
++                             "afterSha256":  "157496278151e5550fc55b2ca8980c26d12cb89d65e64131cdb9608c7674efee"
++                         }
++                     ],
++    "diffSummary":  "Refactor PetClinic Wrap one long Javadoc comment line without changing so",
++    "diffStat":  {
++                     "filesChanged":  1,
++                     "insertions":  3,
++                     "deletions":  2
++                 },
++    "validation":  {
++                       "diffCheck":  "passed",
++                       "command":  ".\\mvnw.cmd test",
++                       "result":  "BUILD SUCCESS",
++                       "testsRun":  75,
++                       "failures":  0,
++                       "errors":  0,
++                       "skipped":  0
++                   },
++    "nonClaims":  [
++                      "no push in candidate slice",
++                      "no PR update in candidate slice",
++                      "no upstream interaction",
++                      "no pom.xml change",
++                      "no dependency change",
++                      "no src/test change",
++                      "no merge",
++                      "no release",
++                      "no deploy",
++                      "no public readiness claim",
++                      "no public correctness claim",
++                      "no public security claim",
++                      "no public compliance claim"
++                  ]
++}
+diff --git a/threshold/receipts/src-main-java-org-springframework-samples-petclinic-repository-ownerrepository-java-comment-wrap-cleanup-line-26-0bd64a726a46.json b/threshold/receipts/src-main-java-org-springframework-samples-petclinic-repository-ownerrepository-java-comment-wrap-cleanup-line-26-0bd64a726a46.json
+new file mode 100644
+index 0000000000000000000000000000000000000000..5ca7eb4326c6dd193721f2594c81394e398c3671
+--- /dev/null
++++ b/threshold/receipts/src-main-java-org-springframework-samples-petclinic-repository-ownerrepository-java-comment-wrap-cleanup-line-26-0bd64a726a46.json
+@@ -0,0 +1,50 @@
++{
++    "schemaVersion":  "threshold.petclinic.slice-receipt.v0.2",
++    "candidateId":  "src-main-java-org-springframework-samples-petclinic-repository-ownerrepository-java-comment-wrap-cleanup-line-26",
++    "leaseName":  "petclinic-threshold-governed-refactor-lease-v16",
++    "branch":  "threshold-governed-refactor-demo-7",
++    "candidateClass":  "comment_wrap_cleanup",
++    "leaseStartHead":  "8956652a7f0a8549f02b8b7ca6149b71c52da137",
++    "baseHead":  "04555634d6ee8b43d07086c3b9cebb9210c579bf",
++    "commitHash":  "0bd64a726a464968c896fd6a26189b4e721fe3a7",
++    "receiptMaterialization":  "post-commit",
++    "perCommitValidationLogAvailable":  true,
++    "branchFinalValidationPassed":  false,
++    "changedFiles":  [
++                         {
++                             "path":  "src/main/java/org/springframework/samples/petclinic/repository/OwnerRepository.java",
++                             "beforeSha256":  "157496278151e5550fc55b2ca8980c26d12cb89d65e64131cdb9608c7674efee",
++                             "afterSha256":  "092a10617a5540a4a27310ccaeadf0b7ecdf839acbb13aa8ae7fd8e16cf8b5d8"
++                         }
++                     ],
++    "diffSummary":  "Refactor PetClinic Wrap one long Javadoc comment line without changing so",
++    "diffStat":  {
++                     "filesChanged":  1,
++                     "insertions":  2,
++                     "deletions":  1
++                 },
++    "validation":  {
++                       "diffCheck":  "passed",
++                       "command":  ".\\mvnw.cmd test",
++                       "result":  "BUILD SUCCESS",
++                       "testsRun":  75,
++                       "failures":  0,
++                       "errors":  0,
++                       "skipped":  0
++                   },
++    "nonClaims":  [
++                      "no push in candidate slice",
++                      "no PR update in candidate slice",
++                      "no upstream interaction",
++                      "no pom.xml change",
++                      "no dependency change",
++                      "no src/test change",
++                      "no merge",
++                      "no release",
++                      "no deploy",
++                      "no public readiness claim",
++                      "no public correctness claim",
++                      "no public security claim",
++                      "no public compliance claim"
++                  ]
++}
+diff --git a/threshold/receipts/src-main-java-org-springframework-samples-petclinic-repository-petrepository-java-comment-wrap-cleanup-line-26-1113a7ba4be6.json b/threshold/receipts/src-main-java-org-springframework-samples-petclinic-repository-petrepository-java-comment-wrap-cleanup-line-26-1113a7ba4be6.json
+new file mode 100644
+index 0000000000000000000000000000000000000000..30207fb3f4a2607259043d5506984354abb29d8d
+--- /dev/null
++++ b/threshold/receipts/src-main-java-org-springframework-samples-petclinic-repository-petrepository-java-comment-wrap-cleanup-line-26-1113a7ba4be6.json
+@@ -0,0 +1,50 @@
++{
++    "schemaVersion": "threshold.petclinic.slice-receipt.v0.2",
++    "candidateId": "src-main-java-org-springframework-samples-petclinic-repository-petrepository-java-comment-wrap-cleanup-line-26",
++    "leaseName": "petclinic-threshold-governed-refactor-lease-v16",
++    "branch": "threshold-governed-refactor-demo-7",
++    "candidateClass": "comment_wrap_cleanup",
++    "leaseStartHead": "8956652a7f0a8549f02b8b7ca6149b71c52da137",
++    "baseHead": "6d800390519876fbfb3bc8bd342a274576c88287",
++    "commitHash": "1113a7ba4be6389d259017fd182ac4d1e164124b",
++    "receiptMaterialization": "post-commit",
++    "perCommitValidationLogAvailable": true,
++    "branchFinalValidationPassed": false,
++    "changedFiles": [
++        {
++            "path": "src/main/java/org/springframework/samples/petclinic/repository/PetRepository.java",
++            "beforeSha256": "C6BB1AB9D17068A7E4C812AABC7B060CF3BA0891FFB3989BD152D8C0BA5508CC",
++            "afterSha256": "3AB8CF397A4918B400C55E9ECF8364DE664D47A2FC9016B2F7940608A224B249"
++        }
++    ],
++    "diffSummary": "Refactor PetClinic Wrap one long Javadoc comment line without changing so",
++    "diffStat": {
++        "filesChanged": 1,
++        "insertions": 2,
++        "deletions": 1
++    },
++    "validation": {
++        "diffCheck": "passed",
++        "command": ".\\mvnw.cmd test",
++        "result": "BUILD SUCCESS",
++        "testsRun": 75,
++        "failures": 0,
++        "errors": 0,
++        "skipped": 0
++    },
++    "nonClaims": [
++        "no push in candidate slice",
++        "no PR update in candidate slice",
++        "no upstream interaction",
++        "no pom.xml change",
++        "no dependency change",
++        "no src/test change",
++        "no merge",
++        "no release",
++        "no deploy",
++        "no public readiness claim",
++        "no public correctness claim",
++        "no public security claim",
++        "no public compliance claim"
++    ]
++}
+diff --git a/threshold/receipts/src-main-java-org-springframework-samples-petclinic-repository-petrepository-java-comment-wrap-cleanup-line-27-dc4c7920d2e9.json b/threshold/receipts/src-main-java-org-springframework-samples-petclinic-repository-petrepository-java-comment-wrap-cleanup-line-27-dc4c7920d2e9.json
+new file mode 100644
+index 0000000000000000000000000000000000000000..49d6b8471455a8c1793f8b2480658404a4420e29
+--- /dev/null
++++ b/threshold/receipts/src-main-java-org-springframework-samples-petclinic-repository-petrepository-java-comment-wrap-cleanup-line-27-dc4c7920d2e9.json
+@@ -0,0 +1,50 @@
++{
++    "schemaVersion":  "threshold.petclinic.slice-receipt.v0.2",
++    "candidateId":  "src-main-java-org-springframework-samples-petclinic-repository-petrepository-java-comment-wrap-cleanup-line-27",
++    "leaseName":  "petclinic-threshold-governed-refactor-lease-v16",
++    "branch":  "threshold-governed-refactor-demo-7",
++    "candidateClass":  "comment_wrap_cleanup",
++    "leaseStartHead":  "d43ca6581673eaf74a94e37c203b139d47c24194",
++    "baseHead":  "0e7efb8199161297760055e2c0a6918b34bb9966",
++    "commitHash":  "dc4c7920d2e964fa224be95862fa92b30168b139",
++    "receiptMaterialization":  "post-commit",
++    "perCommitValidationLogAvailable":  true,
++    "branchFinalValidationPassed":  false,
++    "changedFiles":  [
++                         {
++                             "path":  "src/main/java/org/springframework/samples/petclinic/repository/PetRepository.java",
++                             "beforeSha256":  "3ab8cf397a4918b400c55e9ecf8364de664d47a2fc9016b2f7940608a224b249",
++                             "afterSha256":  "357899e2cffef40a266207a04ec9aafcec7257257b5f75cec64476fabea15362"
++                         }
++                     ],
++    "diffSummary":  "Refactor PetClinic Wrap one long Javadoc comment line without changing so",
++    "diffStat":  {
++                     "filesChanged":  1,
++                     "insertions":  2,
++                     "deletions":  1
++                 },
++    "validation":  {
++                       "diffCheck":  "passed",
++                       "command":  ".\\mvnw.cmd test",
++                       "result":  "BUILD SUCCESS",
++                       "testsRun":  75,
++                       "failures":  0,
++                       "errors":  0,
++                       "skipped":  0
++                   },
++    "nonClaims":  [
++                      "no push in candidate slice",
++                      "no PR update in candidate slice",
++                      "no upstream interaction",
++                      "no pom.xml change",
++                      "no dependency change",
++                      "no src/test change",
++                      "no merge",
++                      "no release",
++                      "no deploy",
++                      "no public readiness claim",
++                      "no public correctness claim",
++                      "no public security claim",
++                      "no public compliance claim"
++                  ]
++}
+diff --git a/threshold/receipts/src-main-java-org-springframework-samples-petclinic-repository-springdatajpa-springdataownerrepository-java-spring-data-query-wrap-cleanup-line-35-dbef187ad978.json b/threshold/receipts/src-main-java-org-springframework-samples-petclinic-repository-springdatajpa-springdataownerrepository-java-spring-data-query-wrap-cleanup-line-35-dbef187ad978.json
+new file mode 100644
+index 0000000000000000000000000000000000000000..429b58eb0ef78db3f82a8201876022df98b08ec2
+--- /dev/null
++++ b/threshold/receipts/src-main-java-org-springframework-samples-petclinic-repository-springdatajpa-springdataownerrepository-java-spring-data-query-wrap-cleanup-line-35-dbef187ad978.json
+@@ -0,0 +1,50 @@
++{
++    "schemaVersion":  "threshold.petclinic.slice-receipt.v0.2",
++    "candidateId":  "src-main-java-org-springframework-samples-petclinic-repository-springdatajpa-springdataownerrepository-java-spring-data-query-wrap-cleanup-line-35",
++    "leaseName":  "petclinic-threshold-governed-refactor-lease-v16",
++    "branch":  "threshold-governed-refactor-demo-7",
++    "candidateClass":  "spring_data_query_wrap_cleanup",
++    "leaseStartHead":  "00a58b69e266b475ab72386527a1af40419fdac2",
++    "baseHead":  "b5ec0eedb51b0ad37ef7fd3c575934ddab25d6ed",
++    "commitHash":  "dbef187ad97887bba11d47a920064e3573ee3488",
++    "receiptMaterialization":  "post-commit",
++    "perCommitValidationLogAvailable":  true,
++    "branchFinalValidationPassed":  false,
++    "changedFiles":  [
++                         {
++                             "path":  "src/main/java/org/springframework/samples/petclinic/repository/springdatajpa/SpringDataOwnerRepository.java",
++                             "beforeSha256":  "52e25f8fa83181dea17c8d0a4d4bb2ffceef0d312b080b1a19eedf57fe7e1ade",
++                             "afterSha256":  "22c5ba877f883b557d5b181c545f944adc2e0492dd9632cc8e44579e1846c5a5"
++                         }
++                     ],
++    "diffSummary":  "Refactor PetClinic Wrap a long Spring Data @Query annotation into a conca",
++    "diffStat":  {
++                     "filesChanged":  1,
++                     "insertions":  3,
++                     "deletions":  2
++                 },
++    "validation":  {
++                       "diffCheck":  "passed",
++                       "command":  ".\\mvnw.cmd test",
++                       "result":  "BUILD SUCCESS",
++                       "testsRun":  75,
++                       "failures":  0,
++                       "errors":  0,
++                       "skipped":  0
++                   },
++    "nonClaims":  [
++                      "no push in candidate slice",
++                      "no PR update in candidate slice",
++                      "no upstream interaction",
++                      "no pom.xml change",
++                      "no dependency change",
++                      "no src/test change",
++                      "no merge",
++                      "no release",
++                      "no deploy",
++                      "no public readiness claim",
++                      "no public correctness claim",
++                      "no public security claim",
++                      "no public compliance claim"
++                  ]
++}
+diff --git a/threshold/receipts/src-main-java-org-springframework-samples-petclinic-repository-vetrepository-java-comment-wrap-cleanup-line-24-2dd510815dc0.json b/threshold/receipts/src-main-java-org-springframework-samples-petclinic-repository-vetrepository-java-comment-wrap-cleanup-line-24-2dd510815dc0.json
+new file mode 100644
+index 0000000000000000000000000000000000000000..d8349322b06e91f5718e99fef6130456fcaa1984
+--- /dev/null
++++ b/threshold/receipts/src-main-java-org-springframework-samples-petclinic-repository-vetrepository-java-comment-wrap-cleanup-line-24-2dd510815dc0.json
+@@ -0,0 +1,50 @@
++{
++    "schemaVersion":  "threshold.petclinic.slice-receipt.v0.2",
++    "candidateId":  "src-main-java-org-springframework-samples-petclinic-repository-vetrepository-java-comment-wrap-cleanup-line-24",
++    "leaseName":  "petclinic-threshold-governed-refactor-lease-v16",
++    "branch":  "threshold-governed-refactor-demo-7",
++    "candidateClass":  "comment_wrap_cleanup",
++    "leaseStartHead":  "d43ca6581673eaf74a94e37c203b139d47c24194",
++    "baseHead":  "3e4891965e0d0375187307a14bc9d41865e38298",
++    "commitHash":  "2dd510815dc0274e9046e4ac680d613177e694bb",
++    "receiptMaterialization":  "post-commit",
++    "perCommitValidationLogAvailable":  true,
++    "branchFinalValidationPassed":  false,
++    "changedFiles":  [
++                         {
++                             "path":  "src/main/java/org/springframework/samples/petclinic/repository/VetRepository.java",
++                             "beforeSha256":  "b69e6585b138dbd6f5b2e7299e72d75efab2fdcf0a78cf5372907da2267a9c54",
++                             "afterSha256":  "cb646aa5ce9e8dd7f9e65b2c6c4f224711d251b2e5bfdf5d122f92fbd46e4a4b"
++                         }
++                     ],
++    "diffSummary":  "Refactor PetClinic Wrap one long Javadoc comment line without changing so",
++    "diffStat":  {
++                     "filesChanged":  1,
++                     "insertions":  3,
++                     "deletions":  2
++                 },
++    "validation":  {
++                       "diffCheck":  "passed",
++                       "command":  ".\\mvnw.cmd test",
++                       "result":  "BUILD SUCCESS",
++                       "testsRun":  75,
++                       "failures":  0,
++                       "errors":  0,
++                       "skipped":  0
++                   },
++    "nonClaims":  [
++                      "no push in candidate slice",
++                      "no PR update in candidate slice",
++                      "no upstream interaction",
++                      "no pom.xml change",
++                      "no dependency change",
++                      "no src/test change",
++                      "no merge",
++                      "no release",
++                      "no deploy",
++                      "no public readiness claim",
++                      "no public correctness claim",
++                      "no public security claim",
++                      "no public compliance claim"
++                  ]
++}
+diff --git a/threshold/receipts/src-main-java-org-springframework-samples-petclinic-repository-vetrepository-java-comment-wrap-cleanup-line-25-70e216baf70a.json b/threshold/receipts/src-main-java-org-springframework-samples-petclinic-repository-vetrepository-java-comment-wrap-cleanup-line-25-70e216baf70a.json
+new file mode 100644
+index 0000000000000000000000000000000000000000..b9e1092c11cdbca4ba3d2c5537712237227ee0f9
+--- /dev/null
++++ b/threshold/receipts/src-main-java-org-springframework-samples-petclinic-repository-vetrepository-java-comment-wrap-cleanup-line-25-70e216baf70a.json
+@@ -0,0 +1,50 @@
++{
++    "schemaVersion":  "threshold.petclinic.slice-receipt.v0.2",
++    "candidateId":  "src-main-java-org-springframework-samples-petclinic-repository-vetrepository-java-comment-wrap-cleanup-line-25",
++    "leaseName":  "petclinic-threshold-governed-refactor-lease-v16",
++    "branch":  "threshold-governed-refactor-demo-7",
++    "candidateClass":  "comment_wrap_cleanup",
++    "leaseStartHead":  "d43ca6581673eaf74a94e37c203b139d47c24194",
++    "baseHead":  "f1cc88a4521d6d986b6dbc4ade570e0c8c8d231a",
++    "commitHash":  "70e216baf70a1c99888f11e09797e2c16bc5cd01",
++    "receiptMaterialization":  "post-commit",
++    "perCommitValidationLogAvailable":  true,
++    "branchFinalValidationPassed":  false,
++    "changedFiles":  [
++                         {
++                             "path":  "src/main/java/org/springframework/samples/petclinic/repository/VetRepository.java",
++                             "beforeSha256":  "cb646aa5ce9e8dd7f9e65b2c6c4f224711d251b2e5bfdf5d122f92fbd46e4a4b",
++                             "afterSha256":  "b8860107cfa343c6c47b1f772986fd3102e6e32670fc4d7c28610ae7dc73b64b"
++                         }
++                     ],
++    "diffSummary":  "Refactor PetClinic Wrap one long Javadoc comment line without changing so",
++    "diffStat":  {
++                     "filesChanged":  1,
++                     "insertions":  2,
++                     "deletions":  1
++                 },
++    "validation":  {
++                       "diffCheck":  "passed",
++                       "command":  ".\\mvnw.cmd test",
++                       "result":  "BUILD SUCCESS",
++                       "testsRun":  75,
++                       "failures":  0,
++                       "errors":  0,
++                       "skipped":  0
++                   },
++    "nonClaims":  [
++                      "no push in candidate slice",
++                      "no PR update in candidate slice",
++                      "no upstream interaction",
++                      "no pom.xml change",
++                      "no dependency change",
++                      "no src/test change",
++                      "no merge",
++                      "no release",
++                      "no deploy",
++                      "no public readiness claim",
++                      "no public correctness claim",
++                      "no public security claim",
++                      "no public compliance claim"
++                  ]
++}
+diff --git a/threshold/receipts/src-main-java-org-springframework-samples-petclinic-repository-visitrepository-java-comment-wrap-cleanup-line-25-a86c4e999541.json b/threshold/receipts/src-main-java-org-springframework-samples-petclinic-repository-visitrepository-java-comment-wrap-cleanup-line-25-a86c4e999541.json
+new file mode 100644
+index 0000000000000000000000000000000000000000..9fc427b85ff13885b8fec9680634ede2198dae41
+--- /dev/null
++++ b/threshold/receipts/src-main-java-org-springframework-samples-petclinic-repository-visitrepository-java-comment-wrap-cleanup-line-25-a86c4e999541.json
+@@ -0,0 +1,50 @@
++{
++    "schemaVersion":  "threshold.petclinic.slice-receipt.v0.2",
++    "candidateId":  "src-main-java-org-springframework-samples-petclinic-repository-visitrepository-java-comment-wrap-cleanup-line-25",
++    "leaseName":  "petclinic-threshold-governed-refactor-lease-v16",
++    "branch":  "threshold-governed-refactor-demo-7",
++    "candidateClass":  "comment_wrap_cleanup",
++    "leaseStartHead":  "d43ca6581673eaf74a94e37c203b139d47c24194",
++    "baseHead":  "09207129c01158ac305621b1a3386f60f7f4b6f0",
++    "commitHash":  "a86c4e999541ab2d96420ce8b0e63d29bc91f96e",
++    "receiptMaterialization":  "post-commit",
++    "perCommitValidationLogAvailable":  true,
++    "branchFinalValidationPassed":  false,
++    "changedFiles":  [
++                         {
++                             "path":  "src/main/java/org/springframework/samples/petclinic/repository/VisitRepository.java",
++                             "beforeSha256":  "968e101933a90b49a1edd4a170782b43e4a0a4017dc69d06d2e68ce56eac4fad",
++                             "afterSha256":  "88f84d05b4e9f2d11c8a1d1acf5b7f0bc612e992e392a990d0d4b0cc5e0c024c"
++                         }
++                     ],
++    "diffSummary":  "Refactor PetClinic Wrap one long Javadoc comment line without changing so",
++    "diffStat":  {
++                     "filesChanged":  1,
++                     "insertions":  3,
++                     "deletions":  2
++                 },
++    "validation":  {
++                       "diffCheck":  "passed",
++                       "command":  ".\\mvnw.cmd test",
++                       "result":  "BUILD SUCCESS",
++                       "testsRun":  75,
++                       "failures":  0,
++                       "errors":  0,
++                       "skipped":  0
++                   },
++    "nonClaims":  [
++                      "no push in candidate slice",
++                      "no PR update in candidate slice",
++                      "no upstream interaction",
++                      "no pom.xml change",
++                      "no dependency change",
++                      "no src/test change",
++                      "no merge",
++                      "no release",
++                      "no deploy",
++                      "no public readiness claim",
++                      "no public correctness claim",
++                      "no public security claim",
++                      "no public compliance claim"
++                  ]
++}
+diff --git a/threshold/receipts/src-main-java-org-springframework-samples-petclinic-repository-visitrepository-java-comment-wrap-cleanup-line-26-3c578fa27eb4.json b/threshold/receipts/src-main-java-org-springframework-samples-petclinic-repository-visitrepository-java-comment-wrap-cleanup-line-26-3c578fa27eb4.json
+new file mode 100644
+index 0000000000000000000000000000000000000000..ad7a321e7f562f655b11b9d82b1cfada4265fc98
+--- /dev/null
++++ b/threshold/receipts/src-main-java-org-springframework-samples-petclinic-repository-visitrepository-java-comment-wrap-cleanup-line-26-3c578fa27eb4.json
+@@ -0,0 +1,50 @@
++{
++    "schemaVersion":  "threshold.petclinic.slice-receipt.v0.2",
++    "candidateId":  "src-main-java-org-springframework-samples-petclinic-repository-visitrepository-java-comment-wrap-cleanup-line-26",
++    "leaseName":  "petclinic-threshold-governed-refactor-lease-v16",
++    "branch":  "threshold-governed-refactor-demo-7",
++    "candidateClass":  "comment_wrap_cleanup",
++    "leaseStartHead":  "d43ca6581673eaf74a94e37c203b139d47c24194",
++    "baseHead":  "99c9c830d9efce8c5e9fdce34c48e26924d18aa2",
++    "commitHash":  "3c578fa27eb488c57a156b33208424607c2ef855",
++    "receiptMaterialization":  "post-commit",
++    "perCommitValidationLogAvailable":  true,
++    "branchFinalValidationPassed":  false,
++    "changedFiles":  [
++                         {
++                             "path":  "src/main/java/org/springframework/samples/petclinic/repository/VisitRepository.java",
++                             "beforeSha256":  "88f84d05b4e9f2d11c8a1d1acf5b7f0bc612e992e392a990d0d4b0cc5e0c024c",
++                             "afterSha256":  "d74528069ecae24efed238790a9a7ef16e31d0208ed4bc2401282e71ec237c92"
++                         }
++                     ],
++    "diffSummary":  "Refactor PetClinic Wrap one long Javadoc comment line without changing so",
++    "diffStat":  {
++                     "filesChanged":  1,
++                     "insertions":  2,
++                     "deletions":  1
++                 },
++    "validation":  {
++                       "diffCheck":  "passed",
++                       "command":  ".\\mvnw.cmd test",
++                       "result":  "BUILD SUCCESS",
++                       "testsRun":  75,
++                       "failures":  0,
++                       "errors":  0,
++                       "skipped":  0
++                   },
++    "nonClaims":  [
++                      "no push in candidate slice",
++                      "no PR update in candidate slice",
++                      "no upstream interaction",
++                      "no pom.xml change",
++                      "no dependency change",
++                      "no src/test change",
++                      "no merge",
++                      "no release",
++                      "no deploy",
++                      "no public readiness claim",
++                      "no public correctness claim",
++                      "no public security claim",
++                      "no public compliance claim"
++                  ]
++}
+diff --git a/threshold/receipts/src-main-java-org-springframework-samples-petclinic-web-pettypeformatter-java-comment-wrap-cleanup-line-31-8fe6f86f2513.json b/threshold/receipts/src-main-java-org-springframework-samples-petclinic-web-pettypeformatter-java-comment-wrap-cleanup-line-31-8fe6f86f2513.json
+new file mode 100644
+index 0000000000000000000000000000000000000000..1731fd81d842feee265a538b9c0b72813d630d58
+--- /dev/null
++++ b/threshold/receipts/src-main-java-org-springframework-samples-petclinic-web-pettypeformatter-java-comment-wrap-cleanup-line-31-8fe6f86f2513.json
+@@ -0,0 +1,50 @@
++{
++    "schemaVersion": "threshold.petclinic.slice-receipt.v0.2",
++    "candidateId": "src-main-java-org-springframework-samples-petclinic-web-pettypeformatter-java-comment-wrap-cleanup-line-31",
++    "leaseName": "petclinic-threshold-governed-refactor-lease-v16",
++    "branch": "threshold-governed-refactor-demo-7",
++    "candidateClass": "comment_wrap_cleanup",
++    "leaseStartHead": "d43ca6581673eaf74a94e37c203b139d47c24194",
++    "baseHead": "34d502c19d188adfdd918dbd8ea4c887bbf5e306",
++    "commitHash": "8fe6f86f251372f397481e0bf411c2c278487356",
++    "receiptMaterialization": "post-commit",
++    "perCommitValidationLogAvailable": true,
++    "branchFinalValidationPassed": false,
++    "changedFiles": [
++        {
++            "path": "src/main/java/org/springframework/samples/petclinic/web/PetTypeFormatter.java",
++            "beforeSha256": "AF6ED365E7DFCA03EBFF13FD6186E3A0562AD435CB2AE05B5A840B95D3E1CA13",
++            "afterSha256": "20E91404D9E502BD2E1A0A0AAA85AACDFBADAA2E7A7D1CECD52F2F6287E09D8E"
++        }
++    ],
++    "diffSummary": "Refactor PetClinic Wrap one long Javadoc comment line without changing so",
++    "diffStat": {
++        "filesChanged": 1,
++        "insertions": 2,
++        "deletions": 1
++    },
++    "validation": {
++        "diffCheck": "passed",
++        "command": ".\\mvnw.cmd test",
++        "result": "BUILD SUCCESS",
++        "testsRun": 75,
++        "failures": 0,
++        "errors": 0,
++        "skipped": 0
++    },
++    "nonClaims": [
++        "no push in candidate slice",
++        "no PR update in candidate slice",
++        "no upstream interaction",
++        "no pom.xml change",
++        "no dependency change",
++        "no src/test change",
++        "no merge",
++        "no release",
++        "no deploy",
++        "no public readiness claim",
++        "no public correctness claim",
++        "no public security claim",
++        "no public compliance claim"
++    ]
++}
+diff --git a/threshold/receipts/src-main-java-org-springframework-samples-petclinic-web-pettypeformatter-java-comment-wrap-cleanup-line-33-9d7f236ef823.json b/threshold/receipts/src-main-java-org-springframework-samples-petclinic-web-pettypeformatter-java-comment-wrap-cleanup-line-33-9d7f236ef823.json
+new file mode 100644
+index 0000000000000000000000000000000000000000..e0d6272451c9cefb77ff4ef4d900bab5cf9038ee
+--- /dev/null
++++ b/threshold/receipts/src-main-java-org-springframework-samples-petclinic-web-pettypeformatter-java-comment-wrap-cleanup-line-33-9d7f236ef823.json
+@@ -0,0 +1,50 @@
++{
++    "schemaVersion":  "threshold.petclinic.slice-receipt.v0.2",
++    "candidateId":  "src-main-java-org-springframework-samples-petclinic-web-pettypeformatter-java-comment-wrap-cleanup-line-33",
++    "leaseName":  "petclinic-threshold-governed-refactor-lease-v16",
++    "branch":  "threshold-governed-refactor-demo-7",
++    "candidateClass":  "comment_wrap_cleanup",
++    "leaseStartHead":  "2eccedf853e26b5bb68e20c6672969fe73848206",
++    "baseHead":  "72ec645d707fcac3a5df86a34cfb9a916db2ae60",
++    "commitHash":  "9d7f236ef8237a4f322ca39c894c7d375aee8818",
++    "receiptMaterialization":  "post-commit",
++    "perCommitValidationLogAvailable":  true,
++    "branchFinalValidationPassed":  false,
++    "changedFiles":  [
++                         {
++                             "path":  "src/main/java/org/springframework/samples/petclinic/web/PetTypeFormatter.java",
++                             "beforeSha256":  "20e91404d9e502bd2e1a0a0aaa85aacdfbadaa2e7a7d1cecd52f2f6287e09d8e",
++                             "afterSha256":  "5588cc8ca0015e73699aeb0dd8fbccc0c026af39b9842df57d234739f19890f6"
++                         }
++                     ],
++    "diffSummary":  "Refactor PetClinic Wrap one long Javadoc comment line without changing so",
++    "diffStat":  {
++                     "filesChanged":  1,
++                     "insertions":  2,
++                     "deletions":  1
++                 },
++    "validation":  {
++                       "diffCheck":  "passed",
++                       "command":  ".\\mvnw.cmd test",
++                       "result":  "BUILD SUCCESS",
++                       "testsRun":  75,
++                       "failures":  0,
++                       "errors":  0,
++                       "skipped":  0
++                   },
++    "nonClaims":  [
++                      "no push in candidate slice",
++                      "no PR update in candidate slice",
++                      "no upstream interaction",
++                      "no pom.xml change",
++                      "no dependency change",
++                      "no src/test change",
++                      "no merge",
++                      "no release",
++                      "no deploy",
++                      "no public readiness claim",
++                      "no public correctness claim",
++                      "no public security claim",
++                      "no public compliance claim"
++                  ]
++}
+diff --git a/threshold/receipts/threshold-governance-audit-and-retroactive-gate-receipt-7abebde.json b/threshold/receipts/threshold-governance-audit-and-retroactive-gate-receipt-7abebde.json
+new file mode 100644
+index 0000000000000000000000000000000000000000..9f4f325ec8803c3162b23188cf0af2c827260749
+--- /dev/null
++++ b/threshold/receipts/threshold-governance-audit-and-retroactive-gate-receipt-7abebde.json
+@@ -0,0 +1,80 @@
++{
++  "schemaVersion": "threshold.petclinic.governance-audit-receipt.v0.1",
++  "receiptId": "threshold-governance-audit-and-retroactive-gate-receipt-7abebde",
++  "createdAt": "2026-07-14T20:20:00Z",
++  "branch": "threshold-governed-refactor-demo-7",
++  "headAtAuditStart": "7abebde66a1435f2cf5ad82735a7388d23981fb1",
++  "auditPurpose": [
++    "determine whether stale active lease-state enabled any extra autonomous source mutation",
++    "materialize a retrospective human-gate receipt for the auto-patchable scope-promotion gate"
++  ],
++  "staleActiveAudit": {
++    "affectedLeaseId": "petclinic-threshold-governed-refactor-lease-v16",
++    "staleStateCommit": "1a596f5f892e185524ca6404100dc69a72ab2f63",
++    "staleStateEvidence": {
++      "remainingCandidates": 0,
++      "remainingCommits": 0,
++      "terminalState": "active",
++      "currentSourceHead": "315c5301e39edb469b7bbc0789a4b0c124666f07",
++      "lastReceipt": "threshold/receipts/src-main-java-org-springframework-samples-petclinic-repository-jpa-jpaownerrepositoryimpl-java-repository-readability-cleanup-line-38-315c5301e39e.json"
++    },
++    "verifiedStateCommit": "7839fb8634b630e2015c280d385ae3c2767bba04",
++    "auditedCommitWindow": {
++      "fromExclusive": "1a596f5f892e185524ca6404100dc69a72ab2f63",
++      "toInclusive": "e9fa68419af305f26b4398dcff4f3744d5cee6ac",
++      "observedCommits": [
++        {
++          "commit": "e9fa68419af305f26b4398dcff4f3744d5cee6ac",
++          "subject": "Harden Threshold autonomous discovery gates",
++          "classification": "governance_hardening",
++          "changedPathClasses": [
++            "threshold/discovery-canaries/**",
++            "threshold/gates/**",
++            "threshold/leases/current.yaml",
++            "threshold/scripts/**"
++          ],
++          "sourceMutationObserved": false
++        }
++      ]
++    },
++    "finding": "No autonomous production-source slice was observed after the v16 budget reached 0/0 and before the stale active state was corrected.",
++    "residualRisk": "Audit is based on local Git history and tracked-file changes in the inspected branch. It does not claim to prove behavior outside this checkout or outside tracked commits."
++  },
++  "retroactiveHumanGateReceipt": {
++    "gateId": "retrospective-human-gate-for-auto-patchable-candidate-classes-v0-1",
++    "coveredChangeCommit": "e9fa68419af305f26b4398dcff4f3744d5cee6ac",
++    "coveredGateArtifact": "threshold/gates/auto-patchable-candidate-classes.json",
++    "coveredRule": "candidate classes without an explicit gate entry must be reviewOnly instead of autoPatchable",
++    "gateReason": "The gate changes autonomy policy by controlling which discovered candidate classes can be automatically patched.",
++    "humanGateType": "explicitHumanDecisionReceiptForRule",
++    "humanDecisionSource": "User requested this batch explicitly after reviewing the stale-active and scope-promotion findings.",
++    "decision": "accepted_retroactively_for_current_branch_record",
++    "limits": [
++      "does not retroactively authorize earlier scope expansions as if they had been gated before execution",
++      "does not authorize additional candidate classes beyond the committed gate artifact",
++      "does not authorize push, PR readiness, merge, release, deploy, or upstream interaction",
++      "does not bypass lease allowlists, canary checks, Maven validation, or per-slice receipts"
++    ]
++  },
++  "validation": {
++    "commands": [
++      "git show 1a596f5f892e185524ca6404100dc69a72ab2f63:threshold/lease-state/current-run.json",
++      "git log --oneline --name-only 1a596f5f892e185524ca6404100dc69a72ab2f63..e9fa68419af305f26b4398dcff4f3744d5cee6ac",
++      "git show --name-only --oneline e9fa68419af305f26b4398dcff4f3744d5cee6ac",
++      "git show --name-only --oneline 7839fb8634b630e2015c280d385ae3c2767bba04"
++    ],
++    "result": "passed",
++    "mavenTestRequired": false,
++    "mavenTestReason": "This batch records governance audit evidence only and does not modify PetClinic production or test source."
++  },
++  "nonClaims": [
++    "no upstream interaction",
++    "no merge",
++    "no release",
++    "no deploy",
++    "no public readiness claim",
++    "no public correctness claim",
++    "no public security claim",
++    "no public compliance claim"
++  ]
++}

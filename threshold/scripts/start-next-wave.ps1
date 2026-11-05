@@ -36,6 +36,7 @@ $ErrorActionPreference = "Stop"
 
 . (Join-Path $PSScriptRoot "lib/runtime-paths.ps1")
 . (Join-Path $PSScriptRoot "lib/lease-policy.ps1")
+. (Join-Path $PSScriptRoot "lib/branch-range-validation.ps1")
 
 $SupportedGovernanceBranchPrefix = "threshold-governed-refactor-demo-"
 if ($BranchPrefix -ne $SupportedGovernanceBranchPrefix) {
@@ -710,7 +711,7 @@ function Invoke-LocalWave {
 
 function Invoke-LocalWaveValidation {
     Assert-CleanWorktree
-    Invoke-Checked -FilePath "git" -ArgumentList @("diff", "--check") -FailureMessage "git diff --check failed."
+    Assert-ThresholdBranchRangeDiffClean -BaseRef "$BaseRemote/$BaseBranch" -LeasePath $LeasePath
     Invoke-Checked -FilePath "powershell.exe" -ArgumentList @(
         "-ExecutionPolicy",
         "Bypass",

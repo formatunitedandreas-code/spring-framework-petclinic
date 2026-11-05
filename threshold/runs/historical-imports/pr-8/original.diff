@@ -1,0 +1,18 @@
+diff --git a/.github/workflows/maven-build-pull-request.yml b/.github/workflows/maven-build-pull-request.yml
+index dbafa179e034b58d499192286867fca379c2c68a..f263c0989c7155f3cf909fae802f1cf1b6b8e60b 100644
+--- a/.github/workflows/maven-build-pull-request.yml
++++ b/.github/workflows/maven-build-pull-request.yml
+@@ -2,7 +2,12 @@ name: Java CI for Pull Request
+ 
+ on:
+   pull_request:
+-    types: [opened, synchronize, reopened]
++    branches:
++      - main
++    types: [opened, synchronize, reopened, ready_for_review]
++  push:
++    branches:
++      - 'threshold-governed-refactor-demo-*'
+ 
+ jobs:
+   build:
