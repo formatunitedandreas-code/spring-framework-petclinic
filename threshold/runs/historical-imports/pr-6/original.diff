@@ -1,0 +1,522 @@
+diff --git a/src/main/java/org/springframework/samples/petclinic/model/Owner.java b/src/main/java/org/springframework/samples/petclinic/model/Owner.java
+index f6e54c207b0b4668a5213a60e0c4d5df657b02e3..d51a493aa9118695577e58172d582a6b4b03b818 100644
+--- a/src/main/java/org/springframework/samples/petclinic/model/Owner.java
++++ b/src/main/java/org/springframework/samples/petclinic/model/Owner.java
+@@ -43,6 +43,10 @@ import org.springframework.core.style.ToStringCreator;
+ @Entity
+ @Table(name = "owners")
+ public class Owner extends Person {
++
++    private static final Comparator<Pet> PET_NAME_COMPARATOR =
++        Comparator.comparing(Pet::getName, String.CASE_INSENSITIVE_ORDER);
++
+     @Column(name = "address")
+     @NotEmpty
+     private String address;
+@@ -97,7 +101,7 @@ public class Owner extends Person {
+ 
+     public List<Pet> getPets() {
+         List<Pet> sortedPets = new ArrayList<>(getPetsInternal());
+-        sortedPets.sort(Comparator.comparing(Pet::getName, String.CASE_INSENSITIVE_ORDER));
++        sortedPets.sort(PET_NAME_COMPARATOR);
+         return Collections.unmodifiableList(sortedPets);
+     }
+ 
+diff --git a/src/main/java/org/springframework/samples/petclinic/model/Pet.java b/src/main/java/org/springframework/samples/petclinic/model/Pet.java
+index 562620473c842e5d33240d612f2dd2cab6145f2e..8725c913cede470e60f2d8181a66a2ec064e9677 100644
+--- a/src/main/java/org/springframework/samples/petclinic/model/Pet.java
++++ b/src/main/java/org/springframework/samples/petclinic/model/Pet.java
+@@ -45,6 +45,8 @@ import java.util.Set;
+ @Table(name = "pets")
+ public class Pet extends NamedEntity {
+ 
++    private static final Comparator<Visit> VISIT_DATE_DESCENDING = Comparator.comparing(Visit::getDate).reversed();
++
+     @Column(name = "birth_date")
+     @DateTimeFormat(pattern = "yyyy/MM/dd")
+     private LocalDate birthDate;
+@@ -98,7 +100,7 @@ public class Pet extends NamedEntity {
+ 
+     public List<Visit> getVisits() {
+         List<Visit> sortedVisits = new ArrayList<>(getVisitsInternal());
+-        sortedVisits.sort(Comparator.comparing(Visit::getDate).reversed());
++        sortedVisits.sort(VISIT_DATE_DESCENDING);
+         return Collections.unmodifiableList(sortedVisits);
+     }
+ 
+diff --git a/src/main/java/org/springframework/samples/petclinic/model/Vet.java b/src/main/java/org/springframework/samples/petclinic/model/Vet.java
+index a8af064b3ded92cbc7b64cc4af6fb674c4fc5954..c98acbb6af6765fec4bc0357522bf33aec5f8ef7 100644
+--- a/src/main/java/org/springframework/samples/petclinic/model/Vet.java
++++ b/src/main/java/org/springframework/samples/petclinic/model/Vet.java
+@@ -43,6 +43,9 @@ import jakarta.xml.bind.annotation.XmlElement;
+ @Table(name = "vets")
+ public class Vet extends Person {
+ 
++    private static final Comparator<Specialty> SPECIALTY_NAME_COMPARATOR =
++        Comparator.comparing(Specialty::getName, String.CASE_INSENSITIVE_ORDER);
++
+     @ManyToMany(fetch = FetchType.EAGER)
+     @JoinTable(name = "vet_specialties", joinColumns = @JoinColumn(name = "vet_id"),
+         inverseJoinColumns = @JoinColumn(name = "specialty_id"))
+@@ -62,7 +65,7 @@ public class Vet extends Person {
+     @XmlElement
+     public List<Specialty> getSpecialties() {
+         List<Specialty> sortedSpecs = new ArrayList<>(getSpecialtiesInternal());
+-        sortedSpecs.sort(Comparator.comparing(Specialty::getName, String.CASE_INSENSITIVE_ORDER));
++        sortedSpecs.sort(SPECIALTY_NAME_COMPARATOR);
+         return Collections.unmodifiableList(sortedSpecs);
+     }
+ 
+diff --git a/src/main/java/org/springframework/samples/petclinic/repository/jdbc/JdbcOwnerRepositoryImpl.java b/src/main/java/org/springframework/samples/petclinic/repository/jdbc/JdbcOwnerRepositoryImpl.java
+index 7355462bc4a1ac38c2485c93dcaea7cdad69cf37..4b471f3fe1cf87779e15878b2a04443e176f24c8 100644
+--- a/src/main/java/org/springframework/samples/petclinic/repository/jdbc/JdbcOwnerRepositoryImpl.java
++++ b/src/main/java/org/springframework/samples/petclinic/repository/jdbc/JdbcOwnerRepositoryImpl.java
+@@ -69,14 +69,7 @@ public class JdbcOwnerRepositoryImpl implements OwnerRepository {
+      */
+     @Override
+     public Collection<Owner> findByLastName(String lastName) {
+-        List<Owner> owners = this.jdbcClient.sql("""
+-                SELECT id, first_name, last_name, address, city, telephone
+-                FROM owners
+-                WHERE last_name like :lastName
+-                """)
+-            .param("lastName", lastName + "%")
+-            .query(BeanPropertyRowMapper.newInstance(Owner.class))
+-            .list();
++        List<Owner> owners = findOwnersByLastNamePrefix(lastName);
+         loadOwnersPetsAndVisits(owners);
+         return owners;
+     }
+@@ -87,9 +80,25 @@ public class JdbcOwnerRepositoryImpl implements OwnerRepository {
+      */
+     @Override
+     public Owner findById(int id) {
+-        Owner owner;
++        Owner owner = findOwnerById(id);
++        loadPetsAndVisits(owner);
++        return owner;
++    }
++
++    private List<Owner> findOwnersByLastNamePrefix(String lastName) {
++        return this.jdbcClient.sql("""
++                SELECT id, first_name, last_name, address, city, telephone
++                FROM owners
++                WHERE last_name like :lastName
++                """)
++            .param("lastName", lastName + "%")
++            .query(BeanPropertyRowMapper.newInstance(Owner.class))
++            .list();
++    }
++
++    private Owner findOwnerById(int id) {
+         try {
+-            owner = this.jdbcClient.sql("""
++            return this.jdbcClient.sql("""
+                     SELECT id, first_name, last_name, address, city, telephone
+                     FROM owners WHERE id = :id
+                     """)
+@@ -99,18 +108,23 @@ public class JdbcOwnerRepositoryImpl implements OwnerRepository {
+         } catch (EmptyResultDataAccessException ex) {
+             throw new ObjectRetrievalFailureException(Owner.class, id);
+         }
+-        loadPetsAndVisits(owner);
+-        return owner;
+     }
+ 
+     public void loadPetsAndVisits(final Owner owner) {
+-        final List<JdbcPet> pets = this.jdbcClient.sql("""
++        attachPetsToOwner(owner, findPetsForOwner(owner.getId()));
++    }
++
++    private List<JdbcPet> findPetsForOwner(int ownerId) {
++        return this.jdbcClient.sql("""
+             SELECT pets.id, name, birth_date, type_id, owner_id, visits.id as visit_id, visit_date, description, pet_id
+             FROM pets LEFT OUTER JOIN visits ON pets.id = pet_id
+             WHERE owner_id=:id ORDER BY pet_id
+             """)
+-            .param("id", owner.getId())
++            .param("id", ownerId)
+             .query(new JdbcPetVisitExtractor());
++    }
++
++    private void attachPetsToOwner(Owner owner, List<JdbcPet> pets) {
+         Collection<PetType> petTypes = getPetTypes();
+         for (JdbcPet pet : pets) {
+             pet.setType(EntityUtils.getById(petTypes, PetType.class, pet.getTypeId()));
+diff --git a/src/main/java/org/springframework/samples/petclinic/repository/jdbc/JdbcPetRepositoryImpl.java b/src/main/java/org/springframework/samples/petclinic/repository/jdbc/JdbcPetRepositoryImpl.java
+index 991ddf8eea28c73e0cfd5e363566031cb04215e4..8bd82803c4bb1df7c7e5e0017f5613801a94156e 100644
+--- a/src/main/java/org/springframework/samples/petclinic/repository/jdbc/JdbcPetRepositoryImpl.java
++++ b/src/main/java/org/springframework/samples/petclinic/repository/jdbc/JdbcPetRepositoryImpl.java
+@@ -70,17 +70,7 @@ public class JdbcPetRepositoryImpl implements PetRepository {
+ 
+     @Override
+     public Pet findById(int id) {
+-        int ownerId;
+-        try {
+-            ownerId = this.jdbcClient
+-                .sql("SELECT owner_id FROM pets WHERE id=:id")
+-                .param("id", id)
+-                .query(Integer.class)
+-                .single();
+-        } catch (EmptyResultDataAccessException ex) {
+-            throw new ObjectRetrievalFailureException(Pet.class, id);
+-        }
+-        Owner owner = this.ownerRepository.findById(ownerId);
++        Owner owner = loadOwnerForPet(id);
+         return EntityUtils.getById(owner.getPets(), Pet.class, id);
+     }
+ 
+@@ -102,6 +92,22 @@ public class JdbcPetRepositoryImpl implements PetRepository {
+                 .update();
+     }
+ 
++    private Owner loadOwnerForPet(int petId) {
++        return this.ownerRepository.findById(findOwnerIdForPet(petId));
++    }
++
++    private int findOwnerIdForPet(int petId) {
++        try {
++            return this.jdbcClient
++                .sql("SELECT owner_id FROM pets WHERE id=:id")
++                .param("id", petId)
++                .query(Integer.class)
++                .single();
++        } catch (EmptyResultDataAccessException ex) {
++            throw new ObjectRetrievalFailureException(Pet.class, petId);
++        }
++    }
++
+     /**
+      * Creates a {@link MapSqlParameterSource} based on data values from the supplied {@link Pet} instance.
+      */
+diff --git a/src/main/java/org/springframework/samples/petclinic/repository/jdbc/JdbcVetRepositoryImpl.java b/src/main/java/org/springframework/samples/petclinic/repository/jdbc/JdbcVetRepositoryImpl.java
+index 58239df63d85c9f7ef54d5101bbba7fc086cc1d7..e122c64944a23ebc12523b5873d16c719217f4d1 100644
+--- a/src/main/java/org/springframework/samples/petclinic/repository/jdbc/JdbcVetRepositoryImpl.java
++++ b/src/main/java/org/springframework/samples/petclinic/repository/jdbc/JdbcVetRepositoryImpl.java
+@@ -23,8 +23,6 @@ import org.springframework.samples.petclinic.repository.VetRepository;
+ import org.springframework.samples.petclinic.util.EntityUtils;
+ import org.springframework.stereotype.Repository;
+ 
+-import java.sql.ResultSet;
+-import java.sql.SQLException;
+ import java.util.ArrayList;
+ import java.util.Collection;
+ import java.util.List;
+@@ -68,22 +66,23 @@ public class JdbcVetRepositoryImpl implements VetRepository {
+ 
+         // Build each vet's list of specialties.
+         for (Vet vet : vets) {
+-            final List<Integer> vetSpecialtiesIds = this.jdbcClient.sql(
+-                    "SELECT specialty_id FROM vet_specialties WHERE vet_id=?")
+-                .param(vet.getId())
+-                .query(
+-                    new BeanPropertyRowMapper<Integer>() {
+-                        @Override
+-                        public Integer mapRow(ResultSet rs, int row) throws SQLException {
+-                            return rs.getInt(1);
+-                        }
+-                    }
+-                ).list();
+-            for (int specialtyId : vetSpecialtiesIds) {
+-                Specialty specialty = EntityUtils.getById(specialties, Specialty.class, specialtyId);
+-                vet.addSpecialty(specialty);
+-            }
++            addSpecialtiesToVet(vet, specialties);
+         }
+         return vets;
+     }
++
++    private void addSpecialtiesToVet(Vet vet, List<Specialty> specialties) {
++        for (Integer specialtyId : loadSpecialtyIdsByVetId(vet.getId())) {
++            Specialty specialty = EntityUtils.getById(specialties, Specialty.class, specialtyId);
++            vet.addSpecialty(specialty);
++        }
++    }
++
++    private List<Integer> loadSpecialtyIdsByVetId(int vetId) {
++        return this.jdbcClient.sql("SELECT specialty_id FROM vet_specialties WHERE vet_id=?")
++            .param(vetId)
++            .query((rs, rowNum) -> rs.getInt("specialty_id"))
++            .list();
++    }
++
+ }
+diff --git a/src/main/java/org/springframework/samples/petclinic/repository/jdbc/JdbcVisitRepositoryImpl.java b/src/main/java/org/springframework/samples/petclinic/repository/jdbc/JdbcVisitRepositoryImpl.java
+index 58cc91d3525ddc72fcdf5b3160cbf2fb7ca93f8c..cd98055abc157201937d816d2f92c31addea8f5d 100644
+--- a/src/main/java/org/springframework/samples/petclinic/repository/jdbc/JdbcVisitRepositoryImpl.java
++++ b/src/main/java/org/springframework/samples/petclinic/repository/jdbc/JdbcVisitRepositoryImpl.java
+@@ -76,23 +76,35 @@ public class JdbcVisitRepositoryImpl implements VisitRepository {
+ 
+     @Override
+     public List<Visit> findByPetId(Integer petId) {
+-        JdbcPet pet = this.jdbcClient
++        JdbcPet pet = loadPetForVisit(petId);
++
++        List<Visit> visits = loadVisitsForPet(petId);
++
++        attachPetToVisits(visits, pet);
++
++        return visits;
++    }
++
++    private JdbcPet loadPetForVisit(Integer petId) {
++        return this.jdbcClient
+             .sql("SELECT id, name, birth_date, type_id, owner_id FROM pets WHERE id=:id")
+             .param("id", petId)
+             .query(new JdbcPetRowMapper())
+             .single();
++    }
+ 
+-        List<Visit> visits = this.jdbcClient
++    private List<Visit> loadVisitsForPet(Integer petId) {
++        return this.jdbcClient
+             .sql("SELECT id as visit_id, visit_date, description FROM visits WHERE pet_id=:id")
+             .param("id", petId)
+             .query(new JdbcVisitRowMapper())
+             .list();
++    }
+ 
+-        for (Visit visit: visits) {
++    private void attachPetToVisits(List<Visit> visits, JdbcPet pet) {
++        for (Visit visit : visits) {
+             visit.setPet(pet);
+         }
+-
+-        return visits;
+     }
+ 
+ }
+diff --git a/src/main/java/org/springframework/samples/petclinic/repository/jdbc/OneToManyResultSetExtractor.java b/src/main/java/org/springframework/samples/petclinic/repository/jdbc/OneToManyResultSetExtractor.java
+index 549112f492a8551b85dec3adabba58edf658342e..56865ce9b46e449888dfc667ba7824e602de7f7a 100644
+--- a/src/main/java/org/springframework/samples/petclinic/repository/jdbc/OneToManyResultSetExtractor.java
++++ b/src/main/java/org/springframework/samples/petclinic/repository/jdbc/OneToManyResultSetExtractor.java
+@@ -112,6 +112,11 @@ public abstract class OneToManyResultSetExtractor<R, C, K> implements ResultSetE
+ 			}
+ 			results.add(root);
+ 		}
++		validateExpectedResults(results);
++		return results;
++	}
++
++	private void validateExpectedResults(List<R> results) {
+ 		if ((expectedResults == ExpectedResults.ONE_AND_ONLY_ONE || expectedResults == ExpectedResults.ONE_OR_NONE) &&
+ 				results.size() > 1) {
+ 			throw new IncorrectResultSizeDataAccessException(1, results.size());
+@@ -120,7 +125,6 @@ public abstract class OneToManyResultSetExtractor<R, C, K> implements ResultSetE
+ 				results.isEmpty()) {
+ 			throw new IncorrectResultSizeDataAccessException(1, 0);
+ 		}
+-		return results;
+ 	}
+ 
+ 	/**
+diff --git a/src/main/java/org/springframework/samples/petclinic/repository/jpa/JpaOwnerRepositoryImpl.java b/src/main/java/org/springframework/samples/petclinic/repository/jpa/JpaOwnerRepositoryImpl.java
+index b1b83c07afd3712a334dab5722571a36bc640553..1c528339b7c8bf2a6d9e3e27d4d5943dc2fd87ca 100644
+--- a/src/main/java/org/springframework/samples/petclinic/repository/jpa/JpaOwnerRepositoryImpl.java
++++ b/src/main/java/org/springframework/samples/petclinic/repository/jpa/JpaOwnerRepositoryImpl.java
+@@ -18,7 +18,6 @@ package org.springframework.samples.petclinic.repository.jpa;
+ import java.util.Collection;
+ 
+ import jakarta.persistence.EntityManager;
+-import jakarta.persistence.Query;
+ 
+ import org.springframework.samples.petclinic.model.Owner;
+ import org.springframework.samples.petclinic.repository.OwnerRepository;
+@@ -53,18 +52,29 @@ public class JpaOwnerRepositoryImpl implements OwnerRepository {
+     public Collection<Owner> findByLastName(String lastName) {
+         // using 'join fetch' because a single query should load both owners and pets
+         // using 'left join fetch' because it might happen that an owner does not have pets yet
+-        Query query = this.em.createQuery("SELECT DISTINCT owner FROM Owner owner left join fetch owner.pets WHERE owner.lastName LIKE :lastName");
+-        query.setParameter("lastName", lastName + "%");
+-        return query.getResultList();
++        return getOwnersByLastNamePrefix(lastName);
+     }
+ 
+     @Override
+     public Owner findById(int id) {
+         // using 'join fetch' because a single query should load both owners and pets
+         // using 'left join fetch' because it might happen that an owner does not have pets yet
+-        Query query = this.em.createQuery("SELECT owner FROM Owner owner left join fetch owner.pets WHERE owner.id =:id");
+-        query.setParameter("id", id);
+-        return (Owner) query.getSingleResult();
++        return findOwnerById(id);
++    }
++
++    @SuppressWarnings("unchecked")
++    private Collection<Owner> getOwnersByLastNamePrefix(String lastName) {
++        return this.em
++            .createQuery("SELECT DISTINCT owner FROM Owner owner left join fetch owner.pets WHERE owner.lastName LIKE :lastName")
++            .setParameter("lastName", lastName + "%")
++            .getResultList();
++    }
++
++    private Owner findOwnerById(int id) {
++        return (Owner) this.em
++            .createQuery("SELECT owner FROM Owner owner left join fetch owner.pets WHERE owner.id =:id")
++            .setParameter("id", id)
++            .getSingleResult();
+     }
+ 
+ 
+diff --git a/src/main/java/org/springframework/samples/petclinic/repository/jpa/JpaVisitRepositoryImpl.java b/src/main/java/org/springframework/samples/petclinic/repository/jpa/JpaVisitRepositoryImpl.java
+index 19028a5fb5664a606a278bc320fb5b0bdb045893..dda1091b005c5322628a51737b604e49ea95046a 100644
+--- a/src/main/java/org/springframework/samples/petclinic/repository/jpa/JpaVisitRepositoryImpl.java
++++ b/src/main/java/org/springframework/samples/petclinic/repository/jpa/JpaVisitRepositoryImpl.java
+@@ -57,9 +57,14 @@ public class JpaVisitRepositoryImpl implements VisitRepository {
+     @Override
+     @SuppressWarnings("unchecked")
+     public List<Visit> findByPetId(Integer petId) {
++        Query query = createFindByPetIdQuery(petId);
++        return query.getResultList();
++    }
++
++    private Query createFindByPetIdQuery(Integer petId) {
+         Query query = this.em.createQuery("SELECT v FROM Visit v where v.pet.id= :id");
+         query.setParameter("id", petId);
+-        return query.getResultList();
++        return query;
+     }
+ 
+ }
+diff --git a/src/main/java/org/springframework/samples/petclinic/util/CallMonitoringAspect.java b/src/main/java/org/springframework/samples/petclinic/util/CallMonitoringAspect.java
+index e906b8e69756e64092af19bcd1221a40a866c817..71de4f07a1ceac4be448117bfaa9085c64ecf9fb 100644
+--- a/src/main/java/org/springframework/samples/petclinic/util/CallMonitoringAspect.java
++++ b/src/main/java/org/springframework/samples/petclinic/util/CallMonitoringAspect.java
+@@ -67,10 +67,18 @@ public class CallMonitoringAspect {
+ 
+     @ManagedAttribute
+     public long getCallTime() {
+-        if (this.callCount > 0)
+-            return this.accumulatedCallTime / this.callCount;
+-        else
+-            return 0;
++        if (hasRecordedCalls()) {
++            return averageCallTime();
++        }
++        return 0;
++    }
++
++    private boolean hasRecordedCalls() {
++        return this.callCount > 0;
++    }
++
++    private long averageCallTime() {
++        return this.accumulatedCallTime / this.callCount;
+     }
+ 
+ 
+diff --git a/src/main/java/org/springframework/samples/petclinic/util/EntityUtils.java b/src/main/java/org/springframework/samples/petclinic/util/EntityUtils.java
+index 78e13793c1d46edb644120f134d3654f7493e573..b18358b9c521a4cbda7b0b88c44e24851e71a03e 100644
+--- a/src/main/java/org/springframework/samples/petclinic/util/EntityUtils.java
++++ b/src/main/java/org/springframework/samples/petclinic/util/EntityUtils.java
+@@ -47,11 +47,15 @@ public class EntityUtils {
+      */
+     public static <T extends BaseEntity> T getById(Collection<T> entities, Class<T> entityClass, int entityId) {
+         for (T entity : entities) {
+-            if (entity.getId() == entityId && entityClass.isInstance(entity)) {
++            if (isMatchingEntity(entity, entityClass, entityId)) {
+                 return entity;
+             }
+         }
+         throw new ObjectRetrievalFailureException(entityClass, entityId);
+     }
+ 
++    private static <T extends BaseEntity> boolean isMatchingEntity(T entity, Class<T> entityClass, int entityId) {
++        return entity.getId() == entityId && entityClass.isInstance(entity);
++    }
++
+ }
+diff --git a/src/main/java/org/springframework/samples/petclinic/web/OwnerController.java b/src/main/java/org/springframework/samples/petclinic/web/OwnerController.java
+index 3ae45f731a78047800fd483173aa384286fc3849..e1de303db0349b773075ae1fb68813da7edd514e 100644
+--- a/src/main/java/org/springframework/samples/petclinic/web/OwnerController.java
++++ b/src/main/java/org/springframework/samples/petclinic/web/OwnerController.java
+@@ -91,7 +91,11 @@ public class OwnerController {
+ 
+         // allow parameterless GET request for /owners to return all records
+         // find owners by last name
+-        Collection<Owner> results = this.clinicService.findOwnerByLastName(owner.getLastName());
++        Collection<Owner> results = findMatchingOwners(owner);
++        return resolveOwnerFindResult(results, result, model);
++    }
++
++    private String resolveOwnerFindResult(Collection<Owner> results, BindingResult result, Map<String, Object> model) {
+         if (results.isEmpty()) {
+             return handleNoOwners(result);
+         }
+@@ -108,6 +112,10 @@ public class OwnerController {
+         }
+     }
+ 
++    private Collection<Owner> findMatchingOwners(Owner owner) {
++        return this.clinicService.findOwnerByLastName(owner.getLastName());
++    }
++
+     private String handleNoOwners(BindingResult result) {
+         result.rejectValue("lastName", "notFound", "not found");
+         return VIEWS_OWNER_FIND_OWNERS;
+diff --git a/src/main/java/org/springframework/samples/petclinic/web/PetValidator.java b/src/main/java/org/springframework/samples/petclinic/web/PetValidator.java
+index fa531ef89f9446aba3c2285eabbdda318a41e661..5607717f245440418ef404559ac13df37de7bba6 100644
+--- a/src/main/java/org/springframework/samples/petclinic/web/PetValidator.java
++++ b/src/main/java/org/springframework/samples/petclinic/web/PetValidator.java
+@@ -46,21 +46,33 @@ public class PetValidator implements Validator {
+     }
+ 
+     private void validateName(Errors errors, Pet pet) {
+-        if (!StringUtils.hasLength(pet.getName())) {
++        if (isMissingName(pet)) {
+             rejectRequiredField(errors, FIELD_NAME);
+         }
+     }
+ 
+     private void validateRequiredFieldsForNewPet(Errors errors, Pet pet) {
+-        if (pet.isNew() && pet.getType() == null) {
++        if (isMissingTypeForNewPet(pet)) {
+             rejectRequiredField(errors, FIELD_TYPE);
+         }
+ 
+-        if (pet.getBirthDate() == null) {
++        if (isMissingBirthDate(pet)) {
+             rejectRequiredField(errors, FIELD_BIRTH_DATE);
+         }
+     }
+ 
++    private boolean isMissingName(Pet pet) {
++        return !StringUtils.hasLength(pet.getName());
++    }
++
++    private boolean isMissingTypeForNewPet(Pet pet) {
++        return pet.isNew() && pet.getType() == null;
++    }
++
++    private boolean isMissingBirthDate(Pet pet) {
++        return pet.getBirthDate() == null;
++    }
++
+     private void rejectRequiredField(Errors errors, String fieldName) {
+         errors.rejectValue(fieldName, REQUIRED, REQUIRED);
+     }
+diff --git a/src/main/java/org/springframework/samples/petclinic/web/VisitController.java b/src/main/java/org/springframework/samples/petclinic/web/VisitController.java
+index b5472013299caff8f3cce3ee96114fd2742257b7..47e609c4695ad1f093ee43633cc74562deed6010 100644
+--- a/src/main/java/org/springframework/samples/petclinic/web/VisitController.java
++++ b/src/main/java/org/springframework/samples/petclinic/web/VisitController.java
+@@ -16,6 +16,7 @@
+ package org.springframework.samples.petclinic.web;
+ 
+ import java.util.Map;
++import java.util.Collection;
+ 
+ import jakarta.validation.Valid;
+ 
+@@ -109,7 +110,11 @@ public class VisitController {
+     }
+ 
+     private void addVisitsToModel(int petId, Map<String, Object> model) {
+-        model.put(MODEL_ATTRIBUTE_VISITS, this.clinicService.findPetById(petId).getVisits());
++        model.put(MODEL_ATTRIBUTE_VISITS, findVisitsForPet(petId));
++    }
++
++    private Collection<Visit> findVisitsForPet(int petId) {
++        return this.clinicService.findPetById(petId).getVisits();
+     }
+ 
+ }

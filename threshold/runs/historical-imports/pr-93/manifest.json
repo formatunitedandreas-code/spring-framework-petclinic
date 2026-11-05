@@ -1,0 +1,159 @@
+{
+  "schemaVersion": "threshold.historical_import.v1",
+  "disposition": "historical_only",
+  "historicalValidationReasserted": false,
+  "runtimeAuthority": "NONE",
+  "executionAuthorized": false,
+  "authorityCreated": false,
+  "qualificationGranted": false,
+  "pullRequest": 93,
+  "originalHead": "e602fbe965d747483c0b2806c4bbe1fe8509030a",
+  "originalTargetBase": "924101e662668b5033b37123f9eef7a76001c8a6",
+  "originalMergeBase": "327ac10d71827903d654b922251182593e03e409",
+  "originalDiff": {
+    "path": "original.diff",
+    "sha256": "abec15cf508f25fe7f016789f8bb7a84778c5933cb6767369a1b8c63dbd295e2"
+  },
+  "changes": [
+    {
+      "path": "src/main/java/org/springframework/samples/petclinic/repository/jdbc/JdbcOwnerRepositoryImpl.java",
+      "before": {
+        "mode": "100644",
+        "blob": "c4c4ce858f63c965fa10622206c09527d12bdbb2",
+        "archive": "blobs/000000-before.bin",
+        "sha256": "8b465c1b201ca77b0f4966e25c4418bee9285fe5db511749b910ef2932da9f8c"
+      },
+      "after": {
+        "mode": "100644",
+        "blob": "68443a8ef582579e3cb7b9355050670fb8363450",
+        "archive": "blobs/000000-after.bin",
+        "sha256": "86cffdc42fedaa0073baa765e841d4c616664111c9c29c601e8e70ee6afef94b"
+      }
+    },
+    {
+      "path": "src/main/java/org/springframework/samples/petclinic/repository/jdbc/JdbcPet.java",
+      "before": {
+        "mode": "100644",
+        "blob": "e8ca238e68ed9b559c0d942616a3eddc59cc5e1b",
+        "archive": "blobs/000001-before.bin",
+        "sha256": "f65d6e251e1f2b1d8fab5112b8f82136bfa276cd137b6297be2be7558d089542"
+      },
+      "after": {
+        "mode": "100644",
+        "blob": "155eefbd88caa3b518bbc6e2b82d2fb13a7672db",
+        "archive": "blobs/000001-after.bin",
+        "sha256": "01d13d0c2dc41efe4e41845cccb02a623b283a0a68cf6e3c069803687887b36f"
+      }
+    },
+    {
+      "path": "src/main/java/org/springframework/samples/petclinic/repository/jdbc/JdbcPetRepositoryImpl.java",
+      "before": {
+        "mode": "100644",
+        "blob": "6e6a995df2c21d1b865f2fa3bd4aa7def4f8278f",
+        "archive": "blobs/000002-before.bin",
+        "sha256": "0aa7e882eb9fa86f8caee926d11f961226c310936cfeb3415eccf3139d091507"
+      },
+      "after": {
+        "mode": "100644",
+        "blob": "d302c9704718577a736b828501e77239527a32f2",
+        "archive": "blobs/000002-after.bin",
+        "sha256": "c9298cda3df0ba02ae32ec7a71d309c3b5979ecc69da977193b2e21c8ad1bb2e"
+      }
+    },
+    {
+      "path": "threshold/candidate-pocket/current.json",
+      "before": {
+        "mode": "100644",
+        "blob": "284e02504066a69fa0d0ba8ce7aa0e2be96cc964",
+        "archive": "blobs/000003-before.bin",
+        "sha256": "2c0a3b027335b2d7390e50b64900afe50aee6d8edd2382570d163953ffec5ad6"
+      },
+      "after": {
+        "mode": "100644",
+        "blob": "2417c3306829eefec9f294e8881997738a9820a5",
+        "archive": "blobs/000003-after.bin",
+        "sha256": "466c5462ddba92d5ce8c7e32667968e7f79cc420004fdf2ccf1b6a88b66a7f87"
+      }
+    },
+    {
+      "path": "threshold/lease-state/current-run.json",
+      "before": {
+        "mode": "100644",
+        "blob": "26a884f9599d616afb59814c85e07586505b00b6",
+        "archive": "blobs/000004-before.bin",
+        "sha256": "35c5a7f3cab0d59170437f88a06b0b146b64a60269acc7703c43e286a6e77dc9"
+      },
+      "after": {
+        "mode": "100644",
+        "blob": "24f2e0cdac2f8508103780bf91a21981dfaf5764",
+        "archive": "blobs/000004-after.bin",
+        "sha256": "f89c478cd7e2270fcc3db54a1aac33fa52a461463212e29a4355c448080b184f"
+      }
+    },
+    {
+      "path": "threshold/leases/current.yaml",
+      "before": {
+        "mode": "100644",
+        "blob": "1718c457783d95ff73ddffbbe6eae21e1a2ecff8",
+        "archive": "blobs/000005-before.bin",
+        "sha256": "2b27dc0488ec744d0d434b85801776143b0f500a9689b74f888f78749088b915"
+      },
+      "after": {
+        "mode": "100644",
+        "blob": "6c829582c107c721f11976d84662fe3cbb55fd49",
+        "archive": "blobs/000005-after.bin",
+        "sha256": "3bbb7025f98cc1354d5e0dc725369d68ac7d23f4dce914e28c890659ef774120"
+      }
+    },
+    {
+      "path": "threshold/receipts/src-main-java-org-springframework-samples-petclinic-repository-jdbc-jdbcownerrepositoryimpl-java-comment-wrap-cleanup-line-173-8e94f6d6a5d3.json",
+      "before": null,
+      "after": {
+        "mode": "100644",
+        "blob": "fc8f5f449d4692e16a90b68337103baa87d0196a",
+        "archive": "blobs/000006-after.bin",
+        "sha256": "2b9a3399e0593bf06964843068dfaa20d3488ed0c98b6f8bdace347ef3c18bdf"
+      }
+    },
+    {
+      "path": "threshold/receipts/src-main-java-org-springframework-samples-petclinic-repository-jdbc-jdbcownerrepositoryimpl-java-comment-wrap-cleanup-line-99-6b7b8559e58c.json",
+      "before": null,
+      "after": {
+        "mode": "100644",
+        "blob": "f5be75343b9b82dd470a0982adb7c49ee924bf03",
+        "archive": "blobs/000007-after.bin",
+        "sha256": "a905a6a1d431e334066f12603ae3d56301554102c1279e4387ce3a6fc45e458b"
+      }
+    },
+    {
+      "path": "threshold/receipts/src-main-java-org-springframework-samples-petclinic-repository-jdbc-jdbcownerrepositoryimpl-java-repository-readability-cleanup-line-53-d5b438b9f2c9.json",
+      "before": null,
+      "after": {
+        "mode": "100644",
+        "blob": "723544ef8a8b278cf90046b575a8ea2292dbd2c1",
+        "archive": "blobs/000008-after.bin",
+        "sha256": "6c81bb9e5eda909c4605e848a3f7958c54ea32c941141b7d137470f78fdfac3b"
+      }
+    },
+    {
+      "path": "threshold/receipts/src-main-java-org-springframework-samples-petclinic-repository-jdbc-jdbcpet-java-comment-wrap-cleanup-line-21-76878bc86d25.json",
+      "before": null,
+      "after": {
+        "mode": "100644",
+        "blob": "601889b1dd27014a67ff1ef86134df9c4c385c57",
+        "archive": "blobs/000009-after.bin",
+        "sha256": "e53473ada3231c0059f82bada43d17b56357ec7ec46c4eb2dcfef63eff9133c8"
+      }
+    },
+    {
+      "path": "threshold/receipts/src-main-java-org-springframework-samples-petclinic-repository-jdbc-jdbcpetrepositoryimpl-java-comment-wrap-cleanup-line-124-aeafe407cf0e.json",
+      "before": null,
+      "after": {
+        "mode": "100644",
+        "blob": "31657314efd215e95ecd348e899d9d9706ee0d9e",
+        "archive": "blobs/000010-after.bin",
+        "sha256": "504b744517ffb439e52585388aabe01e194a8e2a6f9fbc1c6eb93c592ec9e4fa"
+      }
+    }
+  ]
+}

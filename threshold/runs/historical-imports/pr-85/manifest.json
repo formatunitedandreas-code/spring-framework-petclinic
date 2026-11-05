@@ -1,0 +1,94 @@
+{
+  "schemaVersion": "threshold.historical_import.v1",
+  "disposition": "historical_only",
+  "historicalValidationReasserted": false,
+  "runtimeAuthority": "NONE",
+  "executionAuthorized": false,
+  "authorityCreated": false,
+  "qualificationGranted": false,
+  "pullRequest": 85,
+  "originalHead": "d759e4ea2327c977e9784ec9531fd92f1cc2954b",
+  "originalTargetBase": "924101e662668b5033b37123f9eef7a76001c8a6",
+  "originalMergeBase": "d039ca6fe980313d93c5945de2729c015e399d48",
+  "originalDiff": {
+    "path": "original.diff",
+    "sha256": "46db5d4e93f01066290542093e9c34cdac9e1a8c8eadb265913169797a7751c2"
+  },
+  "changes": [
+    {
+      "path": "src/main/java/org/springframework/samples/petclinic/model/Owner.java",
+      "before": {
+        "mode": "100644",
+        "blob": "6af35985c34bc07b0be9c354dae33affa9f6d3fa",
+        "archive": "blobs/000000-before.bin",
+        "sha256": "083ef7799c4801a6016fc858c68ba360b1ee03b99dae9a05cedcd7c49f08c1bc"
+      },
+      "after": {
+        "mode": "100644",
+        "blob": "2a74b8736f50bd647d1d08674d99cec10dad3caa",
+        "archive": "blobs/000000-after.bin",
+        "sha256": "34b77e30560d747ce66a128af4ed85d4134553d20567a2abed785b412264f249"
+      }
+    },
+    {
+      "path": "threshold/candidate-pocket/current.json",
+      "before": {
+        "mode": "100644",
+        "blob": "a106ddea24eb96ad09aa9b205ca33d70bd1311fe",
+        "archive": "blobs/000001-before.bin",
+        "sha256": "56e64ecdfbc18ce3b92019feb531abddc1df6a2dd9fa4fb9c20a545ac39f2e28"
+      },
+      "after": {
+        "mode": "100644",
+        "blob": "1b639dcc2704cf8c3beb87873c574546f8fecec8",
+        "archive": "blobs/000001-after.bin",
+        "sha256": "68539d4b504e5c61b01a6294435fd576e06c183c89aa7361705be29cc95fdf52"
+      }
+    },
+    {
+      "path": "threshold/lease-state/current-run.json",
+      "before": {
+        "mode": "100644",
+        "blob": "b38aa4174eb5385443da9dc4e14ae5752acbcc9b",
+        "archive": "blobs/000002-before.bin",
+        "sha256": "d5b3197bcb25dc44433b56e79ddb0ef9d4786c67b9abd37a40772bc9777e5136"
+      },
+      "after": {
+        "mode": "100644",
+        "blob": "defd5d0b74e6a74da6d877b02025d0d9078fe321",
+        "archive": "blobs/000002-after.bin",
+        "sha256": "96d7c2174c5b3b0a67f91a5c0e2e2cda46674fab1ac222f2b7b4d363ed2c73fa"
+      }
+    },
+    {
+      "path": "threshold/leases/current.yaml",
+      "before": {
+        "mode": "100644",
+        "blob": "e2eac3adcadafca2afa38284497d4710bf2912c3",
+        "archive": "blobs/000003-before.bin",
+        "sha256": "a5a7570abf9a694b69251f6c47a0baf1e96a22d7aae874b46d2f30efeed14be0"
+      },
+      "after": {
+        "mode": "100644",
+        "blob": "9b038294406972eaaab3ada4730d4130805f9755",
+        "archive": "blobs/000003-after.bin",
+        "sha256": "a8ae3d5cda2b84065814f09773ae12cb5c238906d20081db00fa50530e53c9ac"
+      }
+    },
+    {
+      "path": "threshold/scripts/discover-candidates.ps1",
+      "before": {
+        "mode": "100644",
+        "blob": "4cd07a43755e3b4f3b3a0f253a433b1c213282f5",
+        "archive": "blobs/000004-before.bin",
+        "sha256": "5af5decdcdc35e45c976c995686b7233b68fb682d8689cb6c8b559cc2ea748e0"
+      },
+      "after": {
+        "mode": "100644",
+        "blob": "f178abebd92f1a690ca49ca8bc93fe38ad19760c",
+        "archive": "blobs/000004-after.bin",
+        "sha256": "f370eca073755853d4e3ceccbab211bbb0e993194e090541eefcaaea6e810d15"
+      }
+    }
+  ]
+}
