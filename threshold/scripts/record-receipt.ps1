@@ -33,6 +33,7 @@ Set-StrictMode -Version Latest
 $ErrorActionPreference = "Stop"
 
 . (Join-Path $PSScriptRoot "lib/candidate-class-provenance.ps1")
+. (Join-Path $PSScriptRoot "lib/content-hash.ps1")
 
 function Get-LeaseScalar {
     param([string[]] $Lines, [string] $Name, [string] $Default = "")
@@ -47,54 +48,6 @@ function Get-LeaseScalar {
 function Get-CommitParent {
     param([string] $Commit)
     return (& git rev-parse "$Commit^").Trim()
-}
-
-function Get-GitBlobSha256 {
-    param([string] $Revision, [string] $Path)
-    $repoPath = ConvertTo-RepoPath $Path
-    $previousErrorActionPreference = $ErrorActionPreference
-    $ErrorActionPreference = "Continue"
-    & git cat-file -e "$Revision`:$repoPath" 2>$null
-    $exists = $LASTEXITCODE -eq 0
-    $ErrorActionPreference = $previousErrorActionPreference
-    if (-not $exists) { return $null }
-
-    $spec = "$Revision`:$repoPath"
-    $processInfo = [System.Diagnostics.ProcessStartInfo]::new()
-    $processInfo.FileName = "git"
-    $argumentListProperty = $processInfo.GetType().GetProperty("ArgumentList")
-    if ($null -ne $argumentListProperty) {
-        [void] $processInfo.ArgumentList.Add("cat-file")
-        [void] $processInfo.ArgumentList.Add("blob")
-        [void] $processInfo.ArgumentList.Add($spec)
-    }
-    else {
-        $escapedSpec = $spec.Replace('"', '\"')
-        $processInfo.Arguments = "cat-file blob `"$escapedSpec`""
-    }
-    $processInfo.RedirectStandardOutput = $true
-    $processInfo.RedirectStandardError = $true
-    $processInfo.UseShellExecute = $false
-
-    $process = [System.Diagnostics.Process]::Start($processInfo)
-    $sha256 = [System.Security.Cryptography.SHA256]::Create()
-    $buffer = [byte[]]::new(8192)
-    try {
-        while (($read = $process.StandardOutput.BaseStream.Read($buffer, 0, $buffer.Length)) -gt 0) {
-            [void] $sha256.TransformBlock($buffer, 0, $read, $null, 0)
-        }
-        [void] $sha256.TransformFinalBlock($buffer, 0, 0)
-        $stderr = $process.StandardError.ReadToEnd()
-        $process.WaitForExit()
-        if ($process.ExitCode -ne 0) {
-            throw "Failed to hash git blob: $spec. $stderr"
-        }
-        return ([System.BitConverter]::ToString($sha256.Hash) -replace "-", "").ToLowerInvariant()
-    }
-    finally {
-        $sha256.Dispose()
-        $process.Dispose()
-    }
 }
 
 function ConvertTo-RepoPath {
@@ -114,9 +67,9 @@ if ([string]::IsNullOrWhiteSpace($BaseHead)) { $BaseHead = Get-CommitParent $Com
 if ([string]::IsNullOrWhiteSpace($DiffSummary)) { $DiffSummary = ((& git show --format=%s --no-patch $CommitHash) -join " ").Trim() }
 if ([string]::IsNullOrWhiteSpace($ExecutorCandidateClass)) { $ExecutorCandidateClass = $CandidateClass }
 if ([string]::IsNullOrWhiteSpace($LearningProjectionClass)) { $LearningProjectionClass = $CandidateClass }
-$leaseDigest = Get-GitBlobSha256 -Revision "HEAD" -Path (ConvertTo-RepoPath $LeasePath)
+$leaseDigest = Get-ThresholdGitBlobSha256 -Revision $CommitHash -Path (ConvertTo-RepoPath $LeasePath)
 if ([string]::IsNullOrWhiteSpace($leaseDigest)) {
-    $leaseDigest = (Get-FileHash -Algorithm SHA256 -LiteralPath $LeasePath).Hash.ToLowerInvariant()
+    throw "Could not compute committed lease blob digest for $LeasePath at $CommitHash"
 }
 
 $changedPaths = @(& git diff --name-only "$BaseHead..$CommitHash" | Where-Object { -not [string]::IsNullOrWhiteSpace($_) })
@@ -135,8 +88,8 @@ $changedFiles = @()
 foreach ($path in $changedPaths) {
     $changedFiles += [ordered]@{
         path = ConvertTo-RepoPath $path
-        beforeSha256 = Get-GitBlobSha256 $BaseHead $path
-        afterSha256 = Get-GitBlobSha256 $CommitHash $path
+        beforeSha256 = Get-ThresholdGitBlobSha256 $BaseHead $path
+        afterSha256 = Get-ThresholdGitBlobSha256 $CommitHash $path
     }
 }
 
@@ -188,6 +141,7 @@ $receipt = [ordered]@{
     candidateId = $CandidateId
     leaseName = $leaseName
     leaseDigest = $leaseDigest
+    leaseDigestRevision = $CommitHash
     branch = $branch
     candidateClass = $CandidateClass
     leaseStartHead = $leaseStartHead
