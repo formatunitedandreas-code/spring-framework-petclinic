@@ -1,0 +1,99 @@
+{
+    "schemaVersion":  "threshold.petclinic.candidate-pocket.v0.2",
+    "leaseName":  "owned-autonomous-refactor-branch-wave-v0_automation",
+    "branch":  "threshold-governed-refactor-demo-153",
+    "generatedFromHead":  "276c95837f787fd4dec62e5960500a4a900d264e",
+    "generatedAt":  "2026-07-17T22:09:56.4283822Z",
+    "discovery":  {
+                      "method":  "static-heuristic-scan",
+                      "sourceRoot":  "src/main/java/org/springframework/samples/petclinic",
+                      "gatePath":  "threshold/gates/auto-patchable-candidate-classes.json",
+                      "approvedAutoPatchableCandidateClasses":  [
+                                                                    "application_bootstrap_readability_cleanup",
+                                                                    "comment_wrap_cleanup",
+                                                                    "duplicate_literal_local_constant_extraction",
+                                                                    "leading_tab_indentation_cleanup",
+                                                                    "line_comment_wrap_cleanup",
+                                                                    "method_signature_wrap_cleanup",
+                                                                    "method_spacing_normalization",
+                                                                    "model_readability_cleanup",
+                                                                    "private_helper_extraction_for_readability",
+                                                                    "redundant_local_variable_simplification",
+                                                                    "repository_readability_cleanup",
+                                                                    "split_string_constant_normalization",
+                                                                    "spring_data_query_concat_wrap_cleanup",
+                                                                    "spring_data_query_wrap_cleanup",
+                                                                    "string_constant_wrap_cleanup",
+                                                                    "utility_readability_cleanup"
+                                                                ],
+                      "scannedFiles":  54,
+                      "ranking":  [
+                                      "score descending",
+                                      "estimated changed lines ascending",
+                                      "candidate class lexical",
+                                      "file path lexical",
+                                      "member lexical"
+                                  ],
+                      "thresholds":  {
+                                         "longLineThreshold":  80,
+                                         "commentWrapThreshold":  84,
+                                         "springDataQueryThreshold":  50,
+                                         "repositoryMethodLengthThreshold":  4,
+                                         "utilityMethodLengthThreshold":  4
+                                     },
+                      "allowedCandidateTypes":  [
+                                                    "private_helper_extraction_for_readability",
+                                                    "redundant_local_variable_simplification",
+                                                    "duplicate_literal_local_constant_extraction",
+                                                    "controller_branch_readability_decomposition",
+                                                    "method_signature_wrap_cleanup",
+                                                    "repository_readability_cleanup",
+                                                    "spring_data_query_wrap_cleanup",
+                                                    "spring_data_query_concat_wrap_cleanup",
+                                                    "model_readability_cleanup",
+                                                    "split_string_constant_normalization",
+                                                    "string_constant_wrap_cleanup",
+                                                    "utility_readability_cleanup",
+                                                    "application_bootstrap_readability_cleanup",
+                                                    "leading_tab_indentation_cleanup",
+                                                    "comment_wrap_cleanup",
+                                                    "line_comment_wrap_cleanup",
+                                                    "method_spacing_normalization",
+                                                    "threshold_governance_artifact_update"
+                                                ]
+                  },
+    "candidates":  [
+                       {
+                           "tieBreak":  {
+                                            "layerScore":  0,
+                                            "path":  "src/main/java/org/springframework/samples/petclinic/owner/adapter/springdata/SpringDataJpaOwnerSearchQuery.java",
+                                            "member":  "line-17"
+                                        },
+                           "gate":  {
+                                        "required":  true,
+                                        "approved":  true,
+                                        "gatePath":  "threshold/gates/auto-patchable-candidate-classes.json"
+                                    },
+                           "score":  90,
+                           "autoPatchable":  true,
+                           "member":  "line-17",
+                           "reviewOnly":  false,
+                           "executionMode":  "auto_patchable",
+                           "file":  "src/main/java/org/springframework/samples/petclinic/owner/adapter/springdata/SpringDataJpaOwnerSearchQuery.java",
+                           "candidateId":  "src-main-java-org-springframework-samples-petclinic-owner-adapter-springdata-springdatajpaownersearchquery-java-method-signature-wrap-cleanup-line-17",
+                           "expectedDiffSummary":  "Wrap a long constant or method signature readability line without changing behavior.",
+                           "candidateClass":  "method_signature_wrap_cleanup",
+                           "estimatedChangedLines":  8
+                       }
+                   ],
+    "nextRecommendedCandidateId":  "src-main-java-org-springframework-samples-petclinic-owner-adapter-springdata-springdatajpaownersearchquery-java-method-signature-wrap-cleanup-line-17",
+    "nextAutoPatchableCandidateId":  "src-main-java-org-springframework-samples-petclinic-owner-adapter-springdata-springdatajpaownersearchquery-java-method-signature-wrap-cleanup-line-17",
+    "nonClaims":  [
+                      "candidate pocket is not an implementation claim",
+                      "candidate pocket does not claim behavior preservation until slice validation passes",
+                      "no public readiness claim",
+                      "no public correctness claim",
+                      "no public security claim",
+                      "no public compliance claim"
+                  ]
+}
