@@ -119,7 +119,7 @@ def source_changes(repo, base, head):
     return [(p, before.get(p), after.get(p)) for p in changed_paths(repo, base, head)]
 
 
-def diff_bytes(repo, base, head):
+def diff_bytes(repo, base, head, paths=None):
     # The archive is compared on other hosts: pin presentation rather than
     # inheriting each operator's context, prefixes, indicators or file ordering.
     return git(repo, "-c", "core.quotePath=true", "-c", "diff.noprefix=false",
@@ -129,7 +129,8 @@ def diff_bytes(repo, base, head):
                "--src-prefix=a/", "--dst-prefix=b/", "--no-color", "--diff-algorithm=myers",
                "--no-indent-heuristic", "--unified=3", "--inter-hunk-context=0", "--line-prefix=",
                "--output-indicator-new=+", "--output-indicator-old=-", "--output-indicator-context= ",
-               "-O", os.devnull, base, head, env=dict(os.environ, GIT_DIFF_OPTS="--unified=3"))
+               "-O", os.devnull, base, head, *(["--", *paths] if paths is not None else []),
+               env=dict(os.environ, GIT_DIFF_OPTS="--unified=3"))
 
 
 def blob(repo, oid):
