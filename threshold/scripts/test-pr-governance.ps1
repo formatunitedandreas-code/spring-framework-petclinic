@@ -19,6 +19,7 @@ $ErrorActionPreference = "Stop"
 . (Join-Path $PSScriptRoot "lib/publication-preflight.ps1")
 . (Join-Path $PSScriptRoot "lib/semantic-workflow.ps1")
 . (Join-Path $PSScriptRoot "lib/historical-import.ps1")
+. (Join-Path $PSScriptRoot "lib/finite-manual-source.ps1")
 . (Join-Path $PSScriptRoot "lib/content-hash.ps1")
 . (Join-Path $PSScriptRoot "lib/pr-metadata-envelope.ps1")
 . (Join-Path $PSScriptRoot "lib/candidate-class-provenance.ps1")
@@ -674,6 +675,17 @@ if ($PublicationPreflight.IsPresent) {
     $publicationChangedPaths = @(& git diff --name-only "$resolvedBaseRefForGit...HEAD")
     if ($LASTEXITCODE -ne 0) { throw "stop_authority_validator_unavailable=publication_diff_unavailable" }
     Assert-PublicationPreflight -ChangedPaths $publicationChangedPaths
+}
+if (Test-ThresholdFiniteManualSourceCandidate -BaseRef $resolvedBaseRefForGit) {
+    Write-Host 'thresholdFiniteCurrentSourceCandidate=true'
+    Write-Host 'sourceCommitReceiptCoverage=current_manual_only_historical_not_reasserted'
+    Write-Host 'freshCiRequired=true'
+    Write-Host 'independentExactHeadReviewRequired=true'
+    Write-Host 'historicalAdmission=HOLD_MISSING_ORIGINAL_QUALIFICATION'
+    Write-Host 'learningEligible=false'
+    Write-Host 'RuntimeAuthority=NONE'
+    Write-Host 'ExecutionAuthorized=false'
+    exit 0
 }
 if (Test-ThresholdInertHistoricalImport -BaseRef $resolvedBaseRefForGit) {
     Write-Host 'thresholdHistoricalImportOnly=true'

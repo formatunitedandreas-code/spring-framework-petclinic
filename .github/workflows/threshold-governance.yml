@@ -36,6 +36,10 @@ jobs:
         shell: pwsh
         run: ./threshold/scripts/test-semantic-file-economy-fixtures.ps1
 
+      - name: Verify finite current manual source candidate boundaries
+        shell: pwsh
+        run: python -B -m unittest discover -s threshold/scripts -p test_finite_manual_source.py
+
       - name: Fetch pull request base
         run: git fetch origin ${{ github.base_ref }}:refs/remotes/origin/${{ github.base_ref }}
 
