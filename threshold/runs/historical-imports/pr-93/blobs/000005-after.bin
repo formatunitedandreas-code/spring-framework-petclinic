@@ -1,0 +1,104 @@
+leaseName: owned-autonomous-refactor-branch-wave-v0_automation
+repository: C:\dev\spring-framework-petclinic
+branch: threshold-governed-refactor-demo-136
+baseRemote: origin
+baseRef: origin/main
+startHead: 327ac10d71827903d654b922251182593e03e409
+headPolicy: descendantOfStartHead
+scopeExpansionTier: 3
+longLineThreshold: 80
+commentWrapThreshold: 84
+springDataQueryThreshold: 50
+repositoryMethodLengthThreshold: 4
+utilityMethodLengthThreshold: 4
+
+budget:
+  maxCandidatesThisRun: 5
+  maxCommitsThisRun: 5
+  maxFilesPerCandidate: 1
+  maxGovernanceFilesPerCandidate: 8
+  maxChangedLinesPerCandidate: 80
+  maxGovernanceChangedLinesPerCandidate: 1200
+  maxRepairAttemptsPerCandidate: 1
+
+allowedRiskClasses:
+  - R0_READ_ONLY
+  - R1_READOUT
+  - R2_REVERSIBLE_LOCAL_MUTATION
+  - R3_LOCAL_COMMIT
+  - R4_OWNED_REPO_BRANCH_PUSH
+  - R4_OWNED_REPO_DRAFT_PR_UPDATE
+
+allowedPaths:
+  - src/main/java/org/springframework/samples/petclinic/service/*.java
+  - src/main/java/org/springframework/samples/petclinic/service/**/*.java
+  - src/main/java/org/springframework/samples/petclinic/web/*.java
+  - src/main/java/org/springframework/samples/petclinic/web/**/*.java
+  - src/main/java/org/springframework/samples/petclinic/repository/*.java
+  - src/main/java/org/springframework/samples/petclinic/repository/**/*.java
+  - src/main/java/org/springframework/samples/petclinic/model/*.java
+  - src/main/java/org/springframework/samples/petclinic/model/**/*.java
+  - src/main/java/org/springframework/samples/petclinic/util/*.java
+  - src/main/java/org/springframework/samples/petclinic/util/**/*.java
+  - src/main/java/org/springframework/samples/petclinic/*.java
+  - threshold/leases/*.yaml
+  - threshold/receipts/*.json
+  - threshold/lease-state/*.json
+  - threshold/candidate-pocket/*.json
+  - threshold/discovery-canaries/**/*.java
+  - threshold/discovery-canaries/*.json
+  - threshold/gates/*.json
+  - threshold/lanes/*.yaml
+  - threshold/scripts/*.ps1
+  - .github/workflows/threshold-governance.yml
+
+forbiddenPaths:
+  - pom.xml
+  - src/main/resources/**
+  - src/test/**
+  - target/**
+  - .github/dependabot.yml
+
+allowedCandidateTypes:
+  - private_helper_extraction_for_readability
+  - redundant_local_variable_simplification
+  - duplicate_literal_local_constant_extraction
+  - controller_branch_readability_decomposition
+  - method_signature_wrap_cleanup
+  - repository_readability_cleanup
+  - spring_data_query_wrap_cleanup
+  - spring_data_query_concat_wrap_cleanup
+  - model_readability_cleanup
+  - split_string_constant_normalization
+  - string_constant_wrap_cleanup
+  - utility_readability_cleanup
+  - application_bootstrap_readability_cleanup
+  - leading_tab_indentation_cleanup
+  - comment_wrap_cleanup
+  - line_comment_wrap_cleanup
+  - method_spacing_normalization
+  - threshold_governance_artifact_update
+
+forbiddenActions:
+  - push_to_upstream
+  - force_push
+  - merge
+  - release
+  - deploy
+  - dependency_or_pom_changes
+  - src_test_changes
+  - public_readiness_claim
+  - public_correctness_claim
+  - public_security_claim
+  - public_compliance_claim
+
+validation:
+  javaHome: C:\Program Files\Java\jdk-17
+  diffCheckCommand: git diff --check
+  mavenTestCommand: .\mvnw.cmd test
+  fullMavenTestRequiredPerCandidate: true
+
+terminalBoundary:
+  afterLocalCommit: hold_at_local_commit_boundary
+  draftPrAllowed: true
+  mergeAllowed: false
