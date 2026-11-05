@@ -46,7 +46,7 @@ def regular_blob(repo, revision, path):
     return evidence.blob(repo, entry[2])
 
 
-def object_at(repo, revision, path):
+def input_entry(repo, revision, path):
     # Missing input paths are explicit null in the accepted witness.
     entries = evidence.git(repo, "ls-tree", "-z", revision, "--", path).split(b"\0")
     entries = [entry for entry in entries if entry]
@@ -57,7 +57,12 @@ def object_at(repo, revision, path):
     require(actual_path.decode("utf-8") == path, "Test input spelling mismatch")
     mode, kind, oid = metadata.decode("ascii").split()
     require((mode, kind) in (("040000", "tree"), ("100644", "blob"), ("100755", "blob")), "Invalid test input mode")
-    return oid
+    return mode, kind, oid
+
+
+def object_at(repo, revision, path):
+    entry = input_entry(repo, revision, path)
+    return None if entry is None else entry[2]
 
 
 def verify_file(repo, revision, path, expected):
@@ -113,6 +118,8 @@ def validate(repo, base_ref, head_ref, pull_request):
     require([record["path"] for record in records] == list(TEST_INPUTS), "Complete Maven test-input set required")
     for record in records:
         path = record["path"]
+        require(input_entry(repo, proposal_base, path) == input_entry(repo, base, path), "Actual base test-input mode/type drift: " + path)
+        require(input_entry(repo, witness, path) == input_entry(repo, head, path), "Source test-input mode/type differs from witness: " + path)
         require(object_at(repo, proposal_base, path) == record["proposalBaseObject"] == object_at(repo, base, path), "Actual base test-input tree drift: " + path)
         require(object_at(repo, witness, path) == record["testedWitnessObject"] == object_at(repo, head, path), "Source test-input tree differs from tested witness: " + path)
     prefix = proposal_path.rsplit("/", 1)[0] + "/"
@@ -125,13 +132,14 @@ def validate(repo, base_ref, head_ref, pull_request):
     validation = proposal["observedValidation"]
     require(validation["sourceHead"] == witness and validation["status"] == "ACTUAL_LOCAL_OBSERVATION_NOT_HISTORICAL_ADMISSION", "Test witness binding mismatch")
     require(validation["freshCurrentSourceCiRequired"] is True and validation["result"] == "BUILD SUCCESS", "Current CI must remain required")
-    require(tuple(validation[key] for key in ("testsRun", "failures", "errors", "skipped")) == (126, 0, 0, 0), "Unexpected witnessed test summary")
+    counts = tuple(validation[key] for key in ("testsRun", "failures", "errors", "skipped"))
+    require(all(type(value) is int for value in counts) and counts == (126, 0, 0, 0), "Unexpected witnessed test summary")
     require(validation["logPath"] == "maven-test.log", "Unexpected test log path")
     log = regular_blob(repo, base, prefix + validation["logPath"])
     require(len(log) == validation["logBytes"] and hashlib.sha256(log).hexdigest() == validation["logSha256"], "Test log artifact tampered")
     require(re.search(rb"Tests run: 126, Failures: 0, Errors: 0, Skipped: 0", log) is not None and b"BUILD SUCCESS" in log, "Witnessed test output missing")
     # A candidate record is intentionally not a statement about current external checks.
-    return {"status": "verified_finite_current_source_candidate", "qualificationId": QUALIFICATION_ID,
+    return {"status": "verified_current_source_candidate", "qualificationId": QUALIFICATION_ID,
             "pullRequest": 184, "actualTargetBase": base, "currentSourceHead": head, "testedWitness": witness,
             "freshCiRequired": True, "independentExactHeadReviewRequired": True,
             "historicalAdmission": LITERALS["historicalAdmission"], "historicalValidationReasserted": False,
@@ -161,6 +169,8 @@ def validate_event(repo, base_ref, event, checkout_ref="HEAD"):
     common = ("--no-ext-diff", "--no-textconv", "--no-relative", "--ignore-submodules=none", "--name-only", "-z")
     require(not evidence.git(repo, "diff", *common, "HEAD") and
             not evidence.git(repo, "diff", "--cached", *common, "HEAD"), "Tracked checkout/index must be clean")
+    require(not evidence.git(repo, "ls-files", "--others", "--full-name", "-z", "--", *TEST_INPUTS),
+            "Untracked or ignored files change the complete Maven test inputs")
     result = validate(repo, base, source, 184)
     if result is not None:
         result.update(checkoutHead=checkout, checkoutTreeEqualsCurrentSource=True, observedRepository=own_repo)
