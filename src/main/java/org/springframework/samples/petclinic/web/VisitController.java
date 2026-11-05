@@ -9,7 +9,8 @@
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
+ * express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
@@ -53,10 +54,12 @@ public class VisitController {
     }
 
     /**
-     * Called before each and every @GetMapping or @PostMapping annotated method.
+     * Called before each and every @GetMapping or @PostMapping
+     * annotated method.
      * 2 goals:
      * - Make sure we always have fresh data
-     * - Since we do not use the session scope, make sure that Pet object
+     * - Since we do not use the session scope, make
+     * sure that Pet object
      * always has an id
      * (Even though id is not part of the form fields)
      *
@@ -84,11 +87,17 @@ public class VisitController {
     // Spring MVC calls method loadPetWithVisit(...) before
     // processNewVisitForm is called
     @PostMapping(value = VISIT_NEW_PATH)
-    public String processNewVisitForm(@Valid Visit visit, BindingResult result) {
+    public String processNewVisitForm(
+        @Valid Visit visit,
+        BindingResult result
+    ) {
         return handleVisitSubmission(visit, result);
     }
 
-    private String handleVisitSubmission(Visit visit, BindingResult result) {
+    private String handleVisitSubmission(
+        Visit visit,
+        BindingResult result
+    ) {
         if (result.hasErrors()) {
             return visitFormView();
         }
@@ -106,12 +115,20 @@ public class VisitController {
     }
 
     @GetMapping(value = "/owners/{ownerId}/pets/{petId}/visits")
-    public String showVisits(@PathVariable int petId, Map<String, Object> model) {
+    public String showVisits(
+        @PathVariable int petId,
+        Map<String,
+        Object> model
+    ) {
         addVisitsToModel(petId, model);
         return VIEWS_VISIT_LIST;
     }
 
-    private void addVisitsToModel(int petId, Map<String, Object> model) {
+    private void addVisitsToModel(
+        int petId,
+        Map<String,
+        Object> model
+    ) {
         model.put(MODEL_ATTRIBUTE_VISITS, this.clinicService.findPetById(petId).getVisits());
     }
 

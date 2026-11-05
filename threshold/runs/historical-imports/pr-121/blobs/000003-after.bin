@@ -1,0 +1,25 @@
+{
+    "schemaVersion":  "threshold.petclinic.lease-state.v0.2",
+    "invocationId":  "owned-autonomous-refactor-branch-wave-v0_automation-20260717T220556Z",
+    "leaseId":  "owned-autonomous-refactor-branch-wave-v0_automation",
+    "mode":  "local_refactor",
+    "branch":  "threshold-governed-refactor-demo-153",
+    "startHead":  "3d45871b6180cee722e4e159839101c46fa780ae",
+    "currentHead":  "276c95837f787fd4dec62e5960500a4a900d264e",
+    "currentSourceHead":  "5b3098835e20582d3bde3c4cdf06d5c4b7c84e60",
+    "candidatesProcessed":  3,
+    "commitsCreated":  3,
+    "remainingBudget":  {
+                            "candidates":  2,
+                            "commits":  2,
+                            "repairAttempts":  1
+                        },
+    "lastReceipt":  "threshold/receipts/src-main-java-org-springframework-samples-petclinic-owner-adapter-jpa-jpaownersearchquery-java-duplicate-literal-local-constant-extraction-ownerid-5b3098835e20.json",
+    "terminalState":  "active",
+    "updatedAt":  "2026-07-17T22:09:54.3176978Z",
+    "terminalReason":  "no applicable autoPatchable candidates after discovery canary passed",
+    "discoveryCanaryLastPassedAt":  "2026-07-17T22:09:51.8249228Z",
+    "scopeExpansionTier":  3,
+    "scopeExpansionReason":  "mid_wave_candidate_shortage",
+    "scopeExpansionAppliedAt":  "2026-07-17T22:09:54.3111758Z"
+}

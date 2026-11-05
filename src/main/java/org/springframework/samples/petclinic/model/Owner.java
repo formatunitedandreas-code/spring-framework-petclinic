@@ -9,7 +9,8 @@
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
+ * express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
@@ -117,7 +118,8 @@ public class Owner extends Person {
     }
 
     /**
-     * Return the Pet with the given name, or null if none found for this Owner.
+     * Return the Pet with the given name, or null if none
+     * found for this Owner.
      *
      * @param name to test
      * @return true if pet name is already in use
@@ -127,7 +129,8 @@ public class Owner extends Person {
     }
 
     /**
-     * Return the Pet with the given name, or null if none found for this Owner.
+     * Return the Pet with the given name, or null if none
+     * found for this Owner.
      *
      * @param name to test
      * @return true if pet name is already in use
@@ -146,7 +149,11 @@ public class Owner extends Person {
         return name.toLowerCase();
     }
 
-    private boolean isMatchingPet(Pet pet, String name, boolean ignoreNew) {
+    private boolean isMatchingPet(
+        Pet pet,
+        String name,
+        boolean ignoreNew
+    ) {
         return (!ignoreNew || !pet.isNew()) && pet.getName().toLowerCase().equals(name);
     }
 
