@@ -1,0 +1,17 @@
+{
+  "schemaVersion": "threshold.petclinic.phase2.receipt.v0.1",
+  "runId": "p2-10-owner-search-compatibility-path-20260717T194000Z",
+  "phaseId": "P2-10",
+  "repository": "C:\\dev\\spring-framework-petclinic",
+  "branch": "agent/owner-search-compatibility-path",
+  "baseHead": "8087dfcd68dba6736e99a066b399b1d4a1ea2aa3",
+  "lane": "product_refactor",
+  "feature": "owner_search_vertical_refactoring",
+  "candidateClass": "owner_search_compatibility_path",
+  "scopeMatch": true,
+  "publicationPerformed": false,
+  "mergePerformed": false,
+  "humanReviewRequired": true,
+  "outcome": "authority_active",
+  "stopReasons": []
+}

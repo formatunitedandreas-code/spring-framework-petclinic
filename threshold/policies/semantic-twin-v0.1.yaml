@@ -1,0 +1,18 @@
+schemaVersion: threshold.semantic-twin-policy.v0.1
+runtimeStateRoot: threshold/runtime
+legacyTwin:
+  sourceHeadRequired: true
+  deterministicDigestRequired: true
+  incrementalParityRequired: true
+  unresolvedConflictDisposition: stop_unresolved_semantic_conflict
+evidence:
+  minimumEvidenceClassesForVerifiedClaim: 2
+  singleEvidenceClassClassification: supported
+  generatedOnlyClassification: hypothesis_only
+  contradictedClassification: contradicted
+stopConditions:
+  - stop_source_head_mismatch
+  - stop_stale_legacy_twin
+  - stop_incremental_twin_divergence
+  - stop_unresolved_semantic_conflict
+  - stop_insufficient_fidelity_evidence
