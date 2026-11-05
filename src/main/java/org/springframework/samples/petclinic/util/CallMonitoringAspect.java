@@ -9,7 +9,8 @@
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
+ * express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
@@ -24,10 +25,16 @@ import org.springframework.jmx.export.annotation.ManagedResource;
 import org.springframework.util.StopWatch;
 
 /**
- * Simple aspect that monitors call count and call invocation time. It uses JMX annotations and therefore can be
+ * Simple aspect that monitors call count and call
+ * invocation time. It uses
+ * JMX annotations and
+ * therefore can be
  * monitored using any JMX console such as the jConsole
  * <p/>
- * This is only useful if you use JPA or JDBC.  Spring-data-jpa doesn't have any correctly annotated classes to join on
+ * This is only useful if you use JPA or JDBC.  Spring-data-jpa
+ * doesn't have any
+ * correctly annotated
+ * classes to join on
  *
  * @author Rob Harrop
  * @author Juergen Hoeller
@@ -67,39 +74,35 @@ public class CallMonitoringAspect {
 
     @ManagedAttribute
     public long getCallTime() {
-        if (hasRecordedCalls()) {
-            return averageCallTime();
+        if (this.callCount <= 0) {
+            return 0;
         }
-        return 0;
-    }
-
-    private boolean hasRecordedCalls() {
-        return this.callCount > 0;
-    }
-
-    private long averageCallTime() {
         return this.accumulatedCallTime / this.callCount;
     }
 
-
     @Around("within(@org.springframework.stereotype.Repository *)")
     public Object invoke(ProceedingJoinPoint joinPoint) throws Throwable {
-        if (this.enabled) {
-            StopWatch sw = new StopWatch(joinPoint.toShortString());
-
-            sw.start("invoke");
-            try {
-                return joinPoint.proceed();
-            } finally {
-                sw.stop();
-                synchronized (this) {
-                    this.callCount++;
-                    this.accumulatedCallTime += sw.getTotalTimeMillis();
-                }
-            }
-        } else {
+        if (!this.enabled) {
             return joinPoint.proceed();
         }
+        StopWatch sw = startInvocationStopWatch(joinPoint);
+        try {
+            return joinPoint.proceed();
+        } finally {
+            sw.stop();
+            recordInvocation(sw.getTotalTimeMillis());
+        }
+    }
+
+    private StopWatch startInvocationStopWatch(ProceedingJoinPoint joinPoint) {
+        StopWatch sw = new StopWatch(joinPoint.toShortString());
+        sw.start("invoke");
+        return sw;
+    }
+
+    private synchronized void recordInvocation(long totalTimeMillis) {
+        this.callCount++;
+        this.accumulatedCallTime += totalTimeMillis;
     }
 
 }

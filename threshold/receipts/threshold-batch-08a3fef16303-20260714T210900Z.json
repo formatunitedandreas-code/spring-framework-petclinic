@@ -1,0 +1,72 @@
+{
+  "schemaVersion": "threshold.petclinic.batch-receipt.v0.1",
+  "batchId": "threshold-batch-08a3fef16303-20260714T210900Z",
+  "leaseId": "petclinic-threshold-batch-refactor-lease-v1",
+  "branch": "threshold-governed-refactor-demo-8",
+  "baseHead": "08a3fef163032c212c53c982b6c404d50a885e18",
+  "sourceCommit": "083adaf3ba3e6319e273218057658fc61b45ba36",
+  "candidateClass": "comment_wrap_cleanup",
+  "candidateCount": 3,
+  "changedFiles": [
+    "src/main/java/org/springframework/samples/petclinic/repository/jdbc/JdbcOwnerRepositoryImpl.java",
+    "src/main/java/org/springframework/samples/petclinic/repository/jdbc/OneToManyResultSetExtractor.java"
+  ],
+  "changedLineCount": 9,
+  "candidates": [
+    {
+      "candidateId": "src-main-java-org-springframework-samples-petclinic-repository-jdbc-jdbcownerrepositoryimpl-java-comment-wrap-cleanup-line-109",
+      "candidateClass": "comment_wrap_cleanup",
+      "file": "src/main/java/org/springframework/samples/petclinic/repository/jdbc/JdbcOwnerRepositoryImpl.java",
+      "member": "line-109",
+      "beforeSha256": "B28C5329F3C9BA2B32D4E91D41FB6C4B53E64B50D632CF522F18821526F2F3D7",
+      "afterSha256": "FA8E2855FC9A6F4A80078548B734BFF9CA6FBF4DC5215F60B8494706B894143E",
+      "expectedDiffSummary": "Wrap one long Javadoc comment line without changing source behavior.",
+      "gateApproved": true,
+      "executionMode": "batched_auto_patchable"
+    },
+    {
+      "candidateId": "src-main-java-org-springframework-samples-petclinic-repository-jdbc-jdbcownerrepositoryimpl-java-comment-wrap-cleanup-line-94",
+      "candidateClass": "comment_wrap_cleanup",
+      "file": "src/main/java/org/springframework/samples/petclinic/repository/jdbc/JdbcOwnerRepositoryImpl.java",
+      "member": "line-94",
+      "beforeSha256": "B28C5329F3C9BA2B32D4E91D41FB6C4B53E64B50D632CF522F18821526F2F3D7",
+      "afterSha256": "FA8E2855FC9A6F4A80078548B734BFF9CA6FBF4DC5215F60B8494706B894143E",
+      "expectedDiffSummary": "Wrap one long Javadoc comment line without changing source behavior.",
+      "gateApproved": true,
+      "executionMode": "batched_auto_patchable"
+    },
+    {
+      "candidateId": "src-main-java-org-springframework-samples-petclinic-repository-jdbc-onetomanyresultsetextractor-java-comment-wrap-cleanup-line-41",
+      "candidateClass": "comment_wrap_cleanup",
+      "file": "src/main/java/org/springframework/samples/petclinic/repository/jdbc/OneToManyResultSetExtractor.java",
+      "member": "line-41",
+      "beforeSha256": "9C14ED14C823FC1BD026306439A8439F63E1D34EF1EF5C86259E29FAA50F2205",
+      "afterSha256": "80813580A85AEAC041413FDA9E98756906159931A36B429CBE921B25F6C9969D",
+      "expectedDiffSummary": "Wrap one long Javadoc comment line without changing source behavior.",
+      "gateApproved": true,
+      "executionMode": "batched_auto_patchable"
+    }
+  ],
+  "validation": {
+    "discoveryCanary": "passed",
+    "diffCheck": "passed",
+    "command": ".\\mvnw.cmd test",
+    "result": "BUILD SUCCESS",
+    "testsRun": 75,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  "runnerNotes": [
+    "Batch runner applied and validated the source changes.",
+    "Git index permission failure interrupted automated source/receipt commits after validation.",
+    "Source commit and batch receipt were completed manually with the same validated diff."
+  ],
+  "nonClaims": [
+    "batch receipt preserves per-candidate evidence but is not an external review claim",
+    "no upstream interaction in batch slice",
+    "no PR update in batch slice",
+    "no merge, release, or deploy in batch slice",
+    "no public readiness, correctness, security, or compliance claim"
+  ]
+}

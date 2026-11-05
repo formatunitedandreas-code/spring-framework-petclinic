@@ -9,7 +9,8 @@
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
+ * express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
@@ -20,7 +21,6 @@ import org.springframework.format.annotation.DateTimeFormat;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
-import jakarta.persistence.FetchType;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
@@ -45,8 +45,6 @@ import java.util.Set;
 @Table(name = "pets")
 public class Pet extends NamedEntity {
 
-    private static final Comparator<Visit> VISIT_DATE_DESCENDING = Comparator.comparing(Visit::getDate).reversed();
-
     @Column(name = "birth_date")
     @DateTimeFormat(pattern = "yyyy/MM/dd")
     private LocalDate birthDate;
@@ -59,7 +57,7 @@ public class Pet extends NamedEntity {
     @JoinColumn(name = "owner_id")
     private Owner owner;
 
-    @OneToMany(cascade = CascadeType.ALL, mappedBy = "pet", fetch = FetchType.EAGER)
+    @OneToMany(cascade = CascadeType.ALL, mappedBy = "pet")
     private Set<Visit> visits;
 
 
@@ -99,8 +97,12 @@ public class Pet extends NamedEntity {
     }
 
     public List<Visit> getVisits() {
+        return sortedVisits();
+    }
+
+    private List<Visit> sortedVisits() {
         List<Visit> sortedVisits = new ArrayList<>(getVisitsInternal());
-        sortedVisits.sort(VISIT_DATE_DESCENDING);
+        sortedVisits.sort(Comparator.comparing(Visit::getDate).reversed());
         return Collections.unmodifiableList(sortedVisits);
     }
 

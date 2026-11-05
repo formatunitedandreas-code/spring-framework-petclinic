@@ -7,10 +7,13 @@
  *
  *      http://www.apache.org/licenses/LICENSE-2.0
  *
- * Unless required by applicable law or agreed to in writing, software
+ * Unless required by applicable law or agreed to in
+ * writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
+ * express or implied.
+ * See the License for the specific language
+ * governing permissions and
  * limitations under the License.
  */
 package org.springframework.samples.petclinic.repository.jdbc;
@@ -23,10 +26,13 @@ import java.sql.SQLException;
 
 /**
  * {@link ResultSetExtractor} implementation by using the
- * {@link OneToManyResultSetExtractor} of Spring Data Core JDBC Extensions.
+ * {@link OneToManyResultSetExtractor} of Spring Data Core
+ * JDBC Extensions.
  */
 public class JdbcPetVisitExtractor extends
     OneToManyResultSetExtractor<JdbcPet, Visit, Integer> {
+
+    private static final String VISITS_PET_ID = "visits.pet_id";
 
     public JdbcPetVisitExtractor() {
         super(new JdbcPetRowMapper(), new JdbcVisitRowMapper());
@@ -39,10 +45,14 @@ public class JdbcPetVisitExtractor extends
 
     @Override
     protected Integer mapForeignKey(ResultSet rs) throws SQLException {
-        if (rs.getObject("visits.pet_id") == null) {
+        if (!hasVisitForeignKey(rs)) {
             return null;
         }
-        return rs.getInt("visits.pet_id");
+        return rs.getInt(VISITS_PET_ID);
+    }
+
+    private boolean hasVisitForeignKey(ResultSet rs) throws SQLException {
+        return rs.getObject(VISITS_PET_ID) != null;
     }
 
     @Override

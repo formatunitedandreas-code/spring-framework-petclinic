@@ -1,0 +1,74 @@
+{
+  "schemaVersion": "threshold.petclinic.phase2.receipt.v0.1",
+  "runId": "p2-12-owner-search-explicit-fetch-plans-20260717T205200Z",
+  "phaseId": "P2-12",
+  "repository": "C:\\dev\\spring-framework-petclinic",
+  "repositorySlug": "formatunitedandreas-code/spring-framework-petclinic",
+  "branch": "agent/owner-search-explicit-fetch-plans",
+  "inputHead": "16ca87d0a69b079c20351a048d7b082ca9b057f2",
+  "baseHead": "16ca87d0a69b079c20351a048d7b082ca9b057f2",
+  "outputHead": "pending_local_commit",
+  "lane": "product_refactor",
+  "feature": "owner_search_vertical_refactoring",
+  "candidateClass": "owner_search_explicit_fetch_plans",
+  "effectClasses": [
+    "persistence_fetch_plan_change",
+    "owner_search_visit_materialization_reduction",
+    "test_measurement_update",
+    "local_evidence_update"
+  ],
+  "scopeMatch": true,
+  "changedProductionFiles": [
+    "src/main/java/org/springframework/samples/petclinic/model/Pet.java",
+    "src/main/java/org/springframework/samples/petclinic/repository/jpa/JpaOwnerRepositoryImpl.java",
+    "src/main/java/org/springframework/samples/petclinic/repository/jpa/JpaPetRepositoryImpl.java",
+    "src/main/java/org/springframework/samples/petclinic/repository/springdatajpa/SpringDataOwnerRepository.java",
+    "src/main/java/org/springframework/samples/petclinic/repository/springdatajpa/SpringDataPetRepository.java"
+  ],
+  "changedTestFiles": [
+    "src/test/java/org/springframework/samples/petclinic/service/AbstractOwnerSearchQueryMeasurementTests.java",
+    "src/test/java/org/springframework/samples/petclinic/service/JdbcOwnerSearchQueryMeasurementTests.java",
+    "src/test/java/org/springframework/samples/petclinic/service/JpaOwnerSearchQueryMeasurementTests.java",
+    "src/test/java/org/springframework/samples/petclinic/service/SpringDataJpaOwnerSearchQueryMeasurementTests.java"
+  ],
+  "databaseSchemaChanges": false,
+  "publicationPerformed": false,
+  "mergePerformed": false,
+  "releasePerformed": false,
+  "deploymentPerformed": false,
+  "behaviorEquivalent": true,
+  "profileParityVerified": true,
+  "queryBudgetVerified": true,
+  "architectureRulesVerified": false,
+  "fullSuitePassed": true,
+  "queryEvidence": {
+    "ownerSearchProjectionBudget": {
+      "jdbc": 1,
+      "jpa": 1,
+      "springDataJpa": 1
+    },
+    "legacyEntitySearchAfter": {
+      "jdbcSingleOwnerQueries": 3,
+      "jdbcAllOwnersQueries": 21,
+      "jdbcAllOwnersLoadedVisits": 4,
+      "jpaSingleOwnerQueries": 2,
+      "jpaAllOwnersQueries": 7,
+      "jpaAllOwnersMaterializedVisits": 0,
+      "springDataJpaSingleOwnerQueries": 2,
+      "springDataJpaAllOwnersQueries": 7,
+      "springDataJpaAllOwnersMaterializedVisits": 0
+    }
+  },
+  "validation": {
+    "ownerSearchTests": "pass: 33 tests, 0 failures, 0 errors, 0 skipped",
+    "controllerTests": "pass: 24 tests, 0 failures, 0 errors, 0 skipped",
+    "jdbcProfile": "pass: 119 tests, 0 failures, 0 errors, 0 skipped",
+    "jpaProfile": "pass: 119 tests, 0 failures, 0 errors, 0 skipped",
+    "springDataJpaProfile": "pass: 119 tests, 0 failures, 0 errors, 0 skipped",
+    "defaultTest": "pass: 119 tests, 0 failures, 0 errors, 0 skipped",
+    "gitDiffCheck": "pass"
+  },
+  "humanReviewRequired": true,
+  "outcome": "local_validation_green_pending_commit",
+  "stopReasons": []
+}

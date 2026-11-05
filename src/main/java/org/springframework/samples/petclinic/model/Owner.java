@@ -9,7 +9,8 @@
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
+ * express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
@@ -44,18 +45,20 @@ import org.springframework.core.style.ToStringCreator;
 @Table(name = "owners")
 public class Owner extends Person {
 
-    private static final Comparator<Pet> PET_NAME_COMPARATOR =
-        Comparator.comparing(Pet::getName, String.CASE_INSENSITIVE_ORDER);
+    private static final String TELEPHONE = "telephone";
 
-    @Column(name = "address")
+    private static final String CITY = "city";
+
+    private static final String ADDRESS = "address";
+    @Column(name = ADDRESS)
     @NotEmpty
     private String address;
 
-    @Column(name = "city")
+    @Column(name = CITY)
     @NotEmpty
     private String city;
 
-    @Column(name = "telephone")
+    @Column(name = TELEPHONE)
     @NotEmpty
     @Digits(fraction = 0, integer = 10)
     private String telephone;
@@ -100,8 +103,12 @@ public class Owner extends Person {
     }
 
     public List<Pet> getPets() {
+        return sortedPets();
+    }
+
+    private List<Pet> sortedPets() {
         List<Pet> sortedPets = new ArrayList<>(getPetsInternal());
-        sortedPets.sort(PET_NAME_COMPARATOR);
+        sortedPets.sort(Comparator.comparing(Pet::getName, String.CASE_INSENSITIVE_ORDER));
         return Collections.unmodifiableList(sortedPets);
     }
 
@@ -111,7 +118,8 @@ public class Owner extends Person {
     }
 
     /**
-     * Return the Pet with the given name, or null if none found for this Owner.
+     * Return the Pet with the given name, or null if none
+     * found for this Owner.
      *
      * @param name to test
      * @return true if pet name is already in use
@@ -121,36 +129,48 @@ public class Owner extends Person {
     }
 
     /**
-     * Return the Pet with the given name, or null if none found for this Owner.
+     * Return the Pet with the given name, or null if none
+     * found for this Owner.
      *
      * @param name to test
      * @return true if pet name is already in use
      */
     public Pet getPet(String name, boolean ignoreNew) {
-        name = name.toLowerCase();
+        String petName = normalizePetName(name);
         for (Pet pet : getPetsInternal()) {
-            if (isMatchingPet(pet, name, ignoreNew)) {
+            if (isMatchingPet(pet, petName, ignoreNew)) {
                 return pet;
             }
         }
         return null;
     }
 
-    private boolean isMatchingPet(Pet pet, String name, boolean ignoreNew) {
+    private String normalizePetName(String name) {
+        return name.toLowerCase();
+    }
+
+    private boolean isMatchingPet(
+        Pet pet,
+        String name,
+        boolean ignoreNew
+    ) {
         return (!ignoreNew || !pet.isNew()) && pet.getName().toLowerCase().equals(name);
     }
 
     @Override
     public String toString() {
-        return new ToStringCreator(this)
+        return appendOwnerToStringFields(new ToStringCreator(this)).toString();
+    }
+
+    private ToStringCreator appendOwnerToStringFields(ToStringCreator toStringCreator) {
+        return toStringCreator
 
             .append("id", this.getId())
             .append("new", this.isNew())
             .append("lastName", this.getLastName())
             .append("firstName", this.getFirstName())
-            .append("address", this.address)
-            .append("city", this.city)
-            .append("telephone", this.telephone)
-            .toString();
+            .append(ADDRESS, this.address)
+            .append(CITY, this.city)
+            .append(TELEPHONE, this.telephone);
     }
 }

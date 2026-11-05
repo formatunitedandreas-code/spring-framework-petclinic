@@ -1,0 +1,50 @@
+{
+    "schemaVersion":  "threshold.petclinic.slice-receipt.v0.2",
+    "candidateId":  "src-main-java-org-springframework-samples-petclinic-service-clinicserviceimpl-java-method-spacing-normalization-collapse-line-87",
+    "leaseName":  "owned-autonomous-refactor-branch-wave-v0_32",
+    "branch":  "threshold-governed-refactor-demo-22",
+    "candidateClass":  "method_spacing_normalization",
+    "leaseStartHead":  "ed710ce09204aa572a28bb27d39e22a3947668c9",
+    "baseHead":  "07c667e8c7da2b2a05386542f7d8715bb3ad1f03",
+    "commitHash":  "77d65618405946350a17803688770f22d130fff1",
+    "receiptMaterialization":  "post-commit",
+    "perCommitValidationLogAvailable":  true,
+    "branchFinalValidationPassed":  false,
+    "changedFiles":  [
+                         {
+                             "path":  "src/main/java/org/springframework/samples/petclinic/service/ClinicServiceImpl.java",
+                             "beforeSha256":  "8899241b5256cf2c940ef8f8ba2031012d5c7774e0f6244863c38f7fa067d41f",
+                             "afterSha256":  "6a32c78c38109814ecc7cc7e3d4448c00102db620a9df74b006240e22dab2ff5"
+                         }
+                     ],
+    "diffSummary":  "Refactor PetClinic Collapse an extra blank line before the next method or",
+    "diffStat":  {
+                     "filesChanged":  1,
+                     "insertions":  0,
+                     "deletions":  1
+                 },
+    "validation":  {
+                       "diffCheck":  "passed",
+                       "command":  ".\\mvnw.cmd test",
+                       "result":  "BUILD SUCCESS",
+                       "testsRun":  75,
+                       "failures":  0,
+                       "errors":  0,
+                       "skipped":  0
+                   },
+    "nonClaims":  [
+                      "no push in candidate slice",
+                      "no PR update in candidate slice",
+                      "no upstream interaction",
+                      "no pom.xml change",
+                      "no dependency change",
+                      "no src/test change",
+                      "no merge",
+                      "no release",
+                      "no deploy",
+                      "no public readiness claim",
+                      "no public correctness claim",
+                      "no public security claim",
+                      "no public compliance claim"
+                  ]
+}

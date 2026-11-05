@@ -1,0 +1,50 @@
+{
+    "schemaVersion":  "threshold.petclinic.slice-receipt.v0.2",
+    "candidateId":  "petclinic-util-callmonitor-invoke-guard-early-return",
+    "leaseName":  "petclinic-threshold-governed-refactor-lease-v1",
+    "branch":  "threshold-governed-refactor-demo-4",
+    "candidateClass":  "utility_readability_cleanup",
+    "leaseStartHead":  "a703491cc707d6f0de9fcfd30719bfa278a74df8",
+    "baseHead":  "e68014902120f2642f23baa67d5e52e407e942d5",
+    "commitHash":  "f1a4ee108f5da24482dafb8714c7a0a4dba661d6",
+    "receiptMaterialization":  "prospective",
+    "perCommitValidationLogAvailable":  false,
+    "branchFinalValidationPassed":  false,
+    "changedFiles":  [
+                         {
+                             "path":  "src/main/java/org/springframework/samples/petclinic/util/CallMonitoringAspect.java",
+                             "beforeSha256":  "e7435e19d8131bc16e601f4156650237fd7f94e4c3cf2f5b0ae19f525245b612",
+                             "afterSha256":  "c3d792da8d0e866e45f48b38cc9d4b6a41e4f9a490ca99e971fba46ae56aae8f"
+                         }
+                     ],
+    "diffSummary":  "Invert invoke monitoring guard to return early when disabled; no behavior change.",
+    "diffStat":  {
+                     "filesChanged":  1,
+                     "insertions":  12,
+                     "deletions":  13
+                 },
+    "validation":  {
+                       "diffCheck":  "passed",
+                       "command":  ".\\mvnw.cmd test",
+                       "result":  "BUILD SUCCESS",
+                       "testsRun":  75,
+                       "failures":  0,
+                       "errors":  0,
+                       "skipped":  0
+                   },
+    "nonClaims":  [
+                      "no push in candidate slice",
+                      "no PR update in candidate slice",
+                      "no upstream interaction",
+                      "no pom.xml change",
+                      "no dependency change",
+                      "no src/test change",
+                      "no merge",
+                      "no release",
+                      "no deploy",
+                      "no public readiness claim",
+                      "no public correctness claim",
+                      "no public security claim",
+                      "no public compliance claim"
+                  ]
+}

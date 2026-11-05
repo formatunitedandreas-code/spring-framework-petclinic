@@ -1,0 +1,50 @@
+{
+    "schemaVersion":  "threshold.petclinic.slice-receipt.v0.2",
+    "candidateId":  "src-main-java-org-springframework-samples-petclinic-model-namedentity-java-comment-wrap-cleanup-line-23",
+    "leaseName":  "owned-autonomous-refactor-branch-wave-v0_automation",
+    "branch":  "threshold-governed-refactor-demo-29",
+    "candidateClass":  "comment_wrap_cleanup",
+    "leaseStartHead":  "0f2fb251652a11130254ddd799fbbf975a61bf8a",
+    "baseHead":  "fa067d7ad7b6eca1653c84d7847671f89eb1ea05",
+    "commitHash":  "4f2ab0469f919b652fd90ed283d40ce1c7b85329",
+    "receiptMaterialization":  "post-commit",
+    "perCommitValidationLogAvailable":  true,
+    "branchFinalValidationPassed":  false,
+    "changedFiles":  [
+                         {
+                             "path":  "src/main/java/org/springframework/samples/petclinic/model/NamedEntity.java",
+                             "beforeSha256":  "b57a4d261cb1f60dd958f9e5ca5abd0b612b80457ebeeabe39ae39f54207faa9",
+                             "afterSha256":  "fa57dfd0bfe63b77b207381ff1e6340e300964fc471e82e175dd3bc092ce818d"
+                         }
+                     ],
+    "diffSummary":  "Refactor PetClinic Wrap one long Javadoc comment line without changing so",
+    "diffStat":  {
+                     "filesChanged":  1,
+                     "insertions":  2,
+                     "deletions":  1
+                 },
+    "validation":  {
+                       "diffCheck":  "passed",
+                       "command":  ".\\mvnw.cmd test",
+                       "result":  "BUILD SUCCESS",
+                       "testsRun":  75,
+                       "failures":  0,
+                       "errors":  0,
+                       "skipped":  0
+                   },
+    "nonClaims":  [
+                      "no push in candidate slice",
+                      "no PR update in candidate slice",
+                      "no upstream interaction",
+                      "no pom.xml change",
+                      "no dependency change",
+                      "no src/test change",
+                      "no merge",
+                      "no release",
+                      "no deploy",
+                      "no public readiness claim",
+                      "no public correctness claim",
+                      "no public security claim",
+                      "no public compliance claim"
+                  ]
+}

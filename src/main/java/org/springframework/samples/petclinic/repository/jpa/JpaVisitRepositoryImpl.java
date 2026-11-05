@@ -9,7 +9,8 @@
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
+ * express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
@@ -18,16 +19,16 @@ package org.springframework.samples.petclinic.repository.jpa;
 import java.util.List;
 
 import jakarta.persistence.EntityManager;
-import jakarta.persistence.Query;
-
 import org.springframework.samples.petclinic.model.Visit;
 import org.springframework.samples.petclinic.repository.VisitRepository;
 import org.springframework.stereotype.Repository;
 
 /**
- * JPA implementation of the ClinicService interface using EntityManager.
+ * JPA implementation of the ClinicService interface
+ * using EntityManager.
  * <p/>
- * <p>The mappings are defined in "orm.xml" located in the META-INF directory.
+ * <p>The mappings are defined in "orm.xml" located in the
+ * META-INF directory.
  *
  * @author Mike Keith
  * @author Rod Johnson
@@ -37,6 +38,9 @@ import org.springframework.stereotype.Repository;
  */
 @Repository
 public class JpaVisitRepositoryImpl implements VisitRepository {
+
+    private static final String FIND_BY_PET_ID_SQL = "SELECT v FROM Visit v WHERE v.pet.id = "
+        + ":id";
 
     private final EntityManager em;
 
@@ -53,18 +57,12 @@ public class JpaVisitRepositoryImpl implements VisitRepository {
         this.em.merge(visit);
     }
 
-
     @Override
-    @SuppressWarnings("unchecked")
     public List<Visit> findByPetId(Integer petId) {
-        Query query = createFindByPetIdQuery(petId);
-        return query.getResultList();
-    }
-
-    private Query createFindByPetIdQuery(Integer petId) {
-        Query query = this.em.createQuery("SELECT v FROM Visit v where v.pet.id= :id");
-        query.setParameter("id", petId);
-        return query;
+        return this.em.createQuery(
+            FIND_BY_PET_ID_SQL, Visit.class)
+            .setParameter("id", petId)
+            .getResultList();
     }
 
 }

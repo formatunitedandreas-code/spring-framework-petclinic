@@ -1,0 +1,50 @@
+{
+    "schemaVersion":  "threshold.petclinic.slice-receipt.v0.2",
+    "candidateId":  "threshold-fix-wrap-executor-materialization",
+    "leaseName":  "petclinic-threshold-governed-refactor-lease-v12",
+    "branch":  "threshold-governed-refactor-demo-6",
+    "candidateClass":  "threshold_governance_artifact_update",
+    "leaseStartHead":  "6926ec7e2414dc5ebef914956418bc22c44cedc5",
+    "baseHead":  "23c0c6ad6c3ce27ab3c919bf950a875a57d717f6",
+    "commitHash":  "7a13dc842fa3499122d35705764c1ff23813397b",
+    "receiptMaterialization":  "post-commit",
+    "perCommitValidationLogAvailable":  true,
+    "branchFinalValidationPassed":  false,
+    "changedFiles":  [
+                         {
+                             "path":  "threshold/scripts/run-next-slice.ps1",
+                             "beforeSha256":  "1ee8a9ff5c70c91251a02af63ae1300f898d134bda797b132dab12af8ebe46e2",
+                             "afterSha256":  "267a1bf5306b5b46cdd5100d4936731ad54966644aca0d377f539c3021a45eb2"
+                         }
+                     ],
+    "diffSummary":  "Fix Threshold wrap executor materialization",
+    "diffStat":  {
+                     "filesChanged":  1,
+                     "insertions":  22,
+                     "deletions":  8
+                 },
+    "validation":  {
+                       "diffCheck":  "passed",
+                       "command":  ".\\mvnw.cmd test",
+                       "result":  "BUILD SUCCESS",
+                       "testsRun":  75,
+                       "failures":  0,
+                       "errors":  0,
+                       "skipped":  0
+                   },
+    "nonClaims":  [
+                      "no push in candidate slice",
+                      "no PR update in candidate slice",
+                      "no upstream interaction",
+                      "no pom.xml change",
+                      "no dependency change",
+                      "no src/test change",
+                      "no merge",
+                      "no release",
+                      "no deploy",
+                      "no public readiness claim",
+                      "no public correctness claim",
+                      "no public security claim",
+                      "no public compliance claim"
+                  ]
+}

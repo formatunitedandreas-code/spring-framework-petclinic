@@ -1,0 +1,49 @@
+{
+    "candidateId":  "petclinic-jdbc-owner-loadpets-maphelper",
+    "leaseName":  "petclinic-threshold-governed-refactor-lease-v1",
+    "branch":  "threshold-governed-refactor-demo-4",
+    "candidateClass":  "threshold_enforcement",
+    "baseHead":  "4e4c7eba92c80d35e8244f8526828680f0a25922",
+    "commitHash":  "7a38d414be33e6742ced5051a5dc9260d3ceae88",
+    "changedFiles":  [
+                         {
+                             "path":  "src/main/java/org/springframework/samples/petclinic/repository/jdbc/JdbcOwnerRepositoryImpl.java",
+                             "beforeSha256":  null,
+                             "afterSha256":  "CBA8D4197C90A48AE90B3DAB2FBAA9D73302C61D3B44BF989C20EA82524CA106"
+                         },
+                         {
+                             "path":  "threshold/receipts/petclinic-jdbc-owner-loadpets-maphelper.json",
+                             "beforeSha256":  null,
+                             "afterSha256":  "A49016D724E7772F34656CDEED4F3BFB1D077DF43B84A72D07C6117D8ADD3279"
+                         }
+                     ],
+    "diffStat":  {
+                     "filesChanged":  2,
+                     "insertions":  50,
+                     "deletions":  2
+                 },
+    "validation":  {
+                       "diffCheck":  "passed",
+                       "command":  ".\\mvnw.cmd test",
+                       "result":  "BUILD SUCCESS, Tests run 75, failures 0, errors 0, skipped 0",
+                       "testsRun":  75,
+                       "failures":  0,
+                       "errors":  0,
+                       "skipped":  0
+                   },
+    "nonClaims":  [
+                      "no push in candidate slice",
+                      "no PR update in candidate slice",
+                      "no upstream interaction",
+                      "no pom.xml change",
+                      "no dependency change",
+                      "no src/test change",
+                      "no merge",
+                      "no release",
+                      "no deploy",
+                      "no public readiness claim",
+                      "no public correctness claim",
+                      "no public security claim",
+                      "no public compliance claim"
+                  ]
+}

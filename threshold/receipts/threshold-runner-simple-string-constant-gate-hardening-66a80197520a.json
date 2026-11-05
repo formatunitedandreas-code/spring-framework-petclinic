@@ -1,0 +1,60 @@
+{
+    "schemaVersion":  "threshold.petclinic.slice-receipt.v0.2",
+    "candidateId":  "threshold-runner-simple-string-constant-gate-hardening",
+    "leaseName":  "petclinic-threshold-governed-refactor-lease-v10",
+    "branch":  "threshold-governed-refactor-demo-6",
+    "candidateClass":  "threshold_governance_artifact_update",
+    "leaseStartHead":  "75f8473a9c9e6d209a0c561c76b21e363e4b97e7",
+    "baseHead":  "2dd603744d403886b9c74ee479b385dfc9da64ec",
+    "commitHash":  "66a80197520a57aae1961790835fe5a8272fe57a",
+    "receiptMaterialization":  "prospective",
+    "perCommitValidationLogAvailable":  false,
+    "branchFinalValidationPassed":  false,
+    "changedFiles":  [
+                         {
+                             "path":  "threshold/scripts/discover-candidates.ps1",
+                             "beforeSha256":  "f6b75619bd61948a970809f6058a627dfc8a0cf0fca101d84f2dde04d356dd5b",
+                             "afterSha256":  "a8c0f27f78d46dda40af8018a1475a674d5b26fa0e6c72e4645813876133775c"
+                         },
+                         {
+                             "path":  "threshold/scripts/run-next-slice.ps1",
+                             "beforeSha256":  "6fcff1ea1032735c2480dfef3a1a4b80a56f264646ffe89a082e8b6d7609e46c",
+                             "afterSha256":  "f688f74d73288140b2d52a00579a93c247a134242ff6d9f23fdf46b8682c7f3a"
+                         },
+                         {
+                             "path":  "threshold/scripts/verify-java-candidate-ast.ps1",
+                             "beforeSha256":  "7650c9997135c12f36ab796e5431c7dcb64aeb71895c4cbb8dc22f033747fdcf",
+                             "afterSha256":  "0b880885e98f4be71164969ec4b5c7f1dfa9aa95e851988d37eb85fec8d138d3"
+                         }
+                     ],
+    "diffSummary":  "Harden Threshold string constant candidate gating",
+    "diffStat":  {
+                     "filesChanged":  3,
+                     "insertions":  18,
+                     "deletions":  3
+                 },
+    "validation":  {
+                       "diffCheck":  "passed",
+                       "command":  ".\\mvnw.cmd test",
+                       "result":  "BUILD SUCCESS",
+                       "testsRun":  75,
+                       "failures":  0,
+                       "errors":  0,
+                       "skipped":  0
+                   },
+    "nonClaims":  [
+                      "no push in candidate slice",
+                      "no PR update in candidate slice",
+                      "no upstream interaction",
+                      "no pom.xml change",
+                      "no dependency change",
+                      "no src/test change",
+                      "no merge",
+                      "no release",
+                      "no deploy",
+                      "no public readiness claim",
+                      "no public correctness claim",
+                      "no public security claim",
+                      "no public compliance claim"
+                  ]
+}

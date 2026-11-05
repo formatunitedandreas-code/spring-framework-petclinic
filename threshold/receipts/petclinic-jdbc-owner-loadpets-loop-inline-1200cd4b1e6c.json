@@ -1,0 +1,50 @@
+{
+    "schemaVersion":  "threshold.petclinic.slice-receipt.v0.2",
+    "candidateId":  "petclinic-jdbc-owner-loadpets-loop-inline",
+    "leaseName":  "petclinic-threshold-governed-refactor-lease-v1",
+    "branch":  "threshold-governed-refactor-demo-4",
+    "candidateClass":  "repository_readability_cleanup",
+    "leaseStartHead":  "a703491cc707d6f0de9fcfd30719bfa278a74df8",
+    "baseHead":  "930bccc466a5a7e2e1bfca27b4f6a052f2aa48c8",
+    "commitHash":  "1200cd4b1e6c227d352bbbecee19a2c45fce9993",
+    "receiptMaterialization":  "prospective",
+    "perCommitValidationLogAvailable":  true,
+    "branchFinalValidationPassed":  true,
+    "changedFiles":  [
+                         {
+                             "path":  "src/main/java/org/springframework/samples/petclinic/repository/jdbc/JdbcOwnerRepositoryImpl.java",
+                             "beforeSha256":  "96ef751c104079f8af20bf3f79185071788e56e0e91a81188154eb5512c2e8f1",
+                             "afterSha256":  "843e349b48105d53646954668f204afcdb2177b3c6219fbf2447d97f136b3164"
+                         }
+                     ],
+    "diffSummary":  "Refactor PetClinic owner repository loadPetsAndVisits loop",
+    "diffStat":  {
+                     "filesChanged":  1,
+                     "insertions":  1,
+                     "deletions":  2
+                 },
+    "validation":  {
+                       "diffCheck":  "passed",
+                       "command":  ".\\mvnw.cmd test",
+                       "result":  "BUILD SUCCESS (75 tests, 0 failures, 0 errors, 0 skipped)",
+                       "testsRun":  75,
+                       "failures":  0,
+                       "errors":  0,
+                       "skipped":  0
+                   },
+    "nonClaims":  [
+                      "no push in candidate slice",
+                      "no PR update in candidate slice",
+                      "no upstream interaction",
+                      "no pom.xml change",
+                      "no dependency change",
+                      "no src/test change",
+                      "no merge",
+                      "no release",
+                      "no deploy",
+                      "no public readiness claim",
+                      "no public correctness claim",
+                      "no public security claim",
+                      "no public compliance claim"
+                  ]
+}

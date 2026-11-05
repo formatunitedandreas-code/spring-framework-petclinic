@@ -1,0 +1,39 @@
+{
+  "runId": "owner-search-p2-05-use-case-20260717T140500Z",
+  "repository": "spring-petclinic/spring-framework-petclinic",
+  "localPath": "C:\\dev\\spring-framework-petclinic",
+  "phaseId": "P2-05",
+  "lane": "product_refactor",
+  "feature": "owner_search_vertical_refactoring",
+  "inputHead": "6cec156",
+  "expectedEffect": "Introduce OwnerSearchQuery port and SearchOwners application use case.",
+  "changedPaths": [
+    "src/main/java/org/springframework/samples/petclinic/owner/port/OwnerSearchQuery.java",
+    "src/main/java/org/springframework/samples/petclinic/owner/application/SearchOwners.java",
+    "src/test/java/org/springframework/samples/petclinic/owner/application/SearchOwnersTests.java",
+    "threshold/docs/OWNER_SEARCH_USE_CASE_V0_1.md",
+    "threshold/receipts/owner-search-p2-05-use-case-20260717T140500Z.json"
+  ],
+  "validationResults": {
+    "gitDiffCheck": "passed",
+    "searchOwnersTests": {
+      "testsRun": 4,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "result": "passed"
+    }
+  },
+  "outputHead": "pending_local_commit",
+  "outcome": "use_case_recorded",
+  "behaviorEquivalent": true,
+  "profileParityVerified": false,
+  "queryBudgetVerified": false,
+  "architectureRulesVerified": false,
+  "fullSuitePassed": false,
+  "publicationPerformed": false,
+  "mergePerformed": false,
+  "releasePerformed": false,
+  "deploymentPerformed": false,
+  "humanReviewRequired": true
+}
