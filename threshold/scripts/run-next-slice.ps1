@@ -16,6 +16,7 @@ $ErrorActionPreference = "Stop"
 
 . (Join-Path $PSScriptRoot "lib/runtime-paths.ps1")
 . (Join-Path $PSScriptRoot "lib/candidate-class-provenance.ps1")
+. (Join-Path $PSScriptRoot "lib/method-signature.ps1")
 
 $runtimePaths = Get-ThresholdRuntimePaths
 if ([string]::IsNullOrWhiteSpace($LeasePath)) {
@@ -306,8 +307,7 @@ function Apply-ReadableMethodSignatureWrap {
         throw "Candidate line '$lineNumber' is not a method declaration in $path."
     }
 
-    $paramsRaw = $signatureMatch.Groups["params"].Value.Trim()
-    $parameters = @($paramsRaw -split "," | ForEach-Object { $_.Trim() } | Where-Object { -not [string]::IsNullOrWhiteSpace($_) })
+    $parameters = @(Get-WrappableMethodSignatureParameters -Line $line)
     if ($parameters.Count -lt 2) {
         throw "Candidate line '$lineNumber' has no multi-parameter signature to wrap in $path."
     }
@@ -646,6 +646,20 @@ function Get-NextCandidate {
                     Write-Host "candidateSkippedReason=constant_already_exists:$($candidate.candidateId)"
                     $applicable = $false
                     break
+                }
+            }
+            "method_signature_wrap_cleanup" {
+                $lineNumber = 0
+                if ($candidateMember -notmatch '^line-([0-9]+)$' -or -not [int]::TryParse($Matches[1], [ref]$lineNumber)) {
+                    Write-Host "candidateSkippedReason=unsupported_line_marker:$candidateId"
+                    $applicable = $false
+                    break
+                }
+                $lines = @(Get-Content -LiteralPath $path)
+                if ($lineNumber -lt 1 -or $lineNumber -gt $lines.Count -or
+                    @(Get-WrappableMethodSignatureParameters -Line $lines[$lineNumber - 1]).Count -lt 2) {
+                    Write-Host "candidateSkippedReason=no_multi_parameter_signature:$candidateId"
+                    $applicable = $false
                 }
             }
             "spring_data_query_wrap_cleanup" {
