@@ -1,4 +1,4 @@
-[CmdletBinding()]
+﻿[CmdletBinding()]
 param(
     [string] $BaseRef = "main",
     [string] $ThresholdCorePath = $env:THRESHOLD_CORE_PATH
@@ -63,30 +63,11 @@ function Invoke-Preflight {
         [string] $CorePath = $ThresholdCorePath
     )
 
-    $output = @(& powershell.exe -NoProfile -ExecutionPolicy Bypass -File "threshold/scripts/test-pr-governance.ps1" `
-        -BaseRef $BaseRef `
-        -PublicationPreflight `
-        -AuthorityPath $AuthorityPath `
-        -ConsumedAuthorityPath $ConsumedAuthorityPath `
-        -ThresholdCorePath $CorePath `
-        -ReviewHead $ReviewHead `
-        -ReviewDecision $ReviewDecision `
-        -OpenP1P2Count $OpenP1P2Count 2>&1)
-    if ($LASTEXITCODE -ne 0) {
-        throw (($output | ForEach-Object { [string]$_ }) -join "`n")
-    }
-    return $output
-}
+    . (Join-Path $PSScriptRoot "lib/publication-preflight.ps1")
+    $ThresholdCorePath = $CorePath
+    $changed = @(& git diff --name-only "origin/${BaseRef}...HEAD")
+    Assert-PublicationPreflight -ChangedPaths $changed
 
-if ([string]::IsNullOrWhiteSpace($ThresholdCorePath)) {
-    $repoRoot = (& git rev-parse --show-toplevel).Trim()
-    $candidate = Join-Path (Split-Path -Parent $repoRoot) "threshold-ai-slim"
-    if (Test-Path (Join-Path $candidate "packages/refactoring-governor/package.json")) {
-        $ThresholdCorePath = $candidate
-    }
-}
-if ([string]::IsNullOrWhiteSpace($ThresholdCorePath)) {
-    throw "threshold_core_path_required_for_publication_preflight_fixtures"
 }
 
 function Assert-ThrowsLike {
@@ -118,6 +99,7 @@ function Write-Authority {
     $head = (& git rev-parse HEAD).Trim()
     $branch = Get-GitFirstLine -GitArgs @("branch", "--show-current")
     $authority = [ordered]@{
+        fixtureMarker = "Grüße_日本語_😀"
         schemaVersion = "threshold.one-shot-authority.v0.1"
         authorityId = "authority:publication-preflight:test"
         repositoryRef = Get-RepositoryRef
@@ -152,15 +134,38 @@ function New-StubCore {
 const fs = require("fs");
 const { execFileSync } = require("child_process");
 const mode = process.env.THRESHOLD_STUB_CORE_MODE || "$Mode";
+const crypto = require("crypto");
+const hash = value => crypto.createHash("sha256").update(value).digest("hex");
+if (process.argv[2] === "digest-publication-authority-input") {
+  const originalText = fs.readFileSync(0, "utf8");
+  const original = JSON.parse(originalText);
+  if (original.authority.fixtureMarker !== "Grüße_日本語_😀") throw Error("UTF8 stdin altered");
+  process.stdout.write(JSON.stringify({inputDigest:hash(originalText)}));
+  process.exit(0);
+}
 const inputPath = process.argv[process.argv.indexOf("--input") + 1];
 const inputText = fs.readFileSync(inputPath, "utf8").replace(/^\uFEFF/, "");
 const input = JSON.parse(inputText);
 const head = input.context.headSha;
-const digest = "fixture-input-digest";
+let digest = hash(inputText);
+if (mode === "wrong-digest") digest = "0".repeat(64);
+if (mode === "input-substitution") {
+  input.context.policyDigest = "substituted";
+  const substituted = JSON.stringify(input);
+  fs.writeFileSync(inputPath, substituted);
+  digest = hash(substituted);
+}
 function decision(effect, allowed, failedConstraintIds) {
   return { effect, allowed, disposition: allowed ? "allowed" : "stop_no_action", failedConstraintIds };
 }
 function output(value, exitCode) {
+  if (mode === "wrong-effect") value.effectDecisions.publication.effect = "merge";
+  if (mode === "wrong-disposition") value.effectDecisions.publication.disposition = "blocked";
+  if (mode === "null-array") value.failedConstraintIds = null;
+  if (mode === "string-array") value.failedConstraintIds = "not-an-array";
+  if (mode === "object-array") value.failedConstraintIds = {};
+  if (mode === "failed-allow") value.failedConstraintIds = ["publication-head-binding"];
+  if (mode === "exit-failure") exitCode = 2;
   process.stdout.write(JSON.stringify(value, null, 2) + "\n");
   process.exitCode = exitCode;
 }
@@ -429,30 +434,22 @@ Assert-ThrowsLike -Name "typed-publication-blocked-reason-string-allowed" -Patte
     }
 }
 
-$gitWriteProbePath = ".git/threshold-publication-preflight-write-probe.tmp"
-$gitMetadataWritable = $false
-try {
-    "probe" | Set-Content -Path $gitWriteProbePath -Encoding UTF8
-    Remove-Item -Force $gitWriteProbePath
-    $gitMetadataWritable = $true
-}
-catch {
-    if (Test-Path $gitWriteProbePath) { Remove-Item -Force $gitWriteProbePath -ErrorAction SilentlyContinue }
-}
-if ($gitMetadataWritable) {
-    Assert-ThrowsLike -Name "post-cli-head-detached" -Pattern "postvalidation_branch_changed" -ScriptBlock {
-        try {
-            Invoke-WithStubCoreMode -Mode "detach-head" -ScriptBlock {
-                Invoke-Preflight -AuthorityPath $authorityPath -ConsumedAuthorityPath $consumedPath -ReviewHead $head -CorePath $stubCorePath
-            }
-        }
-        finally {
-            git switch $originalBranch | Out-Null
+foreach ($case in @(
+    @{ mode = "wrong-digest"; pattern = "inputDigest_mismatch" },
+    @{ mode = "input-substitution"; pattern = "inputDigest_mismatch" },
+    @{ mode = "wrong-effect"; pattern = "publication_effect_mismatch" },
+    @{ mode = "wrong-disposition"; pattern = "publication_disposition_mismatch" },
+    @{ mode = "null-array"; pattern = "invalid_array" },
+    @{ mode = "string-array"; pattern = "invalid_array" },
+    @{ mode = "object-array"; pattern = "invalid_array" },
+    @{ mode = "failed-allow"; pattern = "allowed_with_failed_constraints" },
+    @{ mode = "exit-failure"; pattern = "validator_failed_with_allow_result" }
+)) {
+    Assert-ThrowsLike -Name $case.mode -Pattern $case.pattern -ScriptBlock {
+        Invoke-WithStubCoreMode -Mode $case.mode -ScriptBlock {
+            Invoke-Preflight -AuthorityPath $authorityPath -ConsumedAuthorityPath $consumedPath -ReviewHead $head -CorePath $stubCorePath
         }
     }
-}
-else {
-    Write-Host "publicationPreflightFixture=post-cli-head-detached-skipped-readonly-git"
 }
 
 try {

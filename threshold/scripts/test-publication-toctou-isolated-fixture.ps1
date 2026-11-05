@@ -46,44 +46,13 @@ function Write-Utf8NoBom {
     param([string] $Path, [string] $Value)
 
     [System.IO.File]::WriteAllText(
-        [System.IO.Path]::GetFullPath($Path),
+        $ExecutionContext.SessionState.Path.GetUnresolvedProviderPathFromPSPath($Path),
         $Value,
         [System.Text.UTF8Encoding]::new($false)
     )
 }
 
-function Invoke-IsolatedCoreValidation {
-    param([string] $CliPath)
-
-    $preValidationHead = (& git rev-parse HEAD).Trim()
-    $preValidationBranch = Get-GitFirstLine -GitArgs @("branch", "--show-current")
-    if ([string]::IsNullOrWhiteSpace($preValidationBranch)) {
-        throw "stop_authority_toctou=prevalidation_detached_head"
-    }
-    $preValidationTree = (& git rev-parse "$preValidationHead^{tree}").Trim()
-
-    $output = @(& node $CliPath 2>&1)
-    if ($LASTEXITCODE -ne 0) {
-        throw (($output | ForEach-Object { [string]$_ }) -join "`n")
-    }
-    $result = (($output | ForEach-Object { [string]$_ }) -join "`n") | ConvertFrom-Json
-    if ([string]$result.evaluatedHead -ne $preValidationHead) {
-        throw "stop_authority_toctou=evaluatedHead_mismatch"
-    }
-
-    $postValidationHead = (& git rev-parse HEAD).Trim()
-    $postValidationBranch = Get-GitFirstLine -GitArgs @("branch", "--show-current")
-    $postValidationTree = (& git rev-parse "$postValidationHead^{tree}").Trim()
-    if ($postValidationHead -ne $preValidationHead) {
-        throw "stop_authority_toctou=postvalidation_head_changed"
-    }
-    if ([string]::IsNullOrWhiteSpace($postValidationBranch) -or $postValidationBranch -ne $preValidationBranch) {
-        throw "stop_authority_toctou=postvalidation_branch_changed"
-    }
-    if ($postValidationTree -ne $preValidationTree) {
-        throw "stop_authority_toctou=postvalidation_tree_changed"
-    }
-}
+. (Join-Path $PSScriptRoot "lib/publication-preflight.ps1")
 
 $originalLocation = Get-Location
 $runtimeRoot = Join-Path $originalLocation "threshold/runtime/publication-toctou-isolated-fixture"
@@ -102,12 +71,19 @@ try {
     $cliPath = Join-Path $runtimeRoot "detach-head-core-stub.js"
     $stub = @"
 const { execFileSync } = require("child_process");
+const fs = require("fs");
+const crypto = require("crypto");
+const hash = text => crypto.createHash("sha256").update(text).digest("hex");
+if (process.argv[2] === "digest-publication-authority-input") {
+  process.stdout.write(JSON.stringify({inputDigest:hash(fs.readFileSync(0,"utf8"))})); process.exit(0);
+}
+const inputText = fs.readFileSync(process.argv[process.argv.indexOf("--input") + 1], "utf8");
 const head = execFileSync("git", ["rev-parse", "HEAD"], { encoding: "utf8" }).trim();
 execFileSync("git", ["switch", "--detach", "HEAD"], { stdio: "ignore" });
 process.stdout.write(JSON.stringify({
   valid: true,
   evaluatedHead: head,
-  inputDigest: "isolated-fixture",
+  inputDigest: hash(inputText),
   effectDecisions: {
     publication: { effect: "publication", allowed: true, disposition: "allowed", failedConstraintIds: [] }
   },
@@ -117,7 +93,15 @@ process.stdout.write(JSON.stringify({
     Write-Utf8NoBom -Path $cliPath -Value $stub
 
     Assert-ThrowsLike -Name "isolated-post-cli-head-detached" -Pattern "postvalidation_branch_changed" -ScriptBlock {
-        Invoke-IsolatedCoreValidation -CliPath $cliPath
+        $ThresholdCorePath = $runtimeRoot
+        $ConsumedAuthorityPath = "consumed.json"
+        $ReviewDecision = "APPROVED"
+        $ReviewHead = (& git rev-parse HEAD).Trim()
+        $targetCli = Join-Path $runtimeRoot "packages/refactoring-governor/dist/cli/thresholdRefactoringCliV0_1.js"
+        New-Item -ItemType Directory -Path (Split-Path -Parent $targetCli) -Force | Out-Null
+        Copy-Item -LiteralPath $cliPath -Destination $targetCli
+        Write-Utf8NoBom "authority.json" '{}'
+        Invoke-CanonicalPublicationAuthorityValidation -Path "authority.json" -RepositoryRef "fixture" -Branch "main" -SubjectRef "fixture" -Head $ReviewHead -WorkorderDigest "fixture" -PolicyDigest "fixture"
     }
 }
 finally {

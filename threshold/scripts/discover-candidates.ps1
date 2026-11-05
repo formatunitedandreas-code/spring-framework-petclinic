@@ -11,6 +11,9 @@ param(
 Set-StrictMode -Version Latest
 $ErrorActionPreference = "Stop"
 
+. (Join-Path $PSScriptRoot "lib/candidate-class-provenance.ps1")
+. (Join-Path $PSScriptRoot "lib/method-signature.ps1")
+
 function Get-LeaseScalar {
     param([string[]] $Lines, [string] $Name)
     $match = $Lines | Where-Object { $_ -match "^\s*$([regex]::Escape($Name)):\s*(.+?)\s*$" } | Select-Object -First 1
@@ -173,67 +176,6 @@ function Get-TrainerDecision {
     return "reviewOnly"
 }
 
-function Test-CommentCleanupClass {
-    param([string] $CandidateClass)
-    return $CandidateClass -eq "comment_wrap_cleanup" -or $CandidateClass -eq "line_comment_wrap_cleanup"
-}
-
-function New-CandidateTwinDeltaEvidence {
-    param(
-        [hashtable] $Candidate,
-        [string] $CandidateClass,
-        [bool] $ExecutionStable
-    )
-
-    $isCommentCleanup = Test-CommentCleanupClass -CandidateClass $CandidateClass
-    $semanticUnitKind = if ($Candidate.ContainsKey("semanticUnitKind")) { [string]$Candidate.semanticUnitKind } elseif ($CandidateClass -eq "line_comment_wrap_cleanup") { "line_comment" } else { "unknown" }
-    $policyRef = $null
-    $qualityDefectProven = $false
-    $qualityImprovementProven = $false
-
-    return [ordered]@{
-        schemaVersion = "threshold.candidate-twin-delta-evidence.v0.1"
-        legacyTwin = [ordered]@{
-            evidenceRef = "petclinic:legacy-semantic-unit:$($Candidate.candidateId)"
-            semanticUnitKind = $semanticUnitKind
-            qualityDefectProven = $qualityDefectProven
-            unresolvedConflicts = 0
-            currentLineLength = if ($Candidate.ContainsKey("currentLineLength")) { [int]$Candidate.currentLineLength } else { $null }
-            configuredMaxLineLength = if ($Candidate.ContainsKey("configuredMaxLineLength")) { [int]$Candidate.configuredMaxLineLength } else { $null }
-        }
-        targetTwin = [ordered]@{
-            evidenceRef = "petclinic:target-semantic-unit:$($Candidate.candidateId)"
-            policyRef = $policyRef
-            canonicalTargetDefined = $false
-            derivedFromUnreviewedPatch = $false
-        }
-        deltaTwin = [ordered]@{
-            evidenceRef = "petclinic:delta-semantic-unit:$($Candidate.candidateId)"
-            transformationExecutable = $ExecutionStable
-            qualityImprovementProven = $qualityImprovementProven
-            expectedBenefit = if ($isCommentCleanup) { 0.1 } else { 0.6 }
-            expectedCost = if ($isCommentCleanup) { 0.2 } else { 0.2 }
-        }
-        semanticFidelity = [ordered]@{
-            behaviorPreserved = $false
-            criticalInvariantsPreserved = $false
-            evidenceStatus = "not_evaluated"
-        }
-        qualityFidelity = [ordered]@{
-            policyViolationRemoved = $false
-            canonicalityImproved = $false
-            packageConsistencyImproved = $false
-            evidenceStatus = "not_evaluated"
-        }
-        nonClaims = @(
-            "PetClinic twin delta evidence is adapter evidence, not a generic twin engine",
-            "discovery visibility is not semantic fidelity proof",
-            "synthetic target policy evidence must not promote candidate admission",
-            "target twins derived from unreviewed patches are not training truth"
-        )
-    }
-}
-
 function Add-Candidate {
     param(
         [hashtable] $Candidate,
@@ -245,44 +187,14 @@ function Add-Candidate {
         return
     }
     $Candidate.candidateClass = $CandidateClass
-    $executionStable = Test-AutoPatchableCandidate $Candidate $CandidateClass
+    $Candidate.autoPatchable = Test-AutoPatchableCandidate $Candidate $CandidateClass
+    $Candidate.reviewOnly = -not $Candidate.autoPatchable
     $trainerDecision = Get-TrainerDecision -CandidateClass $CandidateClass
-    $admission = if ($trainerDecision -eq "held") { "shadowOnly" } else { "reviewOnly" }
-    $maturityReasons = New-Object System.Collections.Generic.List[string]
-
-    $Candidate.twinDelta = New-CandidateTwinDeltaEvidence -Candidate $Candidate -CandidateClass $CandidateClass -ExecutionStable $executionStable
-    $maturityReasons.Add("candidate_maturity:twin_delta_quality_fidelity_failed") | Out-Null
-    $maturityReasons.Add("candidate_maturity:policy_not_bound") | Out-Null
-    $maturityReasons.Add("candidate_maturity:semantic_fidelity_not_evaluated") | Out-Null
-
-    if (Test-CommentCleanupClass -CandidateClass $CandidateClass) {
-        $admission = "reviewOnly"
-        $maturityReasons.Add("candidate_maturity:comment_cleanup_requires_policy_bound_quality_objective") | Out-Null
+    if ($trainerDecision -ne "autoPatchable") {
+        $Candidate.autoPatchable = $false
+        $Candidate.reviewOnly = $trainerDecision -ne "held"
     }
-
-    $Candidate.autoPatchable = $admission -eq "autoPatchable"
-    $Candidate.reviewOnly = $admission -eq "reviewOnly"
-    $Candidate.admission = $admission
-    $Candidate.executionMode = if ($Candidate.autoPatchable) { "auto_patchable" } elseif ($admission -eq "shadowOnly") { "shadow_only" } else { "review_only" }
-    $Candidate.maturity = [ordered]@{
-        schemaVersion = "threshold.candidate-maturity-admission.v0.1"
-        admission = $admission
-        predicates = [ordered]@{
-            executionStable = if ($executionStable) { "passed" } else { "failed" }
-            qualityObjectiveVerified = "failed"
-            policyBound = "failed"
-            semanticRiskAcceptable = "not_evaluated"
-            economicBudgetSatisfied = "passed"
-            evidenceComplete = "failed"
-            learningEligible = if ($trainerDecision -eq "held") { "failed" } else { "passed" }
-        }
-        reasonCodes = @($maturityReasons)
-        nonClaims = @(
-            "execution stability is not quality objective verification",
-            "candidate admission is not publication authority",
-            "Somnium may demote candidate maturity but may not promote missing evidence, policy, or quality"
-        )
-    }
+    $Candidate.executionMode = if ($Candidate.autoPatchable) { "auto_patchable" } elseif ($trainerDecision -eq "held") { "held" } else { "review_only" }
     $Candidate.gate = [ordered]@{
         required = $true
         approved = Test-CandidateClassGate $CandidateClass
@@ -398,20 +310,7 @@ function Test-SimpleStringConstantWrapCandidateLine {
 
 function Get-WrappableMethodSignatureParameterCount {
     param([string] $Line)
-
-    $match = [regex]::Match($Line, "^\s*(public|private|protected)\s+.+\(\s*(?<params>.*)\)\s*\{\s*$")
-    if (-not $match.Success) {
-        return 0
-    }
-
-    $paramsRaw = $match.Groups["params"].Value.Trim()
-    if ([string]::IsNullOrWhiteSpace($paramsRaw)) {
-        return 0
-    }
-
-    return (@($paramsRaw -split "," | ForEach-Object { $_.Trim() } | Where-Object {
-        -not [string]::IsNullOrWhiteSpace($_)
-    })).Count
+    return @(Get-WrappableMethodSignatureParameters -Line $Line).Count
 }
 
 function Test-SplitStringConstantLine {
@@ -515,53 +414,18 @@ function Test-MethodOrAnnotationBoundaryLine {
 function Find-ConservativeCommentSplitPoint {
     param([string] $Text)
 
-    $minimumPrefix = 24
-    $minimumSegmentLength = 16
-    $preferredMaxIndex = [Math]::Min(112, $Text.Length - 1)
-    if ($preferredMaxIndex -lt $minimumPrefix) {
-        return $null
-    }
-
-    $spaceSplit = $preferredMaxIndex
-    while ($spaceSplit -ge $minimumPrefix) {
-        $spaceSplit = $Text.LastIndexOf(" ", $spaceSplit)
-        if ($spaceSplit -lt $minimumPrefix) {
-            break
-        }
-        $beforeSplit = $Text.Substring(0, $spaceSplit)
-        $lastInlineTagStart = $beforeSplit.LastIndexOf("{@")
-        $lastInlineTagEnd = $beforeSplit.LastIndexOf("}")
-        if ($lastInlineTagStart -gt $lastInlineTagEnd) {
-            $spaceSplit--
-            continue
-        }
-        if ($spaceSplit -lt ($Text.Length - 1) -and
-            $spaceSplit -ge $minimumSegmentLength -and
-            ($Text.Length - ($spaceSplit + 1)) -ge $minimumSegmentLength) {
-            return [pscustomobject]@{
-                Index = $spaceSplit
-                KeepDelimiter = $false
-            }
-        }
-        $spaceSplit--
-    }
-
-    return $null
+    return Find-ThresholdConservativeCommentSplitPoint -Text $Text
 }
 
-function Get-CommentSemanticUnitKind {
+function Test-JavadocCommentLine {
     param(
-        [string] $Line,
-        [int] $LineIndex,
-        [string] $DefaultKind
+        [string[]] $Lines,
+        [int] $Index,
+        [hashtable] $JavaTextBlockLineState = @{}
     )
 
-    if ($LineIndex -lt 12 -and $Line -match "(?i)\b(copyright|licensed|apache|license)\b") {
-        return "license_header"
-    }
-    return $DefaultKind
+    return Test-ThresholdJavaLineIsJavadocCommentContent -Lines $Lines -Index $Index -JavaTextBlockLineState $JavaTextBlockLineState
 }
-
 function Parse-MethodBlocks {
     param([string[]] $Lines)
     $methods = New-Object System.Collections.Generic.List[psobject]
@@ -642,12 +506,13 @@ foreach ($file in $sourceFiles) {
     elseif ($path -like "*/model/*") { $layerScore = 6 }
     elseif ($path -like "*/web/*") { $layerScore = 5 }
     elseif ($path -like "*/util/*") { $layerScore = 5 }
+    $javaTextBlockLineState = Get-ThresholdJavaTextBlockLineState -Lines $lines
 
     # Heuristic 0: normalize a small contiguous block of leading tab indentation.
     $tabBlockStart = $null
     $tabBlockLength = 0
     for ($i = 0; $i -lt $lines.Count; $i++) {
-        if ($lines[$i] -match "^\t+\S") {
+        if ($lines[$i] -match "^\t+\S" -and -not $javaTextBlockLineState.ContainsKey($i + 1)) {
             if ($null -eq $tabBlockStart) {
                 $tabBlockStart = $i
             }
@@ -887,14 +752,7 @@ foreach ($file in $sourceFiles) {
     # Heuristic 4: tiny spacing normalization between adjacent methods.
     for ($i = 0; $i -lt $lines.Count; $i++) {
         $line = $lines[$i]
-        if ($line.Length -le $commentWrapThreshold) {
-            continue
-        }
-        if ($line -notmatch '^\s*\*\s+\S') {
-            continue
-        }
-        $commentText = ($line -replace '^\s*\*\s+', '')
-        if (-not (Find-ConservativeCommentSplitPoint -Text $commentText)) {
+        if (-not (Test-ThresholdCommentWrapCandidateLine -Lines $lines -Index $i -CommentWrapThreshold $commentWrapThreshold -JavaTextBlockLineState $javaTextBlockLineState)) {
             continue
         }
         $member = "line-$($i + 1)"
@@ -903,9 +761,6 @@ foreach ($file in $sourceFiles) {
             score = 30 + 30 + 20 + 10 + $layerScore
             file = $path
             member = $member
-            semanticUnitKind = Get-CommentSemanticUnitKind -Line $line -LineIndex $i -DefaultKind "javadoc_comment"
-            currentLineLength = $line.Length
-            configuredMaxLineLength = $null
             commentWrapSplitPointFound = $true
             expectedDiffSummary = "Wrap one long Javadoc comment line without changing source behavior."
             estimatedChangedLines = 2
@@ -932,9 +787,6 @@ foreach ($file in $sourceFiles) {
             score = 30 + 30 + 20 + 10 + $layerScore
             file = $path
             member = $member
-            semanticUnitKind = Get-CommentSemanticUnitKind -Line $line -LineIndex $i -DefaultKind "line_comment"
-            currentLineLength = $line.Length
-            configuredMaxLineLength = $null
             commentWrapSplitPointFound = $true
             expectedDiffSummary = "Wrap one long line comment without changing source behavior."
             estimatedChangedLines = 2
@@ -955,6 +807,7 @@ foreach ($file in $sourceFiles) {
                     score = 30 + 30 + 20 + 10 + $layerScore
                     file = $path
                     member = $member
+                    spacingAction = "insert_blank_line"
                     expectedDiffSummary = "Insert a blank line between adjacent methods '$($currentMethod.Name)' and '$($nextMethod.Name)'."
                     estimatedChangedLines = 1
                     tieBreak = [ordered]@{ layerScore = $layerScore; path = $path; member = "$($currentMethod.Name)-$($nextMethod.Name)" }

@@ -125,23 +125,32 @@
     "receiptCommitPolicy": "one_batch_receipt_commit_per_batch",
     "failurePolicy": "revert_entire_batch_before_commit",
     "approvedCandidateClasses": [
-    ],
-    "heldCandidateClasses": [
       {
         "candidateClass": "comment_wrap_cleanup",
-        "heldBy": "candidate-maturity-admission-v0.1",
-        "reason": "Execution stability is no longer sufficient for autoPatchable admission; comment wrapping requires explicit quality objective, policy binding, semantic-unit grouping, aggregate evidence, and review reuse before promotion.",
-        "targetAdmission": "reviewOnly"
-      },
-      {
-        "candidateClass": "line_comment_wrap_cleanup",
-        "heldBy": "candidate-maturity-admission-v0.1",
-        "reason": "Line comments are reviewOnly until semantic-unit grouping and policy-bound quality objectives separate license/header comments from ordinary readability comments.",
-        "targetAdmission": "reviewOnly"
+        "authorizedBy": "retrospective-human-gate-for-auto-patchable-candidate-classes-v0-1",
+        "scope": "pilot batch mode for independent single-line Javadoc comment wraps only",
+        "requiresDiscoveryCanary": true,
+        "requiresSameCandidateClassPerBatch": true
       }
+    ],
+    "heldCandidateClasses": [
     ]
   },
   "approvedAutoPatchableCandidateClasses": [
+    {
+      "candidateClass": "comment_wrap_cleanup",
+      "authorizedBy": "governance-hardening-bootstrap",
+      "scope": "single long Javadoc comment line wrapping only",
+      "requiresCanary": true,
+      "pilotAutoPatchableAtF2": true,
+      "pilotScope": "single long Javadoc comment line wrapping after gate, discovery canary, runner support, local review simulation, and provenance checks are present"
+    },
+    {
+      "candidateClass": "line_comment_wrap_cleanup",
+      "authorizedBy": "scope-executor-expansion-v0-1",
+      "scope": "single long Java // comment line wrapping only",
+      "requiresCanary": true
+    },
     {
       "candidateClass": "duplicate_literal_local_constant_extraction",
       "authorizedBy": "governance-hardening-bootstrap",

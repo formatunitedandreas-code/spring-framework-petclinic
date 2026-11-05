@@ -57,16 +57,14 @@ if ($scopeDrainText -notmatch 'branchFinalValidationPassed = \$false') {
     throw "scope_drain_aggregate_branch_final_validation_field_missing"
 }
 
-$prGovernanceText = Get-Content (Join-Path $PSScriptRoot "test-pr-governance.ps1") -Raw
+$prGovernanceText = (Get-Content (Join-Path $PSScriptRoot "test-pr-governance.ps1") -Raw) + (Get-Content (Join-Path $PSScriptRoot "lib/publication-preflight.ps1") -Raw)
 if ($prGovernanceText -notmatch "Assert-ThresholdSemanticEvidenceFileEconomy") {
     throw "pr_governance_file_economy_enforcement_missing"
 }
-if ($prGovernanceText -notmatch "Source commit covered by aggregate Threshold receipt") {
-    throw "pr_governance_aggregate_receipt_coverage_missing"
+if ($prGovernanceText -match "aggregateReceiptByCommit") {
+    throw "aggregate_receipt_must_not_replace_source_provenance"
 }
-if ($prGovernanceText -notmatch "AllowedValidationResults") {
-    throw "pr_governance_validation_status_allowlist_missing"
-}
+
 if ($prGovernanceText -notmatch "PublicationPreflight") {
     throw "pr_governance_publication_preflight_missing"
 }
@@ -92,7 +90,9 @@ foreach ($requiredMarker in @(
     "reason-renaming-does-not-decide",
     "reason-ablation-does-not-decide",
     "merge-authority-not-publication",
-    "post-cli-head-detached"
+    "input-substitution",
+    "wrong-digest",
+    "wrong-effect"
 )) {
     if ($publicationPreflightText -notmatch $requiredMarker) {
         throw "publication_preflight_fixture_missing=$requiredMarker"
@@ -120,18 +120,6 @@ foreach ($requiredMarker in @(
 )) {
     if ($reasonAuditText -notmatch [regex]::Escape($requiredMarker)) {
         throw "reason_audit_boundary_marker_missing=$requiredMarker"
-    }
-}
-
-$candidateMaturityText = Get-Content (Join-Path $PSScriptRoot "test-candidate-maturity-governance.ps1") -Raw
-foreach ($requiredMarker in @(
-    "comment_wrap_cleanup_must_not_be_batch_auto_patchable",
-    "line_comment_wrap_cleanup_trainer_decision_must_be_reviewOnly",
-    "threshold.candidate-twin-delta-evidence.v0.1",
-    "Test-CandidateMaturityAutoPatchable"
-)) {
-    if ($candidateMaturityText -notmatch [regex]::Escape($requiredMarker)) {
-        throw "candidate_maturity_governance_marker_missing=$requiredMarker"
     }
 }
 

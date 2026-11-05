@@ -27,7 +27,7 @@ if (-not (Test-Path $PrGovernancePath)) {
     throw "reason_audit_target_missing=$PrGovernancePath"
 }
 
-$text = Get-Content $PrGovernancePath -Raw
+$text = (Get-Content $PrGovernancePath -Raw) + (Get-Content (Join-Path $PSScriptRoot "lib/publication-preflight.ps1") -Raw)
 $requiredMarkers = @(
     "Assert-CorePublicationAuthorityResult",
     "effectDecisions.publication",
