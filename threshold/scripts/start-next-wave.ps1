@@ -19,19 +19,28 @@ param(
         "LocalOnly",
         "PublishDraftPr",
         "VerifyPr",
+        "VerifyPrUntilExternalReview",
         "MergeIfAuthorized",
+        "FullLifecycleWithPolicyHold",
         "FullLifecycle"
     )]
     [string] $Phase = "FullLifecycle",
     [switch] $SkipPush,
     [switch] $SkipPullRequest,
-    [switch] $SkipMerge
+    [switch] $SkipMerge,
+    [switch] $PreferBatch
 )
 
 Set-StrictMode -Version Latest
 $ErrorActionPreference = "Stop"
 
 . (Join-Path $PSScriptRoot "lib/runtime-paths.ps1")
+. (Join-Path $PSScriptRoot "lib/lease-policy.ps1")
+
+$SupportedGovernanceBranchPrefix = "threshold-governed-refactor-demo-"
+if ($BranchPrefix -ne $SupportedGovernanceBranchPrefix) {
+    throw "unsupported_branch_prefix_for_threshold_governance. branchPrefix=$BranchPrefix supportedPrefix=$SupportedGovernanceBranchPrefix"
+}
 
 $runtimePaths = Get-ThresholdRuntimePaths
 if ([string]::IsNullOrWhiteSpace($LeasePath)) {
@@ -116,6 +125,27 @@ function Read-JsonFile {
     return Get-Content $Path -Raw | ConvertFrom-Json
 }
 
+function Read-LeaseLines {
+    if (-not (Test-Path $LeasePath)) {
+        throw "Lease file not found: $LeasePath"
+    }
+    return @(Get-Content $LeasePath)
+}
+
+function Get-LeaseIntScalarOrDefault {
+    param(
+        [string] $Name,
+        [int] $DefaultValue
+    )
+
+    $leaseLines = Read-LeaseLines
+    $match = $leaseLines | Where-Object { $_ -match "^\s*$([regex]::Escape($Name)):\s*(\d+)\s*$" } | Select-Object -First 1
+    if (-not $match) {
+        return $DefaultValue
+    }
+    return [int]($match -replace "^\s*$([regex]::Escape($Name)):\s*", "").Trim()
+}
+
 function Commit-PathsIfNeeded {
     param(
         [string[]] $Paths,
@@ -142,11 +172,63 @@ function Commit-PathsIfNeeded {
     return $true
 }
 
+function Invoke-PreProductDiscoveryPreparation {
+    param(
+        [string] $CandidatePocketPath,
+        [int] $MinScore
+    )
+
+    $output = Invoke-Checked -FilePath "powershell.exe" -ArgumentList @(
+        "-NoProfile",
+        "-ExecutionPolicy",
+        "Bypass",
+        "-File",
+        ".\threshold\scripts\prepare-discovery-evidence.ps1",
+        "-CandidatePocketPath",
+        $CandidatePocketPath,
+        "-MinScore",
+        "$MinScore"
+    ) -FailureMessage "Pre-product discovery evidence preparation failed."
+
+    foreach ($line in $output) {
+        Write-Host $line
+    }
+
+    $evidencePaths = @(
+        $output |
+            Where-Object { [string]$_ -match "^discoveryEvidencePath=" } |
+            ForEach-Object { ([string]$_).Substring("discoveryEvidencePath=".Length) }
+    )
+    if ($evidencePaths.Count -eq 0) {
+        throw "Pre-product discovery evidence preparation produced no evidence artifacts."
+    }
+
+    return $evidencePaths
+}
+
 function Restore-GovernancePaths {
     $paths = @($LeasePath, $StatePath, $PocketPath)
     & git restore -- @paths
     if ($LASTEXITCODE -ne 0) {
         throw "Failed to restore governance files."
+    }
+}
+
+function Restore-PreWaveBranch {
+    param(
+        [string] $PreviousBranch,
+        [string] $WaveBranch
+    )
+
+    if ([string]::IsNullOrWhiteSpace($PreviousBranch) -or $PreviousBranch -eq $WaveBranch) {
+        return
+    }
+
+    Invoke-Checked -FilePath "git" -ArgumentList @("switch", $PreviousBranch) -FailureMessage "Failed to restore previous branch '$PreviousBranch'."
+
+    & git branch -D $WaveBranch
+    if ($LASTEXITCODE -ne 0) {
+        throw "Failed to delete transient wave branch '$WaveBranch'."
     }
 }
 
@@ -167,10 +249,30 @@ function Update-CandidatePocket {
     ) -FailureMessage "Candidate discovery failed."
 }
 
+function Set-PreProductDiscoverySourceHead {
+    param(
+        [string] $CandidatePocketPath,
+        [string] $DiscoverySourceHead
+    )
+
+    if ([string]::IsNullOrWhiteSpace($DiscoverySourceHead)) {
+        throw "Discovery source head is required for pre-product evidence binding."
+    }
+    if (-not (Test-Path $CandidatePocketPath)) {
+        throw "Candidate pocket not found for pre-product evidence binding: $CandidatePocketPath"
+    }
+
+    $pocket = Read-JsonFile -Path $CandidatePocketPath
+    Set-JsonProperty -Object $pocket -Name "preProductDiscoverySourceHead" -Value $DiscoverySourceHead
+    Set-JsonProperty -Object $pocket -Name "preProductDiscoveryEvidencePolicy" -Value "CandidateDiscoveryEvidence is materialized from this source head before product slice commits and remains the lookup key across later pocket refreshes."
+    $pocket | ConvertTo-Json -Depth 12 | Set-Content $CandidatePocketPath
+}
+
 function Get-AutoPatchableCandidateCount {
     param([string] $Path)
     $pocket = Read-JsonFile -Path $Path
-    return @($pocket.candidates | Where-Object { $_.autoPatchable -eq $true }).Count
+    $minScore = Get-LeaseIntScalarOrDefault -Name "minScore" -DefaultValue 70
+    return @($pocket.candidates | Where-Object { $_.autoPatchable -eq $true -and [int]$_.score -ge $minScore }).Count
 }
 
 function Sync-LeaseStateWrite {
@@ -185,6 +287,38 @@ function Sync-LeaseStateWrite {
         $StatePath,
         "-Write"
     ) -FailureMessage "Lease-state sync write failed."
+}
+
+function Set-JsonProperty {
+    param(
+        [pscustomobject] $Object,
+        [string] $Name,
+        [object] $Value
+    )
+
+    if ($Object.PSObject.Properties[$Name]) {
+        $Object.$Name = $Value
+    }
+    else {
+        $Object | Add-Member -NotePropertyName $Name -NotePropertyValue $Value
+    }
+}
+
+function Mark-TerminalEvidenceSourceHead {
+    $sourceHead = (& git rev-parse HEAD).Trim()
+
+    $state = Read-JsonFile -Path $StatePath
+    Set-JsonProperty -Object $state -Name "currentHeadRole" -Value "sourceHead"
+    Set-JsonProperty -Object $state -Name "terminalEvidenceHead" -Value $sourceHead
+    Set-JsonProperty -Object $state -Name "terminalEvidencePolicy" -Value "terminal evidence is generated from the last governed source/evidence head before the terminal governance commit"
+    Set-JsonProperty -Object $state -Name "terminalEvidenceMarkedAt" -Value (Get-Date).ToUniversalTime().ToString("o")
+    $state | ConvertTo-Json -Depth 10 | Set-Content $StatePath
+
+    $pocket = Read-JsonFile -Path $PocketPath
+    Set-JsonProperty -Object $pocket -Name "generatedFromHeadRole" -Value "sourceHead"
+    Set-JsonProperty -Object $pocket -Name "terminalEvidenceHead" -Value $sourceHead
+    Set-JsonProperty -Object $pocket -Name "terminalEvidencePolicy" -Value "candidate pocket is generated from the last governed source/evidence head before the terminal governance commit"
+    $pocket | ConvertTo-Json -Depth 12 | Set-Content $PocketPath
 }
 
 function Try-ExpandScopeForCandidateShortage {
@@ -212,6 +346,30 @@ function Try-ExpandScopeForCandidateShortage {
     return ($output -contains "scopeExpansionApplied=true")
 }
 
+function Invoke-BatchIfAvailable {
+    if (-not $PreferBatch.IsPresent) {
+        return $false
+    }
+
+    $output = Invoke-Checked -FilePath "powershell.exe" -ArgumentList @(
+        "-ExecutionPolicy",
+        "Bypass",
+        "-File",
+        ".\threshold\scripts\run-next-batch.ps1",
+        "-CandidatePocketPath",
+        $PocketPath,
+        "-PrBaseHead",
+        $script:CurrentWaveEvidenceHead,
+        "-RequirePreProductDiscoveryEvidence"
+    ) -FailureMessage "run-next-batch failed."
+
+    foreach ($line in $output) {
+        Write-Host $line
+    }
+
+    return @($output | Where-Object { [string]$_ -eq "Threshold batch completed" }).Count -gt 0
+}
+
 function Get-PullRequestMetadata {
     param([int] $Number)
 
@@ -223,6 +381,23 @@ function Get-PullRequestMetadata {
     ) -FailureMessage "Failed to query pull request #$Number."
 
     return ($json -join "`n" | ConvertFrom-Json)
+}
+
+function Get-PullRequestReviewDecision {
+    param([int] $Number)
+
+    $json = Invoke-Checked -FilePath "gh" -ArgumentList @(
+        "pr",
+        "view",
+        "$Number",
+        "--repo",
+        $OwnedRepo,
+        "--json",
+        "reviewDecision"
+    ) -FailureMessage "Failed to query pull request review decision for #$Number."
+
+    $metadata = ($json -join "`n" | ConvertFrom-Json)
+    return [string]$metadata.reviewDecision
 }
 
 function Assert-ReadyForMerge {
@@ -243,7 +418,10 @@ function Assert-ReadyForMerge {
 }
 
 function Assert-RemoteBaseMatchesMergeCommit {
-    param([pscustomobject] $MergedPullRequest)
+    param(
+        [pscustomobject] $MergedPullRequest,
+        [string] $ExpectedBaseBranch = $BaseBranch
+    )
 
     $mergeCommit = [string]$MergedPullRequest.merge_commit_sha
     if ([string]::IsNullOrWhiteSpace($mergeCommit)) {
@@ -257,17 +435,128 @@ function Assert-RemoteBaseMatchesMergeCommit {
 
     $remoteBase = (Invoke-Checked -FilePath "git" -ArgumentList @(
         "rev-parse",
-        "$BaseRemote/$BaseBranch"
-    ) -FailureMessage "Failed to resolve $BaseRemote/$BaseBranch after merge.") -join "`n"
+        "$BaseRemote/$ExpectedBaseBranch"
+    ) -FailureMessage "Failed to resolve $BaseRemote/$ExpectedBaseBranch after merge.") -join "`n"
     $remoteBase = $remoteBase.Trim()
 
     if ($remoteBase -ne $mergeCommit) {
-        throw "origin_main_stale_after_merge. expected=$mergeCommit actual=$remoteBase"
+        throw "remote_base_stale_after_merge. base=$BaseRemote/$ExpectedBaseBranch expected=$mergeCommit actual=$remoteBase"
     }
 
     Write-Host "postMergeRemoteRefresh=passed"
-    Write-Host "remoteBase=$BaseRemote/$BaseBranch"
+    Write-Host "remoteBase=$BaseRemote/$ExpectedBaseBranch"
     Write-Host "remoteHead=$remoteBase"
+}
+
+function New-GovernedEvidenceBasePromotionBody {
+    param(
+        [pscustomobject] $Wave,
+        [pscustomobject] $MergedPullRequest
+    )
+
+    $mergeCommit = [string]$MergedPullRequest.merge_commit_sha
+    if ([string]::IsNullOrWhiteSpace($mergeCommit)) {
+        throw "Merged pull request did not report merge_commit_sha for governed evidence-base promotion."
+    }
+
+    return @"
+## Summary
+- promote governed Threshold wave $($Wave.WaveNumber) evidence-base result to $BaseRemote/$BaseBranch
+- preserve the merged product/evidence head as the exact PR review object
+- reconcile configured base only through this separate promotion PR
+
+## Bound Source
+- product pull request: $($MergedPullRequest.url)
+- product/evidence merge commit: `$mergeCommit`
+- evidence base branch: `$($Wave.PullRequestBaseBranch)`
+- configured base: `$BaseRemote/$BaseBranch`
+
+## Non-claims
+- no direct configured-base push
+- no force push
+- no dependency change
+- no release or deploy
+"@
+}
+
+function Invoke-GovernedEvidenceBasePromotion {
+    param(
+        [pscustomobject] $Wave,
+        [pscustomobject] $MergedPullRequest
+    )
+
+    $mergeCommit = [string]$MergedPullRequest.merge_commit_sha
+    if ([string]::IsNullOrWhiteSpace($mergeCommit)) {
+        throw "Merged pull request did not report merge_commit_sha for governed evidence-base promotion."
+    }
+
+    Invoke-Checked -FilePath "git" -ArgumentList @("fetch", $BaseRemote) -FailureMessage "Failed to refresh $BaseRemote before governed evidence-base promotion."
+
+    & git merge-base --is-ancestor "$BaseRemote/$BaseBranch" $mergeCommit
+    if ($LASTEXITCODE -ne 0) {
+        throw "governed_evidence_base_promotion_not_descendant_of_configured_base. configuredBase=$BaseRemote/$BaseBranch productMergeCommit=$mergeCommit"
+    }
+
+    $safeBaseBranch = ($BaseBranch -replace "[^A-Za-z0-9._-]", "-")
+    $promotionBranch = "$($Wave.EvidenceBranch)-promote-to-$safeBaseBranch"
+    Invoke-Checked -FilePath "git" -ArgumentList @("branch", "-f", $promotionBranch, $mergeCommit) -FailureMessage "Failed to create governed evidence-base promotion branch '$promotionBranch'."
+    Invoke-Checked -FilePath "git" -ArgumentList @("push", $BaseRemote, "$promotionBranch`:refs/heads/$promotionBranch") -FailureMessage "Failed to push governed evidence-base promotion branch '$promotionBranch'."
+
+    $promotionTitle = "Promote Threshold wave $($Wave.WaveNumber) evidence base"
+    $promotionBody = New-GovernedEvidenceBasePromotionBody -Wave $Wave -MergedPullRequest $MergedPullRequest
+    $promotionPrOutput = Invoke-Checked -FilePath "gh" -ArgumentList @(
+        "pr",
+        "create",
+        "--repo",
+        $OwnedRepo,
+        "--base",
+        $BaseBranch,
+        "--head",
+        $promotionBranch,
+        "--title",
+        $promotionTitle,
+        "--body",
+        $promotionBody
+    ) -FailureMessage "Failed to create governed evidence-base promotion pull request."
+
+    $promotionPrUrl = ($promotionPrOutput | Select-Object -Last 1).Trim()
+    $promotionPrMatch = [regex]::Match($promotionPrUrl, "/pull/(?<number>\d+)$")
+    if (-not $promotionPrMatch.Success) {
+        throw "Could not parse governed evidence-base promotion pull request number from '$promotionPrUrl'."
+    }
+    $promotionPr = [pscustomobject]@{
+        Number = [int]$promotionPrMatch.Groups["number"].Value
+        Url = $promotionPrUrl
+        Title = $promotionTitle
+        Branch = $promotionBranch
+        Head = $mergeCommit
+    }
+
+    [void](@(Invoke-PullRequestVerification -PullRequest $promotionPr) | Select-Object -Last 1)
+    $mergedPromotionPr = @(Invoke-AuthorizedMerge -Wave ([pscustomobject]@{
+        Branch = $promotionBranch
+        PullRequestBaseBranch = $BaseBranch
+        EvidenceBranch = $Wave.EvidenceBranch
+        WaveNumber = $Wave.WaveNumber
+    }) -PullRequest $promotionPr) | Select-Object -Last 1
+
+    Assert-RemoteBaseMatchesMergeCommit -MergedPullRequest $mergedPromotionPr -ExpectedBaseBranch $BaseBranch
+    Write-Host "governedEvidenceBasePromotion=merged"
+    Write-Host "governedEvidenceBasePromotionPr=$($promotionPr.Url)"
+    return $mergedPromotionPr
+}
+
+function Assert-PullRequestBaseHasThresholdGovernanceTrigger {
+    param([string] $PullRequestBaseBranch)
+
+    if ($PullRequestBaseBranch -eq $BaseBranch) {
+        return
+    }
+    if ($PullRequestBaseBranch -match "^threshold-governed-refactor-demo-\d+-discovery-base$") {
+        return
+    }
+
+    throw "Pull request base '$PullRequestBaseBranch' is not covered by the Threshold governance workflow trigger."
 }
 
 function New-PullRequestBody {
@@ -306,8 +595,11 @@ function Invoke-LocalWave {
     Assert-CleanWorktree
     Invoke-Checked -FilePath "git" -ArgumentList @("fetch", $BaseRemote) -FailureMessage "Failed to fetch $BaseRemote."
 
+    $startingBranch = (& git branch --show-current).Trim()
     $branch = Get-NextWaveBranchName
-    Invoke-Checked -FilePath "git" -ArgumentList @("switch", "-c", $branch, "$BaseRemote/$BaseBranch") -FailureMessage "Failed to switch to new branch '$branch'."
+    $evidenceBranch = "$branch-discovery-base"
+    Invoke-Checked -FilePath "git" -ArgumentList @("switch", "-c", $evidenceBranch, "$BaseRemote/$BaseBranch") -FailureMessage "Failed to switch to new discovery evidence branch '$evidenceBranch'."
+    $discoverySourceHead = (& git rev-parse HEAD).Trim()
 
     Invoke-Checked -FilePath "powershell.exe" -ArgumentList @(
         "-ExecutionPolicy",
@@ -326,22 +618,30 @@ function Invoke-LocalWave {
         "$MaxChangedLinesPerCandidate",
         "-MaxRepairAttemptsPerCandidate",
         "$MaxRepairAttemptsPerCandidate",
+        "-BranchName",
+        $branch,
+        "-BaseRef",
+        "$BaseRemote/$evidenceBranch",
         "-DraftPrAllowed"
     ) -FailureMessage "Failed to start lease."
 
     Update-CandidatePocket
+    Set-PreProductDiscoverySourceHead -CandidatePocketPath $PocketPath -DiscoverySourceHead $discoverySourceHead
     $initialAutoPatchableCount = Get-AutoPatchableCandidateCount -Path $PocketPath
     while ($initialAutoPatchableCount -lt $MinAutoPatchableCandidates) {
         if (-not (Try-ExpandScopeForCandidateShortage -Reason "fresh_wave_candidate_shortage")) {
             break
         }
         Update-CandidatePocket
+        Set-PreProductDiscoverySourceHead -CandidatePocketPath $PocketPath -DiscoverySourceHead $discoverySourceHead
         $initialAutoPatchableCount = Get-AutoPatchableCandidateCount -Path $PocketPath
     }
     if ($initialAutoPatchableCount -lt $MinAutoPatchableCandidates) {
         Restore-GovernancePaths
+        Restore-PreWaveBranch -PreviousBranch $startingBranch -WaveBranch $evidenceBranch
         Write-Host "ready_no_candidates_on_fresh_wave"
         Write-Host "branch=$branch"
+        Write-Host "currentBranch=$((& git branch --show-current).Trim())"
         Write-Host "head=$((& git rev-parse HEAD).Trim())"
         Write-Host "autoPatchableCandidateCount=$initialAutoPatchableCount"
         Write-Host "minAutoPatchableCandidates=$MinAutoPatchableCandidates"
@@ -349,15 +649,27 @@ function Invoke-LocalWave {
     }
 
     $waveNumber = Get-WaveNumberFromBranch -Branch $branch
-    [void](Commit-PathsIfNeeded -Paths $governancePaths -Message "Start Threshold wave $waveNumber candidate pocket")
+    $minScore = Get-LeaseIntScalarOrDefault -Name "minScore" -DefaultValue 70
+    $evidencePaths = Invoke-PreProductDiscoveryPreparation -CandidatePocketPath $PocketPath -MinScore $minScore
+    [void](Commit-PathsIfNeeded -Paths ($governancePaths + $evidencePaths) -Message "Prepare Threshold wave $waveNumber discovery evidence")
+    $evidenceHead = (& git rev-parse HEAD).Trim()
+    $script:CurrentWaveEvidenceHead = $evidenceHead
+    Invoke-Checked -FilePath "git" -ArgumentList @("switch", "-c", $branch, $evidenceHead) -FailureMessage "Failed to switch to product branch '$branch'."
 
     while ($true) {
-        Invoke-Checked -FilePath "powershell.exe" -ArgumentList @(
-            "-ExecutionPolicy",
-            "Bypass",
-            "-File",
-            ".\threshold\scripts\run-next-slice.ps1"
-        ) -FailureMessage "run-next-slice failed."
+        $batchCompleted = Invoke-BatchIfAvailable
+        if (-not $batchCompleted) {
+            Invoke-Checked -FilePath "powershell.exe" -ArgumentList @(
+                "-ExecutionPolicy",
+                "Bypass",
+                "-File",
+                ".\threshold\scripts\run-next-slice.ps1",
+                "-PrBaseHead",
+                $evidenceHead,
+                "-MinScore",
+                "$(Get-LeaseIntScalarOrDefault -Name "minScore" -DefaultValue 70)"
+            ) -FailureMessage "run-next-slice failed."
+        }
 
         $state = Read-JsonFile -Path $StatePath
         if ($state.terminalState -eq "ready_no_candidates_verified") {
@@ -365,11 +677,9 @@ function Invoke-LocalWave {
             $autoPatchableCandidateCount = Get-AutoPatchableCandidateCount -Path $PocketPath
             if ($state.remainingBudget.candidates -gt 0 -and
                 $state.remainingBudget.commits -gt 0 -and
-                $autoPatchableCandidateCount -lt $MinAutoPatchableCandidates -and
-                (Try-ExpandScopeForCandidateShortage -Reason "mid_wave_candidate_shortage")) {
-                Update-CandidatePocket
-                [void](Commit-PathsIfNeeded -Paths $governancePaths -Message "Expand Threshold wave $waveNumber scope")
-                continue
+                $autoPatchableCandidateCount -lt $MinAutoPatchableCandidates) {
+                Write-Host "midWaveScopeExpansionBlocked=true"
+                Write-Host "midWaveScopeExpansionPolicy=scope expansion after product branch start would create discovery evidence inside the product PR"
             }
             break
         }
@@ -377,16 +687,22 @@ function Invoke-LocalWave {
             break
         }
 
-        Update-CandidatePocket
-        [void](Commit-PathsIfNeeded -Paths @($PocketPath) -Message "Record Threshold wave $waveNumber updated candidate pocket")
+        Write-Host "candidatePocketRefreshBlocked=true"
+        Write-Host "candidatePocketRefreshPolicy=product slices must consume the pre-product evidence-bearing candidate pocket"
     }
 
     Update-CandidatePocket
+    Set-PreProductDiscoverySourceHead -CandidatePocketPath $PocketPath -DiscoverySourceHead $discoverySourceHead
+    Mark-TerminalEvidenceSourceHead
     $state = Read-JsonFile -Path $StatePath
     [void](Commit-PathsIfNeeded -Paths $governancePaths -Message "Record Threshold wave $waveNumber terminal state")
 
     return [pscustomobject]@{
         Branch = $branch
+        EvidenceBranch = $evidenceBranch
+        PullRequestBaseBranch = $evidenceBranch
+        PullRequestBaseGovernanceTriggered = $true
+        EvidenceHead = $evidenceHead
         WaveNumber = $waveNumber
         State = $state
     }
@@ -406,6 +722,10 @@ function Invoke-LocalWaveValidation {
 function Invoke-PullRequestPublish {
     param([pscustomobject] $Wave)
 
+    $leaseLines = Read-LeaseLines
+    Assert-ThresholdActionAllowed -LeaseLines $leaseLines -LeasePath $LeasePath -Action "pr"
+
+    Invoke-Checked -FilePath "git" -ArgumentList @("push", $BaseRemote, $Wave.EvidenceBranch) -FailureMessage "Failed to push discovery evidence branch '$($Wave.EvidenceBranch)'."
     Invoke-Checked -FilePath "git" -ArgumentList @("push", $BaseRemote, $Wave.Branch) -FailureMessage "Failed to push branch '$($Wave.Branch)'."
 
     if ($SkipPullRequest.IsPresent) {
@@ -418,13 +738,14 @@ function Invoke-PullRequestPublish {
 
     $prTitle = "Refactor PetClinic autonomous wave $($Wave.WaveNumber)"
     $prBody = New-PullRequestBody -WaveNumber $Wave.WaveNumber -State $Wave.State
+    Assert-PullRequestBaseHasThresholdGovernanceTrigger -PullRequestBaseBranch $Wave.PullRequestBaseBranch
     $prCreateOutput = Invoke-Checked -FilePath "gh" -ArgumentList @(
         "pr",
         "create",
         "--repo",
         $OwnedRepo,
         "--base",
-        $BaseBranch,
+        $Wave.PullRequestBaseBranch,
         "--head",
         $Wave.Branch,
         "--title",
@@ -470,6 +791,9 @@ function Invoke-AuthorizedMerge {
         [pscustomobject] $PullRequest
     )
 
+    $leaseLines = Read-LeaseLines
+    Assert-ThresholdActionAllowed -LeaseLines $leaseLines -LeasePath $LeasePath -Action "merge"
+
     $mergeBody = @"
 PR #$($PullRequest.Number)
 branch $($Wave.Branch)
@@ -496,7 +820,11 @@ non-claims: no upstream interaction, no release, no deploy, no public readiness/
         throw "Pull request #$($PullRequest.Number) did not reach merged state."
     }
 
-    Assert-RemoteBaseMatchesMergeCommit -MergedPullRequest $mergedPullRequest
+    Assert-RemoteBaseMatchesMergeCommit -MergedPullRequest $mergedPullRequest -ExpectedBaseBranch $Wave.PullRequestBaseBranch
+    if ($Wave.PullRequestBaseBranch -ne $BaseBranch) {
+        $promotionMergedPullRequest = @(Invoke-GovernedEvidenceBasePromotion -Wave $Wave -MergedPullRequest $mergedPullRequest) | Select-Object -Last 1
+        return $promotionMergedPullRequest
+    }
     return $mergedPullRequest
 }
 
@@ -524,13 +852,30 @@ if ($Phase -eq "PublishDraftPr") {
 }
 
 $pullRequestMetadata = @(Invoke-PullRequestVerification -PullRequest $pullRequest) | Select-Object -Last 1
+$reviewDecision = Get-PullRequestReviewDecision -Number $pullRequest.Number
 
-if ($SkipMerge.IsPresent -or $Phase -eq "VerifyPr") {
+if ($SkipMerge.IsPresent -or $Phase -eq "VerifyPr" -or $Phase -eq "VerifyPrUntilExternalReview") {
     Write-Host "start-next-wave completed without merge"
     Write-Host "phase=$Phase"
     Write-Host "branch=$($wave.Branch)"
     Write-Host "pullRequest=$($pullRequest.Url)"
     Write-Host "mergeableState=$($pullRequestMetadata.mergeable_state)"
+    Write-Host "reviewDecision=$reviewDecision"
+    if ($Phase -eq "VerifyPrUntilExternalReview" -and $reviewDecision -eq "REVIEW_REQUIRED") {
+        Write-Host "policyHold=external_review_required"
+    }
+    Write-Host "terminalState=$($wave.State.terminalState)"
+    exit 0
+}
+
+if ($Phase -eq "FullLifecycleWithPolicyHold") {
+    Write-Host "start-next-wave completed at policy hold"
+    Write-Host "phase=$Phase"
+    Write-Host "branch=$($wave.Branch)"
+    Write-Host "pullRequest=$($pullRequest.Url)"
+    Write-Host "mergeableState=$($pullRequestMetadata.mergeable_state)"
+    Write-Host "reviewDecision=$reviewDecision"
+    Write-Host "policyHold=merge_requires_explicit_authority_or_external_review"
     Write-Host "terminalState=$($wave.State.terminalState)"
     exit 0
 }

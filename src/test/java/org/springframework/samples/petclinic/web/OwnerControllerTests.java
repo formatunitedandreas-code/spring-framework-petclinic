@@ -1,18 +1,25 @@
 package org.springframework.samples.petclinic.web;
 
-import org.assertj.core.util.Lists;
+import java.util.List;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.samples.petclinic.model.Owner;
+import org.springframework.samples.petclinic.owner.api.OwnerListItem;
+import org.springframework.samples.petclinic.owner.application.SearchOwners;
 import org.springframework.samples.petclinic.service.ClinicService;
 import org.springframework.test.context.junit.jupiter.web.SpringJUnitWebConfig;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.hasProperty;
 import static org.hamcrest.Matchers.is;
 import static org.mockito.BDDMockito.given;
+import static org.mockito.Mockito.verify;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
@@ -33,6 +40,9 @@ class OwnerControllerTests {
 
     @Autowired
     private ClinicService clinicService;
+
+    @Autowired
+    private SearchOwners searchOwners;
 
     private MockMvc mockMvc;
 
@@ -97,7 +107,7 @@ class OwnerControllerTests {
 
     @Test
     void testProcessFindFormSuccess() throws Exception {
-        given(this.clinicService.findOwnerByLastName("")).willReturn(Lists.newArrayList(george, new Owner()));
+        given(this.searchOwners.searchByLastName("")).willReturn(List.of(ownerListItem(george), ownerListItem(2)));
 
         mockMvc.perform(get("/owners"))
             .andExpect(status().isOk())
@@ -105,8 +115,47 @@ class OwnerControllerTests {
     }
 
     @Test
+    void parameterlessFindReturnsOwnersListForEmptyLastName() throws Exception {
+        OwnerListItem betty = ownerListItem(2, "Betty", "Davis", "10 Ocean Ave.", "Madison", "6085551024");
+        given(this.searchOwners.searchByLastName("")).willReturn(List.of(ownerListItem(george), betty));
+
+        MvcResult result = mockMvc.perform(get("/owners"))
+            .andExpect(status().isOk())
+            .andExpect(model().attributeExists("selections"))
+            .andExpect(view().name("owners/ownersList"))
+            .andReturn();
+
+        assertThat(ownerSelections(result)).containsExactly(ownerListItem(george), betty);
+        verify(this.searchOwners).searchByLastName("");
+    }
+
+    @Test
+    void multipleResultsPreserveOrderingOwnerFieldsAndPetNames() throws Exception {
+        OwnerListItem georgeSelection = ownerListItem(george, "Basil", "Zelda");
+        OwnerListItem betty = ownerListItem(2, "Betty", "Franklin", "10 Ocean Ave.", "Madison", "6085551024",
+            "Rex");
+        given(this.searchOwners.searchByLastName("Franklin")).willReturn(List.of(georgeSelection, betty));
+
+        MvcResult result = mockMvc.perform(get("/owners").param("lastName", "Franklin"))
+            .andExpect(status().isOk())
+            .andExpect(view().name("owners/ownersList"))
+            .andReturn();
+
+        List<OwnerListItem> selections = ownerSelections(result);
+        assertThat(selections).containsExactly(georgeSelection, betty);
+        assertThat(selections.get(0).id()).isEqualTo(TEST_OWNER_ID);
+        assertThat(selections.get(0).firstName()).isEqualTo("George");
+        assertThat(selections.get(0).lastName()).isEqualTo("Franklin");
+        assertThat(selections.get(0).address()).isEqualTo("110 W. Liberty St.");
+        assertThat(selections.get(0).city()).isEqualTo("Madison");
+        assertThat(selections.get(0).telephone()).isEqualTo("6085551023");
+        assertThat(selections.get(0).petNames()).containsExactly("Basil", "Zelda");
+        assertThat(selections.get(1).petNames()).containsExactly("Rex");
+    }
+
+    @Test
     void testProcessFindFormByLastName() throws Exception {
-        given(this.clinicService.findOwnerByLastName(george.getLastName())).willReturn(Lists.newArrayList(george));
+        given(this.searchOwners.searchByLastName(george.getLastName())).willReturn(List.of(ownerListItem(george)));
 
         mockMvc.perform(get("/owners")
             .param("lastName", "Franklin")
@@ -117,6 +166,8 @@ class OwnerControllerTests {
 
     @Test
     void testProcessFindFormNoOwnersFound() throws Exception {
+        given(this.searchOwners.searchByLastName("Unknown Surname")).willReturn(List.of());
+
         mockMvc.perform(get("/owners")
             .param("lastName", "Unknown Surname")
         )
@@ -124,6 +175,16 @@ class OwnerControllerTests {
             .andExpect(model().attributeHasFieldErrors("owner", "lastName"))
             .andExpect(model().attributeHasFieldErrorCode("owner", "lastName", "notFound"))
             .andExpect(view().name("owners/findOwners"));
+    }
+
+    @Test
+    void oneResultRedirectsToOwnerDetailsPath() throws Exception {
+        given(this.searchOwners.searchByLastName("Franklin")).willReturn(List.of(ownerListItem(george)));
+
+        mockMvc.perform(get("/owners").param("lastName", "Franklin"))
+            .andExpect(status().is3xxRedirection())
+            .andExpect(view().name("redirect:/owners/" + TEST_OWNER_ID))
+            .andExpect(redirectedUrl("/owners/" + TEST_OWNER_ID));
     }
 
     @Test
@@ -176,6 +237,46 @@ class OwnerControllerTests {
             .andExpect(model().attribute("owner", hasProperty("city", is("Madison"))))
             .andExpect(model().attribute("owner", hasProperty("telephone", is("6085551023"))))
             .andExpect(view().name("owners/ownerDetails"));
+    }
+
+    @SuppressWarnings("unchecked")
+    private List<OwnerListItem> ownerSelections(MvcResult result) {
+        MockHttpServletRequest request = result.getRequest();
+        Object selections = request.getAttribute("selections");
+        assertThat(selections).isInstanceOf(List.class);
+        return List.copyOf((List<OwnerListItem>) selections);
+    }
+
+    private Owner owner(int id, String firstName, String lastName, String address, String city, String telephone) {
+        Owner owner = new Owner();
+        owner.setId(id);
+        owner.setFirstName(firstName);
+        owner.setLastName(lastName);
+        owner.setAddress(address);
+        owner.setCity(city);
+        owner.setTelephone(telephone);
+        return owner;
+    }
+
+    private OwnerListItem ownerListItem(int id) {
+        return ownerListItem(id, "Owner", "Last", "Address", "City", "Telephone");
+    }
+
+    private OwnerListItem ownerListItem(Owner owner, String... petNames) {
+        return ownerListItem(owner.getId(), owner.getFirstName(), owner.getLastName(), owner.getAddress(),
+            owner.getCity(), owner.getTelephone(), petNames);
+    }
+
+    private OwnerListItem ownerListItem(
+        int id,
+        String firstName,
+        String lastName,
+        String address,
+        String city,
+        String telephone,
+        String... petNames
+    ) {
+        return new OwnerListItem(id, firstName, lastName, address, city, telephone, List.of(petNames));
     }
 
 }

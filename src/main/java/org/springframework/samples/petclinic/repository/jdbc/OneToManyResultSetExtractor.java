@@ -7,10 +7,13 @@
  *
  *      http://www.apache.org/licenses/LICENSE-2.0
  *
- * Unless required by applicable law or agreed to in writing, software
+ * Unless required by applicable law or agreed to in
+ * writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
+ * express or implied.
+ * See the License for the specific language
+ * governing permissions and
  * limitations under the License.
  */
 
@@ -27,25 +30,34 @@ import org.springframework.jdbc.core.RowMapper;
 import org.springframework.util.Assert;
 
 /**
- * An abstract results extractor for row mapping operations that map multiple rows to a single
+ * An abstract results extractor for row mapping operations
+ * that map multiple
+ * rows to a single
  * root object. This is
- * useful when joining a one-to-many relationship where there can be multiple
+ * useful when joining a one-to-many relationship where
+ * there can be multiple
  * child rows returned
  * per parent root.
  * <p>
- * It's assumed that the root type R table has a primary key (id) of type K and that the child
+ * It's assumed that the root type R table has a primary
+ * key (id) of type K
+ * and that the child
  * type C table has a
  * foreign key of type K referencing the root table's primary key.
  * <p>
- * For example, consider the relationship: "a Customer has one-to-many Addresses".
+ * For example, consider the relationship: "a Customer has
+ * one-to-many Addresses".
  * When joining the
  * Customer table with
- * the Address table to build a Customer object, multiple rows would be returned for
+ * the Address table to build a Customer object, multiple rows
+ * would be returned for
  * a Customer if it
  * has more than one
  * Address. This extractor is useful in that case.
  * <p>
- * This class comes from the Spring Data JDBC Extensions project that has been archived in 2019:
+ * This class comes from the Spring Data JDBC Extensions
+ * project that has been
+ * archived in 2019:
  * <a href="https://github.com/spring-attic/spring-data-jdbc-ext">Spring Data JDBC
  * Extensions for the Oracle
  * database</a>.
@@ -69,21 +81,31 @@ public abstract class OneToManyResultSetExtractor<R, C, K> implements ResultSetE
     protected final RowMapper<C> childMapper;
 
     /**
-	 * Creates a new {@link OneToManyResultSetExtractor} from the given {@link RowMapper}s.
+	 * Creates a new {@link OneToManyResultSetExtractor} from the given
+	 * {@link RowMapper}s.
 	 *
-	 * @param rootMapper {@link RowMapper} to map the root entity, must not be {@literal null}.
-	 * @param childMapper {@link RowMapper} to map the root entities, must not be {@literal null}.
+	 * @param rootMapper {@link RowMapper} to map the root
+	 * entity, must not be
+	 * {@literal null}.
+	 * @param childMapper {@link RowMapper} to map the root
+	 * entities, must not be
+	 * {@literal null}.
 	 */
     protected OneToManyResultSetExtractor(RowMapper<R> rootMapper, RowMapper<C> childMapper) {
         this(rootMapper, childMapper, null);
     }
 
     /**
-	 * Creates a new {@link OneToManyResultSetExtractor} from the given {@link RowMapper}s and
+	 * Creates a new {@link OneToManyResultSetExtractor} from the given
+	 * {@link RowMapper}s and
 	 * {@link ExpectedResults}.
 	 *
-	 * @param rootMapper {@link RowMapper} to map the root entity, must not be {@literal null}.
-	 * @param childMapper {@link RowMapper} to map the root entities, must not be {@literal null}.
+	 * @param rootMapper {@link RowMapper} to map the root
+	 * entity, must not be
+	 * {@literal null}.
+	 * @param childMapper {@link RowMapper} to map the root
+	 * entities, must not be
+	 * {@literal null}.
 	 * @param expectedResults the expected results type
 	 */
     protected OneToManyResultSetExtractor(RowMapper<R> rootMapper, RowMapper<C> childMapper, ExpectedResults expectedResults) {
@@ -140,7 +162,8 @@ public abstract class OneToManyResultSetExtractor<R, C, K> implements ResultSetE
 	 * Map the primary key value to the required type.
 	 * This method must be implemented by subclasses.
 	 * This method should not call <code>next()</code> on
-	 * the ResultSet; it is only supposed to map values of the current row.
+	 * the ResultSet; it is only supposed to map values of
+	 * the current row.
 	 *
 	 * @param rs the ResultSet
 	 * @return the primary key value
@@ -152,7 +175,8 @@ public abstract class OneToManyResultSetExtractor<R, C, K> implements ResultSetE
 	 * Map the foreign key value to the required type.
 	 * This method must be implemented by subclasses.
 	 * This method should not call <code>next()</code> on
-	 * the ResultSet; it is only supposed to map values of the current row.
+	 * the ResultSet; it is only supposed to map values of
+	 * the current row.
 	 *
 	 * @param rs the ResultSet
 	 * @return the foreign key value
