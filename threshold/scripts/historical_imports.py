@@ -4,6 +4,7 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
+import os
 from pathlib import Path, PurePosixPath
 import re
 import subprocess
@@ -37,10 +38,10 @@ def require(condition, message):
         raise InvalidImport(message)
 
 
-def git(repo: Path, *args: str, data: bytes | None = None) -> bytes:
+def git(repo: Path, *args: str, data: bytes | None = None, env=None) -> bytes:
     result = subprocess.run(
         ["git", "-C", str(repo), *args], input=data, stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE, check=False,
+        stderr=subprocess.PIPE, check=False, env=env,
     )
     if result.returncode:
         raise InvalidImport("Git operation failed: " + " ".join(args[:2]))
@@ -104,12 +105,12 @@ def tree(repo, revision, prefix=None):
 
 
 def changed_paths(repo, base, head):
-    return [
+    return sorted([
         path_name(x.decode("utf-8", errors="strict"))
         for x in git(repo, "diff", "--no-ext-diff", "--no-textconv", "--name-only",
                      "--no-renames", "--no-relative", "--ignore-submodules=none",
-                     "-z", base, head).split(b"\0") if x
-    ]
+                     "-O", os.devnull, "-z", base, head).split(b"\0") if x
+    ])
 
 
 def source_changes(repo, base, head):
@@ -119,10 +120,16 @@ def source_changes(repo, base, head):
 
 
 def diff_bytes(repo, base, head):
-    return git(repo, "diff", "--binary", "--full-index", "--no-ext-diff",
+    # The archive is compared on other hosts: pin presentation rather than
+    # inheriting each operator's context, prefixes, indicators or file ordering.
+    return git(repo, "-c", "core.quotePath=true", "-c", "diff.noprefix=false",
+               "-c", "diff.mnemonicPrefix=false", "-c", "diff.suppressBlankEmpty=false",
+               "diff", "--binary", "--full-index", "--no-ext-diff",
                "--no-textconv", "--no-renames", "--no-relative", "--ignore-submodules=none",
                "--src-prefix=a/", "--dst-prefix=b/", "--no-color", "--diff-algorithm=myers",
-               "--no-indent-heuristic", base, head)
+               "--no-indent-heuristic", "--unified=3", "--inter-hunk-context=0", "--line-prefix=",
+               "--output-indicator-new=+", "--output-indicator-old=-", "--output-indicator-context= ",
+               "-O", os.devnull, base, head, env=dict(os.environ, GIT_DIFF_OPTS="--unified=3"))
 
 
 def blob(repo, oid):

@@ -64,12 +64,15 @@ forbiddenActions:
         write(cls.reference, "threshold/lease-state/current-run.json", b"{}\n")
         write(cls.reference, "src/main/java/demo/App.java", b"class App { int value = 0; }\n")
         write(cls.reference, "docs/old-evidence.bin", b"old\x00\xff\r\n")
+        context = b"first\n\nthird\nfourth\n" + b"unchanged\n" * 20 + b"last\n"
+        write(cls.reference, "docs/context.txt", context)
         cls.fork = save(cls.reference, "Fixture source fork")
         run(cls.reference, "switch", "--quiet", "-c", "historical-source")
         write(cls.reference, "src/main/java/demo/App.java", b"class App { int value = 1; }\n")
         write(cls.reference, "threshold/leases/current.yaml",
               (cls.reference / "threshold/leases/current.yaml").read_bytes() + b"# old source lease\n")
         write(cls.reference, "docs/new-evidence.bin", b"new\x00\xff\r\n\x80")
+        write(cls.reference, "docs/context.txt", context.replace(b"first", b"FIRST").replace(b"last", b"LAST"))
         (cls.reference / "docs/old-evidence.bin").unlink()
         cls.original = save(cls.reference, "Historical source with modification, addition and deletion")
         run(cls.reference, "switch", "--quiet", "main")
@@ -134,10 +137,14 @@ forbiddenActions:
         self.assertTrue(any(c["before"] is None for c in manifest["changes"]))
         self.assertTrue(any(c["after"] is None for c in manifest["changes"]))
         self.assertEqual(manifest["originalMergeBase"], self.fork)
-        expected_diff = run(self.repo, "diff", "--binary", "--full-index", "--no-ext-diff",
+        expected_diff = run(self.repo, "-c", "core.quotePath=true", "-c", "diff.noprefix=false",
+                            "-c", "diff.mnemonicPrefix=false", "-c", "diff.suppressBlankEmpty=false",
+                            "diff", "--binary", "--full-index", "--no-ext-diff",
                             "--no-textconv", "--no-renames", "--no-relative", "--ignore-submodules=none",
                             "--src-prefix=a/", "--dst-prefix=b/", "--no-color", "--diff-algorithm=myers",
-                            "--no-indent-heuristic", self.fork, self.original)
+                            "--no-indent-heuristic", "--unified=3", "--inter-hunk-context=0", "--line-prefix=",
+                            "--output-indicator-new=+", "--output-indicator-old=-", "--output-indicator-context= ",
+                            "-O", os.devnull, self.fork, self.original)
         self.assertEqual((self.archive / "original.diff").read_bytes(), expected_diff)
         for change in manifest["changes"]:
             for side in ("before", "after"):
@@ -146,6 +153,36 @@ forbiddenActions:
                                      run(self.repo, "cat-file", "blob", change[side]["blob"]))
         self.assertEqual(run(self.repo, "show", "HEAD:src/main/java/demo/App.java"),
                          run(self.repo, "show", self.base + ":src/main/java/demo/App.java"))
+
+    def test_diff_presentation_settings_cannot_change_captured_bytes(self):
+        expected = (self.archive / "original.diff").read_bytes()
+        order = self.repo / "custom-diff-order"
+        order.write_text("src/main/**\nthreshold/**\ndocs/**\n", encoding="utf-8")
+        settings = (("diff.context", "0"), ("diff.interHunkContext", "100"),
+                    ("diff.noprefix", "true"), ("diff.mnemonicPrefix", "true"),
+                    ("diff.algorithm", "histogram"), ("diff.suppressBlankEmpty", "true"),
+                    ("diff.outputIndicatorNew", ">"), ("diff.outputIndicatorOld", "<"),
+                    ("diff.outputIndicatorContext", "|"), ("diff.srcPrefix", "source/"),
+                    ("diff.dstPrefix", "target/"), ("diff.linePrefix", "custom-prefix "),
+                    ("diff.orderFile", str(order)), ("core.quotePath", "false"))
+        for key, value in settings:
+            run(self.repo, "config", key, value)
+        self.assertEqual(hi.diff_bytes(self.repo, self.fork, self.original), expected)
+        old_options = os.environ.get("GIT_DIFF_OPTS")
+        try:
+            os.environ["GIT_DIFF_OPTS"] = "--unified=0"
+            self.assertEqual(hi.diff_bytes(self.repo, self.fork, self.original), expected)
+        finally:
+            if old_options is None:
+                os.environ.pop("GIT_DIFF_OPTS", None)
+            else:
+                os.environ["GIT_DIFF_OPTS"] = old_options
+        self.assertIsNotNone(hi.validate(self.repo, self.base, "HEAD"))
+        directory = hi.capture(self.repo, self.original, self.base, 9002)
+        self.assertEqual((self.repo / directory / "original.diff").read_bytes(), expected)
+        for key, _value in settings:
+            run(self.repo, "config", "--unset", key)
+        self.assertEqual(hi.diff_bytes(self.repo, self.fork, self.original), expected)
 
     def test_actual_powershell_governance_uses_the_bounded_path(self):
         result = self.gate()
