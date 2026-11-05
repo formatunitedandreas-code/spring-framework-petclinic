@@ -18,6 +18,7 @@ Set-StrictMode -Version Latest
 $ErrorActionPreference = "Stop"
 
 . (Join-Path $PSScriptRoot "lib/candidate-class-provenance.ps1")
+. (Join-Path $PSScriptRoot "lib/content-hash.ps1")
 
 function ConvertTo-RepoPath {
     param([string] $Path)
@@ -46,63 +47,6 @@ function Write-TextFile {
         $normalizedContent = $normalizedContent -replace "`n", "`r`n"
     }
     [System.IO.File]::WriteAllText((Resolve-Path -LiteralPath $Path), $normalizedContent, $encoding)
-}
-
-function Get-FileSha256 {
-    param([string] $Path)
-    if (-not (Test-Path $Path)) { throw "File not found for hashing: $Path" }
-    return (Get-FileHash -Algorithm SHA256 -LiteralPath $Path).Hash
-}
-
-function Get-GitBlobSha256 {
-    param([string] $Revision, [string] $Path)
-
-    $repoPath = ConvertTo-RepoPath $Path
-    $previousErrorActionPreference = $ErrorActionPreference
-    $ErrorActionPreference = "Continue"
-    & git cat-file -e "$Revision`:$repoPath" 2>$null
-    $exists = $LASTEXITCODE -eq 0
-    $ErrorActionPreference = $previousErrorActionPreference
-    if (-not $exists) {
-        throw "Git blob not found for hashing: $Revision`:$repoPath"
-    }
-
-    $spec = "$Revision`:$repoPath"
-    $processInfo = [System.Diagnostics.ProcessStartInfo]::new()
-    $processInfo.FileName = "git"
-    $argumentListProperty = $processInfo.GetType().GetProperty("ArgumentList")
-    if ($null -ne $argumentListProperty) {
-        [void] $processInfo.ArgumentList.Add("cat-file")
-        [void] $processInfo.ArgumentList.Add("blob")
-        [void] $processInfo.ArgumentList.Add($spec)
-    }
-    else {
-        $escapedSpec = $spec.Replace('"', '\"')
-        $processInfo.Arguments = "cat-file blob `"$escapedSpec`""
-    }
-    $processInfo.RedirectStandardOutput = $true
-    $processInfo.RedirectStandardError = $true
-    $processInfo.UseShellExecute = $false
-
-    $process = [System.Diagnostics.Process]::Start($processInfo)
-    $sha256 = [System.Security.Cryptography.SHA256]::Create()
-    $buffer = [byte[]]::new(8192)
-    try {
-        while (($read = $process.StandardOutput.BaseStream.Read($buffer, 0, $buffer.Length)) -gt 0) {
-            [void] $sha256.TransformBlock($buffer, 0, $read, $null, 0)
-        }
-        [void] $sha256.TransformFinalBlock($buffer, 0, 0)
-        $stderr = $process.StandardError.ReadToEnd()
-        $process.WaitForExit()
-        if ($process.ExitCode -ne 0) {
-            throw "Failed to hash git blob: $spec. $stderr"
-        }
-        return ([System.BitConverter]::ToString($sha256.Hash) -replace "-", "").ToLowerInvariant()
-    }
-    finally {
-        $sha256.Dispose()
-        $process.Dispose()
-    }
 }
 
 function Assert-CleanWorktree {
@@ -495,9 +439,9 @@ try {
         $candidateDiscoveryEvidence = $candidateDiscoveryEvidenceById[$candidateId]
 
         $path = ConvertTo-RepoPath $candidate.file
-        $beforeHash = Get-FileSha256 -Path $path
+        $beforeHash = Get-ThresholdFileSha256 -Path $path
         Apply-CommentWrapCleanup -Candidate $candidate
-        $afterHash = Get-FileSha256 -Path $path
+        $afterHash = Get-ThresholdFileSha256 -Path $path
         if ($beforeHash -eq $afterHash) {
             throw "Candidate '$($candidate.candidateId)' produced no materialized file change."
         }
@@ -550,7 +494,8 @@ try {
         schemaVersion = "threshold.petclinic.batch-receipt.v0.1"
         batchId = $batchId
         leaseId = [string]$state.leaseId
-        leaseDigest = Get-GitBlobSha256 -Revision "HEAD" -Path $LeasePath
+        leaseDigest = Get-ThresholdGitBlobSha256 -Revision $sourceCommit -Path $LeasePath
+        leaseDigestRevision = $sourceCommit
         branch = [string]$state.branch
         baseHead = $baseHead
         sourceCommit = $sourceCommit
