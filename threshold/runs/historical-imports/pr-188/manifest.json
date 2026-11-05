@@ -1,0 +1,74 @@
+{
+  "schemaVersion": "threshold.historical_import.v1",
+  "disposition": "historical_only",
+  "historicalValidationReasserted": false,
+  "runtimeAuthority": "NONE",
+  "executionAuthorized": false,
+  "authorityCreated": false,
+  "qualificationGranted": false,
+  "pullRequest": 188,
+  "originalHead": "22a8db039d28129592d6fd7e48b625e3c28dded0",
+  "originalTargetBase": "924101e662668b5033b37123f9eef7a76001c8a6",
+  "originalMergeBase": "b2879eaae0e44a559af980940793f7687feff556",
+  "originalDiff": {
+    "path": "original.diff",
+    "sha256": "f9e4ba685b23bdf41987b461d6d2e7060cc7e895e651d36055a1c77264039c09"
+  },
+  "changes": [
+    {
+      "path": "src/main/java/org/springframework/samples/petclinic/web/PetTypeFormatter.java",
+      "before": {
+        "mode": "100644",
+        "blob": "f95e30a6b51cf3dce83cf6c750d582b6146fe252",
+        "archive": "blobs/000000-before.bin",
+        "sha256": "b4b52c1904683595e02e81243f5a18135611f2ff2f7d2243a693e1b1f1958d28"
+      },
+      "after": {
+        "mode": "100644",
+        "blob": "674241cc5355cf7736d9eee33dd0f9c84f6c6fdb",
+        "archive": "blobs/000000-after.bin",
+        "sha256": "abb6cf85f90e04eb9ab8178f2ce6d9ef19522e436b5ecdc75a0405d275dfe068"
+      }
+    },
+    {
+      "path": "threshold/attestations/receipt-chain.json",
+      "before": {
+        "mode": "100644",
+        "blob": "224fb1de896d8d65cebf205e7c4a32722c7fe86b",
+        "archive": "blobs/000001-before.bin",
+        "sha256": "41fd8a6c2226979e4c94d913b8e57abdf69a207fb9584a83966d597a905ef9a7"
+      },
+      "after": {
+        "mode": "100644",
+        "blob": "0366cca07521b1c637e9303fb7e22b610878fe68",
+        "archive": "blobs/000001-after.bin",
+        "sha256": "453cfb50b858a05742d010c622c786ed776f5ce1eae862dae4efc520cb63a489"
+      }
+    },
+    {
+      "path": "threshold/kgs/fidelity-kg.json",
+      "before": {
+        "mode": "100644",
+        "blob": "6b10e30cded4e85b77c54d8bd67f4e2dcadd0979",
+        "archive": "blobs/000002-before.bin",
+        "sha256": "683cd06db73bff035744d56950baeb6c14f1fcd4c6781ee59a1d26572d81fa00"
+      },
+      "after": {
+        "mode": "100644",
+        "blob": "48ce935481c01db6a552c9a7734cc3a7b647cd7c",
+        "archive": "blobs/000002-after.bin",
+        "sha256": "1b09057b602c5c6c28fa32fb69f436ab253d539523a0177f62081df7ca3600a2"
+      }
+    },
+    {
+      "path": "threshold/receipts/d4b-cycle-02-pet-type-formatter-import-spacing-d7cd0f94e73b.json",
+      "before": null,
+      "after": {
+        "mode": "100644",
+        "blob": "e9acead11be71cbb846d1fc942d45c992d098367",
+        "archive": "blobs/000003-after.bin",
+        "sha256": "1d450346fca1b7ae1167f4b94b7f41828ac484a52116303fb0c1a2c4aa4f5f79"
+      }
+    }
+  ]
+}
