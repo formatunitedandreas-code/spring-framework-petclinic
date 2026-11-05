@@ -7,10 +7,13 @@
  *
  *      http://www.apache.org/licenses/LICENSE-2.0
  *
- * Unless required by applicable law or agreed to in writing, software
+ * Unless required by applicable law or agreed to in
+ * writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
+ * express or implied.
+ * See the License for the specific language
+ * governing permissions and
  * limitations under the License.
  */
 package org.springframework.samples.petclinic.repository.jpa;
@@ -36,6 +39,18 @@ import org.springframework.stereotype.Repository;
 @Repository
 public class JpaPetRepositoryImpl implements PetRepository {
 
+    private static final String FIND_PET_TYPES_SQL = "SELECT ptype FROM PetType ptype ORDER BY "
+        + "ptype.name";
+
+    private static final String FIND_BY_ID_SQL = """
+            SELECT DISTINCT pet
+            FROM Pet pet
+            LEFT JOIN FETCH pet.owner
+            LEFT JOIN FETCH pet.type
+            LEFT JOIN FETCH pet.visits
+            WHERE pet.id = :id
+            """;
+
     private final EntityManager em;
 
     public JpaPetRepositoryImpl(EntityManager em) {
@@ -43,23 +58,26 @@ public class JpaPetRepositoryImpl implements PetRepository {
     }
 
     @Override
-    @SuppressWarnings("unchecked")
     public List<PetType> findPetTypes() {
-        return this.em.createQuery("SELECT ptype FROM PetType ptype ORDER BY ptype.name").getResultList();
+        return this.em.createQuery(
+            FIND_PET_TYPES_SQL, PetType.class)
+            .getResultList();
     }
 
     @Override
     public Pet findById(int id) {
-        return this.em.find(Pet.class, id);
+        return this.em.createQuery(FIND_BY_ID_SQL, Pet.class)
+            .setParameter("id", id)
+            .getSingleResult();
     }
 
     @Override
     public void save(Pet pet) {
         if (pet.getId() == null) {
             this.em.persist(pet);
-        } else {
-            this.em.merge(pet);
+            return;
         }
+        this.em.merge(pet);
     }
 
 }

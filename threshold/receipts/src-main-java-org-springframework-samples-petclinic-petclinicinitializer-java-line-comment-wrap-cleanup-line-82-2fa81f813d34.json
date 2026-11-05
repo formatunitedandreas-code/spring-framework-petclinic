@@ -1,0 +1,50 @@
+{
+    "schemaVersion":  "threshold.petclinic.slice-receipt.v0.2",
+    "candidateId":  "src-main-java-org-springframework-samples-petclinic-petclinicinitializer-java-line-comment-wrap-cleanup-line-82",
+    "leaseName":  "owned-autonomous-refactor-branch-wave-v0_automation",
+    "branch":  "threshold-governed-refactor-demo-151",
+    "candidateClass":  "line_comment_wrap_cleanup",
+    "leaseStartHead":  "d3de2a2ac4aae75d3868ee0462cdbfcb50d9bf1f",
+    "baseHead":  "7735b6b3207ed0dff8f92020a74f5e2ff5a1d99e",
+    "commitHash":  "2fa81f813d3482b794e3a066c6ae1d459b802038",
+    "receiptMaterialization":  "post-commit",
+    "perCommitValidationLogAvailable":  true,
+    "branchFinalValidationPassed":  false,
+    "changedFiles":  [
+                         {
+                             "path":  "src/main/java/org/springframework/samples/petclinic/PetclinicInitializer.java",
+                             "beforeSha256":  "ffffe49d932456f81cafc879a1acf00a5709b190c4f749ff5f1091fe2d2e27e3",
+                             "afterSha256":  "1f0a1362da7dcb5368f3d243296f64d743eafd0339f16fc6b119f1c83ba738c6"
+                         }
+                     ],
+    "diffSummary":  "Refactor PetClinic Wrap one long line comment without changing source beh",
+    "diffStat":  {
+                     "filesChanged":  1,
+                     "insertions":  2,
+                     "deletions":  1
+                 },
+    "validation":  {
+                       "diffCheck":  "passed",
+                       "command":  ".\\mvnw.cmd test",
+                       "result":  "BUILD SUCCESS",
+                       "testsRun":  75,
+                       "failures":  0,
+                       "errors":  0,
+                       "skipped":  0
+                   },
+    "nonClaims":  [
+                      "no push in candidate slice",
+                      "no PR update in candidate slice",
+                      "no upstream interaction",
+                      "no pom.xml change",
+                      "no dependency change",
+                      "no src/test change",
+                      "no merge",
+                      "no release",
+                      "no deploy",
+                      "no public readiness claim",
+                      "no public correctness claim",
+                      "no public security claim",
+                      "no public compliance claim"
+                  ]
+}

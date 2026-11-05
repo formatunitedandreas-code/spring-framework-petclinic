@@ -1,0 +1,50 @@
+{
+    "schemaVersion":  "threshold.petclinic.slice-receipt.v0.2",
+    "candidateId":  "petclinic-jdbc-visit-attach-pet-list-helper",
+    "leaseName":  "petclinic-threshold-governed-refactor-lease-v1",
+    "branch":  "threshold-governed-refactor-demo-4",
+    "candidateClass":  "repository_readability_cleanup",
+    "leaseStartHead":  "4e4c7eba92c80d35e8244f8526828680f0a25922",
+    "baseHead":  "f4fee1c9e830d23167127375cf4d4ac46bb9342c",
+    "commitHash":  "940d8d19b37a1fb6f74c4612bb066a566751881b",
+    "receiptMaterialization":  "prospective",
+    "perCommitValidationLogAvailable":  true,
+    "branchFinalValidationPassed":  true,
+    "changedFiles":  [
+                         {
+                             "path":  "src/main/java/org/springframework/samples/petclinic/repository/jdbc/JdbcVisitRepositoryImpl.java",
+                             "beforeSha256":  "b1a90e325edc4ddc6c293ef7d4eb4c649323a4c4ef7056f7823aa601f3aef9a4",
+                             "afterSha256":  "d07c6c5f422e8830fbf26d13415c0b06b1d190527b744e961bdb351827813489"
+                         }
+                     ],
+    "diffSummary":  "Extract visit pet attachment loop helper",
+    "diffStat":  {
+                     "filesChanged":  1,
+                     "insertions":  7,
+                     "deletions":  3
+                 },
+    "validation":  {
+                       "diffCheck":  "passed",
+                       "command":  "powershell -ExecutionPolicy Bypass -File threshold\\scripts\\validate-slice.ps1",
+                       "result":  "BUILD SUCCESS; Tests run: 75, Failures: 0, Errors: 0, Skipped: 0",
+                       "testsRun":  75,
+                       "failures":  0,
+                       "errors":  0,
+                       "skipped":  0
+                   },
+    "nonClaims":  [
+                      "no push in candidate slice",
+                      "no PR update in candidate slice",
+                      "no upstream interaction",
+                      "no pom.xml change",
+                      "no dependency change",
+                      "no src/test change",
+                      "no merge",
+                      "no release",
+                      "no deploy",
+                      "no public readiness claim",
+                      "no public correctness claim",
+                      "no public security claim",
+                      "no public compliance claim"
+                  ]
+}

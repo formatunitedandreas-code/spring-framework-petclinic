@@ -1,0 +1,60 @@
+{
+    "schemaVersion":  "threshold.petclinic.slice-receipt.v0.2",
+    "candidateId":  "src-main-java-org-springframework-samples-petclinic-model-owner-java-model-readability-cleanup-tostring",
+    "leaseName":  "owned-autonomous-refactor-branch-wave-v0_automation",
+    "branch":  "threshold-governed-refactor-demo-113",
+    "candidateClass":  "model_readability_cleanup",
+    "leaseStartHead":  "d039ca6fe980313d93c5945de2729c015e399d48",
+    "baseHead":  "cdeaabd3af9b97205ae4305a3db6c38bcba7a575",
+    "commitHash":  "1234132549a442f922f31a74d2ab79b1bc9569b4",
+    "receiptMaterialization":  "post-commit",
+    "perCommitValidationLogAvailable":  true,
+    "branchFinalValidationPassed":  false,
+    "changedFiles":  [
+                         {
+                             "path":  "src/main/java/org/springframework/samples/petclinic/model/Owner.java",
+                             "beforeSha256":  "4523d65271f1207fe6f52915e9a42c161ee7fb1a8fe20c2c6825e2599acd071b",
+                             "afterSha256":  "a2a90b4ff968a94a8f28cb773eafa55c5fb337f3e756361b78be2bea37e7f367"
+                         },
+                         {
+                             "path":  "threshold/lease-state/current-run.json",
+                             "beforeSha256":  "98046e961debe6ab218cabbb2b0a206435abad1a010c18cd0e550e2c1e12865c",
+                             "afterSha256":  "85dfe8892318022848b11584c194dc11f7e41bcb750b69c7acee81a3ed4efb7d"
+                         },
+                         {
+                             "path":  "threshold/leases/current.yaml",
+                             "beforeSha256":  "6b9967b9ca979e534f8adcb2e2b9c38aeed9bc0a52662da2de26aebc472cbdbb",
+                             "afterSha256":  "2f83986351181edb3bd244344b1b78feaa219c1df9e0947dc5f6c0b3b1173df6"
+                         }
+                     ],
+    "diffSummary":  "Refactor PetClinic owner toString helper extraction",
+    "diffStat":  {
+                     "filesChanged":  3,
+                     "insertions":  21,
+                     "deletions":  23
+                 },
+    "validation":  {
+                       "diffCheck":  "passed",
+                       "command":  ".\\mvnw.cmd test",
+                       "result":  "BUILD SUCCESS",
+                       "testsRun":  75,
+                       "failures":  0,
+                       "errors":  0,
+                       "skipped":  0
+                   },
+    "nonClaims":  [
+                      "no push in candidate slice",
+                      "no PR update in candidate slice",
+                      "no upstream interaction",
+                      "no pom.xml change",
+                      "no dependency change",
+                      "no src/test change",
+                      "no merge",
+                      "no release",
+                      "no deploy",
+                      "no public readiness claim",
+                      "no public correctness claim",
+                      "no public security claim",
+                      "no public compliance claim"
+                  ]
+}

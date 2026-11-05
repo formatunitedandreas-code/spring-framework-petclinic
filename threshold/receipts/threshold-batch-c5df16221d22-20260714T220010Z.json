@@ -1,0 +1,68 @@
+{
+  "schemaVersion": "threshold.petclinic.batch-receipt.v0.1",
+  "batchId": "threshold-batch-c5df16221d22-20260714T220010Z",
+  "leaseId": "owned-autonomous-refactor-branch-wave-v0_9_renewed_budget",
+  "branch": "threshold-governed-refactor-demo-9",
+  "baseHead": "c5df16221d22be9ae8cb9f78ec903c2f246bd776",
+  "sourceCommit": "6a6763a8423bdbce7c6b924c648c20cab54f4078",
+  "candidateClass": "comment_wrap_cleanup",
+  "candidateCount": 3,
+  "changedFiles": [
+    "src/main/java/org/springframework/samples/petclinic/repository/OwnerRepository.java",
+    "src/main/java/org/springframework/samples/petclinic/repository/PetRepository.java",
+    "src/main/java/org/springframework/samples/petclinic/repository/VetRepository.java"
+  ],
+  "changedLineCount": 9,
+  "candidates": [
+    {
+      "candidateId": "src-main-java-org-springframework-samples-petclinic-repository-ownerrepository-java-comment-wrap-cleanup-line-26",
+      "candidateClass": "comment_wrap_cleanup",
+      "file": "src/main/java/org/springframework/samples/petclinic/repository/OwnerRepository.java",
+      "member": "line-26",
+      "beforeSha256": "B99ADF74919706D08554055E5DD01ED15B8778E2469C16F821A84EFF1C5F88B3",
+      "afterSha256": "2DABCF2E0A7CC448361E4201F42337CCDD64DCF23105FBFE23C331160560C1AA",
+      "expectedDiffSummary": "Wrap long repository Javadoc URL path without changing code behavior.",
+      "gateApproved": true,
+      "executionMode": "batched_auto_patchable"
+    },
+    {
+      "candidateId": "src-main-java-org-springframework-samples-petclinic-repository-petrepository-java-comment-wrap-cleanup-line-27",
+      "candidateClass": "comment_wrap_cleanup",
+      "file": "src/main/java/org/springframework/samples/petclinic/repository/PetRepository.java",
+      "member": "line-27",
+      "beforeSha256": "B33DDF6EB298C309CB9F80E773B46F282D5665C388CE8B89B3265CF9FC629205",
+      "afterSha256": "345A75630D6AA36BF4F39F61050703C41314195E9D627522AAD6194495727794",
+      "expectedDiffSummary": "Wrap long repository Javadoc URL path without changing code behavior.",
+      "gateApproved": true,
+      "executionMode": "batched_auto_patchable"
+    },
+    {
+      "candidateId": "src-main-java-org-springframework-samples-petclinic-repository-vetrepository-java-comment-wrap-cleanup-line-25",
+      "candidateClass": "comment_wrap_cleanup",
+      "file": "src/main/java/org/springframework/samples/petclinic/repository/VetRepository.java",
+      "member": "line-25",
+      "beforeSha256": "90E9046A4B1395AB3561996AEDF471EBC9E210B48D81C1C2F39141B9AA9EF2C3",
+      "afterSha256": "BB38214DCDFA5B1E3C4FF4F34B54351602061DD3CAFB822F131943DE16C87997",
+      "expectedDiffSummary": "Wrap long repository Javadoc URL path without changing code behavior.",
+      "gateApproved": true,
+      "executionMode": "batched_auto_patchable"
+    }
+  ],
+  "validation": {
+    "discoveryCanary": "passed",
+    "diffCheck": "passed",
+    "command": ".\\mvnw.cmd test",
+    "result": "BUILD SUCCESS",
+    "testsRun": 75,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  "nonClaims": [
+    "batch receipt preserves per-candidate evidence but is not an external review claim",
+    "no upstream interaction in batch slice",
+    "no PR update in batch slice",
+    "no merge, release, or deploy in batch slice",
+    "no public readiness, correctness, security, or compliance claim"
+  ]
+}

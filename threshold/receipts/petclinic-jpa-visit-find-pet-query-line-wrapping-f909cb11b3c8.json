@@ -1,0 +1,50 @@
+{
+    "schemaVersion":  "threshold.petclinic.slice-receipt.v0.2",
+    "candidateId":  "petclinic-jpa-visit-find-pet-query-line-wrapping",
+    "leaseName":  "petclinic-threshold-governed-refactor-lease-v1",
+    "branch":  "threshold-governed-refactor-demo-4",
+    "candidateClass":  "repository_readability_cleanup",
+    "leaseStartHead":  "4e4c7eba92c80d35e8244f8526828680f0a25922",
+    "baseHead":  "fc94966e8695441a7d9fd5b5ccfe9d5d3595e514",
+    "commitHash":  "f909cb11b3c8171ea804e60e14cc8f7b093f9335",
+    "receiptMaterialization":  "prospective",
+    "perCommitValidationLogAvailable":  true,
+    "branchFinalValidationPassed":  true,
+    "changedFiles":  [
+                         {
+                             "path":  "src/main/java/org/springframework/samples/petclinic/repository/jpa/JpaVisitRepositoryImpl.java",
+                             "beforeSha256":  "76db589b529c581d4b79a5ce2af0c3182aed3e62374203b9c2bb72f3aa96f91a",
+                             "afterSha256":  "21775c237052dae4dfd2ff160176ff925243968f9ea0117bdff06bad7b468ef8"
+                         }
+                     ],
+    "diffSummary":  "Wrap long createQuery invocation in findByPetId without changing JPQL text",
+    "diffStat":  {
+                     "filesChanged":  1,
+                     "insertions":  2,
+                     "deletions":  1
+                 },
+    "validation":  {
+                       "diffCheck":  "passed",
+                       "command":  ".\\\\mvnw.cmd test",
+                       "result":  "Threshold slice validation passed; BUILD SUCCESS; Tests run: 75; Failures: 0; Errors: 0; Skipped: 0",
+                       "testsRun":  75,
+                       "failures":  0,
+                       "errors":  0,
+                       "skipped":  0
+                   },
+    "nonClaims":  [
+                      "no push in candidate slice",
+                      "no PR update in candidate slice",
+                      "no upstream interaction",
+                      "no pom.xml change",
+                      "no dependency change",
+                      "no src/test change",
+                      "no merge",
+                      "no release",
+                      "no deploy",
+                      "no public readiness claim",
+                      "no public correctness claim",
+                      "no public security claim",
+                      "no public compliance claim"
+                  ]
+}

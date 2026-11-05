@@ -9,7 +9,8 @@
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
+ * express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
@@ -24,7 +25,9 @@ import org.springframework.validation.Validator;
 /**
  * <code>Validator</code> for <code>Pet</code> forms.
  * <p>
- * We're not using Bean Validation annotations here because it is easier to define such validation rule in Java.
+ * We're not using Bean Validation annotations here because it is
+ * easier to define such
+ * validation rule in Java.
  * </p>
  *
  * @author Ken Krebs
@@ -34,24 +37,41 @@ import org.springframework.validation.Validator;
 public class PetValidator implements Validator {
 
     private static final String REQUIRED = "required";
+    private static final String FIELD_NAME = "name";
+    private static final String FIELD_TYPE = "type";
+    private static final String FIELD_BIRTH_DATE = "birthDate";
 
     @Override
     public void validate(Object obj, Errors errors) {
         Pet pet = (Pet) obj;
-        // name validation
+        validateName(errors, pet);
+        validateRequiredFieldsForNewPet(errors, pet);
+    }
+
+    private void validateName(Errors errors, Pet pet) {
         if (!StringUtils.hasLength(pet.getName())) {
-            errors.rejectValue("name", REQUIRED, REQUIRED);
+            rejectRequiredField(errors, FIELD_NAME);
         }
+    }
 
-        // type validation
+    private void validateRequiredFieldsForNewPet(
+        Errors errors,
+        Pet pet
+    ) {
         if (pet.isNew() && pet.getType() == null) {
-            errors.rejectValue("type", REQUIRED, REQUIRED);
+            rejectRequiredField(errors, FIELD_TYPE);
         }
 
-        // birth date validation
         if (pet.getBirthDate() == null) {
-            errors.rejectValue("birthDate", REQUIRED, REQUIRED);
+            rejectRequiredField(errors, FIELD_BIRTH_DATE);
         }
+    }
+
+    private void rejectRequiredField(
+        Errors errors,
+        String fieldName
+    ) {
+        errors.rejectValue(fieldName, REQUIRED, REQUIRED);
     }
 
     /**
@@ -61,6 +81,4 @@ public class PetValidator implements Validator {
     public boolean supports(Class<?> clazz) {
         return Pet.class.isAssignableFrom(clazz);
     }
-
-
 }

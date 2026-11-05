@@ -9,18 +9,21 @@
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
+ * express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
 package org.springframework.samples.petclinic.web;
 
-import java.util.Collection;
+import java.util.List;
 import java.util.Map;
 
 import jakarta.validation.Valid;
 
 import org.springframework.samples.petclinic.model.Owner;
+import org.springframework.samples.petclinic.owner.api.OwnerListItem;
+import org.springframework.samples.petclinic.owner.application.SearchOwners;
 import org.springframework.samples.petclinic.service.ClinicService;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -38,16 +41,27 @@ import org.springframework.web.servlet.ModelAndView;
 @Controller
 public class OwnerController {
 
-    private static final String MODEL_ATTRIBUTE_OWNER = "owner";
+    private static final String OWNER_ID = "ownerId";
+
     private static final String VIEWS_OWNER_CREATE_OR_UPDATE_FORM = "owners/createOrUpdateOwnerForm";
     private static final String VIEWS_OWNER_FIND_OWNERS = "owners/findOwners";
+    private static final String VIEWS_OWNER_LIST = "owners/ownersList";
+    private static final String VIEWS_OWNER_DETAILS = "owners/ownerDetails";
+    private static final String MODEL_ATTRIBUTE_OWNER = "owner";
     private static final String MODEL_ATTRIBUTE_SELECTIONS = "selections";
-    private static final String VIEW_OWNERS_LIST = "owners/ownersList";
-    private static final String VIEW_REDIRECT_OWNER_DETAILS = "redirect:/owners/{ownerId}";
+    private static final String OWNER_EDIT_PATH = "/owners/{ownerId}/edit";
+    private static final String OWNER_NEW_PATH = "/owners/new";
+    private static final String REDIRECT_TO_OWNERS = "redirect:/owners/";
+    private static final String REDIRECT_TO_OWNER = "redirect:/owners/{ownerId}";
     private final ClinicService clinicService;
+    private final SearchOwners searchOwners;
 
-    public OwnerController(ClinicService clinicService) {
+    public OwnerController(
+        ClinicService clinicService,
+        SearchOwners searchOwners
+    ) {
         this.clinicService = clinicService;
+        this.searchOwners = searchOwners;
     }
 
     @InitBinder
@@ -55,20 +69,23 @@ public class OwnerController {
         dataBinder.setDisallowedFields("id");
     }
 
-    @GetMapping(value = "/owners/new")
+    @GetMapping(value = OWNER_NEW_PATH)
     public String initCreationForm(Map<String, Object> model) {
         initializeOwnerModel(model);
         return VIEWS_OWNER_CREATE_OR_UPDATE_FORM;
     }
 
-    @PostMapping(value = "/owners/new")
-    public String processCreationForm(@Valid Owner owner, BindingResult result) {
+    @PostMapping(value = OWNER_NEW_PATH)
+    public String processCreationForm(
+        @Valid Owner owner,
+        BindingResult result
+    ) {
         if (result.hasErrors()) {
             return VIEWS_OWNER_CREATE_OR_UPDATE_FORM;
         }
 
         this.clinicService.saveOwner(owner);
-        return "redirect:/owners/" + owner.getId();
+        return buildOwnerRedirect(owner.getId());
     }
 
     @GetMapping(value = "/owners/find")
@@ -82,15 +99,18 @@ public class OwnerController {
     }
 
     @GetMapping(value = "/owners")
-    public String processFindForm(Owner owner, BindingResult result, Map<String, Object> model) {
+    public String processFindForm(
+        Owner owner,
+        BindingResult result,
+        Map<String,
+        Object> model
+    ) {
+        normalizeLastName(owner);
 
-        // allow parameterless GET request for /owners to return all records
-        if (owner.getLastName() == null) {
-            owner.setLastName(""); // empty string signifies broadest possible search
-        }
-
+        // allow parameterless GET request for /owners to
+        // return all records
         // find owners by last name
-        Collection<Owner> results = this.clinicService.findOwnerByLastName(owner.getLastName());
+        List<OwnerListItem> results = this.searchOwners.searchByLastName(owner.getLastName());
         if (results.isEmpty()) {
             return handleNoOwners(result);
         }
@@ -100,37 +120,61 @@ public class OwnerController {
         return handleMultipleOwners(model, results);
     }
 
+    private void normalizeLastName(Owner owner) {
+        // Empty string signifies broadest possible search.
+        if (owner.getLastName() == null) {
+            owner.setLastName("");
+        }
+    }
+
     private String handleNoOwners(BindingResult result) {
         result.rejectValue("lastName", "notFound", "not found");
         return VIEWS_OWNER_FIND_OWNERS;
     }
 
-    private String handleSingleOwner(Collection<Owner> results) {
-        Owner foundOwner = results.iterator().next();
-        return "redirect:/owners/" + foundOwner.getId();
+    private String handleSingleOwner(List<OwnerListItem> results) {
+        return buildOwnerRedirect(results.get(0).id());
     }
 
-    private String handleMultipleOwners(Map<String, Object> model, Collection<Owner> results) {
+    private String buildOwnerRedirect(Integer ownerId) {
+        return REDIRECT_TO_OWNERS + ownerId;
+    }
+
+    private String handleMultipleOwners(
+        Map<String,
+        Object> model,
+        List<OwnerListItem> results
+    ) {
         model.put(MODEL_ATTRIBUTE_SELECTIONS, results);
-        return VIEW_OWNERS_LIST;
+        return VIEWS_OWNER_LIST;
     }
 
-    @GetMapping(value = "/owners/{ownerId}/edit")
-    public String initUpdateOwnerForm(@PathVariable("ownerId") int ownerId, Model model) {
-        Owner owner = this.clinicService.findOwnerById(ownerId);
-        model.addAttribute(owner);
+    @GetMapping(value = OWNER_EDIT_PATH)
+    public String initUpdateOwnerForm(
+        @PathVariable(OWNER_ID) int ownerId,
+        Model model
+    ) {
+        addOwnerToModel(model, ownerId);
         return VIEWS_OWNER_CREATE_OR_UPDATE_FORM;
     }
 
-    @PostMapping(value = "/owners/{ownerId}/edit")
-    public String processUpdateOwnerForm(@Valid Owner owner, BindingResult result, @PathVariable("ownerId") int ownerId) {
+    private void addOwnerToModel(Model model, int ownerId) {
+        model.addAttribute(MODEL_ATTRIBUTE_OWNER, this.clinicService.findOwnerById(ownerId));
+    }
+
+    @PostMapping(value = OWNER_EDIT_PATH)
+    public String processUpdateOwnerForm(
+        @Valid Owner owner,
+        BindingResult result,
+        @PathVariable(OWNER_ID) int ownerId
+    ) {
         if (result.hasErrors()) {
             return VIEWS_OWNER_CREATE_OR_UPDATE_FORM;
         }
 
         owner.setId(ownerId);
         this.clinicService.saveOwner(owner);
-        return VIEW_REDIRECT_OWNER_DETAILS;
+        return REDIRECT_TO_OWNER;
     }
 
     /**
@@ -140,9 +184,14 @@ public class OwnerController {
      * @return a ModelMap with the model attributes for the view
      */
     @GetMapping("/owners/{ownerId}")
-    public ModelAndView showOwner(@PathVariable("ownerId") int ownerId) {
-        Owner owner = this.clinicService.findOwnerById(ownerId);
-        return new ModelAndView("owners/ownerDetails").addObject(owner);
+    public ModelAndView showOwner(@PathVariable(OWNER_ID) int ownerId) {
+        return buildOwnerDetailsView(ownerId);
+    }
+
+    private ModelAndView buildOwnerDetailsView(int ownerId) {
+        ModelAndView modelAndView = new ModelAndView(VIEWS_OWNER_DETAILS);
+        modelAndView.addObject(this.clinicService.findOwnerById(ownerId));
+        return modelAndView;
     }
 
 }

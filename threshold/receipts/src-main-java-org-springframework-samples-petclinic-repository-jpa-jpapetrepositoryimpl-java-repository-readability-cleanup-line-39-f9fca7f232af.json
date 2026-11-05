@@ -1,0 +1,50 @@
+{
+    "schemaVersion":  "threshold.petclinic.slice-receipt.v0.2",
+    "candidateId":  "src-main-java-org-springframework-samples-petclinic-repository-jpa-jpapetrepositoryimpl-java-repository-readability-cleanup-line-39",
+    "leaseName":  "owned-autonomous-refactor-branch-wave-v0_automation",
+    "branch":  "threshold-governed-refactor-demo-31",
+    "candidateClass":  "repository_readability_cleanup",
+    "leaseStartHead":  "abeb4cbe2fd2d92f1ea83e9d4afce42f7d57157c",
+    "baseHead":  "b9080755793abed94ef93581586ba15cfb7c1d1d",
+    "commitHash":  "f9fca7f232af6cca6d145bacb6bcf04bbf496fc7",
+    "receiptMaterialization":  "post-commit",
+    "perCommitValidationLogAvailable":  true,
+    "branchFinalValidationPassed":  false,
+    "changedFiles":  [
+                         {
+                             "path":  "src/main/java/org/springframework/samples/petclinic/repository/jpa/JpaPetRepositoryImpl.java",
+                             "beforeSha256":  "2ef523e425f7765b1c7d2789bf1fd0048839610057b61834cf0b67085e37f2ad",
+                             "afterSha256":  "a5c3136c6ff409bcac77b2839efe7a5e821c02640af1b75080a014c6c306e039"
+                         }
+                     ],
+    "diffSummary":  "Refactor PetClinic Normalize a split repository string constant into a ca",
+    "diffStat":  {
+                     "filesChanged":  1,
+                     "insertions":  2,
+                     "deletions":  2
+                 },
+    "validation":  {
+                       "diffCheck":  "passed",
+                       "command":  ".\\mvnw.cmd test",
+                       "result":  "BUILD SUCCESS",
+                       "testsRun":  75,
+                       "failures":  0,
+                       "errors":  0,
+                       "skipped":  0
+                   },
+    "nonClaims":  [
+                      "no push in candidate slice",
+                      "no PR update in candidate slice",
+                      "no upstream interaction",
+                      "no pom.xml change",
+                      "no dependency change",
+                      "no src/test change",
+                      "no merge",
+                      "no release",
+                      "no deploy",
+                      "no public readiness claim",
+                      "no public correctness claim",
+                      "no public security claim",
+                      "no public compliance claim"
+                  ]
+}

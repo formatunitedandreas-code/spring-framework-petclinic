@@ -7,10 +7,13 @@
  *
  *      http://www.apache.org/licenses/LICENSE-2.0
  *
- * Unless required by applicable law or agreed to in writing, software
+ * Unless required by applicable law or agreed to in
+ * writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
+ * express or implied.
+ * See the License for the specific language
+ * governing permissions and
  * limitations under the License.
  */
 package org.springframework.samples.petclinic.repository.jdbc;
@@ -34,7 +37,8 @@ import java.util.Collection;
 import java.util.List;
 
 /**
- * A simple JDBC-based implementation of the {@link OwnerRepository} interface.
+ * A simple JDBC-based implementation of the
+ * {@link OwnerRepository} interface.
  *
  * @author Ken Krebs
  * @author Juergen Hoeller
@@ -47,15 +51,47 @@ import java.util.List;
 @Repository
 public class JdbcOwnerRepositoryImpl implements OwnerRepository {
 
+    private static final String ID = "id";
+
+
+    private static final String GET_PET_TYPES_SQL = "SELECT id, name FROM types ORDER BY "
+        + "name";
+
+    private static final String SAVE_SQL = """
+                    UPDATE owners
+                    SET first_name=:firstName, last_name=:lastName, address=:address, city=:city, telephone=:telephone
+                    WHERE id=:id
+                    """;
+
+    private static final String LOAD_PETS_AND_VISITS_FOR_OWNER_SQL = """
+            SELECT pets.id, name, birth_date, type_id, owner_id, visits.id as visit_id, visit_date, description, pet_id
+            FROM pets LEFT OUTER JOIN visits ON pets.id = pet_id
+            WHERE owner_id=:id ORDER BY pet_id
+            """;
+
+    private static final String FIND_BY_LAST_NAME_SQL = """
+                SELECT id, first_name, last_name, address, city, telephone
+                FROM owners
+                WHERE last_name like :lastName
+                """;
+
+    private static final String FIND_BY_ID_SQL = """
+                SELECT id, first_name, last_name, address, city, telephone
+                FROM owners WHERE id = :id
+                """;
+
     private final JdbcClient jdbcClient;
 
     private final SimpleJdbcInsert insertOwner;
 
-    public JdbcOwnerRepositoryImpl(DataSource dataSource, JdbcClient jdbcClient) {
+    public JdbcOwnerRepositoryImpl(
+        DataSource dataSource,
+        JdbcClient jdbcClient
+    ) {
 
         this.insertOwner = new SimpleJdbcInsert(dataSource)
             .withTableName("owners")
-            .usingGeneratedKeyColumns("id");
+            .usingGeneratedKeyColumns(ID);
 
         this.jdbcClient = jdbcClient;
 
@@ -63,17 +99,19 @@ public class JdbcOwnerRepositoryImpl implements OwnerRepository {
 
 
     /**
-     * Loads {@link Owner Owners} from the data store by last name, returning all owners whose last name <i>starts</i> with
-     * the given name; also loads the {@link Pet Pets} and {@link Visit Visits} for the corresponding owners, if not
+     * Loads {@link Owner Owners} from the data store by last
+     * name, returning all
+     * owners whose last
+     * name <i>starts</i>
+     * with
+     * the given name; also loads the {@link Pet Pets} and
+     * {@link Visit Visits} for the
+     * corresponding owners, if not
      * already loaded.
      */
     @Override
     public Collection<Owner> findByLastName(String lastName) {
-        List<Owner> owners = this.jdbcClient.sql("""
-                SELECT id, first_name, last_name, address, city, telephone
-                FROM owners
-                WHERE last_name like :lastName
-                """)
+        List<Owner> owners = this.jdbcClient.sql(FIND_BY_LAST_NAME_SQL)
             .param("lastName", lastName + "%")
             .query(BeanPropertyRowMapper.newInstance(Owner.class))
             .list();
@@ -82,69 +120,74 @@ public class JdbcOwnerRepositoryImpl implements OwnerRepository {
     }
 
     /**
-     * Loads the {@link Owner} with the supplied <code>id</code>; also loads the {@link Pet Pets} and {@link Visit Visits}
+     * Loads the {@link Owner} with the supplied
+     * <code>id</code>; also loads the
+     * {@link Pet Pets} and
+     * {@link Visit Visits}
      * for the corresponding owner, if not already loaded.
      */
     @Override
     public Owner findById(int id) {
-        Owner owner;
         try {
-            owner = this.jdbcClient.sql("""
-                    SELECT id, first_name, last_name, address, city, telephone
-                    FROM owners WHERE id = :id
-                    """)
-                .param("id", id)
+            Owner owner = this.jdbcClient.sql(FIND_BY_ID_SQL)
+                .param(ID, id)
                 .query(BeanPropertyRowMapper.newInstance(Owner.class))
                 .single();
+            loadPetsAndVisits(owner);
+            return owner;
         } catch (EmptyResultDataAccessException ex) {
             throw new ObjectRetrievalFailureException(Owner.class, id);
         }
-        loadPetsAndVisits(owner);
-        return owner;
     }
 
     public void loadPetsAndVisits(final Owner owner) {
-        final List<JdbcPet> pets = this.jdbcClient.sql("""
-            SELECT pets.id, name, birth_date, type_id, owner_id, visits.id as visit_id, visit_date, description, pet_id
-            FROM pets LEFT OUTER JOIN visits ON pets.id = pet_id
-            WHERE owner_id=:id ORDER BY pet_id
-            """)
-            .param("id", owner.getId())
-            .query(new JdbcPetVisitExtractor());
         Collection<PetType> petTypes = getPetTypes();
-        for (JdbcPet pet : pets) {
-            pet.setType(EntityUtils.getById(petTypes, PetType.class, pet.getTypeId()));
-            owner.addPet(pet);
+        for (JdbcPet pet : loadPetsAndVisitsForOwner(owner.getId())) {
+            mapPetToOwner(owner, petTypes, pet);
         }
+    }
+
+    private List<JdbcPet> loadPetsAndVisitsForOwner(int ownerId) {
+        return this.jdbcClient.sql(LOAD_PETS_AND_VISITS_FOR_OWNER_SQL)
+            .param(ID, ownerId)
+            .query(new JdbcPetVisitExtractor());
+    }
+
+    private void mapPetToOwner(
+        Owner owner,
+        Collection<PetType> petTypes,
+        JdbcPet pet
+    ) {
+        pet.setType(EntityUtils.getById(petTypes, PetType.class, pet.getTypeId()));
+        owner.addPet(pet);
     }
 
     @Override
     public void save(Owner owner) {
         BeanPropertySqlParameterSource parameterSource = new BeanPropertySqlParameterSource(owner);
         if (owner.isNew()) {
-            Number newKey = this.insertOwner.executeAndReturnKey(parameterSource);
-            owner.setId(newKey.intValue());
-        } else {
-            this.jdbcClient.sql("""
-                    UPDATE owners
-                    SET first_name=:firstName, last_name=:lastName, address=:address, city=:city, telephone=:telephone
-                    WHERE id=:id
-                    """)
+            owner.setId(this.insertOwner.executeAndReturnKey(parameterSource).intValue());
+            return;
+        }
+        this.jdbcClient.sql(SAVE_SQL)
                 .paramSource(parameterSource)
                 .update();
-        }
     }
 
     public Collection<PetType> getPetTypes() {
-        return this.jdbcClient.sql("SELECT id, name FROM types ORDER BY name")
+        return this.jdbcClient.sql(GET_PET_TYPES_SQL)
             .query(BeanPropertyRowMapper.newInstance(PetType.class))
             .list();
     }
 
     /**
-     * Loads the {@link Pet} and {@link Visit} data for the supplied {@link List} of {@link Owner Owners}.
+     * Loads the {@link Pet} and {@link Visit} data for the
+     * supplied {@link List} of
+     * {@link Owner Owners}.
      *
-     * @param owners the list of owners for whom the pet and visit data should be loaded
+     * @param owners the list of owners for whom the
+     * pet and visit data
+     * should be loaded
      * @see #loadPetsAndVisits(Owner)
      */
     private void loadOwnersPetsAndVisits(List<Owner> owners) {

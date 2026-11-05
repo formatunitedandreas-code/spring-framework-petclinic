@@ -1,0 +1,70 @@
+{
+    "schemaVersion":  "threshold.petclinic.slice-receipt.v0.2",
+    "candidateId":  "threshold-expanded-scope-signature-and-constant-wraps",
+    "leaseName":  "petclinic-threshold-governed-refactor-lease-v12",
+    "branch":  "threshold-governed-refactor-demo-6",
+    "candidateClass":  "threshold_governance_artifact_update",
+    "leaseStartHead":  "6926ec7e2414dc5ebef914956418bc22c44cedc5",
+    "baseHead":  "6926ec7e2414dc5ebef914956418bc22c44cedc5",
+    "commitHash":  "a53fc3f420da680685cfb802c64d1bcae976e073",
+    "receiptMaterialization":  "post-commit",
+    "perCommitValidationLogAvailable":  true,
+    "branchFinalValidationPassed":  false,
+    "changedFiles":  [
+                         {
+                             "path":  "threshold/lease-state/current-run.json",
+                             "beforeSha256":  "91c6881c09558f11bfb76e93184b6737fd6efa088208d6e169ec674a176c8e7e",
+                             "afterSha256":  "6bc9d8ed2a1c1f34f2488fc89083dc415e923199aaff8bc9f92f4b8e502ae6bc"
+                         },
+                         {
+                             "path":  "threshold/leases/current.yaml",
+                             "beforeSha256":  "2787124db8e769e7db0c5cecccdaf1629b3fbc1540ef9386ea97e39a5b4d250f",
+                             "afterSha256":  "46ded12406920216a101672a04db9690ee40083966659a3d465b5e72629bd9c7"
+                         },
+                         {
+                             "path":  "threshold/scripts/discover-candidates.ps1",
+                             "beforeSha256":  "1a903ba9c7010b8e698e91f0d534650120ae1802ae0f416b97c353d06432d229",
+                             "afterSha256":  "e0138f12474735cf1880c4067349661572efcf83c86ff5540cf6ea353ef79e86"
+                         },
+                         {
+                             "path":  "threshold/scripts/run-next-slice.ps1",
+                             "beforeSha256":  "9e7bab36bb267179926a25f7903aca0988112d6b8e24f06c5a340720c9ce06ea",
+                             "afterSha256":  "ed09919e87bcda5584e110ff70b50afeb2864a8a1abcc1720adcf5c000a74649"
+                         },
+                         {
+                             "path":  "threshold/scripts/start-lease.ps1",
+                             "beforeSha256":  "d5aec669e920444c5e0c241059bd36b30e1b40357f37354f17383894287844a8",
+                             "afterSha256":  "8cac526258cacf16241410369390a1d1e78081eaa6320c1fed7dae6f79fe2c06"
+                         }
+                     ],
+    "diffSummary":  "Extend Threshold scope for signature and constant wraps",
+    "diffStat":  {
+                     "filesChanged":  5,
+                     "insertions":  67,
+                     "deletions":  22
+                 },
+    "validation":  {
+                       "diffCheck":  "passed",
+                       "command":  ".\\mvnw.cmd test",
+                       "result":  "BUILD SUCCESS",
+                       "testsRun":  75,
+                       "failures":  0,
+                       "errors":  0,
+                       "skipped":  0
+                   },
+    "nonClaims":  [
+                      "no push in candidate slice",
+                      "no PR update in candidate slice",
+                      "no upstream interaction",
+                      "no pom.xml change",
+                      "no dependency change",
+                      "no src/test change",
+                      "no merge",
+                      "no release",
+                      "no deploy",
+                      "no public readiness claim",
+                      "no public correctness claim",
+                      "no public security claim",
+                      "no public compliance claim"
+                  ]
+}

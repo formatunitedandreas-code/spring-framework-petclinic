@@ -1,0 +1,65 @@
+{
+    "schemaVersion":  "threshold.petclinic.slice-receipt.v0.2",
+    "candidateId":  "threshold-expanded-scope-method-spacing-normalization",
+    "leaseName":  "petclinic-threshold-governed-refactor-lease-v10",
+    "branch":  "threshold-governed-refactor-demo-6",
+    "candidateClass":  "threshold_governance_artifact_update",
+    "leaseStartHead":  "75f8473a9c9e6d209a0c561c76b21e363e4b97e7",
+    "baseHead":  "192083beffb89eb6a9fe7e50614079419e0de88f",
+    "commitHash":  "86cdd43f38d7cd6a603d9fe915b98dfe9ee63685",
+    "receiptMaterialization":  "post-commit",
+    "perCommitValidationLogAvailable":  true,
+    "branchFinalValidationPassed":  false,
+    "changedFiles":  [
+                         {
+                             "path":  "threshold/scripts/complete-slice.ps1",
+                             "beforeSha256":  "543f9478d77d68463a53479929a84d9f787893fb00727699c896325e5076e94d",
+                             "afterSha256":  "072ac1b7d334d64d96de59f23590461310b2ad5ca570bd39341c5fa5cf97b8a8"
+                         },
+                         {
+                             "path":  "threshold/scripts/discover-candidates.ps1",
+                             "beforeSha256":  "a8c0f27f78d46dda40af8018a1475a674d5b26fa0e6c72e4645813876133775c",
+                             "afterSha256":  "1a903ba9c7010b8e698e91f0d534650120ae1802ae0f416b97c353d06432d229"
+                         },
+                         {
+                             "path":  "threshold/scripts/run-next-slice.ps1",
+                             "beforeSha256":  "f688f74d73288140b2d52a00579a93c247a134242ff6d9f23fdf46b8682c7f3a",
+                             "afterSha256":  "9e7bab36bb267179926a25f7903aca0988112d6b8e24f06c5a340720c9ce06ea"
+                         },
+                         {
+                             "path":  "threshold/scripts/start-lease.ps1",
+                             "beforeSha256":  "abf8f70ec955dafe77dfc83d5f3c1d655a82b1282d4d29c0821adbe7ed8127ff",
+                             "afterSha256":  "d5aec669e920444c5e0c241059bd36b30e1b40357f37354f17383894287844a8"
+                         }
+                     ],
+    "diffSummary":  "Extend Threshold candidate scope for method spacing",
+    "diffStat":  {
+                     "filesChanged":  4,
+                     "insertions":  98,
+                     "deletions":  5
+                 },
+    "validation":  {
+                       "diffCheck":  "passed",
+                       "command":  ".\\mvnw.cmd test",
+                       "result":  "BUILD SUCCESS",
+                       "testsRun":  75,
+                       "failures":  0,
+                       "errors":  0,
+                       "skipped":  0
+                   },
+    "nonClaims":  [
+                      "no push in candidate slice",
+                      "no PR update in candidate slice",
+                      "no upstream interaction",
+                      "no pom.xml change",
+                      "no dependency change",
+                      "no src/test change",
+                      "no merge",
+                      "no release",
+                      "no deploy",
+                      "no public readiness claim",
+                      "no public correctness claim",
+                      "no public security claim",
+                      "no public compliance claim"
+                  ]
+}

@@ -7,10 +7,13 @@
  *
  *      http://www.apache.org/licenses/LICENSE-2.0
  *
- * Unless required by applicable law or agreed to in writing, software
+ * Unless required by applicable law or agreed to in
+ * writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
+ * express or implied.
+ * See the License for the specific language
+ * governing permissions and
  * limitations under the License.
  */
 package org.springframework.samples.petclinic.repository.jpa;
@@ -18,7 +21,6 @@ package org.springframework.samples.petclinic.repository.jpa;
 import java.util.Collection;
 
 import jakarta.persistence.EntityManager;
-import jakarta.persistence.Query;
 
 import org.springframework.samples.petclinic.model.Owner;
 import org.springframework.samples.petclinic.repository.OwnerRepository;
@@ -36,6 +38,18 @@ import org.springframework.stereotype.Repository;
 @Repository
 public class JpaOwnerRepositoryImpl implements OwnerRepository {
 
+    private static final String FIND_BY_ID_SQL = """
+            SELECT DISTINCT owner
+            FROM Owner owner
+            LEFT JOIN FETCH owner.pets pet
+            LEFT JOIN FETCH pet.type
+            LEFT JOIN FETCH pet.visits
+            WHERE owner.id = :id
+            """;
+
+    private static final String FIND_BY_LAST_NAME_SQL = "SELECT DISTINCT owner FROM Owner owner left join fetch owner.pets "
+            + "WHERE owner.lastName LIKE :lastName";
+
     private final EntityManager em;
 
     public JpaOwnerRepositoryImpl(EntityManager em) {
@@ -43,38 +57,51 @@ public class JpaOwnerRepositoryImpl implements OwnerRepository {
     }
 
     /**
-     * Important: in the current version of this method, we load Owners with all their Pets and Visits while
-     * we do not need Visits at all, and we only need one property from the Pet objects (the 'name' property).
+     * Important: in the current version of this
+     * method, we load Owners
+     * with all their Pets
+     * and Visits while
+     * we do not need Visits at all, and we only need one
+     * property from the
+     * Pet objects (the
+     * 'name' property).
      * There are some ways to improve it such as:
      * - creating a Lightweight class
-     * - Turning on lazy-loading and using the open session in view pattern
+     * - Turning on lazy-loading and using the open
+     * session in view pattern
      */
-    @SuppressWarnings("unchecked")
     public Collection<Owner> findByLastName(String lastName) {
-        // using 'join fetch' because a single query should load both owners and pets
-        // using 'left join fetch' because it might happen that an owner does not have pets yet
-        Query query = this.em.createQuery("SELECT DISTINCT owner FROM Owner owner left join fetch owner.pets WHERE owner.lastName LIKE :lastName");
-        query.setParameter("lastName", lastName + "%");
-        return query.getResultList();
+        // using 'join fetch' because a single query should load
+        // both owners and pets
+        // using 'left join fetch' because it might happen
+        // that an owner does
+        // not have pets yet
+        return this.em.createQuery(
+            FIND_BY_LAST_NAME_SQL, Owner.class)
+            .setParameter("lastName", lastName + "%")
+            .getResultList();
     }
 
     @Override
     public Owner findById(int id) {
-        // using 'join fetch' because a single query should load both owners and pets
-        // using 'left join fetch' because it might happen that an owner does not have pets yet
-        Query query = this.em.createQuery("SELECT owner FROM Owner owner left join fetch owner.pets WHERE owner.id =:id");
-        query.setParameter("id", id);
-        return (Owner) query.getSingleResult();
+        // using 'join fetch' because a single query should load
+        // both owners and pets
+        // using 'left join fetch' because it might happen
+        // that an owner does
+        // not have pets yet
+        return this.em.createQuery(
+            FIND_BY_ID_SQL, Owner.class)
+            .setParameter("id", id)
+            .getSingleResult();
     }
-
 
     @Override
     public void save(Owner owner) {
         if (owner.getId() == null) {
             this.em.persist(owner);
-        } else {
-            this.em.merge(owner);
+            return;
         }
+        this.em.merge(owner);
 
     }
 
