@@ -107,7 +107,8 @@ def changed_paths(repo, base, head):
     return [
         path_name(x.decode("utf-8", errors="strict"))
         for x in git(repo, "diff", "--no-ext-diff", "--no-textconv", "--name-only",
-                     "--no-renames", "-z", base, head).split(b"\0") if x
+                     "--no-renames", "--no-relative", "--ignore-submodules=none",
+                     "-z", base, head).split(b"\0") if x
     ]
 
 
@@ -119,7 +120,9 @@ def source_changes(repo, base, head):
 
 def diff_bytes(repo, base, head):
     return git(repo, "diff", "--binary", "--full-index", "--no-ext-diff",
-               "--no-textconv", "--no-renames", base, head)
+               "--no-textconv", "--no-renames", "--no-relative", "--ignore-submodules=none",
+               "--src-prefix=a/", "--dst-prefix=b/", "--no-color", "--diff-algorithm=myers",
+               "--no-indent-heuristic", base, head)
 
 
 def blob(repo, oid):

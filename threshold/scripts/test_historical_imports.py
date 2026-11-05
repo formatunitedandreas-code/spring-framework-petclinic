@@ -132,7 +132,9 @@ forbiddenActions:
         self.assertTrue(any(c["after"] is None for c in manifest["changes"]))
         self.assertEqual(manifest["originalMergeBase"], self.fork)
         expected_diff = run(self.repo, "diff", "--binary", "--full-index", "--no-ext-diff",
-                            "--no-textconv", "--no-renames", self.fork, self.original)
+                            "--no-textconv", "--no-renames", "--no-relative", "--ignore-submodules=none",
+                            "--src-prefix=a/", "--dst-prefix=b/", "--no-color", "--diff-algorithm=myers",
+                            "--no-indent-heuristic", self.fork, self.original)
         self.assertEqual((self.archive / "original.diff").read_bytes(), expected_diff)
         for change in manifest["changes"]:
             for side in ("before", "after"):

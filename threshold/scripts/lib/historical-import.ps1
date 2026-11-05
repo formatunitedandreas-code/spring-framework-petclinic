@@ -3,7 +3,7 @@ Set-StrictMode -Version Latest
 function Test-ThresholdInertHistoricalImport {
     param([Parameter(Mandatory = $true)][string] $BaseRef)
 
-    $rawPaths = @(& git diff --no-ext-diff --no-textconv --no-renames --name-only -z $BaseRef HEAD) -join "`n"
+    $rawPaths = @(& git diff --no-ext-diff --no-textconv --no-renames --no-relative --ignore-submodules=none --name-only -z $BaseRef HEAD) -join "`n"
     if ($LASTEXITCODE -ne 0) { throw 'Could not inspect the final historical-import delta.' }
     if ($rawPaths -notmatch '(^|\x00)threshold/runs/historical-imports/') { return $false }
 
@@ -17,7 +17,7 @@ function Test-ThresholdInertHistoricalImport {
     $repo = (& git rev-parse --show-toplevel).Trim()
     if ($LASTEXITCODE -ne 0) { throw 'Could not resolve historical-import repository.' }
     $validator = Join-Path (Split-Path $PSScriptRoot -Parent) 'historical_imports.py'
-    $output = @(& $python.Source $validator validate --repository $repo --base $BaseRef --head HEAD 2>&1)
+    $output = @(& $python.Source -B $validator validate --repository $repo --base $BaseRef --head HEAD 2>&1)
     $code = $LASTEXITCODE
     if ($code -eq 3) { return $false }
     if ($code -ne 0) { throw "Invalid historical import: $($output -join ' ')" }
