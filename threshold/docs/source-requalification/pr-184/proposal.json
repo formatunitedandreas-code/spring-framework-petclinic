@@ -1,0 +1,131 @@
+{
+  "schemaVersion": "threshold.finite_source_requalification.proposal.v1",
+  "status": "PROPOSAL_ONLY_NOT_ADMISSION",
+  "repository": "formatunitedandreas-code/spring-framework-petclinic",
+  "originalPullRequest": 184,
+  "originalHead": "a867b4933bfa24fa5cdb02bea328a382ce570298",
+  "historicalAdmission": "HOLD_MISSING_ORIGINAL_QUALIFICATION",
+  "proposalBase": "49c5fcbdb7db5a2bba0b7f23133cff2d60e642d2",
+  "publishedWitness": {
+    "pullRequest": 201,
+    "branch": "codex/pr184-source-witness",
+    "head": "45128d9e3877f8254bc68cb99d212b3eed8d4d8c",
+    "url": "https://github.com/formatunitedandreas-code/spring-framework-petclinic/pull/201",
+    "status": "WITNESS_ONLY_CURRENT_AUTONOMOUS_GOVERNANCE_HOLD"
+  },
+  "files": [
+    {
+      "path": "src/main/java/org/springframework/samples/petclinic/repository/jdbc/OneToManyResultSetExtractor.java",
+      "before": {
+        "gitBlob": "66f5a16e356fad0f3430bdf2fc6a51eae02fd347",
+        "sha256": "f0adbc826e72dfde6841bc3603f698bb9b37cf2aa96b1dd727fde185db1cfa67",
+        "bytes": 6326,
+        "mode": "100644"
+      },
+      "after": {
+        "gitBlob": "c0f37644ac91cc25d429e8f7d775b4d2ad2a628e",
+        "sha256": "f59233cfd4f16e3f0d780cd8bf1c1e1877e606243f350cee69283bc9cfb2e33c",
+        "bytes": 6849,
+        "mode": "100644"
+      }
+    },
+    {
+      "path": "src/test/java/org/springframework/samples/petclinic/repository/jdbc/OneToManyResultSetExtractorTests.java",
+      "before": null,
+      "after": {
+        "gitBlob": "9a675ebce1c968528a0237dfb5607e58cbad4dc2",
+        "sha256": "f91bc0fd90e4880aeaacc41969baf50064de34875bacc3480a1b164d8cea084f",
+        "bytes": 6504,
+        "mode": "100644"
+      }
+    }
+  ],
+  "productPatch": {
+    "path": "product-delta.diff",
+    "base": "49c5fcbdb7db5a2bba0b7f23133cff2d60e642d2",
+    "head": "45128d9e3877f8254bc68cb99d212b3eed8d4d8c",
+    "limitedToExactPaths": [
+      "src/main/java/org/springframework/samples/petclinic/repository/jdbc/OneToManyResultSetExtractor.java",
+      "src/test/java/org/springframework/samples/petclinic/repository/jdbc/OneToManyResultSetExtractorTests.java"
+    ],
+    "sha256": "7a8f462f1ea0b9ac1899556041d582baf621fcd7c5f2648756827ced987a189b",
+    "bytes": 10433
+  },
+  "testInputObjects": [
+    {
+      "path": "src",
+      "proposalBaseObject": "541c25407be765f4bd1439f87d9311e60dc82951",
+      "testedWitnessObject": "e253642dd41fdd827d4db30af5747819eed92975"
+    },
+    {
+      "path": "pom.xml",
+      "proposalBaseObject": "bacef40a412dc36bb4335c876b83eb1c6b4a5cbb",
+      "testedWitnessObject": "bacef40a412dc36bb4335c876b83eb1c6b4a5cbb"
+    },
+    {
+      "path": ".mvn",
+      "proposalBaseObject": "d209c5695db79bc07674e8aa044d09bd4b03170c",
+      "testedWitnessObject": "d209c5695db79bc07674e8aa044d09bd4b03170c"
+    },
+    {
+      "path": "mvnw",
+      "proposalBaseObject": "b7f064624f8911a9d50912d2c3e163a1eb685209",
+      "testedWitnessObject": "b7f064624f8911a9d50912d2c3e163a1eb685209"
+    },
+    {
+      "path": "mvnw.cmd",
+      "proposalBaseObject": "cba1f040dc3c8ca3445f24904051943a296b59bf",
+      "testedWitnessObject": "cba1f040dc3c8ca3445f24904051943a296b59bf"
+    }
+  ],
+  "observedValidation": {
+    "sourceHead": "45128d9e3877f8254bc68cb99d212b3eed8d4d8c",
+    "command": "JAVA_HOME=C:/Program Files/Java/jdk-17 ./mvnw.cmd -o -B test",
+    "result": "BUILD SUCCESS",
+    "testsRun": 126,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0,
+    "logPath": "maven-test.log",
+    "logSha256": "0fce6d0797bce0055db0f1d8b2d0246c8c0aa39bbed91f9818185eb99ff24e1d",
+    "logBytes": 45057,
+    "status": "ACTUAL_LOCAL_OBSERVATION_NOT_HISTORICAL_ADMISSION",
+    "freshCurrentSourceCiRequired": true
+  },
+  "authorizationBasis": {
+    "kind": "explicit_current_user_source_repair_task",
+    "userRequest": "Dann behebe bitte die Konflikte, offenen Befunde und Governance-Fehler, reviewe alle PRs danach vollständig und merge sie, wenn alles grün und befundfrei ist.",
+    "scope": "current bounded source/test repair, review and conditional Git merge only",
+    "humanReviewPerformed": false,
+    "ownerAcceptanceRecorded": false,
+    "rootIndependentAcceptanceRequired": true
+  },
+  "sourceReview": {
+    "scope": "Full two-file diff; cursor progression, root/child ordering, mapper row indices and cardinality exceptions examined. Seven focused new tests; full Maven126/126.",
+    "reviewerRole": "parallel source review agent /root/petclinic_qualification",
+    "findingStatus": "no introduced behavior defect found",
+    "isHumanApproval": false
+  },
+  "proposedFutureAdmission": {
+    "selfUseAllowed": false,
+    "ordinaryPreparatoryGovernanceRequired": true,
+    "registrationMustAlreadyExistInTargetBase": true,
+    "sourcePrMayModifyRegistration": false,
+    "targetBaseAfterPolicyAcceptance": "MUST_BE_EXPLICITLY_PINNED_AND_RECHECKED_AFTER_ACCEPTANCE",
+    "currentSourceTestTreesMustEqualPublishedWitness": true,
+    "exactProductDeltaRequired": true,
+    "freshCiAndIndependentExactHeadReviewRequired": true,
+    "historicalValidationReasserted": false,
+    "autonomousClassAdmissionChanged": false
+  },
+  "nonClaims": {
+    "admissionGranted": false,
+    "qualificationGranted": false,
+    "authorityCreated": false,
+    "runtimeAuthority": "NONE",
+    "executionAuthorized": false,
+    "installationAuthorized": false,
+    "cohortActivationAuthorized": false,
+    "kgOrTrainerLearningAuthorized": false
+  }
+}

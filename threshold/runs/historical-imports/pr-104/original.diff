@@ -1,0 +1,532 @@
+diff --git a/src/main/java/org/springframework/samples/petclinic/PetclinicInitializer.java b/src/main/java/org/springframework/samples/petclinic/PetclinicInitializer.java
+index 5fcd494b1c9a6c3183fda441d25d3c12a2c7f475..9b2dd739f4a0cbe551639ee1e67e03617f13a225 100644
+--- a/src/main/java/org/springframework/samples/petclinic/PetclinicInitializer.java
++++ b/src/main/java/org/springframework/samples/petclinic/PetclinicInitializer.java
+@@ -26,7 +26,8 @@ import jakarta.servlet.ServletContext;
+ 
+ 
+ /**
+- * In Servlet 3.0+ environments, this class replaces the traditional {@code web.xml}-based
++ * In Servlet 3.0+ environments, this class replaces the traditional
++ * {@code web.xml}-based
+  * approach in order to
+  * configure the
+  * {@link ServletContext} programmatically.
+@@ -78,7 +79,8 @@ public class PetclinicInitializer extends AbstractDispatcherServletInitializer {
+ 
+     @Override
+     protected Filter[] getServletFilters() {
+-        // Used to provide the ability to enter Chinese characters inside the Owner Form
++        // Used to provide the ability to enter Chinese characters
++        // inside the Owner Form
+         return new Filter[]{new CharacterEncodingFilter("UTF-8", true)};
+     }
+ 
+diff --git a/src/main/java/org/springframework/samples/petclinic/web/VisitController.java b/src/main/java/org/springframework/samples/petclinic/web/VisitController.java
+index b5472013299caff8f3cce3ee96114fd2742257b7..337e3418241a84b6d0fc9f8a213cf00355c32fa7 100644
+--- a/src/main/java/org/springframework/samples/petclinic/web/VisitController.java
++++ b/src/main/java/org/springframework/samples/petclinic/web/VisitController.java
+@@ -56,7 +56,8 @@ public class VisitController {
+      * Called before each and every @GetMapping or @PostMapping annotated method.
+      * 2 goals:
+      * - Make sure we always have fresh data
+-     * - Since we do not use the session scope, make sure that Pet object always has an id
++     * - Since we do not use the session scope, make sure that Pet object
++     * always has an id
+      * (Even though id is not part of the form fields)
+      *
+      * @param petId the pet identifier from the URI
+@@ -73,13 +74,15 @@ public class VisitController {
+         return visit;
+     }
+ 
+-    // Spring MVC calls method loadPetWithVisit(...) before initNewVisitForm is called
++    // Spring MVC calls method loadPetWithVisit(...) before
++    // initNewVisitForm is called
+     @GetMapping(value = VISIT_NEW_PATH)
+     public String initNewVisitForm() {
+         return visitFormView();
+     }
+ 
+-    // Spring MVC calls method loadPetWithVisit(...) before processNewVisitForm is called
++    // Spring MVC calls method loadPetWithVisit(...) before
++    // processNewVisitForm is called
+     @PostMapping(value = VISIT_NEW_PATH)
+     public String processNewVisitForm(@Valid Visit visit, BindingResult result) {
+         return handleVisitSubmission(visit, result);
+diff --git a/threshold/candidate-pocket/current.json b/threshold/candidate-pocket/current.json
+index 0fe450f5bdfd78eb0eeab41618ce05136bd51cfa..032b77359fb5e8fd23e1ec3177c98acea5783d80 100644
+--- a/threshold/candidate-pocket/current.json
++++ b/threshold/candidate-pocket/current.json
+@@ -1,9 +1,9 @@
+ {
+     "schemaVersion":  "threshold.petclinic.candidate-pocket.v0.2",
+     "leaseName":  "owned-autonomous-refactor-branch-wave-v0_automation",
+-    "branch":  "threshold-governed-refactor-demo-150",
+-    "generatedFromHead":  "02dce9d1f32cf999fe64ef57a61984bc78b4a76f",
+-    "generatedAt":  "2026-07-17T05:51:04.1023062Z",
++    "branch":  "threshold-governed-refactor-demo-151",
++    "generatedFromHead":  "47ce7a72076e087f197d23756ebb8cad1a221a95",
++    "generatedAt":  "2026-07-17T06:04:46.4379958Z",
+     "discovery":  {
+                       "method":  "static-heuristic-scan",
+                       "sourceRoot":  "src/main/java/org/springframework/samples/petclinic",
+@@ -63,124 +63,10 @@
+                                                 ]
+                   },
+     "candidates":  [
+-                       {
+-                           "tieBreak":  {
+-                                            "layerScore":  5,
+-                                            "path":  "src/main/java/org/springframework/samples/petclinic/web/VisitController.java",
+-                                            "member":  "line-59"
+-                                        },
+-                           "gate":  {
+-                                        "required":  true,
+-                                        "approved":  true,
+-                                        "gatePath":  "threshold/gates/auto-patchable-candidate-classes.json"
+-                                    },
+-                           "score":  95,
+-                           "autoPatchable":  true,
+-                           "member":  "line-59",
+-                           "reviewOnly":  false,
+-                           "executionMode":  "auto_patchable",
+-                           "file":  "src/main/java/org/springframework/samples/petclinic/web/VisitController.java",
+-                           "candidateId":  "src-main-java-org-springframework-samples-petclinic-web-visitcontroller-java-comment-wrap-cleanup-line-59",
+-                           "expectedDiffSummary":  "Wrap one long Javadoc comment line without changing source behavior.",
+-                           "candidateClass":  "comment_wrap_cleanup",
+-                           "commentWrapSplitPointFound":  true,
+-                           "estimatedChangedLines":  2
+-                       },
+-                       {
+-                           "tieBreak":  {
+-                                            "layerScore":  5,
+-                                            "path":  "src/main/java/org/springframework/samples/petclinic/web/VisitController.java",
+-                                            "member":  "line-76"
+-                                        },
+-                           "gate":  {
+-                                        "required":  true,
+-                                        "approved":  true,
+-                                        "gatePath":  "threshold/gates/auto-patchable-candidate-classes.json"
+-                                    },
+-                           "score":  95,
+-                           "autoPatchable":  true,
+-                           "member":  "line-76",
+-                           "reviewOnly":  false,
+-                           "executionMode":  "auto_patchable",
+-                           "file":  "src/main/java/org/springframework/samples/petclinic/web/VisitController.java",
+-                           "candidateId":  "src-main-java-org-springframework-samples-petclinic-web-visitcontroller-java-line-comment-wrap-cleanup-line-76",
+-                           "expectedDiffSummary":  "Wrap one long line comment without changing source behavior.",
+-                           "candidateClass":  "line_comment_wrap_cleanup",
+-                           "commentWrapSplitPointFound":  true,
+-                           "estimatedChangedLines":  2
+-                       },
+-                       {
+-                           "tieBreak":  {
+-                                            "layerScore":  5,
+-                                            "path":  "src/main/java/org/springframework/samples/petclinic/web/VisitController.java",
+-                                            "member":  "line-82"
+-                                        },
+-                           "gate":  {
+-                                        "required":  true,
+-                                        "approved":  true,
+-                                        "gatePath":  "threshold/gates/auto-patchable-candidate-classes.json"
+-                                    },
+-                           "score":  95,
+-                           "autoPatchable":  true,
+-                           "member":  "line-82",
+-                           "reviewOnly":  false,
+-                           "executionMode":  "auto_patchable",
+-                           "file":  "src/main/java/org/springframework/samples/petclinic/web/VisitController.java",
+-                           "candidateId":  "src-main-java-org-springframework-samples-petclinic-web-visitcontroller-java-line-comment-wrap-cleanup-line-82",
+-                           "expectedDiffSummary":  "Wrap one long line comment without changing source behavior.",
+-                           "candidateClass":  "line_comment_wrap_cleanup",
+-                           "commentWrapSplitPointFound":  true,
+-                           "estimatedChangedLines":  2
+-                       },
+-                       {
+-                           "tieBreak":  {
+-                                            "layerScore":  0,
+-                                            "path":  "src/main/java/org/springframework/samples/petclinic/PetclinicInitializer.java",
+-                                            "member":  "line-29"
+-                                        },
+-                           "gate":  {
+-                                        "required":  true,
+-                                        "approved":  true,
+-                                        "gatePath":  "threshold/gates/auto-patchable-candidate-classes.json"
+-                                    },
+-                           "score":  90,
+-                           "autoPatchable":  true,
+-                           "member":  "line-29",
+-                           "reviewOnly":  false,
+-                           "executionMode":  "auto_patchable",
+-                           "file":  "src/main/java/org/springframework/samples/petclinic/PetclinicInitializer.java",
+-                           "candidateId":  "src-main-java-org-springframework-samples-petclinic-petclinicinitializer-java-comment-wrap-cleanup-line-29",
+-                           "expectedDiffSummary":  "Wrap one long Javadoc comment line without changing source behavior.",
+-                           "candidateClass":  "comment_wrap_cleanup",
+-                           "commentWrapSplitPointFound":  true,
+-                           "estimatedChangedLines":  2
+-                       },
+-                       {
+-                           "tieBreak":  {
+-                                            "layerScore":  0,
+-                                            "path":  "src/main/java/org/springframework/samples/petclinic/PetclinicInitializer.java",
+-                                            "member":  "line-81"
+-                                        },
+-                           "gate":  {
+-                                        "required":  true,
+-                                        "approved":  true,
+-                                        "gatePath":  "threshold/gates/auto-patchable-candidate-classes.json"
+-                                    },
+-                           "score":  90,
+-                           "autoPatchable":  true,
+-                           "member":  "line-81",
+-                           "reviewOnly":  false,
+-                           "executionMode":  "auto_patchable",
+-                           "file":  "src/main/java/org/springframework/samples/petclinic/PetclinicInitializer.java",
+-                           "candidateId":  "src-main-java-org-springframework-samples-petclinic-petclinicinitializer-java-line-comment-wrap-cleanup-line-81",
+-                           "expectedDiffSummary":  "Wrap one long line comment without changing source behavior.",
+-                           "candidateClass":  "line_comment_wrap_cleanup",
+-                           "commentWrapSplitPointFound":  true,
+-                           "estimatedChangedLines":  2
+-                       }
++
+                    ],
+-    "nextRecommendedCandidateId":  "src-main-java-org-springframework-samples-petclinic-web-visitcontroller-java-comment-wrap-cleanup-line-59",
+-    "nextAutoPatchableCandidateId":  "src-main-java-org-springframework-samples-petclinic-web-visitcontroller-java-comment-wrap-cleanup-line-59",
++    "nextRecommendedCandidateId":  null,
++    "nextAutoPatchableCandidateId":  null,
+     "nonClaims":  [
+                       "candidate pocket is not an implementation claim",
+                       "candidate pocket does not claim behavior preservation until slice validation passes",
+diff --git a/threshold/lease-state/current-run.json b/threshold/lease-state/current-run.json
+index 66d75d945b7da18473873a8838a168e175592bbf..125b89f215b538fed1ad6b2b7b3fa93b1a0cba40 100644
+--- a/threshold/lease-state/current-run.json
++++ b/threshold/lease-state/current-run.json
+@@ -1,12 +1,12 @@
+ {
+     "schemaVersion":  "threshold.petclinic.lease-state.v0.2",
+-    "invocationId":  "owned-autonomous-refactor-branch-wave-v0_automation-20260717T054410Z",
++    "invocationId":  "owned-autonomous-refactor-branch-wave-v0_automation-20260717T055811Z",
+     "leaseId":  "owned-autonomous-refactor-branch-wave-v0_automation",
+     "mode":  "local_refactor",
+-    "branch":  "threshold-governed-refactor-demo-150",
+-    "startHead":  "79a1eaab08a8574ed20bf6a18775f86d939cd3e0",
+-    "currentHead":  "02dce9d1f32cf999fe64ef57a61984bc78b4a76f",
+-    "currentSourceHead":  "074b3773bd820626b1a586f5bb073870a26dfe9d",
++    "branch":  "threshold-governed-refactor-demo-151",
++    "startHead":  "d3de2a2ac4aae75d3868ee0462cdbfcb50d9bf1f",
++    "currentHead":  "47ce7a72076e087f197d23756ebb8cad1a221a95",
++    "currentSourceHead":  "2fa81f813d3482b794e3a066c6ae1d459b802038",
+     "candidatesProcessed":  5,
+     "commitsCreated":  5,
+     "remainingBudget":  {
+@@ -14,9 +14,9 @@
+                             "commits":  0,
+                             "repairAttempts":  1
+                         },
+-    "lastReceipt":  "threshold/receipts/src-main-java-org-springframework-samples-petclinic-web-petvalidator-java-comment-wrap-cleanup-line-27-074b3773bd82.json",
++    "lastReceipt":  "threshold/receipts/src-main-java-org-springframework-samples-petclinic-petclinicinitializer-java-line-comment-wrap-cleanup-line-82-2fa81f813d34.json",
+     "terminalState":  "budget_exhausted_verified",
+-    "updatedAt":  "2026-07-17T05:51:00.3587123Z",
++    "updatedAt":  "2026-07-17T06:04:43.8977777Z",
+     "terminalReason":  "remaining candidate or commit budget is exhausted after discovery canary passed",
+-    "discoveryCanaryLastPassedAt":  "2026-07-17T05:51:00.3485986Z"
++    "discoveryCanaryLastPassedAt":  "2026-07-17T06:04:43.8886840Z"
+ }
+diff --git a/threshold/leases/current.yaml b/threshold/leases/current.yaml
+index 7bd7b45fde628310ab7dc22839bc8852b7437e37..c9855bc92bd6e307aeb42cd926e930db1a1dfeb6 100644
+--- a/threshold/leases/current.yaml
++++ b/threshold/leases/current.yaml
+@@ -1,9 +1,9 @@
+ leaseName: owned-autonomous-refactor-branch-wave-v0_automation
+ repository: C:\dev\spring-framework-petclinic
+-branch: threshold-governed-refactor-demo-150
++branch: threshold-governed-refactor-demo-151
+ baseRemote: origin
+ baseRef: origin/main
+-startHead: 79a1eaab08a8574ed20bf6a18775f86d939cd3e0
++startHead: d3de2a2ac4aae75d3868ee0462cdbfcb50d9bf1f
+ headPolicy: descendantOfStartHead
+ scopeExpansionTier: 3
+ longLineThreshold: 80
+diff --git a/threshold/receipts/src-main-java-org-springframework-samples-petclinic-petclinicinitializer-java-comment-wrap-cleanup-line-29-bb343d9659a6.json b/threshold/receipts/src-main-java-org-springframework-samples-petclinic-petclinicinitializer-java-comment-wrap-cleanup-line-29-bb343d9659a6.json
+new file mode 100644
+index 0000000000000000000000000000000000000000..aa209afc54ce8699263c756c1d5672090f579204
+--- /dev/null
++++ b/threshold/receipts/src-main-java-org-springframework-samples-petclinic-petclinicinitializer-java-comment-wrap-cleanup-line-29-bb343d9659a6.json
+@@ -0,0 +1,50 @@
++{
++    "schemaVersion":  "threshold.petclinic.slice-receipt.v0.2",
++    "candidateId":  "src-main-java-org-springframework-samples-petclinic-petclinicinitializer-java-comment-wrap-cleanup-line-29",
++    "leaseName":  "owned-autonomous-refactor-branch-wave-v0_automation",
++    "branch":  "threshold-governed-refactor-demo-151",
++    "candidateClass":  "comment_wrap_cleanup",
++    "leaseStartHead":  "d3de2a2ac4aae75d3868ee0462cdbfcb50d9bf1f",
++    "baseHead":  "dcb22ed75067267e6046c0c49459c299f4878cc4",
++    "commitHash":  "bb343d9659a6e50cf7e3b0926af504c2fb378302",
++    "receiptMaterialization":  "post-commit",
++    "perCommitValidationLogAvailable":  true,
++    "branchFinalValidationPassed":  false,
++    "changedFiles":  [
++                         {
++                             "path":  "src/main/java/org/springframework/samples/petclinic/PetclinicInitializer.java",
++                             "beforeSha256":  "5d7ba4717bb9af412d78fd3a44668a3a2ccfe8efd5a6d2049e252b51e19d838e",
++                             "afterSha256":  "ffffe49d932456f81cafc879a1acf00a5709b190c4f749ff5f1091fe2d2e27e3"
++                         }
++                     ],
++    "diffSummary":  "Refactor PetClinic Wrap one long Javadoc comment line without changing so",
++    "diffStat":  {
++                     "filesChanged":  1,
++                     "insertions":  2,
++                     "deletions":  1
++                 },
++    "validation":  {
++                       "diffCheck":  "passed",
++                       "command":  ".\\mvnw.cmd test",
++                       "result":  "BUILD SUCCESS",
++                       "testsRun":  75,
++                       "failures":  0,
++                       "errors":  0,
++                       "skipped":  0
++                   },
++    "nonClaims":  [
++                      "no push in candidate slice",
++                      "no PR update in candidate slice",
++                      "no upstream interaction",
++                      "no pom.xml change",
++                      "no dependency change",
++                      "no src/test change",
++                      "no merge",
++                      "no release",
++                      "no deploy",
++                      "no public readiness claim",
++                      "no public correctness claim",
++                      "no public security claim",
++                      "no public compliance claim"
++                  ]
++}
+diff --git a/threshold/receipts/src-main-java-org-springframework-samples-petclinic-petclinicinitializer-java-line-comment-wrap-cleanup-line-82-2fa81f813d34.json b/threshold/receipts/src-main-java-org-springframework-samples-petclinic-petclinicinitializer-java-line-comment-wrap-cleanup-line-82-2fa81f813d34.json
+new file mode 100644
+index 0000000000000000000000000000000000000000..f7671761235703eaebfb04f5606be5bab8ea2e9c
+--- /dev/null
++++ b/threshold/receipts/src-main-java-org-springframework-samples-petclinic-petclinicinitializer-java-line-comment-wrap-cleanup-line-82-2fa81f813d34.json
+@@ -0,0 +1,50 @@
++{
++    "schemaVersion":  "threshold.petclinic.slice-receipt.v0.2",
++    "candidateId":  "src-main-java-org-springframework-samples-petclinic-petclinicinitializer-java-line-comment-wrap-cleanup-line-82",
++    "leaseName":  "owned-autonomous-refactor-branch-wave-v0_automation",
++    "branch":  "threshold-governed-refactor-demo-151",
++    "candidateClass":  "line_comment_wrap_cleanup",
++    "leaseStartHead":  "d3de2a2ac4aae75d3868ee0462cdbfcb50d9bf1f",
++    "baseHead":  "7735b6b3207ed0dff8f92020a74f5e2ff5a1d99e",
++    "commitHash":  "2fa81f813d3482b794e3a066c6ae1d459b802038",
++    "receiptMaterialization":  "post-commit",
++    "perCommitValidationLogAvailable":  true,
++    "branchFinalValidationPassed":  false,
++    "changedFiles":  [
++                         {
++                             "path":  "src/main/java/org/springframework/samples/petclinic/PetclinicInitializer.java",
++                             "beforeSha256":  "ffffe49d932456f81cafc879a1acf00a5709b190c4f749ff5f1091fe2d2e27e3",
++                             "afterSha256":  "1f0a1362da7dcb5368f3d243296f64d743eafd0339f16fc6b119f1c83ba738c6"
++                         }
++                     ],
++    "diffSummary":  "Refactor PetClinic Wrap one long line comment without changing source beh",
++    "diffStat":  {
++                     "filesChanged":  1,
++                     "insertions":  2,
++                     "deletions":  1
++                 },
++    "validation":  {
++                       "diffCheck":  "passed",
++                       "command":  ".\\mvnw.cmd test",
++                       "result":  "BUILD SUCCESS",
++                       "testsRun":  75,
++                       "failures":  0,
++                       "errors":  0,
++                       "skipped":  0
++                   },
++    "nonClaims":  [
++                      "no push in candidate slice",
++                      "no PR update in candidate slice",
++                      "no upstream interaction",
++                      "no pom.xml change",
++                      "no dependency change",
++                      "no src/test change",
++                      "no merge",
++                      "no release",
++                      "no deploy",
++                      "no public readiness claim",
++                      "no public correctness claim",
++                      "no public security claim",
++                      "no public compliance claim"
++                  ]
++}
+diff --git a/threshold/receipts/src-main-java-org-springframework-samples-petclinic-web-visitcontroller-java-comment-wrap-cleanup-line-59-ba7fdf6278d5.json b/threshold/receipts/src-main-java-org-springframework-samples-petclinic-web-visitcontroller-java-comment-wrap-cleanup-line-59-ba7fdf6278d5.json
+new file mode 100644
+index 0000000000000000000000000000000000000000..de7c7b0a667ca01034a89edac4a58aa0925ffe81
+--- /dev/null
++++ b/threshold/receipts/src-main-java-org-springframework-samples-petclinic-web-visitcontroller-java-comment-wrap-cleanup-line-59-ba7fdf6278d5.json
+@@ -0,0 +1,50 @@
++{
++    "schemaVersion":  "threshold.petclinic.slice-receipt.v0.2",
++    "candidateId":  "src-main-java-org-springframework-samples-petclinic-web-visitcontroller-java-comment-wrap-cleanup-line-59",
++    "leaseName":  "owned-autonomous-refactor-branch-wave-v0_automation",
++    "branch":  "threshold-governed-refactor-demo-151",
++    "candidateClass":  "comment_wrap_cleanup",
++    "leaseStartHead":  "d3de2a2ac4aae75d3868ee0462cdbfcb50d9bf1f",
++    "baseHead":  "c1de4290f74a92e1fbd703e3beaa6be81b6cc641",
++    "commitHash":  "ba7fdf6278d5919d3d994af28c653ac46fcdbc5a",
++    "receiptMaterialization":  "post-commit",
++    "perCommitValidationLogAvailable":  true,
++    "branchFinalValidationPassed":  false,
++    "changedFiles":  [
++                         {
++                             "path":  "src/main/java/org/springframework/samples/petclinic/web/VisitController.java",
++                             "beforeSha256":  "347043f498aa5d7dc96548815d691172c99deb7aaabb273f0c7df9560bb4b669",
++                             "afterSha256":  "42d101a53d2d498837390535e7e4bb9d3412c458e60823d042340e5b9173a9ef"
++                         }
++                     ],
++    "diffSummary":  "Refactor PetClinic Wrap one long Javadoc comment line without changing so",
++    "diffStat":  {
++                     "filesChanged":  1,
++                     "insertions":  2,
++                     "deletions":  1
++                 },
++    "validation":  {
++                       "diffCheck":  "passed",
++                       "command":  ".\\mvnw.cmd test",
++                       "result":  "BUILD SUCCESS",
++                       "testsRun":  75,
++                       "failures":  0,
++                       "errors":  0,
++                       "skipped":  0
++                   },
++    "nonClaims":  [
++                      "no push in candidate slice",
++                      "no PR update in candidate slice",
++                      "no upstream interaction",
++                      "no pom.xml change",
++                      "no dependency change",
++                      "no src/test change",
++                      "no merge",
++                      "no release",
++                      "no deploy",
++                      "no public readiness claim",
++                      "no public correctness claim",
++                      "no public security claim",
++                      "no public compliance claim"
++                  ]
++}
+diff --git a/threshold/receipts/src-main-java-org-springframework-samples-petclinic-web-visitcontroller-java-line-comment-wrap-cleanup-line-77-324e3cb5f884.json b/threshold/receipts/src-main-java-org-springframework-samples-petclinic-web-visitcontroller-java-line-comment-wrap-cleanup-line-77-324e3cb5f884.json
+new file mode 100644
+index 0000000000000000000000000000000000000000..06dd3a7bea33673b96c14db5b2eb2363aa095301
+--- /dev/null
++++ b/threshold/receipts/src-main-java-org-springframework-samples-petclinic-web-visitcontroller-java-line-comment-wrap-cleanup-line-77-324e3cb5f884.json
+@@ -0,0 +1,50 @@
++{
++    "schemaVersion":  "threshold.petclinic.slice-receipt.v0.2",
++    "candidateId":  "src-main-java-org-springframework-samples-petclinic-web-visitcontroller-java-line-comment-wrap-cleanup-line-77",
++    "leaseName":  "owned-autonomous-refactor-branch-wave-v0_automation",
++    "branch":  "threshold-governed-refactor-demo-151",
++    "candidateClass":  "line_comment_wrap_cleanup",
++    "leaseStartHead":  "d3de2a2ac4aae75d3868ee0462cdbfcb50d9bf1f",
++    "baseHead":  "22ce864a132b032a52214a324f368403ac91d300",
++    "commitHash":  "324e3cb5f88457e055dd2e444f052893e8022ed9",
++    "receiptMaterialization":  "post-commit",
++    "perCommitValidationLogAvailable":  true,
++    "branchFinalValidationPassed":  false,
++    "changedFiles":  [
++                         {
++                             "path":  "src/main/java/org/springframework/samples/petclinic/web/VisitController.java",
++                             "beforeSha256":  "42d101a53d2d498837390535e7e4bb9d3412c458e60823d042340e5b9173a9ef",
++                             "afterSha256":  "1ba587de58d637e03e5c2d5b015370eec16836d6f651873c916016d615adadd6"
++                         }
++                     ],
++    "diffSummary":  "Refactor PetClinic Wrap one long line comment without changing source beh",
++    "diffStat":  {
++                     "filesChanged":  1,
++                     "insertions":  2,
++                     "deletions":  1
++                 },
++    "validation":  {
++                       "diffCheck":  "passed",
++                       "command":  ".\\mvnw.cmd test",
++                       "result":  "BUILD SUCCESS",
++                       "testsRun":  75,
++                       "failures":  0,
++                       "errors":  0,
++                       "skipped":  0
++                   },
++    "nonClaims":  [
++                      "no push in candidate slice",
++                      "no PR update in candidate slice",
++                      "no upstream interaction",
++                      "no pom.xml change",
++                      "no dependency change",
++                      "no src/test change",
++                      "no merge",
++                      "no release",
++                      "no deploy",
++                      "no public readiness claim",
++                      "no public correctness claim",
++                      "no public security claim",
++                      "no public compliance claim"
++                  ]
++}
+diff --git a/threshold/receipts/src-main-java-org-springframework-samples-petclinic-web-visitcontroller-java-line-comment-wrap-cleanup-line-84-3aaf174e5e33.json b/threshold/receipts/src-main-java-org-springframework-samples-petclinic-web-visitcontroller-java-line-comment-wrap-cleanup-line-84-3aaf174e5e33.json
+new file mode 100644
+index 0000000000000000000000000000000000000000..5cf919897a563115602a12aa52772ceecc489d43
+--- /dev/null
++++ b/threshold/receipts/src-main-java-org-springframework-samples-petclinic-web-visitcontroller-java-line-comment-wrap-cleanup-line-84-3aaf174e5e33.json
+@@ -0,0 +1,50 @@
++{
++    "schemaVersion":  "threshold.petclinic.slice-receipt.v0.2",
++    "candidateId":  "src-main-java-org-springframework-samples-petclinic-web-visitcontroller-java-line-comment-wrap-cleanup-line-84",
++    "leaseName":  "owned-autonomous-refactor-branch-wave-v0_automation",
++    "branch":  "threshold-governed-refactor-demo-151",
++    "candidateClass":  "line_comment_wrap_cleanup",
++    "leaseStartHead":  "d3de2a2ac4aae75d3868ee0462cdbfcb50d9bf1f",
++    "baseHead":  "3b64d6fc8b73a013df4e8e5d4a60f6230442033b",
++    "commitHash":  "3aaf174e5e3317cc77f20d282d98e72fe1785ed1",
++    "receiptMaterialization":  "post-commit",
++    "perCommitValidationLogAvailable":  true,
++    "branchFinalValidationPassed":  false,
++    "changedFiles":  [
++                         {
++                             "path":  "src/main/java/org/springframework/samples/petclinic/web/VisitController.java",
++                             "beforeSha256":  "1ba587de58d637e03e5c2d5b015370eec16836d6f651873c916016d615adadd6",
++                             "afterSha256":  "71ab5bb88a61ee8006669c4264cf7d2e84e775971a4cff54ee58d92d53ded4b4"
++                         }
++                     ],
++    "diffSummary":  "Refactor PetClinic Wrap one long line comment without changing source beh",
++    "diffStat":  {
++                     "filesChanged":  1,
++                     "insertions":  2,
++                     "deletions":  1
++                 },
++    "validation":  {
++                       "diffCheck":  "passed",
++                       "command":  ".\\mvnw.cmd test",
++                       "result":  "BUILD SUCCESS",
++                       "testsRun":  75,
++                       "failures":  0,
++                       "errors":  0,
++                       "skipped":  0
++                   },
++    "nonClaims":  [
++                      "no push in candidate slice",
++                      "no PR update in candidate slice",
++                      "no upstream interaction",
++                      "no pom.xml change",
++                      "no dependency change",
++                      "no src/test change",
++                      "no merge",
++                      "no release",
++                      "no deploy",
++                      "no public readiness claim",
++                      "no public correctness claim",
++                      "no public security claim",
++                      "no public compliance claim"
++                  ]
++}
