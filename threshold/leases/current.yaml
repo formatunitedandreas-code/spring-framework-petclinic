@@ -1,16 +1,17 @@
 leaseName: owned-autonomous-refactor-branch-wave-v0_automation
 repository: C:\dev\spring-framework-petclinic
-branch: threshold-governed-refactor-demo-79
+branch: threshold-governed-refactor-demo-184
 baseRemote: origin
 baseRef: origin/main
-startHead: d76489d2ee0ef038e87e41475326ef27ada716cc
+startHead: 2a115d45261436c3c53df5cd69c6962f7ed686f1
 headPolicy: descendantOfStartHead
-scopeExpansionTier: 2
-longLineThreshold: 92
-commentWrapThreshold: 96
-springDataQueryThreshold: 60
-repositoryMethodLengthThreshold: 5
-utilityMethodLengthThreshold: 5
+scopeExpansionTier: 7
+longLineThreshold: 68
+commentWrapThreshold: 69
+springDataQueryThreshold: 40
+repositoryMethodLengthThreshold: 2
+utilityMethodLengthThreshold: 2
+minScore: 98
 
 budget:
   maxCandidatesThisRun: 5
@@ -48,6 +49,7 @@ allowedPaths:
   - threshold/discovery-canaries/**/*.java
   - threshold/discovery-canaries/*.json
   - threshold/gates/*.json
+  - threshold/capability-backlog/*.json
   - threshold/lanes/*.yaml
   - threshold/scripts/*.ps1
   - .github/workflows/threshold-governance.yml
@@ -60,27 +62,26 @@ forbiddenPaths:
   - .github/dependabot.yml
 
 allowedCandidateTypes:
-  - private_helper_extraction_for_readability
   - redundant_local_variable_simplification
   - duplicate_literal_local_constant_extraction
-  - controller_branch_readability_decomposition
   - method_signature_wrap_cleanup
   - repository_readability_cleanup
   - spring_data_query_wrap_cleanup
+  - spring_data_query_concat_wrap_cleanup
   - model_readability_cleanup
   - split_string_constant_normalization
   - string_constant_wrap_cleanup
   - utility_readability_cleanup
   - application_bootstrap_readability_cleanup
+  - annotation_attribute_wrap_cleanup
+  - leading_tab_indentation_cleanup
   - comment_wrap_cleanup
   - line_comment_wrap_cleanup
   - method_spacing_normalization
-  - threshold_governance_artifact_update
 
 forbiddenActions:
   - push_to_upstream
   - force_push
-  - merge
   - release
   - deploy
   - dependency_or_pom_changes
@@ -99,4 +100,4 @@ validation:
 terminalBoundary:
   afterLocalCommit: hold_at_local_commit_boundary
   draftPrAllowed: true
-  mergeAllowed: false
+  mergeAllowed: true

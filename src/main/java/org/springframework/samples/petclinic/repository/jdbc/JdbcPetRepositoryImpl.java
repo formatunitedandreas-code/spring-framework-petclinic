@@ -7,10 +7,13 @@
  *
  *      http://www.apache.org/licenses/LICENSE-2.0
  *
- * Unless required by applicable law or agreed to in writing, software
+ * Unless required by applicable law or agreed to in
+ * writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
+ * express or implied.
+ * See the License for the specific language
+ * governing permissions and
  * limitations under the License.
  */
 package org.springframework.samples.petclinic.repository.jdbc;
@@ -46,11 +49,14 @@ public class JdbcPetRepositoryImpl implements PetRepository {
 
     private static final String ID = "id";
 
+    private static final String NAME = "name";
+
 
     private static final String FIND_OWNER_ID_BY_PET_ID_SQL = "SELECT owner_id FROM pets WHERE "
         + "id=:id";
 
-    private static final String FIND_PET_TYPES_SQL = "SELECT id, name FROM types ORDER BY name";
+    private static final String FIND_PET_TYPES_SQL = "SELECT id, name FROM types ORDER BY " +
+        NAME;
 
     private static final String SAVE_SQL = """
                     UPDATE pets
@@ -121,13 +127,14 @@ public class JdbcPetRepositoryImpl implements PetRepository {
     }
 
     /**
-     * Creates a {@link MapSqlParameterSource} based on data values from the supplied
+     * Creates a {@link MapSqlParameterSource} based on data values
+     * from the supplied
      * {@link Pet} instance.
      */
     private MapSqlParameterSource createPetParameterSource(Pet pet) {
         return new MapSqlParameterSource()
             .addValue(ID, pet.getId())
-            .addValue("name", pet.getName())
+            .addValue(NAME, pet.getName())
             .addValue("birth_date", pet.getBirthDate())
             .addValue("type_id", pet.getType().getId())
             .addValue("owner_id", pet.getOwner().getId());
