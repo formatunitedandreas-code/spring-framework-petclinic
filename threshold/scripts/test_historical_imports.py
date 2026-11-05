@@ -64,7 +64,7 @@ forbiddenActions:
         write(cls.reference, "threshold/lease-state/current-run.json", b"{}\n")
         write(cls.reference, "src/main/java/demo/App.java", b"class App { int value = 0; }\n")
         write(cls.reference, "docs/old-evidence.bin", b"old\x00\xff\r\n")
-        context = b"first\n\nthird\nfourth\n" + b"unchanged\n" * 20 + b"last\n"
+        context = b"first \n\nthird  \nfourth\n" + b"unchanged\n" * 20 + b"last \n"
         write(cls.reference, "docs/context.txt", context)
         cls.fork = save(cls.reference, "Fixture source fork")
         run(cls.reference, "switch", "--quiet", "-c", "historical-source")
@@ -189,6 +189,16 @@ forbiddenActions:
         self.assertEqual(result.returncode, 0, result.stderr.decode(errors="replace"))
         self.assertIn(b"thresholdHistoricalImportOnly=true", result.stdout)
         self.assertIn(b"historical_only_not_reasserted", result.stdout)
+
+    def test_diff_check_keeps_historical_whitespace_opaque_and_manifest_lf(self):
+        self.assertNotIn(b"\r\n", (self.archive / "manifest.json").read_bytes())
+        change = next(c for c in self.manifest()["changes"] if c["path"] == "docs/context.txt")
+        original = (self.archive / change["after"]["archive"]).read_bytes()
+        self.assertIn(b"FIRST \n\nthird  \n", original)
+        self.assertEqual(original, run(self.repo, "cat-file", "blob", change["after"]["blob"]))
+        self.assertIn(b" third  \n", (self.archive / "original.diff").read_bytes())
+        self.assertEqual(run(self.repo, "diff", "--check", self.base, "HEAD"), b"")
+        self.assertIsNotNone(hi.validate(self.repo, self.base, "HEAD"))
 
     def test_ordinary_policy_change_is_not_an_inert_import(self):
         run(self.repo, "checkout", "--quiet", "--detach", self.base)
