@@ -13,6 +13,9 @@ expected input digest from `digest-publication-authority-input --stdin`, using t
 original in-memory UTF-8 JSON, and compares the validator's exact digest, head,
 publication effect, Boolean permission, disposition, and constraint arrays. Missing
 CLI support fails closed. Diagnostic reason labels do not grant permission.
+Replay-state input requires an explicit consumption-ID array with unique nonempty
+strings. Missing or malformed ledgers and legacy authority-ID records remain
+UNKNOWN and stop preflight; this repair does not introduce a ledger writer.
 
 `test-publication-core-contract.ps1 -ThresholdCorePath <built-core>` checks the real
 producer/consumer digest contract with Unicode input and a missing-authority case

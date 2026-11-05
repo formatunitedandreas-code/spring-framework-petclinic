@@ -670,6 +670,11 @@ $expectedBaseRef = Get-LeaseScalar $leaseLines "baseRef"
 $mergeAllowed = Get-LeaseScalar $leaseLines "mergeAllowed"
 $forbiddenActions = @(Get-ThresholdLeaseList -Lines $leaseLines -Name "forbiddenActions")
 $resolvedBaseRefForGit = Resolve-BaseRefForGit -Ref $BaseRef
+if ($PublicationPreflight.IsPresent) {
+    $publicationChangedPaths = @(& git diff --name-only "$resolvedBaseRefForGit...HEAD")
+    if ($LASTEXITCODE -ne 0) { throw "stop_authority_validator_unavailable=publication_diff_unavailable" }
+    Assert-PublicationPreflight -ChangedPaths $publicationChangedPaths
+}
 if (Test-ThresholdInertHistoricalImport -BaseRef $resolvedBaseRefForGit) {
     Write-Host 'thresholdHistoricalImportOnly=true'
     Write-Host 'sourceCommitReceiptCoverage=historical_only_not_reasserted'
@@ -685,7 +690,6 @@ $remoteIndependentExpectedBaseRef = ConvertTo-RemoteIndependentLeaseBaseRef -Ref
 
 $preCommitWorktreeMode = $false
 $changedPaths = @(git diff --name-only "$resolvedBaseRefForGit...HEAD")
-if ($PublicationPreflight.IsPresent) { Assert-PublicationPreflight -ChangedPaths $changedPaths }
 $semanticRunEvidencePaths = @($changedPaths | Where-Object { $_ -match "^threshold/runs/[^/]+/(twin-delta|aggregate-receipt|evidence-digests)\.json$" })
 if ($semanticRunEvidencePaths.Count -gt 0) {
     Assert-ThresholdSemanticEvidenceFileEconomy -BaseRef $resolvedBaseRefForGit -RequireCompleteRunEvidence

@@ -37,13 +37,16 @@ $inputPath = Join-Path ([System.IO.Path]::GetTempPath()) ("threshold-core-contra
 try {
     [System.IO.File]::WriteAllText($inputPath, $inputJson, [System.Text.UTF8Encoding]::new($false))
     $output = @(& node $cliPath validate-publication-authority --input $inputPath)
+    $validatorCode = $LASTEXITCODE
     $result = ConvertFrom-SingleJsonDocument -Text ($output -join "`n")
     Assert-CorePublicationAuthorityResult -Result $result -ExpectedHead $head -ExpectedInputDigest $expectedDigest
     if ($result.valid -ne $false -or $result.effectDecisions.publication.allowed -ne $false) {
         throw "Missing-authority contract fixture must remain non-authorizing"
     }
+    if ($validatorCode -ne 2) { throw "Missing-authority CLI must return its denied-result status" }
     Write-Host "publicationCoreContract=passed"
     Write-Host "runtimeAuthority=NONE"
     Write-Host "executionAuthorized=false"
 }
 finally { Remove-Item -LiteralPath $inputPath -Force -ErrorAction SilentlyContinue }
+$global:LASTEXITCODE = 0 # The denied canonical result above is the expected outcome.
