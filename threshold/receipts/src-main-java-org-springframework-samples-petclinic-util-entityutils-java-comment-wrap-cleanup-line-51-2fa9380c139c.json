@@ -1,0 +1,51 @@
+{
+    "schemaVersion":  "threshold.petclinic.slice-receipt.v0.2",
+    "candidateId":  "src-main-java-org-springframework-samples-petclinic-util-entityutils-java-comment-wrap-cleanup-line-51",
+    "leaseName":  "owned-autonomous-refactor-branch-wave-v0_automation",
+    "leaseDigest":  "46e525a3e18f1a198392dd5429b6c8107e0c2282e650420e29ea8cd331f38a61",
+    "branch":  "threshold-governed-refactor-demo-177",
+    "candidateClass":  "comment_wrap_cleanup",
+    "leaseStartHead":  "af93593f739bdb700aa130f2463922e22158d816",
+    "baseHead":  "affc9fb8dddb1f65ee55e1f0a6e6db3025d265af",
+    "commitHash":  "2fa9380c139c70e5094f525a76580b695d366b52",
+    "receiptMaterialization":  "post-commit",
+    "perCommitValidationLogAvailable":  true,
+    "branchFinalValidationPassed":  false,
+    "changedFiles":  [
+                         {
+                             "path":  "src/main/java/org/springframework/samples/petclinic/util/EntityUtils.java",
+                             "beforeSha256":  "c1a504a0fc64a54bcd9f9967350709e84f94a1bf32632d881342895764f0a1ee",
+                             "afterSha256":  "e833b6de864eee85339c26ad95842b13adc20c26dc1d27bbf346bddb9b76809f"
+                         }
+                     ],
+    "diffSummary":  "Refactor PetClinic Wrap one long Javadoc comment line without changing so",
+    "diffStat":  {
+                     "filesChanged":  1,
+                     "insertions":  2,
+                     "deletions":  1
+                 },
+    "validation":  {
+                       "diffCheck":  "passed",
+                       "command":  ".\\mvnw.cmd test",
+                       "result":  "BUILD SUCCESS",
+                       "testsRun":  119,
+                       "failures":  0,
+                       "errors":  0,
+                       "skipped":  0
+                   },
+    "nonClaims":  [
+                      "no push in candidate slice",
+                      "no PR update in candidate slice",
+                      "no upstream interaction",
+                      "no pom.xml change",
+                      "no dependency change",
+                      "no src/test change",
+                      "no merge",
+                      "no release",
+                      "no deploy",
+                      "no public readiness claim",
+                      "no public correctness claim",
+                      "no public security claim",
+                      "no public compliance claim"
+                  ]
+}

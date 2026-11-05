@@ -3,6 +3,7 @@ param()
 
 Set-StrictMode -Version Latest
 $ErrorActionPreference = "Stop"
+. (Join-Path $PSScriptRoot "lib/candidate-class-provenance.ps1")
 
 $originalLocation = Get-Location
 $tempRoot = Join-Path ([System.IO.Path]::GetTempPath()) ("threshold-receipt-digest-" + [guid]::NewGuid().ToString("N"))
@@ -42,29 +43,65 @@ try {
     $utf8NoBom = New-Object System.Text.UTF8Encoding $false
     [System.IO.File]::WriteAllText((Join-Path $tempRoot $leasePath), $leaseContent + "`n", $utf8NoBom)
 
-    Set-Content -Path "src/main/java/demo/App.java" -NoNewline -Value "class App { }"
-    & git add -- $leasePath "src/main/java/demo/App.java"
+    $javaPath = "src/main/java/demo/App.java"
+    $javaBefore = @(
+        "package org.example;", "", "import java.util.Locale;", "",
+        "class App {", "    public String print(Locale locale) {",
+        "        return locale.toLanguageTag();", "    }", "",
+        "    public String parse(String text) {", "        return text;", "    }", "}"
+    ) -join "`n"
+    [System.IO.File]::WriteAllText((Join-Path $tempRoot $javaPath), $javaBefore + "`n", $utf8NoBom)
+    & git add -- $leasePath $javaPath
     & git commit -m "Initial canary commit" | Out-Null
     if ($LASTEXITCODE -ne 0) { throw "initial commit failed" }
     $initialHead = (& git rev-parse HEAD).Trim()
-
     $updatedLeaseContent = $leaseContent.Replace("startHead: pending", "startHead: $initialHead").Replace("originMainAtActivation: pending", "originMainAtActivation: $initialHead")
     [System.IO.File]::WriteAllText((Join-Path $tempRoot $leasePath), $updatedLeaseContent + "`n", $utf8NoBom)
-    Set-Content -Path "src/main/java/demo/App.java" -NoNewline -Value "class App { int v = 1; }"
-    & git add -- $leasePath "src/main/java/demo/App.java"
-    & git commit -m "Source canary commit" | Out-Null
+    & git add -- $leasePath
+    & git commit -m "Bind canary lease" | Out-Null
+    if ($LASTEXITCODE -ne 0) { throw "lease commit failed" }
+    $discoverySourceHead = (& git rev-parse HEAD).Trim()
+    $pocketPath = "method-pocket.json"
+    [ordered]@{
+        schemaVersion = "threshold.petclinic.candidate-pocket.v0.2"
+        generatedFromHead = $discoverySourceHead
+        candidates = @([ordered]@{
+            candidateId = "digest-canary"
+            candidateClass = "method_spacing_normalization"
+            file = $javaPath
+            member = "line-9"
+            spacingAction = "collapse_extra_blank_line"
+        })
+    } | ConvertTo-Json -Depth 6 | Set-Content $pocketPath
+    $discoveryPath = Get-ThresholdCandidateDiscoveryEvidencePath -DiscoveryEvidenceRoot "discovery-evidence" -CandidateId "digest-canary" -BaseHead $discoverySourceHead
+    $discovery = New-ThresholdCandidateDiscoveryEvidence -BaseHead $discoverySourceHead -CandidateId "digest-canary" -CandidatePocketPath $pocketPath
+    Write-ThresholdCandidateDiscoveryEvidence -DiscoveryEvidence $discovery -Path $discoveryPath
+    & git add -- $pocketPath $discoveryPath
+    & git commit -m "Bind pre-product discovery evidence" | Out-Null
+    if ($LASTEXITCODE -ne 0) { throw "discovery commit failed" }
+    $baseHead = (& git rev-parse HEAD).Trim()
+    [System.IO.File]::WriteAllText((Join-Path $tempRoot $javaPath), $javaBefore.Replace("    }`n`n    public", "    }`n    public") + "`n", $utf8NoBom)
+    & git add -- $javaPath
+    & git commit -m "Normalize method boundary spacing" | Out-Null
     if ($LASTEXITCODE -ne 0) { throw "source commit failed" }
     $sourceCommit = (& git rev-parse HEAD).Trim()
-    $baseHead = (& git rev-parse "$sourceCommit^").Trim()
+    [System.IO.File]::AppendAllText((Join-Path $tempRoot $leasePath), "# metadata after requested source commit`n", $utf8NoBom)
+    & git add -- $leasePath
+    & git commit -m "Advance metadata beyond source commit" | Out-Null
+    if ($LASTEXITCODE -ne 0) { throw "metadata commit failed" }
 
     $crlfLeaseContent = ($updatedLeaseContent -replace "`n", "`r`n") + "`r`n"
     [System.IO.File]::WriteAllText((Join-Path $tempRoot $leasePath), $crlfLeaseContent, $utf8NoBom)
     $worktreeLeaseDigest = (Get-FileHash -Algorithm SHA256 -LiteralPath $leasePath).Hash.ToLowerInvariant()
 
-    & powershell.exe -NoProfile -ExecutionPolicy Bypass -File "C:/dev/spring-framework-petclinic/threshold/scripts/record-receipt.ps1" `
+    & (Get-Process -Id $PID).Path -NoProfile -File (Join-Path $PSScriptRoot "record-receipt.ps1") `
         -LeasePath $leasePath `
         -StatePath "threshold/lease-state/current-run.json" `
         -CandidateId "digest-canary" `
+        -CandidateClass "method_spacing_normalization" `
+        -PrBaseHead $baseHead `
+        -CandidatePocketPath $pocketPath `
+        -DiscoveryEvidencePath $discoveryPath `
         -CommitHash $sourceCommit `
         -BaseHead $baseHead `
         -ValidationResult "BUILD SUCCESS" `

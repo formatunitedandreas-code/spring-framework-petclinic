@@ -2,8 +2,10 @@ name: Threshold governance
 
 on:
   pull_request:
-    branches: [main]
-    types: [opened, synchronize, reopened, ready_for_review]
+    branches:
+      - main
+      - 'threshold-governed-refactor-demo-*-discovery-base'
+    types: [opened, synchronize, reopened, edited, ready_for_review]
 
 jobs:
   threshold-governance:
@@ -14,12 +16,42 @@ jobs:
           fetch-depth: 0
 
       - name: Fetch pull request base
-        run: git fetch origin ${{ github.base_ref }} --depth=1
+        run: git fetch origin ${{ github.base_ref }}:refs/remotes/origin/${{ github.base_ref }}
 
       - name: Verify Threshold lease, receipts, state, and merge authority
         shell: pwsh
         run: |
+          try {
+            ./threshold/scripts/test-pr-governance.ps1 -BaseRef "${{ github.base_ref }}"
+          }
+          catch {
+            $message = $_.Exception.Message -replace "%", "%25" -replace "`r", "%0D" -replace "`n", "%0A"
+            $type = $_.Exception.GetType().FullName
+            $position = $_.InvocationInfo.PositionMessage -replace "%", "%25" -replace "`r", "%0D" -replace "`n", "%0A"
+            Write-Host "::error title=Threshold PR governance failed::$type`: $message%0A$position"
+            exit 1
+          }
+
+      - name: Verify committed receipt digest consistency
+        shell: pwsh
+        run: pwsh -File threshold/scripts/test-receipt-digest-consistency.ps1
+
+      - name: Verify Threshold PR metadata envelope fixtures
+        shell: pwsh
+        run: pwsh -File threshold/scripts/test-pr-metadata-envelope.ps1
+
+      - name: Run Threshold local review simulation
+        shell: pwsh
+        run: pwsh -File threshold/scripts/test-local-review-simulation.ps1
+
+      - name: Legacy inline Threshold governance checker
+        if: ${{ false }}
+        shell: pwsh
+        run: |
           $ErrorActionPreference = "Stop"
+          pwsh -File threshold/scripts/test-pr-governance.ps1 -BaseRef "${{ github.base_ref }}"
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          exit 0
           $leasePath = "threshold/leases/current.yaml"
           $statePath = "threshold/lease-state/current-run.json"
           if (-not (Test-Path $leasePath)) {
@@ -58,7 +90,9 @@ jobs:
             return (
               $normalized -like "threshold/scripts/*" -or
               $normalized -like "threshold/gates/*" -or
+              $normalized -like "threshold/capability-backlog/*" -or
               $normalized -like "threshold/authority/*" -or
+              $normalized -eq "threshold/trainer/review-findings.json" -or
               $normalized -eq ".github/workflows/threshold-governance.yml" -or
               $normalized -eq ".github/CODEOWNERS"
             )
@@ -71,6 +105,11 @@ jobs:
               $normalized -like "threshold/lease-state/*" -or
               $normalized -like "threshold/leases/*" -or
               $normalized -like "threshold/receipts/*" -or
+              $normalized -like "threshold/attestations/*" -or
+              $normalized -like "threshold/discovery-canaries/*" -or
+              $normalized -like "threshold/kgs/*" -or
+              $normalized -eq "threshold/trainer/training-report.json" -or
+              $normalized -eq "threshold/trainer/generated-canary-rules.json" -or
               $normalized -like "threshold/candidate-pocket/*" -or
               $normalized -like "threshold/docs/*"
             )
@@ -263,3 +302,12 @@ jobs:
           Write-Host "sourceCommitReceiptCoverage=complete"
           Write-Host "thresholdGovernanceLabelRequired=false"
           Write-Host "Threshold governance passed"
+
+      - name: Verify Threshold capability and fidelity knowledge graphs
+        env:
+          THRESHOLD_RECEIPT_TREEISH: ${{ github.event.pull_request.head.sha }}
+          THRESHOLD_PR_BASE_HEAD: ${{ github.event.pull_request.base.sha }}
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = "Stop"
+          pwsh -File threshold/scripts/test-kg-governance.ps1 -BaseRef "${{ github.base_ref }}"

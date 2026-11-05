@@ -9,7 +9,8 @@
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
+ * express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
@@ -42,14 +43,16 @@ import jakarta.servlet.ServletContext;
 public class PetclinicInitializer extends AbstractDispatcherServletInitializer {
 
     /**
-     * Spring profile used to choose the persistence layer implementation.
+     * Spring profile used to choose the persistence
+     * layer implementation.
      * <p>
      * When using Spring jpa, use: jpa
      * When using Spring JDBC, use: jdbc
      * When using Spring Data JPA, use: spring-data-jpa
      * <p/>
      * <p>
-     * You also may use the -Dspring.profiles.active=jdbc VM options to change
+     * You also may use the -Dspring.profiles.active=jdbc VM
+     * options to change
      * default jpa Spring profile.
      */
     private static final String SPRING_PROFILE = "jpa";

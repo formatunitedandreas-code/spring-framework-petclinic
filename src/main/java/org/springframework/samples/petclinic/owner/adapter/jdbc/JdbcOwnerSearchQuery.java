@@ -16,6 +16,8 @@ import org.springframework.stereotype.Repository;
 @Repository
 public class JdbcOwnerSearchQuery implements OwnerSearchQuery {
 
+    private static final String OWNER_ID = "owner_id";
+
     private static final String SEARCH_BY_LAST_NAME_SQL = """
         SELECT owners.id AS owner_id,
                owners.first_name,
@@ -46,7 +48,7 @@ public class JdbcOwnerSearchQuery implements OwnerSearchQuery {
     private List<OwnerListItem> extractOwnerListItems(ResultSet rs) throws SQLException {
         Map<Integer, OwnerListItemBuilder> owners = new LinkedHashMap<>();
         while (rs.next()) {
-            OwnerListItemBuilder owner = owners.computeIfAbsent(rs.getInt("owner_id"), ignored -> newOwner(rs));
+            OwnerListItemBuilder owner = owners.computeIfAbsent(rs.getInt(OWNER_ID), ignored -> newOwner(rs));
             String petName = rs.getString("pet_name");
             if (petName != null) {
                 owner.petNames().add(petName);
@@ -57,7 +59,7 @@ public class JdbcOwnerSearchQuery implements OwnerSearchQuery {
 
     private OwnerListItemBuilder newOwner(ResultSet rs) {
         try {
-            return new OwnerListItemBuilder(rs.getInt("owner_id"), rs.getString("first_name"),
+            return new OwnerListItemBuilder(rs.getInt(OWNER_ID), rs.getString("first_name"),
                 rs.getString("last_name"), rs.getString("address"), rs.getString("city"),
                 rs.getString("telephone"), new ArrayList<>());
         }

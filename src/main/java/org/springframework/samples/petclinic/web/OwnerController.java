@@ -9,7 +9,8 @@
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
+ * express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
@@ -55,7 +56,10 @@ public class OwnerController {
     private final ClinicService clinicService;
     private final SearchOwners searchOwners;
 
-    public OwnerController(ClinicService clinicService, SearchOwners searchOwners) {
+    public OwnerController(
+        ClinicService clinicService,
+        SearchOwners searchOwners
+    ) {
         this.clinicService = clinicService;
         this.searchOwners = searchOwners;
     }
@@ -72,7 +76,10 @@ public class OwnerController {
     }
 
     @PostMapping(value = OWNER_NEW_PATH)
-    public String processCreationForm(@Valid Owner owner, BindingResult result) {
+    public String processCreationForm(
+        @Valid Owner owner,
+        BindingResult result
+    ) {
         if (result.hasErrors()) {
             return VIEWS_OWNER_CREATE_OR_UPDATE_FORM;
         }
@@ -92,10 +99,16 @@ public class OwnerController {
     }
 
     @GetMapping(value = "/owners")
-    public String processFindForm(Owner owner, BindingResult result, Map<String, Object> model) {
+    public String processFindForm(
+        Owner owner,
+        BindingResult result,
+        Map<String,
+        Object> model
+    ) {
         normalizeLastName(owner);
 
-        // allow parameterless GET request for /owners to return all records
+        // allow parameterless GET request for /owners to
+        // return all records
         // find owners by last name
         List<OwnerListItem> results = this.searchOwners.searchByLastName(owner.getLastName());
         if (results.isEmpty()) {
@@ -127,13 +140,20 @@ public class OwnerController {
         return REDIRECT_TO_OWNERS + ownerId;
     }
 
-    private String handleMultipleOwners(Map<String, Object> model, List<OwnerListItem> results) {
+    private String handleMultipleOwners(
+        Map<String,
+        Object> model,
+        List<OwnerListItem> results
+    ) {
         model.put(MODEL_ATTRIBUTE_SELECTIONS, results);
         return VIEWS_OWNER_LIST;
     }
 
     @GetMapping(value = OWNER_EDIT_PATH)
-    public String initUpdateOwnerForm(@PathVariable(OWNER_ID) int ownerId, Model model) {
+    public String initUpdateOwnerForm(
+        @PathVariable(OWNER_ID) int ownerId,
+        Model model
+    ) {
         addOwnerToModel(model, ownerId);
         return VIEWS_OWNER_CREATE_OR_UPDATE_FORM;
     }

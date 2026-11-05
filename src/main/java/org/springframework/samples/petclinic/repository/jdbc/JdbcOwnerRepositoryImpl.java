@@ -7,10 +7,13 @@
  *
  *      http://www.apache.org/licenses/LICENSE-2.0
  *
- * Unless required by applicable law or agreed to in writing, software
+ * Unless required by applicable law or agreed to in
+ * writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
+ * express or implied.
+ * See the License for the specific language
+ * governing permissions and
  * limitations under the License.
  */
 package org.springframework.samples.petclinic.repository.jdbc;
@@ -34,7 +37,8 @@ import java.util.Collection;
 import java.util.List;
 
 /**
- * A simple JDBC-based implementation of the {@link OwnerRepository} interface.
+ * A simple JDBC-based implementation of the
+ * {@link OwnerRepository} interface.
  *
  * @author Ken Krebs
  * @author Juergen Hoeller
@@ -80,7 +84,10 @@ public class JdbcOwnerRepositoryImpl implements OwnerRepository {
 
     private final SimpleJdbcInsert insertOwner;
 
-    public JdbcOwnerRepositoryImpl(DataSource dataSource, JdbcClient jdbcClient) {
+    public JdbcOwnerRepositoryImpl(
+        DataSource dataSource,
+        JdbcClient jdbcClient
+    ) {
 
         this.insertOwner = new SimpleJdbcInsert(dataSource)
             .withTableName("owners")
@@ -92,7 +99,8 @@ public class JdbcOwnerRepositoryImpl implements OwnerRepository {
 
 
     /**
-     * Loads {@link Owner Owners} from the data store by last name, returning all
+     * Loads {@link Owner Owners} from the data store by last
+     * name, returning all
      * owners whose last
      * name <i>starts</i>
      * with
@@ -145,7 +153,11 @@ public class JdbcOwnerRepositoryImpl implements OwnerRepository {
             .query(new JdbcPetVisitExtractor());
     }
 
-    private void mapPetToOwner(Owner owner, Collection<PetType> petTypes, JdbcPet pet) {
+    private void mapPetToOwner(
+        Owner owner,
+        Collection<PetType> petTypes,
+        JdbcPet pet
+    ) {
         pet.setType(EntityUtils.getById(petTypes, PetType.class, pet.getTypeId()));
         owner.addPet(pet);
     }
@@ -169,10 +181,12 @@ public class JdbcOwnerRepositoryImpl implements OwnerRepository {
     }
 
     /**
-     * Loads the {@link Pet} and {@link Visit} data for the supplied {@link List} of
+     * Loads the {@link Pet} and {@link Visit} data for the
+     * supplied {@link List} of
      * {@link Owner Owners}.
      *
-     * @param owners the list of owners for whom the pet and visit data
+     * @param owners the list of owners for whom the
+     * pet and visit data
      * should be loaded
      * @see #loadPetsAndVisits(Owner)
      */

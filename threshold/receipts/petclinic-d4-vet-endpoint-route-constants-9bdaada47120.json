@@ -1,0 +1,43 @@
+{
+  "schemaVersion": "threshold.petclinic.slice-receipt.v0.2",
+  "receiptId": "petclinic-d4-vet-endpoint-route-constants-9bdaada47120",
+  "candidateId": "d4-petclinic-vet-endpoint-route-constants",
+  "candidateClass": "duplicate_literal_local_constant_extraction",
+  "sourceCommit": "9bdaada47120de30c381849fafa0ee31af25c9e5",
+  "baseHead": "1c4423dcd75fcde12daae445c7e147a972ccbd57",
+  "branch": "codex/d4-petclinic-repair-factory-pilot-v0-1",
+  "receiptMaterialization": "post-commit-governance-reconciliation",
+  "leaseDigest": "c6c7c7fa8f62449e73d4313b223ee8ea7e2b67df84f87026b02d3abb2fd63558",
+  "changedFiles": [
+    {
+      "path": "src/main/java/org/springframework/samples/petclinic/web/VetController.java",
+      "changeKind": "duplicate_literal_local_constant_extraction"
+    }
+  ],
+  "validation": {
+    "command": ".\\mvnw.cmd -Dtest=VetControllerTests test",
+    "javaHome": "C:\\Program Files\\Java\\jdk-17",
+    "result": "passed",
+    "testsRun": 3,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0,
+    "diffCheckPassed": true,
+    "cachedDiffCheckPassed": true
+  },
+  "boundaries": {
+    "providerCallCount": 0,
+    "credentialReadCount": 0,
+    "dependencyChangeCount": 0,
+    "governancePolicyMutationCount": 0,
+    "runtimeEffectCount": 0,
+    "automaticRetryCount": 0
+  },
+  "nonClaims": [
+    "No dependency or pom change.",
+    "No src/test change.",
+    "No runtime, provider, deployment, release, or upstream push authority.",
+    "No public correctness, security, compliance, deployment readiness, or production readiness claim.",
+    "No behavior change is claimed beyond preserving existing VetController route behavior under existing tests."
+  ]
+}
