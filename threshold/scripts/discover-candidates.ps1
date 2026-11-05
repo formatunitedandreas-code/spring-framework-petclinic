@@ -12,6 +12,7 @@ Set-StrictMode -Version Latest
 $ErrorActionPreference = "Stop"
 
 . (Join-Path $PSScriptRoot "lib/candidate-class-provenance.ps1")
+. (Join-Path $PSScriptRoot "lib/method-signature.ps1")
 
 function Get-LeaseScalar {
     param([string[]] $Lines, [string] $Name)
@@ -309,20 +310,7 @@ function Test-SimpleStringConstantWrapCandidateLine {
 
 function Get-WrappableMethodSignatureParameterCount {
     param([string] $Line)
-
-    $match = [regex]::Match($Line, "^\s*(public|private|protected)\s+.+\(\s*(?<params>.*)\)\s*\{\s*$")
-    if (-not $match.Success) {
-        return 0
-    }
-
-    $paramsRaw = $match.Groups["params"].Value.Trim()
-    if ([string]::IsNullOrWhiteSpace($paramsRaw)) {
-        return 0
-    }
-
-    return (@($paramsRaw -split "," | ForEach-Object { $_.Trim() } | Where-Object {
-        -not [string]::IsNullOrWhiteSpace($_)
-    })).Count
+    return @(Get-WrappableMethodSignatureParameters -Line $Line).Count
 }
 
 function Test-SplitStringConstantLine {

@@ -15,6 +15,10 @@ jobs:
         with:
           fetch-depth: 0
 
+      - name: Verify method signature candidate filtering
+        shell: pwsh
+        run: pwsh -File threshold/scripts/test-method-signature-candidate-filter.ps1
+
       - name: Fetch pull request base
         run: git fetch origin ${{ github.base_ref }}:refs/remotes/origin/${{ github.base_ref }}
 
