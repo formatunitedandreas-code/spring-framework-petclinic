@@ -1,0 +1,51 @@
+{
+    "schemaVersion":  "threshold.petclinic.slice-receipt.v0.2",
+    "candidateId":  "src-main-java-org-springframework-samples-petclinic-repository-jpa-jpaownerrepositoryimpl-java-line-comment-wrap-cleanup-line-83",
+    "leaseName":  "owned-autonomous-refactor-branch-wave-v0_automation",
+    "leaseDigest":  "225b2ca8eca9fcc76c1d3cb3a69460b3c9e8f74a6e9790a496588d4d5c970f9e",
+    "branch":  "threshold-governed-refactor-demo-165",
+    "candidateClass":  "line_comment_wrap_cleanup",
+    "leaseStartHead":  "26f228ecfefac1171d2257ed7d04fcbb32385dca",
+    "baseHead":  "4db611f0744b964fe532d1719174c27d4276283f",
+    "commitHash":  "f0fc8fe2495009b1f4596f1072db507f99e375ac",
+    "receiptMaterialization":  "post-commit",
+    "perCommitValidationLogAvailable":  true,
+    "branchFinalValidationPassed":  false,
+    "changedFiles":  [
+                         {
+                             "path":  "src/main/java/org/springframework/samples/petclinic/repository/jpa/JpaOwnerRepositoryImpl.java",
+                             "beforeSha256":  "7bf5e284439006aad50358667ed9c02bbf875bc663b816747a1d9fb2dee52163",
+                             "afterSha256":  "5c1a0cfed5d4ec9628cbf52a60eb37d5fdf7b037f67de313b42d15b36a3895b1"
+                         }
+                     ],
+    "diffSummary":  "Refactor PetClinic Wrap one long line comment without changing source beh",
+    "diffStat":  {
+                     "filesChanged":  1,
+                     "insertions":  2,
+                     "deletions":  1
+                 },
+    "validation":  {
+                       "diffCheck":  "passed",
+                       "command":  ".\\mvnw.cmd test",
+                       "result":  "BUILD SUCCESS",
+                       "testsRun":  119,
+                       "failures":  0,
+                       "errors":  0,
+                       "skipped":  0
+                   },
+    "nonClaims":  [
+                      "no push in candidate slice",
+                      "no PR update in candidate slice",
+                      "no upstream interaction",
+                      "no pom.xml change",
+                      "no dependency change",
+                      "no src/test change",
+                      "no merge",
+                      "no release",
+                      "no deploy",
+                      "no public readiness claim",
+                      "no public correctness claim",
+                      "no public security claim",
+                      "no public compliance claim"
+                  ]
+}

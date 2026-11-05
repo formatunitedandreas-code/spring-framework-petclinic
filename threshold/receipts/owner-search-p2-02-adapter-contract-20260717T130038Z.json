@@ -1,0 +1,80 @@
+{
+  "runId": "owner-search-p2-02-adapter-contract-20260717T130038Z",
+  "repository": "spring-petclinic/spring-framework-petclinic",
+  "localPath": "C:\\dev\\spring-framework-petclinic",
+  "phaseId": "P2-02",
+  "lane": "product_refactor",
+  "feature": "owner_search_vertical_refactoring",
+  "inputHead": "62122be0f073066a6290f81a9356dce367c00ba3",
+  "inputDigest": {
+    "branch": "agent/owner-search-behavior-baseline",
+    "productSourceHead": "04f7e344e51ed6c75e9e3062ebc8ee7fa9415b1c",
+    "originMain": "04f7e344e51ed6c75e9e3062ebc8ee7fa9415b1c",
+    "activeGrant": "p2-02-owner-search-adapter-contract-baseline"
+  },
+  "allowedPaths": [
+    "src/test/java/org/springframework/samples/petclinic/**",
+    "threshold/docs/**",
+    "threshold/receipts/**",
+    "threshold/lease-state/**",
+    "threshold/leases/**"
+  ],
+  "expectedEffect": "Add common Owner Search adapter parity contract tests without production changes.",
+  "changedPaths": [
+    "src/test/java/org/springframework/samples/petclinic/service/AbstractOwnerSearchContractTests.java",
+    "src/test/java/org/springframework/samples/petclinic/service/JdbcOwnerSearchContractTests.java",
+    "src/test/java/org/springframework/samples/petclinic/service/JpaOwnerSearchContractTests.java",
+    "src/test/java/org/springframework/samples/petclinic/service/SpringDataJpaOwnerSearchContractTests.java",
+    "threshold/docs/OWNER_SEARCH_ADAPTER_CONTRACT_BASELINE_V0_1.md",
+    "threshold/receipts/owner-search-p2-02-adapter-contract-20260717T130038Z.json"
+  ],
+  "validationCommands": [
+    "git diff --check",
+    "$env:JAVA_HOME='C:\\Program Files\\Java\\jdk-17'; .\\mvnw.cmd -Dtest=*OwnerSearch* test"
+  ],
+  "validationResults": {
+    "gitDiffCheck": "passed",
+    "ownerSearchContractTests": {
+      "testsRun": 18,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "profiles": {
+        "jdbc": "passed",
+        "jpa": "passed",
+        "spring-data-jpa": "passed"
+      }
+    }
+  },
+  "outputHead": "pending_local_commit",
+  "outcome": "adapter_contract_baseline_recorded",
+  "stopReasons": [],
+  "receiptRef": "threshold/receipts/owner-search-p2-02-adapter-contract-20260717T130038Z.json",
+  "effectClasses": [
+    "R2_REVERSIBLE_LOCAL_MUTATION"
+  ],
+  "candidateClass": "owner_search_adapter_contract_baseline",
+  "scopeMatch": true,
+  "testEvidence": {
+    "adapterParityBaseline": "OwnerSearch contract tests passed for jdbc, jpa, and spring-data-jpa"
+  },
+  "queryEvidence": {
+    "executed": false,
+    "reason": "P2-02 does not measure query counts"
+  },
+  "architectureEvidence": {
+    "executed": false,
+    "reason": "P2-02 does not introduce architecture rules"
+  },
+  "recommendedDisposition": "admitted_for_next_local_phase",
+  "behaviorEquivalent": true,
+  "profileParityVerified": true,
+  "queryBudgetVerified": false,
+  "architectureRulesVerified": false,
+  "fullSuitePassed": false,
+  "publicationPerformed": false,
+  "mergePerformed": false,
+  "releasePerformed": false,
+  "deploymentPerformed": false,
+  "humanReviewRequired": true
+}

@@ -9,7 +9,8 @@
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
+ * express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
@@ -24,7 +25,8 @@ import org.springframework.samples.petclinic.model.Owner;
 import org.springframework.samples.petclinic.repository.OwnerRepository;
 
 /**
- * Spring Data JPA specialization of the {@link OwnerRepository} interface
+ * Spring Data JPA specialization of the
+ * {@link OwnerRepository} interface
  *
  * @author Michael Isvy
  * @since 15.1.2013
@@ -32,12 +34,18 @@ import org.springframework.samples.petclinic.repository.OwnerRepository;
 public interface SpringDataOwnerRepository extends OwnerRepository, Repository<Owner, Integer> {
 
     @Override
-    @Query("SELECT DISTINCT owner FROM Owner owner left join fetch owner.pets WHERE owner.lastName " +
+    @Query(
+        "SELECT DISTINCT owner FROM Owner owner left join fetch owner.pets WHERE owner.lastName " +
         "LIKE :lastName%")
     Collection<Owner> findByLastName(@Param("lastName") String lastName);
 
     @Override
-    @Query("SELECT owner FROM Owner owner left join fetch owner.pets WHERE owner.id " +
+    @Query(
+        "SELECT DISTINCT owner FROM Owner owner " +
+        "left join fetch owner.pets pet " +
+        "left join fetch pet.type " +
+        "left join fetch pet.visits " +
+        "WHERE owner.id " +
         "=:id")
     Owner findById(@Param("id") int id);
 }

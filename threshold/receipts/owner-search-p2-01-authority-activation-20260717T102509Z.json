@@ -1,0 +1,82 @@
+{
+  "runId": "owner-search-p2-01-authority-activation-20260717T102509Z",
+  "repository": "spring-petclinic/spring-framework-petclinic",
+  "localPath": "C:\\dev\\spring-framework-petclinic",
+  "phaseId": "P2-01",
+  "lane": "product_refactor",
+  "feature": "owner_search_vertical_refactoring",
+  "decision": "active",
+  "authoritySource": "user_one_shot_grant_2026-07-17",
+  "installedLease": "p2-01-owner-search-product-refactor",
+  "replacedLease": {
+    "leaseName": "owned-autonomous-refactor-branch-wave-v0_automation",
+    "repository": "C:\\dev\\spring-framework-petclinic\\fresh-cycle-run",
+    "branch": "threshold-governed-refactor-demo-5",
+    "scopeMatch": false
+  },
+  "branch": "main",
+  "head": "04f7e344e51ed6c75e9e3062ebc8ee7fa9415b1c",
+  "originMain": "04f7e344e51ed6c75e9e3062ebc8ee7fa9415b1c",
+  "mainOriginMainDistance": "0 0",
+  "priorStop": {
+    "runId": "owner-search-p2-01-start-stop-20260717T122227Z",
+    "terminalState": "stop_no_action",
+    "terminalReason": "stop_missing_authority"
+  },
+  "githubState": {
+    "verified": true,
+    "legacyPullRequestsNotAuthority": [
+      {
+        "number": 104,
+        "state": "MERGED",
+        "mergedAt": "2023-11-29T07:28:32Z",
+        "mergeCommit": "bd32f43ba2f1f2202e98e7c4c3c549c5debbf288"
+      },
+      {
+        "number": 105,
+        "state": "MERGED",
+        "mergedAt": "2023-11-30T07:54:59Z",
+        "mergeCommit": "73d7a47ea3bd08e048e4715fe2372c83016140aa"
+      }
+    ],
+    "openPullRequests": [
+      {
+        "number": 280,
+        "baseRefName": "main",
+        "headRefName": "threshold/dep-001-human-authorized-candidate",
+        "headRefOid": "2aa7c462235b06ca4cc00448c606f6b50de5b2a0",
+        "isDraft": false,
+        "mergeable": "MERGEABLE"
+      },
+      {
+        "number": 281,
+        "baseRefName": "main",
+        "headRefName": "threshold-governed-refactor-demo",
+        "headRefOid": "a7f1dd04d1c534c6343a353d2d6bd405358baa4b",
+        "isDraft": true,
+        "mergeable": "MERGEABLE"
+      },
+      {
+        "number": 282,
+        "baseRefName": "main",
+        "headRefName": "threshold-governed-refactor-demo-3",
+        "headRefOid": "d32a3e12647ae93b98e0a2abeb4b584cf772e541",
+        "isDraft": false,
+        "mergeable": "MERGEABLE"
+      }
+    ]
+  },
+  "installedPaths": [
+    "threshold/leases/current.yaml",
+    "threshold/lease-state/current-run.json",
+    "threshold/docs/PHASE_2_OWNER_SEARCH_P2_01_AUTHORITY_ACTIVE_V0_1.md",
+    "threshold/receipts/owner-search-p2-01-authority-activation-20260717T102509Z.json"
+  ],
+  "productChangesPerformed": false,
+  "testsExecuted": false,
+  "commitsCreated": false,
+  "pushPerformed": false,
+  "mergePerformed": false,
+  "terminalBoundary": "hold_at_local_commit_boundary",
+  "recommendedNextAction": "Begin P2-01 owner-search product refactoring under the active lease."
+}
