@@ -1,0 +1,64 @@
+{
+  "schemaVersion": "threshold.historical_import.v1",
+  "disposition": "historical_only",
+  "historicalValidationReasserted": false,
+  "runtimeAuthority": "NONE",
+  "executionAuthorized": false,
+  "authorityCreated": false,
+  "qualificationGranted": false,
+  "pullRequest": 4,
+  "originalHead": "7573dcb06fabf615bfe6d32778792e17b7a44ab4",
+  "originalTargetBase": "924101e662668b5033b37123f9eef7a76001c8a6",
+  "originalMergeBase": "5b93163cdbd6440f0f1ab9740d3a76b84ba17abd",
+  "originalDiff": {
+    "path": "original.diff",
+    "sha256": "8ca51d783a7d1c3a221215ba89a41e1c00296f83877d3a3656723725ec285db1"
+  },
+  "changes": [
+    {
+      "path": "src/main/java/org/springframework/samples/petclinic/web/OwnerController.java",
+      "before": {
+        "mode": "100644",
+        "blob": "ebe8f2e626abfaa03b95cddd4c794ae5eb030aae",
+        "archive": "blobs/000000-before.bin",
+        "sha256": "5a34cbdac51d70d4d65acca9c17e9f9dd35fa9f2eb71862d6bf8dfa4d205f65c"
+      },
+      "after": {
+        "mode": "100644",
+        "blob": "893ff0ee314dce944c96aa4adf83717d7336ed56",
+        "archive": "blobs/000000-after.bin",
+        "sha256": "88e232cccdf126800d7540b35bec8c82699b82ec91aff6615c05cea27b573281"
+      }
+    },
+    {
+      "path": "src/main/java/org/springframework/samples/petclinic/web/PetController.java",
+      "before": {
+        "mode": "100644",
+        "blob": "ec6f3a78caaefc368364dd56351c77199c335a9b",
+        "archive": "blobs/000001-before.bin",
+        "sha256": "1dd653db93abe40e8308de569603aadb405f40be4e8bc8dfb682398931aa62db"
+      },
+      "after": {
+        "mode": "100644",
+        "blob": "189d4806f529ae89c9afaa6b44b0d7b681f93676",
+        "archive": "blobs/000001-after.bin",
+        "sha256": "605cdaba123ce29dcbea070f71e153ee2ab1e0620c2af8f9a40ec19e3bc60dd6"
+      }
+    },
+    {
+      "path": "src/main/java/org/springframework/samples/petclinic/web/VisitController.java",
+      "before": {
+        "mode": "100644",
+        "blob": "e770532ab61c048344280254b7526d302c6a3b3b",
+        "archive": "blobs/000002-before.bin",
+        "sha256": "fde8deeb7ca3dc6a2246108de15ff1c7550a03b3785217edbbdb3637a593fd91"
+      },
+      "after": {
+        "mode": "100644",
+        "blob": "3bf4b90c0e9eaaa9b5b3da836cd121750407905d",
+        "archive": "blobs/000002-after.bin",
+        "sha256": "bcd7bf7d4dc83c4159fdb4577d0059cf70dd8d05f1b71c9728fe0367abf1dec1"
+      }
+    }
+  ]
+}
