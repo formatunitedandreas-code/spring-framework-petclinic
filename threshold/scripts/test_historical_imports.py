@@ -8,6 +8,7 @@ import subprocess
 import sys
 import tempfile
 import unittest
+from unittest import mock
 
 sys.dont_write_bytecode = True
 import historical_imports as hi
@@ -124,9 +125,13 @@ forbiddenActions:
         script = str(self.repo / "threshold/scripts/test-pr-governance.ps1").replace("'", "''")
         command = ("$ErrorActionPreference='Stop'; try { & '" + script + "' -BaseRef 'origin/main' } "
                    "catch { [Console]::Error.WriteLine($_.Exception.Message); exit 1 }")
+        # This owned Git fixture has its own refs and no real pull-request event.
+        # Keep the caller's event intact, but do not bind this repository to it.
+        environment = os.environ.copy()
+        environment.pop("GITHUB_EVENT_PATH", None)
         return subprocess.run(
             [executable, "-NoProfile", "-Command", command], cwd=self.repo,
-            stdout=subprocess.PIPE, stderr=subprocess.PIPE, check=False)
+            env=environment, stdout=subprocess.PIPE, stderr=subprocess.PIPE, check=False)
 
     def test_positive_preserves_complete_original_bytes_and_active_tree(self):
         result = hi.validate(self.repo, self.base, "HEAD")
@@ -189,6 +194,15 @@ forbiddenActions:
         self.assertEqual(result.returncode, 0, result.stderr.decode(errors="replace"))
         self.assertIn(b"thresholdHistoricalImportOnly=true", result.stdout)
         self.assertIn(b"historical_only_not_reasserted", result.stdout)
+
+    def test_owned_archive_fixture_does_not_inherit_an_outer_pr184_event(self):
+        outer_event = self.repo.parent / "outer-pr184.json"
+        outer_event.write_text(json.dumps({"number": 184, "pull_request": {"number": 184}}), encoding="utf-8")
+        with mock.patch.dict(os.environ, {"GITHUB_EVENT_PATH": str(outer_event)}):
+            result = self.gate()
+            self.assertEqual(os.environ["GITHUB_EVENT_PATH"], str(outer_event))
+        self.assertEqual(result.returncode, 0, result.stderr.decode(errors="replace"))
+        self.assertIn(b"thresholdHistoricalImportOnly=true", result.stdout)
 
     def test_diff_check_keeps_historical_whitespace_opaque_and_manifest_lf(self):
         self.assertNotIn(b"\r\n", (self.archive / "manifest.json").read_bytes())

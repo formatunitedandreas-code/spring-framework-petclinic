@@ -20,6 +20,8 @@ $ErrorActionPreference = "Stop"
 . (Join-Path $PSScriptRoot "lib/candidate-class-provenance.ps1")
 . (Join-Path $PSScriptRoot "lib/content-hash.ps1")
 
+. (Join-Path $PSScriptRoot "lib/branch-range-validation.ps1")
+
 function ConvertTo-RepoPath {
     param([string] $Path)
     return ($Path -replace "\\", "/").Trim()
@@ -470,8 +472,7 @@ try {
         throw "Batch changed $changedLineCount lines, exceeding maxChangedLinesPerBatch=$MaxChangedLinesPerBatch."
     }
 
-    & git diff --check
-    if ($LASTEXITCODE -ne 0) { throw "git diff --check failed for batch." }
+    Assert-ThresholdBranchRangeDiffClean -LeasePath $LeasePath
 
     if (-not $SkipMavenTest.IsPresent) {
         $env:JAVA_HOME = "C:\Program Files\Java\jdk-17"

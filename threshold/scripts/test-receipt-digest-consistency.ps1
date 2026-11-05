@@ -16,6 +16,7 @@ try {
     if ($LASTEXITCODE -ne 0) { throw "git init failed" }
     & git config user.email "threshold-canary@example.invalid"
     & git config user.name "Threshold Canary"
+    & git config core.longpaths true
 
     New-Item -ItemType Directory -Path "threshold/leases" -Force | Out-Null
     New-Item -ItemType Directory -Path "threshold/receipts" -Force | Out-Null
