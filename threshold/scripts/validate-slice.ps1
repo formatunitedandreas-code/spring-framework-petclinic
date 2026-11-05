@@ -1,13 +1,24 @@
 [CmdletBinding()]
 param(
-    [string] $LeasePath = "threshold/leases/current.yaml",
-    [string] $StatePath = "threshold/lease-state/current-run.json",
+    [string] $LeasePath = "",
+    [string] $StatePath = "",
     [switch] $SkipMavenTest,
     [switch] $RequireHeadReceipt
 )
 
 Set-StrictMode -Version Latest
 $ErrorActionPreference = "Stop"
+
+. (Join-Path $PSScriptRoot "lib/runtime-paths.ps1")
+. (Join-Path $PSScriptRoot "lib/lease-policy.ps1")
+
+$runtimePaths = Get-ThresholdRuntimePaths
+if ([string]::IsNullOrWhiteSpace($LeasePath)) {
+    $LeasePath = $runtimePaths.LeasePath
+}
+if ([string]::IsNullOrWhiteSpace($StatePath)) {
+    $StatePath = $runtimePaths.LeaseStatePath
+}
 
 function Get-LeaseScalar {
     param([string[]] $Lines, [string] $Name)
@@ -44,13 +55,12 @@ function Get-BudgetValue {
 
 function Test-GovernancePath {
     param([string] $Path)
-    $normalized = $Path -replace "\\", "/"
-    return $normalized -like "threshold/*" -or $normalized -eq ".github/workflows/threshold-governance.yml"
+    return Test-ThresholdGovernancePath -Path $Path
 }
 
 function Get-ReceiptForCommit {
     param([string] $CommitHash)
-    $receiptPaths = @(Get-ChildItem threshold/receipts -Filter *.json -ErrorAction SilentlyContinue)
+    $receiptPaths = @(Get-ChildItem $runtimePaths.ReceiptDirectory -Filter *.json -ErrorAction SilentlyContinue)
     foreach ($receiptPath in $receiptPaths) {
         $receipt = Get-Content $receiptPath.FullName -Raw | ConvertFrom-Json
         if ($receipt.commitHash -eq $CommitHash) { return $receiptPath.FullName }
@@ -73,6 +83,8 @@ $leaseStartHead = Get-LeaseScalar $leaseLines "startHead"
 
 $currentBranch = (& git branch --show-current).Trim()
 if ($currentBranch -ne $expectedBranch) { throw "Branch mismatch. expected=$expectedBranch actual=$currentBranch" }
+$currentHead = (& git rev-parse HEAD).Trim()
+Assert-ThresholdHeadPolicy -LeaseLines $leaseLines -LeasePath $LeasePath -CurrentHead $currentHead -CurrentBranch $currentBranch
 
 if (Test-Path $StatePath) {
     $state = Get-Content $StatePath -Raw | ConvertFrom-Json
@@ -136,26 +148,30 @@ if (-not $changedPaths) {
     throw "No slice changes found in working tree or index."
 }
 
-$governancePaths = @($changedPaths | Where-Object { Test-GovernancePath $_ })
-$fileBudget = $maxFiles
-if ($governancePaths.Count -eq $changedPaths.Count) { $fileBudget = $maxGovernanceFiles }
-if ($changedPaths.Count -gt $fileBudget) { throw "Slice changes $($changedPaths.Count) files, exceeding file budget=$fileBudget." }
-
-foreach ($path in $changedPaths) {
-    $isAllowed = $false
-    foreach ($pattern in $allowedPaths) {
-        if (Test-PathAgainstPattern $path $pattern) { $isAllowed = $true; break }
-    }
-    if (-not $isAllowed) { throw "Changed path is outside lease allowlist: $path" }
-
-    foreach ($pattern in $forbiddenPaths) {
-        if (Test-PathAgainstPattern $path $pattern) { throw "Changed path is forbidden by lease: $path" }
-    }
+$runtimeGovernanceArtifacts = @(
+    $runtimePaths.LeasePath,
+    $runtimePaths.LeaseStatePath,
+    $runtimePaths.CandidatePocketPath
+)
+$effectiveChangedPaths = @($changedPaths | Where-Object { $runtimeGovernanceArtifacts -notcontains ($_ -replace "\\", "/") })
+if (-not $effectiveChangedPaths -and -not $RequireHeadReceipt -and $changedPaths.Count -gt 0) {
+    Write-Host "Threshold slice validation passed"
+    Write-Host "changedPaths=$($changedPaths.Count)"
+    Write-Host "effectiveChangedPaths=0"
+    Write-Host "mavenTestSkipped=$($SkipMavenTest.IsPresent)"
+    return
 }
 
+$governancePaths = @($effectiveChangedPaths | Where-Object { Test-GovernancePath $_ })
+$fileBudget = $maxFiles
+if ($governancePaths.Count -eq $effectiveChangedPaths.Count) { $fileBudget = $maxGovernanceFiles }
+if ($effectiveChangedPaths.Count -gt $fileBudget) { throw "Slice changes $($effectiveChangedPaths.Count) files, exceeding file budget=$fileBudget." }
+
+Assert-ThresholdChangedPathsAllowed -LeaseLines $leaseLines -ChangedPaths $effectiveChangedPaths
+
 $changedLineCount = 0
-$numstat = & git diff --numstat
-if (-not $numstat) { $numstat = & git diff --cached --numstat }
+$numstat = & git diff --numstat -- @effectiveChangedPaths
+if (-not $numstat) { $numstat = & git diff --cached --numstat -- @effectiveChangedPaths }
 foreach ($line in $numstat) {
     $parts = $line -split "\s+"
     if ($parts.Count -ge 2 -and $parts[0] -match "^\d+$" -and $parts[1] -match "^\d+$") {
@@ -163,10 +179,12 @@ foreach ($line in $numstat) {
     }
 }
 foreach ($path in $untrackedPaths) {
-    if (Test-Path $path) { $changedLineCount += (Get-Content $path).Count }
+    if ((Test-Path $path) -and ($runtimeGovernanceArtifacts -notcontains (($path -replace "\\", "/").Trim()))) {
+        $changedLineCount += (Get-Content $path).Count
+    }
 }
 $changedLineBudget = $maxChangedLines
-if ($governancePaths.Count -eq $changedPaths.Count) { $changedLineBudget = $maxGovernanceChangedLines }
+if ($governancePaths.Count -eq $effectiveChangedPaths.Count) { $changedLineBudget = $maxGovernanceChangedLines }
 if ($changedLineCount -gt $changedLineBudget) { throw "Slice changes $changedLineCount lines, exceeding changed-line budget=$changedLineBudget." }
 
 & git diff --check
@@ -179,6 +197,6 @@ if (-not $SkipMavenTest) {
 }
 
 Write-Host "Threshold slice validation passed"
-Write-Host "changedPaths=$($changedPaths.Count)"
+Write-Host "changedPaths=$($effectiveChangedPaths.Count)"
 Write-Host "changedLines=$changedLineCount"
 Write-Host "mavenTestSkipped=$($SkipMavenTest.IsPresent)"

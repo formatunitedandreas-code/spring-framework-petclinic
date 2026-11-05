@@ -11,4 +11,8 @@ class CanaryJdbcRepository {
             .single();
     }
 
+	void normalizeLeadingTabsCanary() {
+		this.jdbcClient.sql("SELECT id FROM owners").query(Integer.class).list();
+	}
+
 }

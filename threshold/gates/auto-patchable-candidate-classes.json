@@ -39,19 +39,80 @@
           "utilityMethodLengthThreshold": 6
         }
       },
-      {
-        "tier": 2,
-        "name": "aggressive_readability_thresholds",
-        "description": "Final bounded expansion tier for the same candidate classes before the runner reports scope exhaustion.",
-        "thresholds": {
-          "longLineThreshold": 92,
-          "commentWrapThreshold": 96,
-          "springDataQueryThreshold": 60,
-          "repositoryMethodLengthThreshold": 5,
-          "utilityMethodLengthThreshold": 5
-        }
+    {
+      "tier": 2,
+      "name": "aggressive_readability_thresholds",
+      "description": "Final bounded expansion tier for the same candidate classes before the runner reports scope exhaustion.",
+      "thresholds": {
+        "longLineThreshold": 92,
+        "commentWrapThreshold": 96,
+        "springDataQueryThreshold": 60,
+        "repositoryMethodLengthThreshold": 5,
+        "utilityMethodLengthThreshold": 5
       }
-    ]
+    },
+    {
+      "tier": 3,
+      "name": "portfolio_expansion_readability_push",
+      "description": "Additional exploratory readability expansion designed for authorized portfolio-restart lanes.",
+      "thresholds": {
+        "longLineThreshold": 80,
+        "commentWrapThreshold": 84,
+        "springDataQueryThreshold": 50,
+        "repositoryMethodLengthThreshold": 4,
+        "utilityMethodLengthThreshold": 4
+      }
+    },
+    {
+      "tier": 4,
+      "name": "portfolio_readability_push_deepen",
+      "description": "Final targeted deepening used for continued autonomous progress when prior portfolio expansion is exhausted.",
+      "thresholds": {
+        "longLineThreshold": 74,
+        "commentWrapThreshold": 76,
+        "springDataQueryThreshold": 44,
+        "repositoryMethodLengthThreshold": 3,
+        "utilityMethodLengthThreshold": 3
+      }
+    },
+    {
+      "tier": 5,
+      "name": "comment_and_method_wrap_recovery_push",
+      "description": "Recovery tier that reopens proven comment and method wrapping candidates after the portfolio readability push is exhausted.",
+      "thresholds": {
+        "longLineThreshold": 68,
+        "commentWrapThreshold": 72,
+        "springDataQueryThreshold": 40,
+        "repositoryMethodLengthThreshold": 2,
+        "utilityMethodLengthThreshold": 2
+      }
+    },
+    {
+      "tier": 6,
+      "name": "minimal_comment_and_line_wrap_deepening",
+      "description": "Smallest observed productive deepening after tier 5 exhaustion; reopens only comment wrapping at length 71.",
+      "thresholds": {
+        "longLineThreshold": 68,
+        "commentWrapThreshold": 70,
+        "springDataQueryThreshold": 40,
+        "repositoryMethodLengthThreshold": 2,
+        "utilityMethodLengthThreshold": 2
+      }
+    },
+    {
+      "tier": 7,
+      "name": "score_gated_service_comment_wrap_training",
+      "description": "Training tier that probes the next comment-wrap threshold only for the highest-confidence score band.",
+      "minScore": 98,
+      "thresholds": {
+        "longLineThreshold": 68,
+        "commentWrapThreshold": 69,
+        "springDataQueryThreshold": 40,
+        "repositoryMethodLengthThreshold": 2,
+        "utilityMethodLengthThreshold": 2
+      }
+    }
+  ]
   },
   "batchReceiptMode": {
     "schemaVersion": "threshold.petclinic.batch-receipt-mode.v0.1",
@@ -73,14 +134,6 @@
       }
     ],
     "heldCandidateClasses": [
-      {
-        "candidateClass": "repository_readability_cleanup",
-        "reason": "hold until batch executor has a dedicated promotion receipt for repository readability changes"
-      },
-      {
-        "candidateClass": "spring_data_query_wrap_cleanup",
-        "reason": "hold until query wrapping has a dedicated batch canary and promotion receipt"
-      }
     ]
   },
   "approvedAutoPatchableCandidateClasses": [
@@ -88,7 +141,9 @@
       "candidateClass": "comment_wrap_cleanup",
       "authorizedBy": "governance-hardening-bootstrap",
       "scope": "single long Javadoc comment line wrapping only",
-      "requiresCanary": true
+      "requiresCanary": true,
+      "pilotAutoPatchableAtF2": true,
+      "pilotScope": "single long Javadoc comment line wrapping after gate, discovery canary, runner support, local review simulation, and provenance checks are present"
     },
     {
       "candidateClass": "line_comment_wrap_cleanup",
@@ -115,12 +170,6 @@
       "requiresCanary": true
     },
     {
-      "candidateClass": "private_helper_extraction_for_readability",
-      "authorizedBy": "governance-hardening-bootstrap",
-      "scope": "existing runner-supported line cleanup only",
-      "requiresCanary": true
-    },
-    {
       "candidateClass": "redundant_local_variable_simplification",
       "authorizedBy": "governance-hardening-bootstrap",
       "scope": "immediate return-local simplification only",
@@ -139,6 +188,12 @@
       "requiresCanary": true
     },
     {
+      "candidateClass": "spring_data_query_concat_wrap_cleanup",
+      "authorizedBy": "scope-expansion-v0-spring-data-concat",
+      "scope": "format-only wrapping of concatenated Spring Data @Query annotations",
+      "requiresCanary": true
+    },
+    {
       "candidateClass": "split_string_constant_normalization",
       "authorizedBy": "governance-hardening-bootstrap",
       "scope": "canonical two-line continuation for already split string constants",
@@ -148,12 +203,40 @@
       "candidateClass": "string_constant_wrap_cleanup",
       "authorizedBy": "governance-hardening-bootstrap",
       "scope": "format-only wrapping of long private static final string constants",
-      "requiresCanary": true
+      "requiresCanary": true,
+      "pilotAutoPatchableAtF2": true,
+      "pilotScope": "first receipts may be produced for simple private static final string constants after gate, discovery canary, and runner support are present"
     },
     {
       "candidateClass": "utility_readability_cleanup",
       "authorizedBy": "governance-hardening-bootstrap",
       "scope": "runner-supported StopWatch helper extraction only",
+      "requiresCanary": true
+    },
+    {
+      "candidateClass": "application_bootstrap_readability_cleanup",
+      "authorizedBy": "scope-executor-expansion-v0-3",
+      "scope": "format-only wrapping of long top-level Spring bootstrap invocation lines with string arguments",
+      "requiresCanary": true
+    },
+    {
+      "candidateClass": "annotation_attribute_wrap_cleanup",
+      "authorizedBy": "scope-executor-expansion-v0-annotation-attribute-wrap",
+      "scope": "format-only wrapping of a single Java annotation line with two or more named top-level attributes",
+      "requiresCanary": true,
+      "pilotAutoPatchableAtF2": true,
+      "pilotScope": "first receipts may be produced after gate, discovery canary, and runner support are present"
+    },
+    {
+      "candidateClass": "leading_tab_indentation_cleanup",
+      "authorizedBy": "scope-executor-expansion-v0-leading-tab-indentation",
+      "scope": "format-only normalization of one contiguous leading-tab indentation block to spaces",
+      "requiresCanary": true
+    },
+    {
+      "candidateClass": "model_readability_cleanup",
+      "authorizedBy": "scope-executor-expansion-v0-model-toString",
+      "scope": "model toString helper extraction for chained ToStringCreator append blocks",
       "requiresCanary": true
     }
   ],
