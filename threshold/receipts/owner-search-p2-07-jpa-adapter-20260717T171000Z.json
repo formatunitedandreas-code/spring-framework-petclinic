@@ -1,0 +1,27 @@
+{
+  "runId": "owner-search-p2-07-jpa-adapter-20260717T171000Z",
+  "phaseId": "P2-07",
+  "repository": "formatunitedandreas-code/spring-framework-petclinic",
+  "baseHead": "226a5bd17fb030d154090b66c071b4e5b7515113",
+  "inputHead": "97c737fa5a36e8cc89c41b0bb6e8511daab5002a",
+  "finalHead": "",
+  "lane": "product_refactor",
+  "feature": "owner_search_vertical_refactoring",
+  "candidateClass": "owner_search_jpa_adapter",
+  "scopeMatch": true,
+  "databaseSchemaChanges": 0,
+  "jpaOwnerSearchQueryCount": 1,
+  "jpaOwnerSearchVisitMaterialization": 0,
+  "queryBudgetVerified": true,
+  "fullSuitePassed": true,
+  "publicationPerformed": false,
+  "mergePerformed": false,
+  "humanReviewRequired": true,
+  "validation": {
+    "gitDiffCheck": "pass",
+    "jpaOwnerSearchQueryTests": "pass: 3 tests, 0 failures, 0 errors, 0 skipped",
+    "ownerSearchTests": "pass: 30 tests, 0 failures, 0 errors, 0 skipped",
+    "fullMavenTest": "pass: 116 tests, 0 failures, 0 errors, 0 skipped"
+  },
+  "terminalState": "validated_local_change_pending_commit"
+}

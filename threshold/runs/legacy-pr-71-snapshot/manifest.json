@@ -1,0 +1,26 @@
+{
+  "pullRequest": 71,
+  "originalHead": "5c7cb664f8a43a39dc394e9592e880fedf1bd927",
+  "disposition": "historical_snapshot_only",
+  "activeLeaseReplaced": false,
+  "runtimeAuthority": "NONE",
+  "executionAuthorized": false,
+  "note": "Preserve original zero-candidate wave records as historical bytes; keep current mainline active state. Original historical validation is not reasserted.",
+  "files": [
+    {
+      "originalPath": "threshold/candidate-pocket/current.json",
+      "archivedPath": "threshold/runs/legacy-pr-71-snapshot/threshold/candidate-pocket/current.json",
+      "sha256": "a490a7acbf53bce182f672f2bf62912a378905d2cfd7c3bb793e296769e9ba1f"
+    },
+    {
+      "originalPath": "threshold/lease-state/current-run.json",
+      "archivedPath": "threshold/runs/legacy-pr-71-snapshot/threshold/lease-state/current-run.json",
+      "sha256": "09997953f63d6400a65e515d2ff17c63e81acb0227e9abae176abdcfe2fd6073"
+    },
+    {
+      "originalPath": "threshold/leases/current.yaml",
+      "archivedPath": "threshold/runs/legacy-pr-71-snapshot/threshold/leases/current.yaml",
+      "sha256": "01b80c7343af39237a4a79a20479432d66e6dca7863856c0c192bc9dfa7c279a"
+    }
+  ]
+}

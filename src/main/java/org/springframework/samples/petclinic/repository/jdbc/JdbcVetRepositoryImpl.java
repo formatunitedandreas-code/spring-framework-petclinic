@@ -7,10 +7,13 @@
  *
  *      http://www.apache.org/licenses/LICENSE-2.0
  *
- * Unless required by applicable law or agreed to in writing, software
+ * Unless required by applicable law or agreed to in
+ * writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
+ * express or implied.
+ * See the License for the specific language
+ * governing permissions and
  * limitations under the License.
  */
 package org.springframework.samples.petclinic.repository.jdbc;
@@ -28,7 +31,8 @@ import java.util.Collection;
 import java.util.List;
 
 /**
- * A simple JDBC-based implementation of the {@link VetRepository} interface.
+ * A simple JDBC-based implementation of the
+ * {@link VetRepository} interface.
  *
  * @author Ken Krebs
  * @author Juergen Hoeller
@@ -45,7 +49,8 @@ public class JdbcVetRepositoryImpl implements VetRepository {
     private static final String FIND_ALL_SQL = "SELECT id, first_name, last_name FROM vets ORDER BY last_name, "
         + "first_name";
 
-    private static final String GET_SPECIALTY_IDS_FOR_SQL = "SELECT specialty_id FROM vet_specialties WHERE vet_id=?";
+    private static final String GET_SPECIALTY_IDS_FOR_SQL = "SELECT specialty_id FROM vet_specialties WHERE "
+        + "vet_id=?";
 
     private static final String FIND_ALL_SQL_INLINE_SQL = "SELECT id, name FROM specialties";
 
@@ -78,7 +83,10 @@ public class JdbcVetRepositoryImpl implements VetRepository {
         return vets;
     }
 
-    private void addSpecialtiesToVet(Vet vet, List<Specialty> specialties) {
+    private void addSpecialtiesToVet(
+        Vet vet,
+        List<Specialty> specialties
+    ) {
         for (int specialtyId : getSpecialtyIdsFor(vet)) {
             Specialty specialty = EntityUtils.getById(specialties, Specialty.class, specialtyId);
             vet.addSpecialty(specialty);
