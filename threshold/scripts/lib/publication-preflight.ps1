@@ -57,12 +57,12 @@ function Get-PolicyDigest {
         if (-not (Test-Path -LiteralPath $policyPath -PathType Leaf)) { throw "stop_authority_missing=policy:$policyPath" }
     }
     $content = @($policyPaths | Sort-Object | ForEach-Object { "$_`n$(Get-Content $_ -Raw)" }) -join "`n---threshold-policy---`n"
-    return Get-TextSha256 -Value $content
+    return "sha256:" + (Get-TextSha256 -Value $content)
 }
 
 function Get-PreflightSubjectDigest {
     param([string[]] $ChangedPaths, [string] $Head)
-    return Get-TextSha256 -Value ((@($Head) + @($ChangedPaths | Sort-Object)) -join "`n")
+    return "sha256:" + (Get-TextSha256 -Value ((@($Head) + @($ChangedPaths | Sort-Object)) -join "`n"))
 }
 
 function Get-JsonPropertyOrNull {

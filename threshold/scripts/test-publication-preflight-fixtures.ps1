@@ -45,13 +45,13 @@ function Get-PolicyDigest {
         "threshold/policies/target-twin-v0.1.yaml"
     ) | Where-Object { Test-Path $_ }
     $content = @($policyPaths | Sort-Object | ForEach-Object { "$_`n$(Get-Content $_ -Raw)" }) -join "`n---threshold-policy---`n"
-    return Get-TextSha256 -Value $content
+    return "sha256:" + (Get-TextSha256 -Value $content)
 }
 
 function Get-SubjectDigest {
     param([string] $Head)
     $changed = @(& git diff --name-only "origin/${BaseRef}...HEAD" | Sort-Object)
-    return Get-TextSha256 -Value ((@($Head) + $changed) -join "`n")
+    return "sha256:" + (Get-TextSha256 -Value ((@($Head) + $changed) -join "`n"))
 }
 
 function Invoke-Preflight {
@@ -110,7 +110,7 @@ function Write-Authority {
         workorderDigest = Get-SubjectDigest -Head $head
         policyDigest = Get-PolicyDigest
         action = "push"
-        issuer = "fixture:publication-preflight"
+        issuer = "urn:threshold:actor:authority:11111111-1111-4111-8111-111111111111"
         issuedAt = (Get-Date).ToUniversalTime().AddMinutes(-5).ToString("o")
         expiresAt = (Get-Date).ToUniversalTime().AddMinutes(30).ToString("o")
         consumptionId = "consume:publication-preflight:test"
