@@ -132,6 +132,7 @@ function Test-ThresholdGovernancePolicyPath {
         $normalized -eq "threshold/trainer/review-findings.json" -or
         $normalized -eq ".gitignore" -or
         $normalized -eq ".github/workflows/threshold-governance.yml" -or
+        $normalized -eq ".github/workflows/maven-build-pull-request.yml" -or
         $normalized -eq ".github/CODEOWNERS"
     )
 }
