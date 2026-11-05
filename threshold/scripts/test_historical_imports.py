@@ -118,9 +118,12 @@ forbiddenActions:
         executable = shutil.which("pwsh") or shutil.which("powershell")
         if executable is None:
             self.skipTest("PowerShell not available")
+        script = str(self.repo / "threshold/scripts/test-pr-governance.ps1").replace("'", "''")
+        command = ("$ErrorActionPreference='Stop'; try { & '" + script + "' -BaseRef 'origin/main' } "
+                   "catch { [Console]::Error.WriteLine($_.Exception.Message); exit 1 }")
         return subprocess.run(
-            [executable, "-NoProfile", "-File", str(self.repo / "threshold/scripts/test-pr-governance.ps1"),
-             "-BaseRef", "origin/main"], cwd=self.repo, stdout=subprocess.PIPE, stderr=subprocess.PIPE, check=False)
+            [executable, "-NoProfile", "-Command", command], cwd=self.repo,
+            stdout=subprocess.PIPE, stderr=subprocess.PIPE, check=False)
 
     def test_positive_preserves_complete_original_bytes_and_active_tree(self):
         result = hi.validate(self.repo, self.base, "HEAD")
